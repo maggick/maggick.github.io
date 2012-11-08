@@ -4,7 +4,7 @@ module GuideHelpers
     if data.page.title
       title << data.page.title
     else
-      title << "My window on cyberspace"
+      title << "My window on the cyberspace"
     end
     title
   end
