@@ -8,6 +8,13 @@ title: Arduino
 
 Arduino 
 
+### Arduino Uno
+
+This is the first Board I get and it is the simple one.
+
+<img src="http://www.matthieu-keller.info/src/arduinoUno/1.JPG" alt="boarduino"/>
+
+
 ### Boarduino
 
 Boarduino is my home made board. I realized it at a workshop leaded by <a href="http://en.wikipedia.org/wiki/Mitch_Altman">Mitch Altman</a> at <a href="http://fabelier.org/">Fabelier</a> a French FacLab in Paris in February 2012.      
@@ -15,12 +22,6 @@ We weld each components on the printed circuit board. But the aim of this worksh
 This board is really useful, as you can see on the bellow picture the connectors are under the board and they really fit in a <a href="http://en.wikipedia.org/wiki/Breadboard">breadboard</a> so there is no more cable between the breadboard and the board.
 
 <img src="http://www.matthieu-keller.info/src/boarduino/1.JPG" alt="boarduino"/>
-
-### Arduino Uno
-
-The 
-
-<img src="http://www.matthieu-keller.info/src/arduinoUno/1.JPG" alt="boarduino"/>
 
 ## Software
 
