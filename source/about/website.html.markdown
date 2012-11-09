@@ -14,6 +14,10 @@ This is the third version of this website :
 With this Word Press version I always have to use the online interface to create or update articles and pages. Moreover the data were on the site database, meaning that as I was not saving them, they were not backup as my usual data.      
 With this new version, I write pages in <a href="https://github.com/github/markup#readme">Markdown format</a> directly on my computer with my favorite text editor, commit them on GitHub and finally put them on the server. There is no more database (meaning no more commentary, see the <a href="/about/me/">About Me section</a> for contact). The site is entirely static.
 
+## language
+
+You may have notice that I am no more using French for my website. This is a arbitrary choice based on the visits statistics obtain via Google analytics. I you really need a French translation, just <a href="/about/me/#Contact">contact me</a>.
+
 ## Technically
 
 This website was realized using <a href="http://www.middlemanapp.com">Middleman</a> a static site generator in Perl.
