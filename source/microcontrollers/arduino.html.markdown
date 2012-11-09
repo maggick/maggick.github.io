@@ -15,7 +15,7 @@ This is the first Board I get and it is the simpler and also very small as you c
 It comports a <a href="http://www.atmel.com/dyn/products/product_card.asp?PN=ATmega328P">ATmega328p</a> microcontroller.
 You can found more informations on the <a href="http://arduino.cc/en/Main/ArduinoBoardUno">official website</a>.
 
-<img src="http://www.matthieu-keller.info/src/arduinoUno/1.JPG" alt="boarduino"/>
+<img src="http://www.matthieu-keller.info/src/arduinoUno/1.JPG" alt="arduino uno"/>
 
 ### Boarduino
 
