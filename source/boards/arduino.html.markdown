@@ -11,7 +11,7 @@ There is a big hacker community around the project.
 
 ### Arduino Uno
 
-This is the first Board I get and it is the simpler and also very small as you can see on the picture bellow.
+This is the first Board I get in January 2012 and it is the simpler and also very small as you can see on the picture bellow.
 It comports a <a href="http://www.atmel.com/dyn/products/product_card.asp?PN=ATmega328P">ATmega328p</a> microcontroller.
 You can found more informations on the <a href="http://arduino.cc/en/Main/ArduinoBoardUno">official website</a>.
 
