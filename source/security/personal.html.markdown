@@ -23,8 +23,4 @@ I use <a href="http://en.wikipedia.org/wiki/Secure_Shell">ssh</a> to get connect
 This service is really useful but when I consult my connexions logs I see a lot of 
 attempt over ssh using wrong login. That is why I choose to just authorize ssh connexion using public key
 authentication.
-To do so :
-	# vim /etc/ssh/ssh_config
-
-
 
