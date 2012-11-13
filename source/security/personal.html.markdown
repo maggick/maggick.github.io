@@ -19,4 +19,8 @@ You can also generate your passwords with a lot of criteria.
 
 ## SSH / Openssh
 
+I use ssh to get connected from my traveling computer to my personal computer from all over the world.
+This service is really useful but when I consult my connexions logs I see a lot of 
+attempt over ssh using wrong login. That is why I choose to just authorize ssh connexion using public key
+authentication.
 
