@@ -13,14 +13,15 @@ It is a database wherein we can put our logins and associated passwords, this ba
 using 256 bit key and protected by password and optional "key file".
 You can also generate your passwords with a lot of criteria.
 
-## Openvpn
-
-<a href="http://en.wikipedia.org/wiki/Openvpn">Openvpn</a>
-
 ## SSH / Openssh
 
 I use <a href="http://en.wikipedia.org/wiki/Secure_Shell">ssh</a> to get connected from my traveling computer to my personal computer from all over the world.
 This service is really useful but when I consult my connexions logs I see a lot of 
 attempt over ssh using wrong login. That is why I choose to just authorize ssh connexion using public key
 authentication.
+
+## Openvpn
+
+<a href="http://en.wikipedia.org/wiki/Openvpn">Openvpn</a> aim to get create a virtual private network. On of its use is to get anonymous on the internet by cyphering your traffic 
+between your computer and your server.
 
