@@ -19,8 +19,12 @@ You can also generate your passwords with a lot of criteria.
 
 ## SSH / Openssh
 
-I use ssh to get connected from my traveling computer to my personal computer from all over the world.
+I use <a href="http://en.wikipedia.org/wiki/Secure_Shell">ssh</a> to get connected from my traveling computer to my personal computer from all over the world.
 This service is really useful but when I consult my connexions logs I see a lot of 
 attempt over ssh using wrong login. That is why I choose to just authorize ssh connexion using public key
 authentication.
+To do so :
+	# vim /etc/ssh/ssh_config
+
+
 
