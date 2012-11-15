@@ -27,7 +27,7 @@ I could have used an other generator like <a href="https://github.com/hyde/hyde"
 
 ## License
 
-<a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/deed.en_US"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-sa/3.0/88x31.png" /></a><br /><span xmlns:dct="http://purl.org/dc/terms/" property="dct:title">This website</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="www.matthieu-keller.info" property="cc:attributionName" rel="cc:attributionURL">Matthieu Keller</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/deed.en_US">Creative Commons Attribution-ShareAlike 3.0 Unported License</a>.<br />Based on a work at <a xmlns:dct="http://purl.org/dc/terms/" href="http://middlemanapp.com/" rel="dct:source">http://middlemanapp.com/</a>.
+<span xmlns:dct="http://purl.org/dc/terms/" property="dct:title">This website</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="www.matthieu-keller.info" property="cc:attributionName" rel="cc:attributionURL">Matthieu Keller</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/deed.en_US">Creative Commons Attribution-ShareAlike 3.0 Unported License</a>.<br />Based on a work at <a xmlns:dct="http://purl.org/dc/terms/" href="http://middlemanapp.com/" rel="dct:source">http://middlemanapp.com/</a>.
 
 ## Thanks
 
