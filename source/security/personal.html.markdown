@@ -1,8 +1,8 @@
 ---
-title: Personal Cryptography 
+title: Personal Security
 ---
 
-# Personal Cryptography 
+# Personal Security
 
 
 ## KeePassX
