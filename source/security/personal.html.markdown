@@ -6,8 +6,7 @@ title: Personal Security
 
 <a href="http://www.gnupg.org/">GPG (GNU Privacy Guard)</a> is a cryptographic software. It allows you to cypher
 texts or files with <a href="http://en.wikipedia.org/wiki/Public-key_cryptography">public-key cryptography</a>.
-You can found my GPG public key <a href="/publicKey">here</a>
-Feel free to use it for discuss about our new world domination plan.
+Feel free to use my GPG <a href="/publicKey">public key</a> to discuss about our new world domination plan.
 
 ## KeePassX
 
