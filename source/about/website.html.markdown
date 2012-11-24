@@ -27,7 +27,8 @@ I could have used an other generator like <a href="https://github.com/hyde/hyde"
 
 ## License
 
-This website by <a href="www.matthieu-keller.info">Matthieu Keller</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/deed.en_US">Creative Commons Attribution-ShareAlike 3.0 Unported License</a>.<br />Based on a work at <a href="http://middlemanapp.com/">http://middlemanapp.com/</a>.
+This website by <a href="www.matthieu-keller.info">Matthieu Keller</a> is licensed under a <a href="http://creativecommons.org/licenses/by-sa/3.0/deed.en_US">Creative Commons Attribution-ShareAlike 3.0 Unported License</a>.<br/>
+Based on a work at <a href="http://middlemanapp.com/">http://middlemanapp.com/</a>.
 
 ## Thanks
 
