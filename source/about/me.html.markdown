@@ -17,7 +17,7 @@ As you can see in the top left logo I used maggick as a pseudo. This was given t
 
 ## Contact
 
-You can contact me via <a href="http://twitter.com/matthieukeller">Twitter</a>, <a href="http://github.com/maggick">Gitub</a> or by <a href="mailto: keller dot mdpa at gmail.com">e-mail</a>.
+You can contact me via <a href="http://twitter.com/matthieukeller">Twitter</a>, <a href="http://github.com/maggick">Gitub</a> or by <a href="mailto:%20keller%20dot%20mdpa%20at%20gmail.com">e-mail</a>.
 
 ## Resume
 
