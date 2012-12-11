@@ -5,6 +5,8 @@ title: About This website
 # About This Website
 
 This is my newest version of my website published the 5 November 2012. 
+It is <a href="http://validator.w3.org/check?uri=http%3A%2F%2Fwww.matthieu-keller.info%2F">HTML5 valid</a>.
+The CSS validation is in progress.
 
 ## History
 
