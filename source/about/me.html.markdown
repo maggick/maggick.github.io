@@ -21,4 +21,4 @@ You can contact me via <a href="http://twitter.com/matthieukeller">Twitter</a>, 
 
 ## Resume
 
-You can found my <a href="/src/CV/resume.pdf">resume here</a>and<a href="http://www.matthieu-keller.info/src/CV/cv.pdf">here in french</a>
+You can found my <a href="/src/CV/resume.pdf">resume here</a> and <a href="http://www.matthieu-keller.info/src/CV/cv.pdf">here in french</a>
