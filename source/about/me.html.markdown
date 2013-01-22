@@ -9,7 +9,7 @@ You can found my complete courses programme <a href="http://www.ensta-paristech.
 
 ## Open Source
 
-I am an Open Source enthusiasm. I discover this world in September 2009. My first GNU/Linux installation was an Ubuntu 10.04 Lucid Linx in June 2010. So on I always have a GNU/Linux distribution installed on my computer. I actually use a Debian testing.
+I am an Open Source enthusiast. I discover this world in September 2009. My first GNU/Linux installation was an Ubuntu 10.04 Lucid Linx in June 2010. So on I always have a GNU/Linux distribution installed on my computer. I actually use a Debian testing.
 
 ## maggick
 
