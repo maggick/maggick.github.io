@@ -27,6 +27,7 @@ without any considerations for the robot
 (<a href="http://www.youtube.com/watch?v=7d_2A1_NbyA&feature=plcp">see youtube video</a>) and next integrate
 the code in the robot. This work fine in my school training pool as you can see on this 
 <a href="http://www.youtube.com/watch?v=1-Zy_YwxD2Y&feature=plcp">other youtube video</a>.
+You can found the source code on <a href="https://github.com/maggick/imgTracking">github</a>.
 
 The following picture show the robot in the training pool.
 
