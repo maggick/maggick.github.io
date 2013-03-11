@@ -1,5 +1,5 @@
 ---
-title: About This website
+title: About This Website
 ---
 
 # About This Website
