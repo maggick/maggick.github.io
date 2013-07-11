@@ -10,3 +10,7 @@ The <a href="http://en.wikipedia.org/wiki/Rasberry_pi">Raspberry Pi</a> is a sma
 
 The raspberry is a real computer so we must install an OS on it.
 
+## Usage
+
+I actually use a raspberry pi as a media center with a Rasbmc on it.
+It is very effective !
