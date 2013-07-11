@@ -13,6 +13,6 @@ You can found the source code on <a href="https://github.com/maggick/rsa">GitHub
 
 ## Vigenere Cryptanalysis
 
-In this school project we must a Vigenere cryptanalysis algorithm.
+In this school project we must a <a href ="http://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher#Cryptanalysis">Vigenere cryptanalysis</a> algorithm.
 You can found the source code on <a href="https://github.com/maggick/Vigenere-Cryptanalysis">GitHub</a>.
 
