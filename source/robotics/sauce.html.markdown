@@ -11,7 +11,7 @@ As its name indicates it is a robotic competition with
 ## SAUC-E '10
 
 I participated to it in 2010 in <a href="http://en.wikipedia.org/wiki/La_Spezia">La Spezia, Italy</a> 
-with my engineering school at this moment : the <a href="http://www.ensta-bretagne.fr/en/">ENSTA-Bretagne</a>.
+with my engineering school.
 I just give a hand with the electrical connectors of the robot and shot & edit a 
 <a href="http://www.youtube.com/watch?v=8qtgPdAXAFQ&feature=plcp">short summary video</a>. We finished at the
 third place. The following picture show the robot.
