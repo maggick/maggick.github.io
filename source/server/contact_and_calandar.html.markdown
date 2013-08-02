@@ -1,5 +1,4 @@
 
-
 # Install
 
 I wish to see Google out of my life.
@@ -37,3 +36,15 @@ as postgres user :
 pg_dump -Fc davical >davical.pgdump
 
 then my user will backup the data on my NAS with a simple scp
+
+# Usage
+
+## Agendav
+
+If message "The action you have requested is not allowed." when you try to login,
+this is due to the variable "cookie_secure" pass it to 'False' and log again.
+Edit the file agendav/web/config/config.php (ligne 81).
+
+
+    $config['cookie_secure']        = FALSE;
+
