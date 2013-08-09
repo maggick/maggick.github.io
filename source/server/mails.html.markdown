@@ -1,7 +1,12 @@
+---
+title: Mail
+---
+
 #Mail
 
-When I start to install my mail server
-I choose postifix.
+When I start to install my own mail server to never be dependent of a service
+as Gmail, hotmail or whatever.
+I choose postifix as SMTP server.
 
 ##SPF
 
