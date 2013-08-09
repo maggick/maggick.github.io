@@ -1,4 +1,12 @@
-Git
+# Git
+
+In software development, is a distributed version control and source code management
+(SCM) system with an emphasis on speed.
+I use git for all my project including this [website](https://github.com/maggick/my_website).
+I use it in command line with [tig](https://github.com/jonas/tig)
+
+
+## Merge two different repository
 
 if you have two differents repositry (first and second) to merge in one even in local :
 
