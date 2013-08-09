@@ -28,9 +28,7 @@ In fact, there is no two way synchronization (yet on July 2013) and the color of
 In order to make a backup of all my data (ie. all the user, calendar and address books)
 I use a cron job witch would use postgres dump to dump the davical database.
 
-I use the official instruction :
-http://wiki.davical.org/w/Backups
-
+I use the [official instructions](http://wiki.davical.org/w/Backups)
 and a full backup fill my needs
 
 as postgres user :
