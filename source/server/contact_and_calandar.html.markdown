@@ -1,4 +1,10 @@
-# Install
+---
+title: Contact and calandar
+---
+
+# Contact and calandar
+
+## Install
 
 I wish to see Google out of my life.
 The requirement was being able to have my calendar and my contacts on my server.
@@ -23,7 +29,7 @@ but I was not fully satisfied.
 In fact, there is no two way synchronization (yet on July 2013) and the color of my calendar were not synchronized.
 
 
-#Backup
+## Backup
 
 In order to make a backup of all my data (ie. all the user, calendar and address books)
 I use a cron job witch would use postgres dump to dump the davical database.
@@ -38,9 +44,9 @@ then my user will backup the data on my NAS with a simple scp
 
 This is not fully working now, work in progress...
 
-# Usage
+## Usage
 
-## Agendav
+### Agendav
 
 If message "The action you have requested is not allowed." when you try to login,
 this is due to the variable "cookie_secure" pass it to 'False' and log again.
