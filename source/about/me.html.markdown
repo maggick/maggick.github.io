@@ -4,8 +4,13 @@ title: About Me
 
 # About Me
 
-I am a student in French engineering school : <a href="http://www.ensta-paristech.fr">ENSTA-ParisTech</a>. My formation is oriented around "Information Systems". So I am principally doing computer science and software development I also do some computer security.
-You can found my complete courses programme <a href="http://www.ensta-paristech.fr/en/becoming-engineer/3rd-year-diplome-d-ingenieur-2nd-year-msc/advanced-specialisations?filiere=CI_3A_FILI_SYIN">here</a> and in <a href="http://www.ensta-paristech.fr/fr/devenir-ingenieur/formation-3e-annee/filieres-d-approfondissement?filiere=CI_3A_FILI_SYIN">French here.</a>
+I am a student in French engineering school : [ENSTA-ParisTech](http://www.ensta-paristech.fr).
+My formation is oriented around "Information Systems". So I am principally doing computer science and
+software development I also do some computer security.
+You can found my complete courses programme 
+[here](http://www.ensta-paristech.fr/en/becoming-engineer/3rd-year-diplome-d-ingenieur-2nd-year-msc/advanced-specialisations?filiere=CI_3A_FILI_SYIN) 
+and in 
+[French here](http://www.ensta-paristech.fr/fr/devenir-ingenieur/formation-3e-annee/filieres-d-approfondissement?filiere=CI_3A_FILI_SYIN).
 
 ## Open Source
 
@@ -17,8 +22,9 @@ As you can see in the top left logo I used maggick as a pseudo. This was given t
 
 ## Contact
 
-You can contact me via <a href="http://twitter.com/matthieukeller">Twitter</a>, <a href="http://github.com/maggick">GitHub</a> or by <a href="mailto:%20keller%20dot%20mdpa%20at%20gmail.com">e-mail</a>.
+You can contact me via [Twitter](http://twitter.com/matthieukeller), [GitHub](http://github.com/maggick)
+or by [e-mail](mailto:%20keller%20dot%20mdpa%20at%20gmail.com).
 
 ## Resume
 
-You can found my <a href="/src/CV/resume.pdf">resume here</a>and<a href="http://www.matthieu-keller.info/src/CV/cv.pdf">here in french</a>
+You can found my [resume here](/src/CV/resume.pdf) and [here in french](http://www.matthieu-keller.info/src/CV/cv.pdf).
