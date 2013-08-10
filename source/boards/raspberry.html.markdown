@@ -4,7 +4,9 @@ title: Raspberry Pi
 
 # Raspberry Pi
 
-The <a href="http://en.wikipedia.org/wiki/Rasberry_pi">Raspberry Pi</a> is a small computer (the size of a credit card). You can found more informations on the <a href="http://www.raspberrypi.org/">official website</a>.
+The [Raspberry Pi](http://en.wikipedia.org/wiki/Rasberry_pi) is a small computer
+(the size of a credit card). You can found more informations on the
+[official website](http://www.raspberrypi.org/).
 
 ## Installation
 
