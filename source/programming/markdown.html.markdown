@@ -68,7 +68,7 @@ of the title:
 
 ### Images
 
-To insert some image it is very similar to the links: `![alt](image address)
+To insert some image it is very similar to the links: `![alt](image address)`
 
 ### Code
 
