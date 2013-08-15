@@ -112,10 +112,9 @@ And an other where you put your public key:
     "qJ6g8Nla+BX2A2V2gwOxT2Xp0mCIqjIFqfoyhxIcftKHHBDFxiun2WLwsUD5ivFewy54ntgphkWJUXfob+NtZ6M8sv531Zd/mgdBgnYAPzWNy5m5MGquNZNEnA44o0sAcKiCRMb7nKpTvfDQQIDAQAB"
     )
 
-[Source](http://stevejenkins.com/blog/2011/08/installing-opendkim-rpm-via-yum-with-postfix-or-sendmail-for-rhel-centos-fedora/)
-
+[Source](http://stevejenkins.com/blog/2011/08/installing-opendkim-rpm-via-yum-with-postfix-or-sendmail-for-rhel-centos-fedora/)    
 [A DomainKey Policy Record
-Tester](http://domainkeys.sourceforge.net/policycheck.html)
+Tester](http://domainkeys.sourceforge.net/policycheck.html)    
 [A DomainKey Selector Record
 Tester](http://domainkeys.sourceforge.net/selectorcheck.html)
 
