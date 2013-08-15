@@ -60,7 +60,7 @@ verifying
 
 You may have to uncomment some lines:
 
-    Nsk           002
+    Umask         002
     UserID        opendkim:opendkim
     Socket        inet:8891@localhost
     Domain        yourdomain.tld
