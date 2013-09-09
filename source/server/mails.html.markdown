@@ -149,7 +149,7 @@ edit the virtual_map in `/etc/postfix/virtual` and add the following line :
 next execute the following commands:
 
     postmap /etc/postfix/virtual
-    postfix restart
+    service postfix restart
 
 ### Catch all with regex :
 
