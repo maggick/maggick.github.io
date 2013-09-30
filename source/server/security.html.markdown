@@ -8,10 +8,6 @@ On a server security is really important.
 Some simple change can make a great gain in security.
 
 
-## Ip Tables - Firewall
-
-It is important to filtre what come in and come out of a server.
-
 ## ssh
 
 I choose an other port than 22 for my ssh server.
@@ -29,7 +25,23 @@ in resume there is a few manipulation:
     # Check that the converted key works; if yes, delete the old one:
     rm ~/.ssh/id_rsa.old
 
+## Ip Tables - Firewall
+
+It is important to filtre what come in and come out of a server.
+
+[source](http://www.alsacreations.com/tuto/lire/622-Securite-firewall-iptables.html)
+
+## Fail2ban
+
+[source](http://www.alsacreations.com/tuto/lire/622-Securite-firewall-iptables.html)
+
+## root shell notification
+
+[source](http://www.alsacreations.com/tuto/lire/622-Securite-firewall-iptables.html)
+
 ## RKHunter
 
 I use RKHunter - which is short for [R]oot[K]itHunter in order to prevent them.
 It is a daily cron job at 4am.
+
+[source](http://www.alsacreations.com/tuto/lire/622-Securite-firewall-iptables.html)
