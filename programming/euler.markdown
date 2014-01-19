@@ -13,7 +13,7 @@ elegant and efficient methods, the use of a computer and programming skills
 will be required to solve most problems.
 
 Moreover you can found all my source code (most of the time without any
-comment) on[Github](https://github.com/maggick/euler).
+comment) on [Github](https://github.com/maggick/euler).
 
 ![project euler](http://projecteuler.net/profile/keller.png)
 
