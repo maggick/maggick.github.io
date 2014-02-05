@@ -1,7 +1,3 @@
----
-title: PIC
----
-
 # PIC
 
 It is not easy to find out how to compile a C code for a PIC16F886 on GNU/Linux.
@@ -30,5 +26,4 @@ void main(void) {
 There your installation of sdcc is working. Now we are going to the hard part:
 
 Under construction
-
 
