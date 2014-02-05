@@ -1,7 +1,3 @@
----
-title: SSHConfing
----
-
 # SSH Config file
 
 SSH Config file can be simply life a lot.

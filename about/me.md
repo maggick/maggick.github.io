@@ -1,7 +1,3 @@
----
-title: About Me
----
-
 # About Me
 
 I am a security consultant.

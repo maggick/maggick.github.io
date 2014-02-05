@@ -1,7 +1,3 @@
----
-title: Git
----
-
 # Git
 
 In software development, is a distributed version control and source code management

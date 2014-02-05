@@ -1,7 +1,3 @@
----
-title: Security
----
-
 # Security
 
 On a server security is really important.

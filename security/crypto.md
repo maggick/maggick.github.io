@@ -1,7 +1,3 @@
----
-title: Cryptography
----
-
 # Cryptography
 
 The cryptography is the art of cypher an informations to hide it from unwanted people.

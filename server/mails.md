@@ -1,7 +1,3 @@
----
-title: Mail
----
-
 #Mail
 
 When I start to install my own mail server to never be dependent of a service

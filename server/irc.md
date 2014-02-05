@@ -1,7 +1,3 @@
----
-title: IRC
----
-
 # IRC
 
 Internet Chat Relay, is a protocol for live interactive Internet text messaging (chat).

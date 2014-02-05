@@ -1,7 +1,3 @@
----
-title: Contact and calandar
----
-
 # Contact and calandar
 
 ## Install

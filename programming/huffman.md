@@ -1,7 +1,3 @@
----
-title: Huffman
----
-
 # Huffman
 
 [Huffman coding](http://en.wikipedia.org/wiki/Huffman_coding) is a compression

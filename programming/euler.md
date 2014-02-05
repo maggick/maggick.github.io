@@ -1,7 +1,3 @@
----
-title: Project Euler
----
-
 # Project Euler
 
 ## Presentation

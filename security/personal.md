@@ -1,7 +1,3 @@
----
-title: Personal Security
----
-
 # Personal Security
 
 This page resume most of the solution I use to keep my privacy on the internet.

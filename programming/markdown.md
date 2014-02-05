@@ -1,7 +1,3 @@
----
-title: Markdown
----
-
 # Markdown
 
 Markdown is a wonderful language to write quick text. All this site is write

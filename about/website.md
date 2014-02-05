@@ -1,7 +1,3 @@
----
-title: About This Website
----
-
 # About This Website
 
 I have no more domain to put my website on.
