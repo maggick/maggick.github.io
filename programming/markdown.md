@@ -110,6 +110,6 @@ for the numbered one just put the number before each element:
 
 ## Convert
 
-What is wonderful is that you can convert markdown file to html, latex, word,
-etc. format with a simple tool : [`pandoc`](http://johnmacfarlane.net/pandoc/)
+What is wonderful is that you can convert markdown files to html with the bash
+`mardown` command.
 
