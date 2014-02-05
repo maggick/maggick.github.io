@@ -2,10 +2,6 @@
 
 I have no more domain to put my website on.
 
-This was my newest version of my website published the 5 November 2012. 
-It was [HTML5 valid](http://validator.w3.org/check?uri=http%3A%2F%2Fwww.matthieu-keller.info%2F).
-The CSS validation was in progress.
-
 ## History
 
 This is the fourth version of this website :
@@ -32,6 +28,6 @@ the HTML output file into my website directory.
 
 ## License
 
-This website by [Matthieu Keller] (www.keller.lc) is licensed under a
+This website by [Matthieu Keller] (https://.keller.lc) is licensed under a
 [Creative Commons Attribution-ShareAlike 3.0 Unported License](http://creativecommons.org/licenses/by-sa/3.0/deed.en_US).
 
