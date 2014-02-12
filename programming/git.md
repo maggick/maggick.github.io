@@ -1,5 +1,7 @@
 # Git
 
+## Presentation
+
 In software development, is a distributed version control and source code management
 (SCM) system with an emphasis on speed.
 I use git for all my project including this [website](https://github.com/maggick/my_website).
