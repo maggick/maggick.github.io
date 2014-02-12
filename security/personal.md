@@ -26,6 +26,7 @@ I use [ssh](http://en.wikipedia.org/wiki/Secure_Shell) to get connected from my
 computers to my servers from all over the world.
 This service is really useful but when I consult my connexions logs I see a lot
 of attempt over ssh using wrong login. That is why I choose to:
+
 * authorize ssh connexion using public key authentication,
 * change from the 22 standard port,
 * let only a non root user login and this user only
