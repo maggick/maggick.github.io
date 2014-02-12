@@ -12,7 +12,7 @@ Installation is really simple:
 
 You can test your installation with the following code :
 
-``` c
+``` cpp
 char test;
 void main(void) {
    test=0;
