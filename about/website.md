@@ -1,6 +1,7 @@
 # About This Website
 
-This website is hosted at [maggick.github.com](maggick.github.com).
+This website is hosted at [maggick.github.com](maggick.github.com) and is
+generated with [MDwiki](http://dynalon.github.io/mdwiki/#!index.md).
 
 ## History
 
@@ -13,6 +14,8 @@ This is the fifth version of this website :
 * The third was generated using Middleman, a static site generator in Ruby wich
   generate HTML pages from markdown files.
 * The fourth was build in html using the `markdown` command.
+
+## Reasons that killed old versions
 
 * The First version was huggly and almost without content.
 * With the Word Press version I always have to use the online interface to create or update articles and pages.
