@@ -37,3 +37,5 @@
   * [apache](server/apache.md)
 
 [gimmick:themechooser](Choose theme)
+
+[gimmick:ForkMeOnGitHub](https://www.github.com/maggick/maggick.github.io)
