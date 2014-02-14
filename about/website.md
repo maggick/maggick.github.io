@@ -1,6 +1,6 @@
 # About This Website
 
-This website is hosted at [maggick.github.com](maggick.github.com) and is
+This website is hosted at [maggick.github.com](http://maggick.github.com) and is
 generated with [MDwiki](http://dynalon.github.io/mdwiki/#!index.md).
 
 ## History
@@ -40,5 +40,5 @@ website !
 
 ## License
 
-This site is licensed under [WTFPL](www.wtfpl.net).
+This site is licensed under [WTFPL](http://www.wtfpl.net).
 
