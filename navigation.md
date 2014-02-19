@@ -29,6 +29,10 @@
   * [security](server/security.md)
   * [ssh config](server/sshconfig.md)
 
+[Desktop Computer]()
+  - - - -
+  * [restore grub](desktop/restore_grub.md)
+
 [test]()
   - - - -
   * [apache](server/apache.md)
