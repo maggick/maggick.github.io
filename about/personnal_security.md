@@ -6,7 +6,7 @@ This page resume most of the solution I use to keep my privacy on the internet.
 
 [GPG (GNU Privacy Guard)](http://www.gnupg.org/) is a cryptographic software.
 It allows you to cypher texts or files with
-[ublic-key cryptography](http://en.wikipedia.org/wiki/Public-key_cryptography).
+[public-key cryptography](http://en.wikipedia.org/wiki/Public-key_cryptography).
 Feel free to use my GPG [public Key](/publickey) to discuss about our new world
 domination plan.
 
