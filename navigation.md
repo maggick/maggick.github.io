@@ -4,7 +4,7 @@
   - - - -
   * [me](about/me.md)
   * [website](about/website.md)
-  * [personnal security](about/personal_security.md)
+  * [personnal security](about/personnal_security.md)
 
 [Boards]()
   - - - -
