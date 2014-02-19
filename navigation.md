@@ -4,6 +4,7 @@
   - - - -
   * [me](about/me.md)
   * [website](about/website.md)
+  * [personnal security](about/personal_security.md)
 
 [Boards]()
   - - - -
@@ -17,11 +18,7 @@
   * [git](programming/git.md)
   * [Huffman](programming/huffman.md)
   * [markdown](programming/markdown.md)
-
-[Security]()
-  - - - -
-  * [cryptography](security/crypto.md)
-  * [personnal](security/personal.md)
+  * [cryptography](programming/crypto.md)
 
 [Server]()
   - - - -
