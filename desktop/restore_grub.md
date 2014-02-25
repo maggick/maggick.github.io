@@ -1,7 +1,7 @@
 # How to restore grub
 
 When you use dual boot computer there is a risk that reinstalling windows
-destroy your grub.  It happeend to me several times.
+destroy your grub. It happeend to me several times.
 
 Here is a simple How to reinstall grub :
 
@@ -12,7 +12,9 @@ USB-key.
 
 ## Commands
 
-We mount the partition in order to reinstall grub:
+Restoring your grub is really easy with a few commands:
+
+First of all we mount the partition in order to reinstall grub:
 
     sudo mount /dev/sdXY /mnt
 

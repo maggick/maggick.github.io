@@ -2,9 +2,10 @@
 
 ## Presentation
 
-In software development, is a distributed version control and source code management
+Git is a distributed version control and source code management
 (SCM) system with an emphasis on speed.
-I use git for all my project including this [website](https://github.com/maggick/my_website).
+I use git for all my project including this
+[website](https://github.com/maggick/maggick.github.io).
 I use it in command line with [tig](https://github.com/jonas/tig)
 
 

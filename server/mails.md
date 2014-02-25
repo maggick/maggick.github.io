@@ -50,7 +50,7 @@ Now we need to edit the configuration files:
 1.  /etc/opendkim/TrustedHosts – a list of servers to “trust” when signing or
 verifying
 
-(You may have to create folder and files).
+(You may have to create folders and files).
 
 ####/etc/opendkim.conf
 
@@ -116,7 +116,9 @@ Tester](http://domainkeys.sourceforge.net/selectorcheck.html)
 
 ##Catch all
 
-to define a catch all create the `virtual` file and add it to postmap :
+Is is really interesting to catch all e-mails directed to your domain. For
+instance you will catch wahtever@yourdomain.com.
+To define a catch all create the `virtual` file and add it to postmap :
 
     # echo '@yourdomain.com emailusername' > /etc/postfix/virtual
     # postmap /etc/postfix/virtual
@@ -135,7 +137,7 @@ and restart the postfix service :
 
 ### Trouble
 
-in odrder that the existing user can get their mail when
+In odrder that the existing users can get their e-mails when
 there is a cath all :
 
 edit the virtual_map in `/etc/postfix/virtual` and add the following line :
@@ -149,7 +151,9 @@ next execute the following commands:
 
 ### Catch all with regex :
 
-in order to make a catch all for an user :
+You can configure some regex catch all for instance you can catch
+whatever.youruser@yourdomain.com
+In order to make a catch all for an user :
 edit (or create) the file 
 
     /etc/postfix/virtual-regexp
