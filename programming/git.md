@@ -6,7 +6,7 @@ Git is a distributed version control and source code management
 (SCM) system with an emphasis on speed.
 I use git for all my project including this
 [website](https://github.com/maggick/maggick.github.io).
-I use it in command line with [tig](https://github.com/jonas/tig)
+I use it in command line with [tig](https://github.com/jonas/tig).
 
 
 ## Merge two different repository
@@ -21,13 +21,13 @@ we create a new git repository ans make an initial commit :
     git add .gitignore
     git commit .gitignore -m 'init'
 
-we fetch and merge the first
+we fetch and merge the first:
 
     git remote add first pathTo/first
     git fetch first
     git merge first/master
 
-we fetch and merge the second
+we fetch and merge the second:
 
     git remote add second pathTo/second
     git fetch second
