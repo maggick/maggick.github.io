@@ -32,6 +32,7 @@
 [Desktop Computer]()
   - - - -
   * [restore grub](desktop/restore_grub.md)
+  * [restore USB drive](desktop/restore_usb_key.md)
 
 [test]()
   - - - -
