@@ -18,10 +18,12 @@ Then you must create a new partiton using cfdisk:
 Finally you nedd to write the file system on your USB stick :
 
 * If you want an ext4 partition:
+
     # mkfs.ext4 /dev/sdx1
     # e2label /dev/sdx1 USB_STICK
 
 * And if you want a FAT32 partition:
+
     # mkfs.vfat -F32 /dev/sdx1
     # dosfslabel /dev/sdx1 USB_STICK
 
