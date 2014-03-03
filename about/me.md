@@ -16,9 +16,8 @@ in summer 2012. I used it on irc on github and on some forums.
 
 ## Contact
 
-You can contact me via [Twitter](http://twitter.com/matthieukeller),
-[GitHub](http://github.com/maggick)
-or by [e-mail](mailto:%20webmaster%20at%20keller%20dot%20lc).
+You can contact me via [Twitter](http://twitter.com/matthieukeller)
+or [GitHub](http://github.com/maggick).
 
 ## Resume
 
