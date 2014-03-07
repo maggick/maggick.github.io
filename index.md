@@ -12,5 +12,5 @@ urgent.
 ## A little social
 
 * follow me on [github](https://github.com/maggick)
-* follow me on [twitter](https://twitter/matthieuKeller)
+* follow me on [twitter](https://twitter.com/matthieuKeller)
 
