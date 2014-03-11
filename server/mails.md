@@ -15,7 +15,7 @@ You just have to add a DNS TXT entry :
 
     yourdomain.com. IN TXT "v=spf1 a mx ~all"
 
-[Source](http://nickwilsdon.com/spf-domain-records/)
+Source: [nickwilsdon](http://nickwilsdon.com/spf-domain-records/)
 
 ##DKIM
 
@@ -108,7 +108,7 @@ And an other where you put your public key:
     "qJ6g8Nla+BX2A2V2gwOxT2Xp0mCIqjIFqfoyhxIcftKHHBDFxiun2WLwsUD5ivFewy54ntgphkWJUXfob+NtZ6M8sv531Zd/mgdBgnYAPzWNy5m5MGquNZNEnA44o0sAcKiCRMb7nKpTvfDQQIDAQAB"
     )
 
-[Source](http://stevejenkins.com/blog/2011/08/installing-opendkim-rpm-via-yum-with-postfix-or-sendmail-for-rhel-centos-fedora/)    
+Source: [stevejenkins](http://stevejenkins.com/blog/2011/08/installing-opendkim-rpm-via-yum-with-postfix-or-sendmail-for-rhel-centos-fedora/)    
 [A DomainKey Policy Record
 Tester](http://domainkeys.sourceforge.net/policycheck.html)    
 [A DomainKey Selector Record
@@ -132,7 +132,7 @@ and restart the postfix service :
 
     # service postfix reload
 
-[Source](http://www.cyberciti.biz/faq/howto-setup-postfix-catch-all-email-accounts/)
+Source: [cyberciti](http://www.cyberciti.biz/faq/howto-setup-postfix-catch-all-email-accounts/)
 
 
 ### Trouble

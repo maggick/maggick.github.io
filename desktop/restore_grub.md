@@ -39,5 +39,5 @@ Exit chroot environnment and unmount everything:
     exit && sudo umount /mnt/dev && sudo umount /mnt/dev/pts && sudo umount
     /mnt/proc && sudo umount /mnt/sys && sudo umount /mnt
 
-[Source](http://howtoubuntu.org/how-to-repair-restore-reinstall-grub-2-with-a-ubuntu-live-cd#.UwSjNoVkFGd)
+Source: [howtoubuntu](http://howtoubuntu.org/how-to-repair-restore-reinstall-grub-2-with-a-ubuntu-live-cd#.UwSjNoVkFGd)
 

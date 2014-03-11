@@ -26,5 +26,5 @@ Then `ssh youHost` is equivalant to
 
 There is a lot of other options, just read the doc.
 
-[source](http://nerderati.com/2011/03/simplify-your-life-with-an-ssh-config-file/)
+Source: [nerderati](http://nerderati.com/2011/03/simplify-your-life-with-an-ssh-config-file/)
 

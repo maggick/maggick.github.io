@@ -27,6 +27,5 @@ And if you want a FAT32 partition:
     # mkfs.vfat -F32 /dev/sdx1
     # dosfslabel /dev/sdx1 USB_STICK
 
-Source
-[archwiki](https://wiki.archlinux.org/index.php/USB_Flash_Installation_Media#How_to_restore_the_USB_drive)
+Source: [archwiki](https://wiki.archlinux.org/index.php/USB_Flash_Installation_Media#How_to_restore_the_USB_drive)
 

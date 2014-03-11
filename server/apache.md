@@ -10,4 +10,4 @@ I had to add the following line in `/etc/apach2/site-avaible`:
     </Directory>
 
 
-[source](http://dabase.com/blog/AH01630:_client_denied_by_server_configuration/)
+Source: [dabase](http://dabase.com/blog/AH01630:_client_denied_by_server_configuration/)
