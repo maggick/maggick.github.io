@@ -1,15 +1,14 @@
-# maggick.github.io
+# www.matthieukeller.com
 
-## Welcome on my Window on the cyberspace !
+## Welcome on my notebook on the cyberspace !
 
-This website is devided is different sections in the above menu.
+This notes are devided in different sections in the above menu.
 
 I do not know why but there is a need of a _test_ section in order that the menu
 work. I will try to solve that problem in the next few weeks but it is not
 urgent.
 
-## A little social
+## back to my portal
 
-* follow me on [github](https://github.com/maggick)
-* follow me on [twitter](https://twitter.com/matthieuKeller)
+ [www.matthieukeller.com](http://www.matthieukeller.com)
 
