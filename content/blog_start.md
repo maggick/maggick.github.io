@@ -13,3 +13,7 @@ with vim and then push to github. That mean that I have all traces of every
 article and evey notes redacted here. I want to offer a comments solution where
 all the comments are sotred on my computer but I am not sure it is possible and
 I will probably use discuss in a fisrt time.
+
+The default theme of pelicn is aweful and I will change it in the next few days.
+Hoping that I found one better.
+
