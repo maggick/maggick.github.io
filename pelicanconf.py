@@ -29,3 +29,9 @@ DEFAULT_PAGINATION = 10
 
 # Uncomment following line if you want document-relative URLs when developing
 #RELATIVE_URLS = True
+
+THEME = "/home/maggick/Documents/pelican-themes/bootstrap"
+
+# Following items are often useful when publishing
+DISQUS_SITENAME = "matthieukeller"
+#GOOGLE_ANALYTICS = ""
