@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*- #
 from __future__ import unicode_literals
 
-AUTHOR = 'matthieu keller'
+AUTHOR = 'Matthieu Keller'
 SITENAME = "maggick's logs"
 SITEURL = '/blog'
 
@@ -23,7 +23,10 @@ LINKS = (('Pelican', 'http://getpelican.com/'),
          ('Jinja2', 'http://jinja.pocoo.org/'),)
 
 # Social widget
-SOCIAL = (('maggick\'s github', 'https://github.com/maggick'),)
+SOCIAL = (('Github', 'https://github.com/maggick'),
+        ('Twitter', 'https://twitter.com/matthieukeller'),
+        ('Linked In', 'https://linkedin.com/in/matthieukeller')
+        )
 
 DEFAULT_PAGINATION = 10
 
