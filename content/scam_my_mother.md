@@ -1,6 +1,6 @@
 Title:Scam my mother
 Date: 08-19-2014
-category:scam
+category:security
 
 Today I was confronted to the first telephonic scam of my life.
 
