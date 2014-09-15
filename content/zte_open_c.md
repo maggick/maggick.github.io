@@ -8,7 +8,7 @@ J'ai testé le téléphone ZTE OPEN C avec Firefox OS 0.3 pendant une semaine.
 Première surprise au déballage, le téléphone ressemble beaucoup au Samsung Galaxy
 S. Mis à part le bouton « power » qui est sur le dessus et non sur le côté.
 
-## prise en main
+## Prise en main
 
 Au démarrage le téléphone est fluide, le fond d'écran rappel que l'on est sur un
 OS différent. Niveau application c'est assez pauvre, on a Firefox, une
