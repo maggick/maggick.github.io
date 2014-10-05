@@ -9,7 +9,7 @@ Linux system:
 Let's replace the sticky keys executable file with a command one:
 
 * boot your computer on a your Linux
-* mount the C partition file (for instance sda1) with `#mount /dev/sda1 /mnt/`
+* mount the C partition file (for instance sda1) with `mount /dev/sda1 /mnt/`
 * backup `cp /mnt/windows/system32/sethc.exe /mnt/windows/system32/sethc.exe_old`
 * replace `cp /mnt/windows/system32/cmd.exe /mnt/windows/system32/sethc.exe`
 * boot on Windows
