@@ -34,6 +34,7 @@
   * [restore grub](desktop/restore_grub.md)
   * [restore USB drive](desktop/restore_usb_key.md)
   * [tmux trick](desktop/tmux_trick.md)
+  * [restore Windows password](desktop/lost_windows_password.md)
 
 [test]()
   - - - -
