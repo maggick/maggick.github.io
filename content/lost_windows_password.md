@@ -12,14 +12,14 @@ password by a known one.
 
 * Let's boot on a Linux live ISO
 * mount the "C" partition (here sda1) : `mount /dev/sda1 /mnt/`
-* backup sethc.exe
-* replace sethc.exe with cmd.exe
+* backup sethc.exe: `cp /mnt/windows/system32/sethc.exe /mnt/windows/system32/sethc.exe_old`
+* replace sethc.exe with cmd.exe: `cp /mnt/windows/system32/cmd.exe /mnt/windows/system32/sethc.exe`
 * reboot on Windows
-* press "Shift" 5 times
-* change the user password for "lol"
+* press "Shift" 5 times, an administration command prompt will open
+* change the user password for "lol": `net user my_user my_new_password`
 * replace the sethc.exe with the original one
 * done !
 
 She was happy, nevertheless the needed program was not on this laptop.
 
-(You can found the manipulations in my notes section)[www.matthieukeller.com/notes/desktop/??]
+(You can found the manipulations in my notes section)[www.matthieukeller.com/notes/desktop/lost_windows_password.md]
