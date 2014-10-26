@@ -1,6 +1,8 @@
 Title:Lost Windows password
 Date: 10-07-2014
 category:desktop
+tags:windows, security, desktop
+meta:plop
 
 Few weeks ago my girlfriend lost her laptop Windows password, I do not have any
 hint about it and of course I am not an other of it (otherwise mimicatz would have been

@@ -1,6 +1,8 @@
 Title:LAMPSecurity: CTF4
 Date:08-29-2014
 Category:CTF
+tags:ctf, security
+meta:plop
 
 I start the LAMPSecurity CTF4 challenge of vulnhub
 [available here](http://vulnhub.com/entry/lampsecurity-ctf4,83/).

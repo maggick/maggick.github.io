@@ -1,6 +1,8 @@
 Title:Blog Start
 Date:08-18-2014
 Category:Blog
+tags:blog
+meta:plop
 
 Today I start my blog using Pelican and hosting it with github pages.
 It is located at [www.matthieukeller.com/blog](http://www.matthieukeller.com/blog).

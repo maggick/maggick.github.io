@@ -1,6 +1,8 @@
 Title:Scam my mother
 Date: 08-19-2014
+tags:scam, security
 category:security
+meta:plop
 
 Today I was confronted to the first telephonic scam of my life.
 

@@ -1,6 +1,8 @@
 Title:ZTE OPEN C et Firefox OS
 Date: 09-15-2014
 category:mobile
+tags:firefox os, open source, mobile phone
+meta:plop
 
 This article concern the ZTE OPEN C and Firefox OS and would be in French.
 
