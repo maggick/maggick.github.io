@@ -46,6 +46,7 @@ DEFAULT_PAGINATION = 10
 #RELATIVE_URLS = True
 
 THEME = "/home/maggick/Documents/pelican-themes/maggner-pelican/"
+STATIC_PATHS = ['images']
 
 # Following items are often useful when publishing
 DISQUS_SITENAME = "matthieukeller"
