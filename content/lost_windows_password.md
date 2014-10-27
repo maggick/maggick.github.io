@@ -5,6 +5,8 @@ tags:windows, security, desktop
 meta:plop
 
 {% img align-left /images/2014.10.passwords.jpg 180 180 Password %}
+Testing pelican summary
+<!-- PELICAN_END_SUMMARY -->
 
 Few weeks ago my girlfriend lost her laptop Windows password, I do not have any
 hint about it and of course I am not an other of it (otherwise mimicatz would have been
