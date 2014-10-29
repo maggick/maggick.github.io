@@ -23,3 +23,10 @@ I will probably use discuss in a first time.
 The default theme of pelican is awful and I will change it in the next few days.
 Hoping that I found one better.
 
+_Edit:_
+
+29 Oct. 2014: I use discuss for the comments and I use the maggner for pelican
+theme. You can read more about the theme in the
+[blog changes](http://www.matthieukeller.com/blog/2014/10/27/blog-changes.html)
+article.
+
