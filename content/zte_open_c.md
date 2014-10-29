@@ -24,17 +24,17 @@ applications équivalentes et ce n'est pas toujours le cas. Suite à la fermetur
 du service « Google reader » j'ai décidé de migré mes services centralisés chez
 Google pour les héberger moi mêmes. J'utilise (après des recherche et des
 comparaisons) « Tiny Tiny RSS » pour mes
-flux RSS, davical pour mes contacts et mes agenda (via un serveur caldav et un
+flux RSS, davical pour mes contacts et mes agendas (via un serveur caldav et un
 serveur carddav) et un serveur de mail auto hébergé pour mes e-mails.
 
 Connaissant la philosophie de la fondation Mozilla je m'attendais à n'avoir
 aucun soucis à trouver des application pour répondre à mes besoins ou même à en
-avoir un soutien natif :
+avoir un support natif :
 
 * cardav, le support de carddav n'est pas encore soutenu par Firefox OS, une
   issue est ouverte sur le [bugtracker de l'OS](https://support.mozilla.org/en-US/kb/adding-calendars-firefox-os)
   à ce propose depuis plus d'un an.
-* caldav, le soutient caldav est natif dans l'application « agenda »de Firefox
+* caldav, le support caldav est natif dans l'application « agenda » de Firefox
   OS malheureusement mon certificat est signé par [cacert](http://cacert.org) et
   ne peut donc pas être utilisé dans l'agenda de Firefox OS.
 * e-mail, mes e-mails étant également hébergés sur ce serveur avec le certificat
@@ -63,5 +63,5 @@ Le ZTE Open C est un téléphone destiné à la base pour les pays en développe
 (d'où son prix ~80 euros) et
 ça ce ressent mais il reste un téléphone simple et léger qui peux constituer un
 bon point d'entré dans le monde des smartphones pour ceux qui n'y sont pas encore
-(enfants, parents, grands-parents)
+(enfants, parents, grands-parents, etc.).
 
