@@ -24,6 +24,7 @@
   - - - -
   * [apache](server/apache.md)
   * [contact & calandar](server/contact_and_calandar.md)
+  * [horde](server/horde.md)
   * [irc](server/irc.md)
   * [mails](server/mails.md)
   * [security](server/security.md)
