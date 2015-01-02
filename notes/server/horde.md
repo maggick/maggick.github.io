@@ -80,4 +80,4 @@ This is all an you should get access to the horde interface.
 The administrator user will have a lot of options one of them is the activation
 of the exchange server.
 
-[http://www.howtoforge.com/install-horde-5-webmail-for-ispconfig-on-debian-wheezy](source)
+[source](http://www.howtoforge.com/install-horde-5-webmail-for-ispconfig-on-debian-wheezy)
