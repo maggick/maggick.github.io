@@ -18,7 +18,7 @@ On the theme directory execute:
   gem install sass
   gem install compass
   (aptitude install / pacman -S / whatever nodejs)
-  npm install grunt
+  npm install grunt-cli grunt
   npm install grunt-contrib-compass
   npm install grunt-contrib-watch
   grunt
