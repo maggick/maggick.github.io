@@ -2,25 +2,39 @@
 # -*- coding: utf-8 -*- #
 from __future__ import unicode_literals
 
-AUTHOR = 'Matthieu Keller'
-SITENAME = "maggick's logs"
+# This file is only used if you use `make publish` or
+# explicitly specify it as your config file.
+
+import os
+import sys
+sys.path.append(os.curdir)
+
+SITEURL = 'http://www.matthieukeller.com/blog/'
+# RELATIVE_URLS = False
+
+# DELETE_OUTPUT_DIRECTORY = True
+
+# Following items are often useful when publishing
+DISQUS_SITENAME = "matthieukeller"
+# GOOGLE_ANALYTICS = ""
+
+AUTHOR = u'Matthieu Keller'
+SITENAME = u"maggick's logs"
 SITEURL = '/blog'
 
+DISPLAY_PAGES_ON_MENU = "True"
 PATH = 'content'
+ARTICLE_EXCLUDES = ('pages',)
+PAGE_URL = 'pages/{slug}.html'
 
 TIMEZONE = 'Europe/Paris'
-DEFAULT_DATE_FORMAT='%d %b %Y'
+DEFAULT_DATE_FORMAT = '%d %b %Y'
 
 DEFAULT_LANG = 'en'
 
-# Feed generation is usually not desired when developing
-FEED_ALL_ATOM = None
-CATEGORY_FEED_ATOM = None
-TRANSLATION_FEED_ATOM = None
-
 # Article
-ARTICLE_URL = '{date:%Y}/{date:%m}/{date:%d}/{slug}.html'
-ARTICLE_SAVE_AS = '{date:%Y}/{date:%m}/{date:%d}/{slug}.html'
+ARTICLE_URL = '{date:%Y}/{date:%m}/{slug}.html'
+ARTICLE_SAVE_AS = '{date:%Y}/{date:%m}/{slug}.html'
 
 # Blogroll
 LINKS = (('Pelican', 'http://getpelican.com/'),
@@ -29,9 +43,9 @@ LINKS = (('Pelican', 'http://getpelican.com/'),
 
 # Social widget
 SOCIAL = (('Github', 'https://github.com/maggick'),
-        ('Twitter', 'https://twitter.com/matthieukeller'),
-        ('Linked In', 'https://linkedin.com/in/matthieukeller')
-        )
+          ('Twitter', 'https://twitter.com/matthieukeller'),
+          ('Linked In', 'https://linkedin.com/in/matthieukeller')
+          )
 
 # Menu
 MENUITEMS = (
@@ -42,20 +56,17 @@ MENUITEMS = (
 
 DEFAULT_PAGINATION = 10
 
-# Uncomment following line if you want document-relative URLs when developing
-#RELATIVE_URLS = True
-
 THEME = "/home/maggick/work/pelican-themes/maggner-pelican/"
 STATIC_PATHS = ['images']
 
 # Following items are often useful when publishing
 DISQUS_SITENAME = "matthieukeller"
-#GOOGLE_ANALYTICS = ""
+# GOOGLE_ANALYTICS = ""
 
 # License
 LICENSE = 'Creative Commons Attribution 4.0'
 LICENSE_URL = 'http://creativecommons.org/licenses/by-sa/4.0/'
-LICENSE_TITLE = 'Share, adapt, use. But mention the author and keep the same license'
+LICENSE_TITLE = 'Share, adapt, use.\
+        But mention the author and keep the same license'
 SOURCE_CODE_URL = 'https://github.com/maggick/blog/'
 SOURCE_CODE_REPOSITORY = 'GitHub'
-
