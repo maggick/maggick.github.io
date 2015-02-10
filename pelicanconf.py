@@ -44,9 +44,11 @@ SOCIAL = (('Github', 'https://github.com/maggick'),
           )
 
 # Menu - NOT WORKING
-  ('Blog', '/'),
-  ('Notes', 'www.matthieukeller.com/notes'),
-)
+MENUITEMS = (
+             ('Portal', 'www.matthieukeller.com'),
+             ('Blog', '/'),
+             ('Notes', 'www.matthieukeller.com/notes'),
+            )
 
 DEFAULT_PAGINATION = 10
 
