@@ -1,16 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*- #
 from __future__ import unicode_literals
-
-# This file is only used if you use `make publish` or
-# explicitly specify it as your config file.
-
 import os
 import sys
 sys.path.append(os.curdir)
 
 SITEURL = 'http://www.matthieukeller.com/blog/'
-# RELATIVE_URLS = False
+RELATIVE_URLS = False
 
 # DELETE_OUTPUT_DIRECTORY = True
 
@@ -40,7 +36,10 @@ LINKS = (('Pelican', 'http://getpelican.com/'),
 # Social widget
 SOCIAL = (('Github', 'https://github.com/maggick'),
           ('Twitter', 'https://twitter.com/matthieukeller'),
-          ('Linked In', 'https://linkedin.com/in/matthieukeller')
+          ('Linked In', 'https://linkedin.com/in/matthieukeller'),
+          ('RSS / ATOM feed',
+           'http://www.matthieukeller.com/blog/feeds/all.atom.xml'),
+          ('Notes', 'www.matthieukeller.com/notes'),
           )
 
 # Menu - NOT WORKING
