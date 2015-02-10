@@ -12,8 +12,8 @@ sys.path.append(os.curdir)
 SITEURL = 'http://www.matthieukeller.com/blog/'
 # RELATIVE_URLS = False
 
-FEED_DOMAIN = SITEURL
 FEED_ATOM = 'feeds/all.atom.xml'
+FEED_MAX_ITEMS = 5
 
 # DELETE_OUTPUT_DIRECTORY = True
 
@@ -21,11 +21,14 @@ FEED_ATOM = 'feeds/all.atom.xml'
 DISQUS_SITENAME = "matthieukeller"
 # GOOGLE_ANALYTICS = ""
 
-AUTHOR = 'Matthieu Keller'
-SITENAME = "maggick's logs"
+AUTHOR = u'Matthieu Keller'
+SITENAME = u"maggick's logs"
 SITEURL = '/blog'
 
+DISPLAY_PAGES_ON_MENU = "True"
 PATH = 'content'
+ARTICLE_EXCLUDES = ('pages',)
+PAGE_URL = 'pages/{slug}.html'
 
 TIMEZONE = 'Europe/Paris'
 DEFAULT_DATE_FORMAT = '%d %b %Y'
@@ -33,8 +36,8 @@ DEFAULT_DATE_FORMAT = '%d %b %Y'
 DEFAULT_LANG = 'en'
 
 # Article
-ARTICLE_URL = '{date:%Y}/{date:%m}/{date:%d}/{slug}.html'
-ARTICLE_SAVE_AS = '{date:%Y}/{date:%m}/{date:%d}/{slug}.html'
+ARTICLE_URL = '{date:%Y}/{date:%m}/{slug}.html'
+ARTICLE_SAVE_AS = '{date:%Y}/{date:%m}/{slug}.html'
 
 # Blogroll
 LINKS = (('Pelican', 'http://getpelican.com/'),
