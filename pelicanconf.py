@@ -14,16 +14,12 @@ SITEURL = 'http://www.matthieukeller.com/blog/'
 
 # DELETE_OUTPUT_DIRECTORY = True
 
-# Following items are often useful when publishing
-DISQUS_SITENAME = "matthieukeller"
-# GOOGLE_ANALYTICS = ""
-
 AUTHOR = u'Matthieu Keller'
 SITENAME = u"maggick's logs"
 SITEURL = '/blog'
 
-DISPLAY_PAGES_ON_MENU = "True"
 PATH = 'content'
+DISPLAY_PAGES_ON_MENU = "True"
 ARTICLE_EXCLUDES = ('pages',)
 PAGE_URL = 'pages/{slug}.html'
 
@@ -47,9 +43,7 @@ SOCIAL = (('Github', 'https://github.com/maggick'),
           ('Linked In', 'https://linkedin.com/in/matthieukeller')
           )
 
-# Menu
-MENUITEMS = (
-  ('Portal', 'www.matthieukeller.com'),
+# Menu - NOT WORKING
   ('Blog', '/'),
   ('Notes', 'www.matthieukeller.com/notes'),
 )
@@ -59,7 +53,7 @@ DEFAULT_PAGINATION = 10
 THEME = "/home/maggick/work/pelican-themes/maggner-pelican/"
 STATIC_PATHS = ['images']
 
-# Following items are often useful when publishing
+# Third party
 DISQUS_SITENAME = "matthieukeller"
 # GOOGLE_ANALYTICS = ""
 
