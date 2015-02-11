@@ -5,7 +5,7 @@ import os
 import sys
 sys.path.append(os.curdir)
 
-SITEURL = 'http://www.matthieukeller.com/blog/'
+SITEURL = 'http://www.matthieukeller.com/blog'
 RELATIVE_URLS = False
 
 # DELETE_OUTPUT_DIRECTORY = True
@@ -36,16 +36,15 @@ LINKS = (('Pelican', 'http://getpelican.com/'),
 SOCIAL = (('Github', 'https://github.com/maggick'),
           ('Twitter', 'https://twitter.com/matthieukeller'),
           ('Linked In', 'https://linkedin.com/in/matthieukeller'),
-          ('RSS / ATOM feed',
-           'http://www.matthieukeller.com/blog/feeds/all.atom.xml'),
-          ('Notes', 'www.matthieukeller.com/notes'),
           )
 
-# Menu - NOT WORKING
+# Menu
 MENUITEMS = (
-             ('Portal', 'www.matthieukeller.com'),
-             ('Blog', '/'),
-             ('Notes', 'www.matthieukeller.com/notes'),
+             ('Portal', 'http://www.matthieukeller.com'),
+             ('Blog', '/blog'),
+             ('Notes', 'https://www.matthieukeller.com/notes'),
+             ('RSS / ATOM feed',
+              'http://www.matthieukeller.com/blog/feeds/all.atom.xml'),
             )
 
 DEFAULT_PAGINATION = 10
