@@ -37,7 +37,7 @@ SOCIAL = (('Github', 'https://github.com/maggick'),
 MENUITEMS = (
              ('Portal', 'http://www.matthieukeller.com'),
              ('Blog', '/blog'),
-             ('Notes', 'https://www.matthieukeller.com/notes'),
+             ('Notes', 'http://www.matthieukeller.com/notes'),
              ('RSS / ATOM feed',
               'http://www.matthieukeller.com/blog/feeds/all.atom.xml'),
             )
