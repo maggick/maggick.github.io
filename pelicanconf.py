@@ -27,11 +27,6 @@ DEFAULT_LANG = 'en'
 ARTICLE_URL = '{date:%Y}/{date:%m}/{slug}.html'
 ARTICLE_SAVE_AS = '{date:%Y}/{date:%m}/{slug}.html'
 
-# Blogroll
-LINKS = (('Pelican', 'http://getpelican.com/'),
-         ('Python.org', 'http://python.org/'),
-         ('Jinja2', 'http://jinja.pocoo.org/'),)
-
 # Social widget
 SOCIAL = (('Github', 'https://github.com/maggick'),
           ('Twitter', 'https://twitter.com/matthieukeller'),
