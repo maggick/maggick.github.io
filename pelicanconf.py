@@ -12,7 +12,6 @@ RELATIVE_URLS = False
 
 AUTHOR = u'Matthieu Keller'
 SITENAME = u"maggick's logs"
-SITEURL = '/blog'
 
 PATH = 'content'
 DISPLAY_PAGES_ON_MENU = "True"
