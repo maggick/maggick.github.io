@@ -27,18 +27,22 @@ DEFAULT_LANG = 'en'
 ARTICLE_URL = '{date:%Y}/{date:%m}/{slug}.html'
 ARTICLE_SAVE_AS = '{date:%Y}/{date:%m}/{slug}.html'
 
+# Social
 # Social widget
 SOCIAL = (('Github', 'https://github.com/maggick'),
           ('Twitter', 'https://twitter.com/matthieukeller'),
           ('Linked In', 'https://linkedin.com/in/matthieukeller'),
           )
+# Social button
+TWITTER_USERNAME = 'matthieukeller'
+GOOGLE_PLUS = '1'
 
 # Menu
 MENUITEMS = (
              ('Portal', '/'),
              ('Blog', '/blog'),
              ('Notes', '/notes'),
-             ('Archives', '/blog/archives'
+             ('Archives', '/blog/archives'),
              ('Feed', '/blog/feeds/all.atom.xml'),
             )
 
