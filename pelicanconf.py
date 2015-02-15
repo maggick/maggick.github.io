@@ -35,11 +35,11 @@ SOCIAL = (('Github', 'https://github.com/maggick'),
 
 # Menu
 MENUITEMS = (
-             ('Portal', 'http://www.matthieukeller.com'),
+             ('Portal', '/'),
              ('Blog', '/blog'),
-             ('Notes', 'http://www.matthieukeller.com/notes'),
-             ('RSS / ATOM feed',
-              'http://www.matthieukeller.com/blog/feeds/all.atom.xml'),
+             ('Notes', '/notes'),
+             ('Archives', '/blog/archives'
+             ('Feed', '/blog/feeds/all.atom.xml'),
             )
 
 DEFAULT_PAGINATION = 10
