@@ -5,7 +5,7 @@ import os
 import sys
 sys.path.append(os.curdir)
 
-SITEURL = 'http://www.matthieukeller.com/blog/'
+SITEURL = 'http://www.matthieukeller.com/blog'
 RELATIVE_URLS = False
 
 # DELETE_OUTPUT_DIRECTORY = True
@@ -27,25 +27,23 @@ DEFAULT_LANG = 'en'
 ARTICLE_URL = '{date:%Y}/{date:%m}/{slug}.html'
 ARTICLE_SAVE_AS = '{date:%Y}/{date:%m}/{slug}.html'
 
-# Blogroll
-LINKS = (('Pelican', 'http://getpelican.com/'),
-         ('Python.org', 'http://python.org/'),
-         ('Jinja2', 'http://jinja.pocoo.org/'),)
-
+# Social
 # Social widget
 SOCIAL = (('Github', 'https://github.com/maggick'),
           ('Twitter', 'https://twitter.com/matthieukeller'),
           ('Linked In', 'https://linkedin.com/in/matthieukeller'),
-          ('RSS / ATOM feed',
-           'http://www.matthieukeller.com/blog/feeds/all.atom.xml'),
-          ('Notes', 'www.matthieukeller.com/notes'),
           )
+# Social button
+TWITTER_USERNAME = 'matthieukeller'
+GOOGLE_PLUS = '1'
 
-# Menu - NOT WORKING
+# Menu
 MENUITEMS = (
-             ('Portal', 'www.matthieukeller.com'),
-             ('Blog', '/'),
-             ('Notes', 'www.matthieukeller.com/notes'),
+             ('Portal', '/'),
+             ('Blog', '/blog'),
+             ('Notes', '/notes'),
+             ('Archives', '/blog/archives'),
+             ('Feed', '/blog/feeds/all.atom.xml'),
             )
 
 DEFAULT_PAGINATION = 10
