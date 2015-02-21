@@ -1,10 +1,7 @@
 # maggick
 
-[About]()
-  - - - -
-  * [me](about/me.md)
-  * [website](about/website.md)
-  * [personnal security](about/personnal_security.md)
+[Portal](www.matthieukeller.com)
+[Blog](www.matthieukeller.com/blog)
 
 [Boards]()
   - - - -
@@ -14,11 +11,8 @@
 
 [Programming]()
   - - - -
-  * [project Euler](programming/euler.md)
   * [git](programming/git.md)
-  * [Huffman](programming/huffman.md)
   * [markdown](programming/markdown.md)
-  * [cryptography](programming/crypto.md)
 
 [Server]()
   - - - -
