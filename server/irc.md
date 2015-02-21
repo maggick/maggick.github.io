@@ -3,9 +3,9 @@
 Internet Chat Relay, is a protocol for live interactive Internet text messaging (chat).
 It necessitate a client.
 
-## wee-chat
+## weechat
 
-Personally I use [wee-chat](http://www.weechat.org/) and here some notes about
+Personally I use [weechat](http://www.weechat.org/) and here some notes about
 it:
 
 ### Connect to an SSL server without checking certificat
