@@ -4,10 +4,10 @@ This blog is:
   * publish with [Pelican] (http://blog.getpelican.com) a static blog generator
   * hosted by [github](https://github.com) with github pages
 
-I use [ghp-import](https://github.com/davisp/ghp-import) to publish the content on the
-site with the gh-pages branch of the blog project:
+I use [ghp-import](https://github.com/davisp/ghp-import) to publish the content
+of the blog on my github user pages:
 
-  pelican && ghp-import output && git push origin gh-pages
+  pelican && ghp-import output && git push git@github.com:maggick/maggick.github.io.git gh-pages:master
 
 The theme is based on Maggner theme, created by Templateify and adapted to
 pelican by [Klaus Laube](https://github.com/kplaube/maggner-pelican).
@@ -24,4 +24,3 @@ On the theme directory execute:
   grunt
 
 This commands will deploy an environment where you can use the theme.
-
