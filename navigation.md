@@ -1,7 +1,6 @@
 # maggick
 
-[Portal](http://www.matthieukeller.com)
-[Blog](http://www.matthieukeller.com/blog)
+[Blog](http://www.matthieukeller.com)
 
 [Boards]()
   - - - -
