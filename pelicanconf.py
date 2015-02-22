@@ -5,7 +5,7 @@ import os
 import sys
 sys.path.append(os.curdir)
 
-SITEURL = 'http://www.matthieukeller.com/blog'
+SITEURL = 'http://www.matthieukeller.com'
 RELATIVE_URLS = False
 
 # DELETE_OUTPUT_DIRECTORY = True
@@ -39,16 +39,16 @@ GOOGLE_PLUS = '1'
 
 # Menu
 MENUITEMS = (
-             ('Portal', '/'),
              ('Notes', '/notes'),
-             ('Archives', '/blog/archives'),
-             ('Feed', '/blog/feeds/all.atom.xml'),
+             ('Archives', '/archives'),
+             ('Feed', '/feeds/all.atom.xml'),
             )
 
 DEFAULT_PAGINATION = 10
 
 THEME = "/home/maggick/work/pelican-themes/maggner-pelican/"
-STATIC_PATHS = ['images']
+STATIC_PATHS = ['images', 'extra/CNAME']
+EXTRA_PATH_METADATA = {'extra/CNAME': {'path': 'CNAME'},}
 
 # Third party
 DISQUS_SITENAME = "matthieukeller"
