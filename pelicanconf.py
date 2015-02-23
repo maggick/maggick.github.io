@@ -27,6 +27,10 @@ DEFAULT_LANG = 'en'
 ARTICLE_URL = '{date:%Y}/{date:%m}/{slug}.html'
 ARTICLE_SAVE_AS = '{date:%Y}/{date:%m}/{slug}.html'
 
+# Plugins
+PLUGIN_PATHS = ['/home/maggick/work/pelican-plugins/']
+PLUGINS = ['summary']
+
 # Social
 # Social widget
 SOCIAL = (('Github', 'https://github.com/maggick'),
