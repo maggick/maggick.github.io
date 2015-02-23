@@ -2,8 +2,9 @@ Title:Compiling cmus for cygwin
 Date: 01-21-2015
 category:programming
 tags:cygwin,cmus
-meta:plop
+meta:How to compile cmus for cygwin (Windows)
 
+<img style="float: left" src="images/2015.01.cmus.png" alt="cmus" width="302">
 I work on a windows machine for my dally job.
 On my personal desktop I use Arch Linux and i3 therefore my music player is in
 curses and does not need any mouse. In fact I use
@@ -12,6 +13,7 @@ curses and does not need any mouse. In fact I use
 [cmus](https://cmus.github.io/) on Windows in [cygwin](https://www.cygwin.com/).
 
 For that we need to compile [cmus](https://cmus.github.io/) from sources.
+<!-- PELICAN_END_SUMMARY -->
 
 It is really easy, you just need to download the `tar.gz` archive, untar it, and
 run :
