@@ -22,14 +22,12 @@ in summer 2012. I used it on irc on github and on some forums.
 You can contact me via [Twitter](http://twitter.com/matthieukeller)
 or [GitHub](http://github.com/maggick).
 
-## Resume
-
-Todo :D
-
 # About This Website
 
-This website is hosted at [maggick.github.com](http://maggick.github.com) and is
-generated with [MDwiki](http://dynalon.github.io/mdwiki/#!index.md).
+This website is hosted at [maggick.github.com](http://maggick.github.com) and
+is redirected to [www.matthieukeller.com](http://www.matthieukeller.com). The
+website is composed of two part : the blog and the notes. You can see the
+"Technically" part to see how I managed both of them.
 
 ## History
 
@@ -55,18 +53,22 @@ This is the fifth version of this website :
   The site is entirely static.
 * The fourth version was not far from this one but it was long to make a small
   correction on a page (a spell correction for instance). I had to re-build the
-  entire website and it was not autmoaticly done.
+  entire website and it was not automatically done.
 
 ## Technically
 
-I use the [MDwiki](http://dynalon.github.io/mdwiki/#!index.md) CMS in order to
-directly generate HTML pages from the markdown files. This build is done in
-javascript, meaning the work is totaly deported on the client side.
-Moreover I use [github pages](http://pages.github.com/) to host my website. This
-mean that every push to my github repository will lead to a direct update of the
-website !
+### Blog
 
-## License
+The blog part is build with [Pelican](http://blog.getpelican.com/) and each
+commit are pushed to my
+[blog repository](https://github.com/maggick/blog) and the build is pushed to my
+[maggick.github.io](http://github.com/maggick/maggick.github.io) repository.
 
-This site is licensed under [WTFPL](http://www.wtfpl.net).
+### Notes
 
+For this notebook part I use the
+[MDwiki](http://dynalon.github.io/mdwiki/#!index.md) CMS in order to directly
+generate HTML pages from the markdown files. This build is done in javascript,
+meaning the work is totally deported on the client side.  Moreover I use
+[github pages](http://pages.github.com/) to host my website. This mean that
+every push to my github repository will lead to a direct update of the website !
