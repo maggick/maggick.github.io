@@ -4,7 +4,7 @@ category:programming
 tags:cygwin,cmus
 meta:How to compile cmus for cygwin (Windows)
 
-<img style="float: left" src="images/2015.01.cmus.png" alt="cmus" width="302">
+<img class="align-left"" src="/images/2015.01.cmus.png" alt="cmus" width="342">
 I work on a windows machine for my dally job.
 On my personal desktop I use Arch Linux and i3 therefore my music player is in
 curses and does not need any mouse. In fact I use
