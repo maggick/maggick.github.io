@@ -15,12 +15,12 @@ To use it a little preparation is necessary:
 
 On the theme directory execute:
 
-  gem install sass
-  gem install compass
-  (aptitude install / pacman -S / whatever nodejs)
-  npm install grunt-cli grunt
-  npm install grunt-contrib-compass
-  npm install grunt-contrib-watch
-  grunt
+    gem install sass
+    gem install compass
+    (aptitude install / pacman -S / whatever nodejs)
+    npm install grunt-cli grunt
+    npm install grunt-contrib-compass
+    npm install grunt-contrib-watch
+    grunt
 
 This commands will deploy an environment where you can use the theme.
