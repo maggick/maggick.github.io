@@ -30,6 +30,7 @@ ARTICLE_SAVE_AS = '{date:%Y}/{date:%m}/{slug}.html'
 # Plugins
 PLUGIN_PATHS = ['/home/maggick/work/pelican-plugins/']
 PLUGINS = ['summary']
+MD_EXTENSIONS = ['codehilite(css_class=highlight)','extra','toc']
 
 # Social
 # Social widget
