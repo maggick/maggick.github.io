@@ -1,3 +1,6 @@
+Title: tmux trick
+Status: hidden
+
 # How to synchronize tmux splits
 
 When you have multiple servers on multiple splits of your tmux,

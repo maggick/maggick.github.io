@@ -1,3 +1,6 @@
+Title: Mails
+Status: hidden
+
 #Mail
 
 When I start to install my own mail server to never be dependent of a service

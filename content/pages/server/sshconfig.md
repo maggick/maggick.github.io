@@ -1,3 +1,6 @@
+Title: SSH config
+Status: hidden
+
 # SSH Config file
 
 SSH Config file can be simply life a lot.

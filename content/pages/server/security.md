@@ -1,8 +1,8 @@
-# Security
+Title: Security
+Status: hidden
 
 On a server security is really important.
 Some simple change can make a great gain in security.
-
 
 ## ssh
 

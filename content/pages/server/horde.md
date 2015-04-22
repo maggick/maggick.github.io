@@ -1,3 +1,6 @@
+Title: Horde
+Status: hidden
+
 # Horde
 
 Horde is a all in one webmail, managing e-mails, calendars, contacts, notes and

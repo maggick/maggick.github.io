@@ -1,3 +1,6 @@
+Title: Lost Windows password
+Status: hidden
+
 # Recover lost Windows password
 
 If you append to "loose" your windows password. Here is a simple trick to reset

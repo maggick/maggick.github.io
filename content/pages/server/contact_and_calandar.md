@@ -1,4 +1,5 @@
-# Contact and calandar
+Title: Contact and calendar
+Status: Hidden
 
 ## Install
 

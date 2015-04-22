@@ -1,3 +1,6 @@
+Title: Restore USB key
+Status: hidden
+
 # Restore an USB key
 
 After using an USB drive to install a new OS (arch, debian, whatever)
