@@ -1,3 +1,6 @@
+Title: Restore grub
+Status: hidden
+
 # How to restore grub
 
 When you use dual boot computer there is a risk that reinstalling windows

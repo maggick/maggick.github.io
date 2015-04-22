@@ -1,3 +1,6 @@
+Title: Apache trick
+Status: hidden
+
 # Apache
 The recent update (August 2013) to apache 2.4.6 broke some permissions
 and my pages accessible by Alias where Forbidden.

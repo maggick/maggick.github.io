@@ -1,4 +1,5 @@
-# IRC
+Title: irc tricks
+Status: hidden
 
 Internet Chat Relay, is a protocol for live interactive Internet text messaging (chat).
 It necessitate a client.

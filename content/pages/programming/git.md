@@ -1,3 +1,6 @@
+Title: git tricks
+Status: hidden
+
 # Git
 
 ## Presentation
