@@ -44,7 +44,6 @@ GOOGLE_PLUS = '1'
 
 # Menu
 MENUITEMS = (
-             ('Notes', '/notes'),
              ('Archives', '/archives'),
              ('Feed', '/feeds/all.atom.xml'),
             )
