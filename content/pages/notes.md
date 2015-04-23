@@ -11,7 +11,7 @@ This are my notes previously available at www.matthieukeller.com/notes.
 ## Server
 
   * [apache trick](/pages/apache-trick.html)
-  * [contact & calandar](/pages/contact-and-calandar.html)
+  * [contact & calendar](/pages/contact-and-calendar.html)
   * [horde](/pages/horde.html)
   * [irc tricks](/pages/irc-tricks.html)
   * [mails](/pages/mails.html)
