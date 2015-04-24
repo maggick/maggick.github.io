@@ -26,6 +26,7 @@ DEFAULT_LANG = 'en'
 # Article
 ARTICLE_URL = '{date:%Y}/{date:%m}/{slug}.html'
 ARTICLE_SAVE_AS = '{date:%Y}/{date:%m}/{slug}.html'
+DISPLAY_CATEGORIES_ON_MENU = True
 
 # Plugins
 PLUGIN_PATHS = ['/home/maggick/work/pelican-plugins/']
