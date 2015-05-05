@@ -16,6 +16,7 @@ Status: hidden
   * radare2 https://github.com/radare/radare2
   * volatility https://github.com/volatilityfoundation/volatility
   * net-creds https://github.com/DanMcInerney/net-creds
+  * crunch a password list generator
 
 ## Firefox
 
