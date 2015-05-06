@@ -35,9 +35,9 @@ MD_EXTENSIONS = ['codehilite(css_class=highlight)','extra','toc']
 
 # Social
 # Social widget
-SOCIAL = (('Github', 'https://github.com/maggick'),
-          ('Twitter', 'https://twitter.com/matthieukeller'),
-          ('Linked In', 'https://linkedin.com/in/matthieukeller'),
+SOCIAL = (('github', 'https://github.com/maggick'),
+          ('twitter', 'https://twitter.com/matthieukeller'),
+          ('linkedin', 'https://linkedin.com/in/matthieukeller'),
           )
 # Social button
 TWITTER_USERNAME = 'matthieukeller'
