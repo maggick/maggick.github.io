@@ -3,7 +3,7 @@ Status: hidden
 
 ## 2015
 
-* semi marathon d'Anthony -08.03.2015 : 2h06m14s (**PR**)
+* semi marathon d'Anthony - 08.03.2015 : 2h06m14s (**PR**)
 
 ## 2013
 
