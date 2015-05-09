@@ -4,7 +4,7 @@ Status: hidden
 ## security
 
   * [nikto](https://cirt.net/nikto2) an Open Source server scanner
-  * [dirbuster]()a multi threaded java application designed to brute force directories and files names on web/application servers
+  * [dirbuster](https://www.owasp.org/index.php/Category:OWASP_DirBuster_Project) a multi threaded java application designed to brute force directories and files names on web/application servers
   * [nmap](https://nmap.org/) an open source utility for network discovery and security auditing
   * [sqlmap](http://sqlmap.org/) an open source penetration testing tool that automates the process of detecting and exploiting SQL injection flaws
   * [sqlninja](http://sqlninja.sourceforge.net/) a SQL Server injection & takeover tool
