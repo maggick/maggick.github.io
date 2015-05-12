@@ -1,6 +1,8 @@
 Title: Tools
 Status: hidden
 
+This is my list of tools.
+
 ## security
 
   * [nikto](https://cirt.net/nikto2) an Open Source server scanner
@@ -11,25 +13,28 @@ Status: hidden
   * [wireshark](https://www.wireshark.org/) the world's foremost network protocol analyzer
   * [burp suite](http://portswigger.net/burp/) an integrated platform for performing security testing of web applications
   * [john the ripper](http://www.openwall.com/john/) a fast password cracker
-  * [hashcat](http://hashcat.net) advanced password recovery
-  * [mimicatz](http://blog.gentilkiwi.com/mimikatz) A little tool to play with Windows security
+  * [hashcat](http://hashcat.net) an advanced password recovery
+  * [mimicatz](http://blog.gentilkiwi.com/mimikatz) a little tool to play with Windows security
   * [wpscan](http://wpscan.org/) a black box WordPress vulnerability scanner
-  * [radare2](http://www.radare.org/r/) unix-like reverse engineering framework and commandline tools
-  * [volatility](http://www.volatilityfoundation.org/) An advanced memory forensics framework
+  * [radare2](http://www.radare.org/r/) an unix-like reverse engineering framework and commandline tools
+  * [volatility](http://www.volatilityfoundation.org/) an advanced memory forensics framework
   * [net-creds](https://github.com/DanMcInerney/net-creds)
   * [crunch](http://crunch-wordlist.sourceforge.net/) a password list generator
 
 ## Firefox
 
-  * firebug
-  * foxyproxy
+  * [firebug](https://addons.mozilla.org/en-US/firefox/addon/firebug/) a wealth of development tools
+  * [foxyproxy](https://addons.mozilla.org/en-US/firefox/addon/foxyproxy-standard/) an advanced proxy management tool
 
 ## tools for linux
 
-  * tree
-  * htop
+  * [vim](http://www.vim.org/) a highly configurable text editor
+  * [tree](http://mama.indstate.edu/users/ice/tree/) sniffs sensitive data from interface or pcap
+  * [htop](http://hisham.hm/htop/) an interactive process viewer for Linux
   * [ncdu](http://dev.yorhel.nl/ncdu) a disk usage analyzer with an ncurses interface
-  * [nevernote](http://nevernote.sourceforge.net/) This is an open source clone of Evernote
+  * [pacgraph](http://kmkeen.com/pacgraph/) draws a pretty picture of your installed packages
+  * [evince](https://wiki.gnome.org/Apps/Evince) a document viewer for multiple document formats
+  * [nevernote](http://nevernote.sourceforge.net/) an open source clone of Evernote
 
 ## i3
 
