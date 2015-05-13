@@ -8,9 +8,9 @@ Status: hidden
 ## 2013
 
 * Mud day - 21.09.2013: No time record
-* les 10km de Paris l'équipe - 12.06.2013: 52m26s (**PR**)
-* semi marathon d'Anthony - 24.03.2013: 2h07m16s
-* les 10km de Malakoff - 26.02.2013: 57m21s
+* les 10km de Paris l'équipe - 23.06.2013: 52m26s (**PR** | [strava](https://www.strava.com/activities/304020954))
+* semi marathon d'Anthony - 24.03.2013: 2h07m16s ([strava](https://www.strava.com/activities/304018173))
+* les 10km de Malakoff - 16.02.2013: 57m21s ([strava](https://www.strava.com/activities/304016904))
 
 *PR: Personal Record*
 
