@@ -26,7 +26,7 @@ This is my list of tools.
   * [firebug](https://addons.mozilla.org/en-US/firefox/addon/firebug/) a wealth of development tools
   * [foxyproxy](https://addons.mozilla.org/en-US/firefox/addon/foxyproxy-standard/) an advanced proxy management tool
 
-## tools for linux
+## tools for linux and i3
 
   * [vim](http://www.vim.org/) a highly configurable text editor
   * [tree](http://mama.indstate.edu/users/ice/tree/) sniffs sensitive data from interface or pcap
@@ -34,10 +34,7 @@ This is my list of tools.
   * [ncdu](http://dev.yorhel.nl/ncdu) a disk usage analyzer with an ncurses interface
   * [pacgraph](http://kmkeen.com/pacgraph/) draws a pretty picture of your installed packages
   * [evince](https://wiki.gnome.org/Apps/Evince) a document viewer for multiple document formats
-  * [nevernote](http://nevernote.sourceforge.net/) an open source clone of Evernote
-
-## i3
-
   * [feh](http://feh.finalrewind.org/) an X11 image viewer aimed mostly at console users
   * [cmus](https://cmus.github.io/) is a small, fast and powerful console music player
   * [vlc](http://www.videolan.org/) a free and open source cross-platform multimedia player
+  * [nevernote](http://nevernote.sourceforge.net/) an open source clone of Evernote
