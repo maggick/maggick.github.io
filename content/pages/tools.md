@@ -28,7 +28,10 @@ This is my list of tools.
 
 ## tools for linux and i3
 
-  * [vim](http://www.vim.org/) a highly configurable text editor
+  * [i3](https://i3wm.org/) a tiling window manager, see
+    [my config on github](https://github.com/maggick/dotfiles/tree/master/i3)
+  * [vim](http://www.vim.org/) a highly configurable text editor, see
+    [my config on github](https://github.com/maggick/dotfiles/blob/master/vimrc)
   * [git](http://git-scm.com/) a distributed version control system
   * [tig](http://jonas.nitro.dk/tig/) an ncurses-based text-mode interface for git
   * [tree](http://mama.indstate.edu/users/ice/tree/) sniffs sensitive data from interface or pcap
