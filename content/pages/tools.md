@@ -18,7 +18,7 @@ This is my list of tools.
   * [wpscan](http://wpscan.org/) a black box WordPress vulnerability scanner
   * [radare2](http://www.radare.org/r/) an unix-like reverse engineering framework and commandline tools
   * [volatility](http://www.volatilityfoundation.org/) an advanced memory forensics framework
-  * [net-creds](https://github.com/DanMcInerney/net-creds)
+  * [net-creds](https://github.com/DanMcInerney/net-creds) a pcap sniffer
   * [crunch](http://crunch-wordlist.sourceforge.net/) a password list generator
 
 ## Firefox
@@ -29,6 +29,8 @@ This is my list of tools.
 ## tools for linux and i3
 
   * [vim](http://www.vim.org/) a highly configurable text editor
+  * [git](http://git-scm.com/) a distributed version control system
+  * [tig](http://jonas.nitro.dk/tig/) an ncurses-based text-mode interface for git
   * [tree](http://mama.indstate.edu/users/ice/tree/) sniffs sensitive data from interface or pcap
   * [htop](http://hisham.hm/htop/) an interactive process viewer for Linux
   * [ncdu](http://dev.yorhel.nl/ncdu) a disk usage analyzer with an ncurses interface
