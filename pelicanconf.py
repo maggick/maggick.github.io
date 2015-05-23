@@ -58,7 +58,7 @@ FAVICON_URL = "%s/media/favicon.ico" % SITEURL
 
 # Third party
 DISQUS_SITENAME = "matthieukeller"
-# GOOGLE_ANALYTICS = ""
+GOOGLE_ANALYTICS = "UA-63314567-1"
 
 # License
 LICENSE = 'Creative Commons Attribution 4.0'
