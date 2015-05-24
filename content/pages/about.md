@@ -14,8 +14,17 @@ Actually my servers run on Debian and my desktops run on Arch Linux.
 I used maggick as a pseudo. This was given to me by my colleagues at Bearstech
 in summer 2012. I used it on irc on github and on some forums.
 
+## Sport
+
+I regularly run and swim. I make myself a ["Palmares" page](/page/palmares.md)
+where I keep track of my races.
+
 ## Contact
 
 You can contact me via [Twitter](http://twitter.com/matthieukeller)
 or [GitHub](http://github.com/maggick).
+
+# Other about page
+
+* [about this website](/pages/about_website.md)
 
