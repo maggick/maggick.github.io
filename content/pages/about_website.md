@@ -44,3 +44,10 @@ and each commit are pushed to my
 [maggick.github.io](http://github.com/maggick/maggick.github.io) repository.
 The articles and notes are redacted in markdown.
 
+### Visual
+
+The theme is based on Maggner theme, created by
+[Templateify](http://www.templateify.com/) and adapted to
+pelican by [Klaus Laube](https://github.com/kplaube/maggner-pelican) with
+my personal modifications in
+[a fork of the project](https://github.com/maggick/maggner-pelican).
