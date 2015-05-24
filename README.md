@@ -18,7 +18,8 @@ of the blog on my github user pages with a dedicated repository:
 
 ## Theme
 
-The theme is based on Maggner theme, created by Templateify and adapted to
+The theme is based on Maggner theme, created by
+[Templateify](http://www.templateify.com/) and adapted to
 pelican by [Klaus Laube](https://github.com/kplaube/maggner-pelican) with
 my personal modifications in
 [a fork of the project](https://github.com/maggick/maggner-pelican).
