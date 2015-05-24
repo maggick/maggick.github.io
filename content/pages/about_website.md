@@ -26,7 +26,7 @@ This is the fifth version of this website :
   my usual data.
 * With this version, I write pages in [Markdown format](https://github.com/github/markup#readme)
   directly on my computer with my favorite text editor, commit them on GitHub and finally put them on the server.
-  There is no more database (meaning no more commentary, see the [About Me section](/about/me/##contact) for contact).
+  There is no more database (meaning no more commentary, see the [About Me section](/about.html#contact) for contact).
   The site is entirely static.
 * The fourth version was not far from this one but it was long to make a small
   correction on a page (a spell correction for instance). I had to re-build the
