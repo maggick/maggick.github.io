@@ -1,31 +1,10 @@
-Title: About
-Date: 2015-02-16 20:40
-
-# About Me
-
-I am a security consultant.
-
-## Open Source
-
-I am an Open Source enthusiast. I discover this world in September 2009. My
-first GNU/Linux installation was an Ubuntu 10.04 Lucid Linx in June 2010. So on
-I always have a GNU/Linux distribution installed on my computer or my servers.
-Actually my servers run on Debian and my desktops run on Arch Linux.
-
-## maggick
-
-I used maggick as a pseudo. This was given to me by my colleagues at Bearstech
-in summer 2012. I used it on irc on github and on some forums.
-
-## Contact
-
-You can contact me via [Twitter](http://twitter.com/matthieukeller)
-or [GitHub](http://github.com/maggick).
+Title: About This website
+Status: Hidden
 
 # About This Website
 
 This website is hosted at [maggick.github.com](http://maggick.github.com) and
-is redirected to [www.matthieukeller.com](http://www.matthieukeller.com). The
+is redirected to [matthieukeller.com](http://matthieukeller.com). The
 website is composed of two part : the blog and the notes. You can see the
 "Technically" part to see how I managed both of them.
 
@@ -57,18 +36,11 @@ This is the fifth version of this website :
 
 ## Technically
 
-### Blog
+### Content
 
-The blog part is build with [Pelican](http://blog.getpelican.com/) and each
-commit are pushed to my
+The blog and the notes parts are build with [Pelican](http://blog.getpelican.com/)
+and each commit are pushed to my
 [blog repository](https://github.com/maggick/blog) and the build is pushed to my
 [maggick.github.io](http://github.com/maggick/maggick.github.io) repository.
+The articles and notes are redacted in markdown.
 
-### Notes
-
-For this notebook part I use the
-[MDwiki](http://dynalon.github.io/mdwiki/#!index.md) CMS in order to directly
-generate HTML pages from the markdown files. This build is done in javascript,
-meaning the work is totally deported on the client side.  Moreover I use
-[github pages](http://pages.github.com/) to host my website. This mean that
-every push to my github repository will lead to a direct update of the website !
