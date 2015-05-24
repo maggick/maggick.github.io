@@ -46,8 +46,8 @@ GOOGLE_PLUS = '1'
 
 # Menu
 MENUITEMS = (
-             ('Archives', '/archives'),
-             ('Feed', '/feeds/all.atom.xml'),
+             ('archives', '/archives'),
+             ('feeds', '/feeds/all.atom.xml'),
             )
 
 DEFAULT_PAGINATION = 10
