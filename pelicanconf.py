@@ -38,6 +38,7 @@ MD_EXTENSIONS = ['codehilite(css_class=highlight)','extra','toc']
 SOCIAL = (('github', 'https://github.com/maggick'),
           ('twitter', 'https://twitter.com/matthieukeller'),
           ('linkedin', 'https://linkedin.com/in/matthieukeller'),
+          ('stackoverflow', 'http://stackoverflow.com/users/1827067/maggick'),
           )
 # Social button
 TWITTER_USERNAME = 'matthieukeller'
