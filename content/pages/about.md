@@ -21,8 +21,12 @@ where I keep track of my races.
 
 ## Contact
 
-You can contact me via [Twitter](http://twitter.com/matthieukeller)
-or [GitHub](http://github.com/maggick).
+The social links in the right panel give your four different ways to contact me:
+
+  1. [Twitter](https://twitter.com/matthieukeller)
+  2. [GitHub](https://github.com/maggick).
+  3. [Linkedin](https://linkedin.com/in/matthieukeller)
+  4. [Stackoverflow](https://http://stackoverflow.com/users/1827067/maggick)
 
 # Other about page
 
