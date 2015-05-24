@@ -1,4 +1,4 @@
-Title: About me
+Title: About
 
 I am a security consultant.
 
@@ -16,7 +16,7 @@ in summer 2012. I used it on irc on github and on some forums.
 
 ## Sport
 
-I regularly run and swim. I make myself a ["Palmares" page](/page/palmares.md)
+I regularly run and swim. I make myself a ["Palmares" page](/page/palmares.html)
 where I keep track of my races.
 
 ## Contact
@@ -30,5 +30,5 @@ The social links in the right panel give your four different ways to contact me:
 
 # Other about page
 
-* [about this website](/pages/about_website.md)
+* [about this website](/pages/about-this-website.html)
 
