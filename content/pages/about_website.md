@@ -1,8 +1,6 @@
 Title: About This website
 Status: hidden
 
-# About This Website
-
 This website is hosted at [maggick.github.com](http://maggick.github.com) and
 is redirected to [matthieukeller.com](http://matthieukeller.com). The
 website is composed of two part : the blog and the notes. You can see the
