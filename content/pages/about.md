@@ -16,7 +16,7 @@ in summer 2012. I used it on irc on github and on some forums.
 
 ## Sport
 
-I regularly run and swim. I make myself a ["Palmares" page](/page/palmares.html)
+I regularly run and swim. I make myself a ["Palmares" page](/pages/palmares.html)
 where I keep track of my races.
 
 ## Contact
