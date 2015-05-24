@@ -1,5 +1,5 @@
 Title: About This website
-Status: Hidden
+Status: hidden
 
 # About This Website
 
