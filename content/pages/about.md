@@ -9,8 +9,8 @@ engineering over the phone.
 On my free time, I develop for my own purposes and complete security challenges.
 You will find more by visiting this website.
 
-I am also trying to make a better place by helping people to master vim in
-French social events called [Tuppervim](http://tuppervim.org).
+I am also trying to make the world a better place by helping people to master
+vim in French social events called [Tuppervim](http://tuppervim.org).
 
 ## Open Source
 
