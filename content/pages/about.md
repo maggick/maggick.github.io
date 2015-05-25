@@ -1,6 +1,16 @@
 Title: About
 
-I am a security consultant.
+I am an IT security consultant. In my daily job I realize intrusion tests on our
+clients websites and infrastructure.
+
+I have also work on configuration review, code review and even social
+engineering over the phone.
+
+On my free time, I develop for my own purposes and complete security challenges.
+You will find more by visiting this website.
+
+I am also trying to make a better place by helping people to master vim in
+French social events called [Tuppervim](http://tuppervim.org).
 
 ## Open Source
 
@@ -31,4 +41,3 @@ The social links in the right panel give your four different ways to contact me:
 # Other about page
 
 * [about this website](/pages/about-this-website.html)
-
