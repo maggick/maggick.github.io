@@ -23,6 +23,13 @@ http://www.amazon.com/Social-Engineering-Art-Human-Hacking/dp/0470639539/ref=sr_
 ## The Hacker Playbook: Practical Guide To Penetration Testing
 **by Peter Kim**
 
+As the pentesting world and tools may change very quickly this books may be less
+and less accurate through time.
+
+Nevertheless, this books is quit good as it really go through each steps of a
+engagement: from discovery to reporting passing by social engineering. Each
+chapter presents the necessary tools.
+
 http://www.amazon.com/Hacker-Playbook-Practical-Penetration-Testing/dp/1494932636/ref=sr_1_sc_2
 
 ## Learning ROS for Robotics Programming
