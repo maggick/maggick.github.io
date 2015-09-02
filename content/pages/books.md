@@ -6,7 +6,17 @@ Here is a simple list of the IT books I have read with a commentary for each one
 of them.
 
 ## Social Engineering: The Art of Human Hacking
-by Christopher Hadnagy
+**by Christopher Hadnagy**
+
+As the title may reveal, this book deals with social engineering techniques.
+
+It is really structured an start with the informations gathering and some
+basis about human reaction before going to human psychologies and giving use the
+tools for social engineering. The end of the books relate some real and very
+exciting engagements and finish with prevention and mitigation techniques.
+
+This books is really good and I recommend it to everyone that is concerned with
+"human" security, as well as pentester as CSO.
 
 http://www.amazon.com/Social-Engineering-Art-Human-Hacking/dp/0470639539/ref=sr_1_1
 
