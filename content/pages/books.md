@@ -4,6 +4,8 @@ Status: hidden
 I read some books and sometime I read IT books.
 Here is a simple list of the IT books I have read with a commentary for each one
 of them.
+Each link is an amazon affiliated one. This is the only way I choose in order to
+monetize this blog. You will never see ads here.
 
 ## Security
 
