@@ -18,7 +18,7 @@ exciting engagements and finish with prevention and mitigation techniques.
 This books is really good and I recommend it to everyone that is concerned with
 "human" security, as well as pentester as CSO.
 
-http://www.amazon.com/Social-Engineering-Art-Human-Hacking/dp/0470639539/ref=sr_1_1
+<a href="http://www.amazon.com/gp/product/0470639539/ref=as_li_tl?ie=UTF8&camp=1789&creative=9325&creativeASIN=0470639539&linkCode=as2&tag=maggickslogs-20&linkId=BXYJFG3XVAPPHWZN">Social Engineering: The Art of Human Hacking</a><img src="http://ir-na.amazon-adsystem.com/e/ir?t=maggickslogs-20&l=as2&o=1&a=0470639539" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" />
 
 ### The Hacker Playbook: Practical Guide To Penetration Testing
 **by Peter Kim**
@@ -30,7 +30,7 @@ Nevertheless, this books is quit good as it really go through each steps of a
 engagement: from discovery to reporting passing by social engineering. Each
 chapter presents the necessary tools.
 
-http://www.amazon.com/Hacker-Playbook-Practical-Penetration-Testing/dp/1494932636/ref=sr_1_sc_2
+<a href="http://www.amazon.com/gp/product/B00J5S9OPU/ref=as_li_tl?ie=UTF8&camp=1789&creative=9325&creativeASIN=B00J5S9OPU&linkCode=as2&tag=maggickslogs-20&linkId=LGHNVMBYCFT7NGJJ">The Hacker Playbook: Practical Guide To Penetration Testing</a><img src="http://ir-na.amazon-adsystem.com/e/ir?t=maggickslogs-20&l=as2&o=1&a=B00J5S9OPU" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" />
 
 ## Robotics
 
@@ -49,18 +49,19 @@ learning with ROS.
 
 I am one of the reviewers of this book.
 
-http://www.amazon.com/Learning-Robotics-Programming-Aaron-Martinez/dp/1782161449/ref=sr_1_1
+
+<a href="http://www.amazon.com/gp/product/1782161449/ref=as_li_tl?ie=UTF8&camp=1789&creative=9325&creativeASIN=1782161449&linkCode=as2&tag=maggickslogs-20&linkId=JNGPN5WJWTGY5ACZ">Learning ROS for Robotics Programming</a><img src="http://ir-na.amazon-adsystem.com/e/ir?t=maggickslogs-20&l=as2&o=1&a=1782161449" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" />
 
 ### Learning ROS for Robotics Programming - Second Edition
 **by Enrique Fernandez, Luis Sanchez Crespo, Anil Mahtani and Aaron Martinez**
 
 This book is an update of the first edition.
 
-The frameowork used is more up-to-date and goes through the same topics with an
+The framework used is more up-to-date and goes through the same topics with an
 addition of the "Points Clouds" (in order to represent 3D vision) notion
 (chapter 6) and an introduction to ["MoveIt!"](http://moveit.ros.org/)
 (chapter 10).
 
 I am one of the reviewers of this book.
 
-http://www.amazon.com/Learning-ROS-Robotics-Programming-Second/dp/1783987588/ref=sr_1_3
+<a href="http://www.amazon.com/gp/product/1783987588/ref=as_li_tl?ie=UTF8&camp=1789&creative=9325&creativeASIN=1783987588&linkCode=as2&tag=maggickslogs-20&linkId=ZDPJJK3SXSGAA76H">Learning ROS for Robotics Programming - Second Edition</a><img src="http://ir-na.amazon-adsystem.com/e/ir?t=maggickslogs-20&l=as2&o=1&a=1783987588" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" />
