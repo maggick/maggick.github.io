@@ -37,9 +37,23 @@ http://www.amazon.com/Hacker-Playbook-Practical-Penetration-Testing/dp/149493263
 ### Learning ROS for Robotics Programming
 **by Aaron Martinez and Enrique Fernández**
 
+As the framework has really evolve in the past years, this book is
+**deprecated** (see the second edition if interesting).
+
+This book introduce [ROS](http://www.ros.org/): The Robot Operating System.
+
+It goes from the basis with the architecture and the debugging to the computer
+vision and the navigations stack.
+The book does not dig into one of the subject but is really good to start
+learning with ROS.
+
+I am one of the reviewers of this book.
+
 http://www.amazon.com/Learning-Robotics-Programming-Aaron-Martinez/dp/1782161449/ref=sr_1_1
 
 ### Learning ROS for Robotics Programming - Second Edition
 **by Enrique Fernandez, Luis Sanchez Crespo, Anil Mahtani and Aaron Martinez**
+
+I am one of the reviewers of this book.
 
 http://www.amazon.com/Learning-ROS-Robotics-Programming-Second/dp/1783987588/ref=sr_1_3
