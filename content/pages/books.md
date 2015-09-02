@@ -54,6 +54,13 @@ http://www.amazon.com/Learning-Robotics-Programming-Aaron-Martinez/dp/1782161449
 ### Learning ROS for Robotics Programming - Second Edition
 **by Enrique Fernandez, Luis Sanchez Crespo, Anil Mahtani and Aaron Martinez**
 
+This book is an update of the first edition.
+
+The frameowork used is more up-to-date and goes through the same topics with an
+addition of the "Points Clouds" (in order to represent 3D vision) notion
+(chapter 6) and an introduction to ["MoveIt!"](http://moveit.ros.org/)
+(chapter 10).
+
 I am one of the reviewers of this book.
 
 http://www.amazon.com/Learning-ROS-Robotics-Programming-Second/dp/1783987588/ref=sr_1_3
