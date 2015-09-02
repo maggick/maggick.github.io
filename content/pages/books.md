@@ -1,7 +1,9 @@
 Title: Books
 Status: hidden
 
-I read some books and sometime I read IT books
+I read some books and sometime I read IT books.
+Here is a simple list of the IT books I have read with a commentary for each one
+of them.
 
 ## Social Engineering: The Art of Human Hacking
 by Christopher Hadnagy
