@@ -21,16 +21,16 @@ This books is really good and I recommend it to everyone that is concerned with
 http://www.amazon.com/Social-Engineering-Art-Human-Hacking/dp/0470639539/ref=sr_1_1
 
 ## The Hacker Playbook: Practical Guide To Penetration Testing
-by Peter Kim
+**by Peter Kim**
 
 http://www.amazon.com/Hacker-Playbook-Practical-Penetration-Testing/dp/1494932636/ref=sr_1_sc_2
 
 ## Learning ROS for Robotics Programming
-by Aaron Martinez and Enrique Fernández
+**by Aaron Martinez and Enrique Fernández**
 
 http://www.amazon.com/Learning-Robotics-Programming-Aaron-Martinez/dp/1782161449/ref=sr_1_1
 
 ## Learning ROS for Robotics Programming - Second Edition
-by Enrique Fernandez, Luis Sanchez Crespo, Anil Mahtani and Aaron Martinez
+**by Enrique Fernandez, Luis Sanchez Crespo, Anil Mahtani and Aaron Martinez**
 
 http://www.amazon.com/Learning-ROS-Robotics-Programming-Second/dp/1783987588/ref=sr_1_3
