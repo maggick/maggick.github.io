@@ -5,7 +5,7 @@ tags:cygwin,cmus
 meta:cygwin,cmus,compilation
 
 <img class="align-left" src="/media/2015.01/2015.01.cmus.png" alt="cmus" width="342">
-I work on a windows machine for my dally job.
+I work on a Windows machine for my dally job.
 On my personal desktop I use Arch Linux and i3 therefore my music player is in
 curses and does not need any mouse. In fact I use
 [cmus](https://cmus.github.io/). So I tried to replace my old media player
@@ -14,6 +14,9 @@ curses and does not need any mouse. In fact I use
 
 For that we need to compile [cmus](https://cmus.github.io/) from sources.
 <!-- PELICAN_END_SUMMARY -->
+
+**A [TL;DR](https://en.wikipedia.org/wiki/TL;DR) is available at the end of
+the article.**
 
 It is really easy, you just need to download the `tar.gz` archive, untar it, and
 run :
@@ -32,14 +35,15 @@ Okay then why a whole blog post about 3 classical commands ?
 Well you may notice that when adding your folder(s) to your library not all your
 files are added to it, in fact [cygwin](https://www.cygwin.com/) does not
 package any mp3 codec so your `flac` files will be read by
-[cmus](https://cmus.github.io/) but not the `mp3` one.
+[cmus](https://cmus.github.io/) but not the `mp3` one (as long as you have
+install the flac codec).
 
 In oder to read mp3 files with [cmus](https://cmus.github.io/) we need to
-install (so to build) a library that read this file format : libmad
+install (so to build) a library that read this file format: libmad
 
 # libmad
 
-first of all we need to download the source package from the official web site :
+First of all we need to download the source package from the official web site :
 [http://www.underbit.com/products/mad/](http://www.underbit.com/products/mad/)
 now we extract the files and make the classical commands:
 
@@ -63,7 +67,7 @@ at : [ftp://ftp.gnu.org/pub/gnu/config/README](ftp://ftp.gnu.org/pub/gnu/config/
 
 ## `-fforce-mem` gcc error
 
-This error is characterize by the following error:
+This error is characterize by the following trace:
 
     gcc: error: unrecognized command line option '-fforce-mem'
     Makefile:383: recipe for target 'version.lo' failed
@@ -86,7 +90,7 @@ but it is just a `sed` command
 
     sed -i '/-fforce-mem/d' configure
 
-we need to restart the 3 basic commands:
+We need to redo the 3 basics commands:
 
     ./configure
     make
@@ -123,11 +127,11 @@ to add a flag at the configure step:
     make install
 
 And now you can launch [cmus](https://cmus.github.io/) and re-add your mp3
-files and **it works !**
+files and **it works!**
 
 ### Workflow
 
-* Install libmad
+* Install [libmad](http://www.underbit.com/products/mad/)
   * change the `config.gess` and `config.sub` files
   * patch the configuration to not use the `-fforce-mem` option with sed: `sed -i '/-fforce-mem/d' configure`
   * run the 3 classic commands :
@@ -143,4 +147,4 @@ files and **it works !**
     make install
 
 *If you run a classical linux distribution to install cmus use `aptitude install
-cmus` or `pacman -S cmus` so much easier !*
+cmus` or `pacman -S cmus`. It is so much easier!*
