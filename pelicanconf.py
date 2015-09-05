@@ -48,6 +48,8 @@ GOOGLE_PLUS = '1'
 MENUITEMS = (
              ('archives', '/archives'),
              ('feeds', '/feeds/all.atom.xml'),
+             ('books', '/pages/books.html')
+             ('palmares', '/pages/palmares.html')
             )
 
 DEFAULT_PAGINATION = 10
