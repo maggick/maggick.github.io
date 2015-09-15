@@ -129,22 +129,22 @@ to add a flag at the configure step:
 And now you can launch [cmus](https://cmus.github.io/) and re-add your mp3
 files and **it works!**
 
-### Workflow
+### Workflow - TL;DR
+
+Here is the [TL;DR](https://en.wikipedia.org/wiki/TL;DR).
 
 * Install [libmad](http://www.underbit.com/products/mad/)
-  * change the `config.gess` and `config.sub` files
+  * change the `config.gess` and `config.sub` files with the one from [this readme](http://ftp.gnu.org/gnu/config/README)
   * patch the configuration to not use the `-fforce-mem` option with sed: `sed -i '/-fforce-mem/d' configure`
-  * run the 3 classic commands :
+  * run the 3 classical commands:
+    * `./configure`
+    * `make`
+    * `make install`
 
-    ./configure
-    make
-    make install
-
-* Install [cmus](https://cmus.github.io/) and add the `gcc` flags to load libraries in /usr/local:
-
-    ./configure CPPFLAGS=-I/usr/local/include LDFLAGS=-L/usr/local/lib
-    make
-    make install
+* Install [cmus](https://cmus.github.io/) from source and add the `gcc` flags to load libraries in /usr/local:
+    * `./configure CPPFLAGS=-I/usr/local/include LDFLAGS=-L/usr/local/lib`
+    * `make`
+    * `make install`
 
 *If you run a classical linux distribution to install cmus use `aptitude install
 cmus` or `pacman -S cmus`. It is so much easier!*
