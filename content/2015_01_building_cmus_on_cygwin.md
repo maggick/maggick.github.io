@@ -133,6 +133,10 @@ files and **it works!**
 
 Here is the [TL;DR](https://en.wikipedia.org/wiki/TL;DR).
 
+* Cygwin dependencies
+  * flac-devel
+  * ncurses
+
 * Install [libmad](http://www.underbit.com/products/mad/)
   * change the `config.gess` and `config.sub` files with the one from [this readme](http://ftp.gnu.org/gnu/config/README)
   * patch the configuration to not use the `-fforce-mem` option with sed: `sed -i '/-fforce-mem/d' configure`
