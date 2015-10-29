@@ -114,6 +114,34 @@ And we just need to install the missing library using [cygwin](https://www.cygwi
 
 **Now we have libmad install in `/usr/local/lib/`**
 
+## recipe for target 'ape.o' failed
+
+*This error was first mention by buzzbo on
+[github](https://github.com/cmus/cmus/issues/343) and resolved by mahkoh.
+Thanks to them.*
+
+After the `./configure`, the `make` may output something like:
+
+    :::text
+       CC     ape.o
+    In file included from ape.c:23:0:
+    xmalloc.h: In function 'xstrndup':
+    xmalloc.h:79:2: error: implicit declaration of function 'strndup' [-Werror=implicit-function-declaration]
+      char *s = strndup(str, n);
+      ^
+    xmalloc.h:79:12: warning: incompatible implicit declaration of built-in function 'strndup'
+      char *s = strndup(str, n);
+                ^
+    cc1: some warnings being treated as errors
+    scripts/lib.mk:66: recipe for target 'ape.o' failed
+    make: *** [ape.o] Error 1
+
+This error is due to an implicit function declaration that is incorrect. Add
+this to the top of the offending files (`xmalloc.h`):
+
+    :::c
+    char *strndup(const char *s, size_t n);
+
 # cmus
 
 But our installation is not completed we need to recompile
