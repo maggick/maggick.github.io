@@ -114,6 +114,23 @@ And we just need to install the missing library using [cygwin](https://www.cygwi
 
 **Now we have libmad install in `/usr/local/lib/`**
 
+# cmus
+
+But our installation is not completed we need to recompile
+[cmus](https://cmus.github.io/) with the support
+of this new library and if you just launch the 3 basic commands it will not
+work. In fact, gcc does not search libraries in `/usr/local` by default. We need
+to add a flag at the configure step:
+
+    ./configure CPPFLAGS=-I/usr/local/include LDFLAGS=-L/usr/local/lib
+    make
+    make install
+
+And now you can launch [cmus](https://cmus.github.io/) and re-add your mp3
+files and **it works!**
+
+You can still have some erros, mostly with the newest cygwin versions.
+
 ## recipe for target 'ape.o' failed
 
 *This error was first mention by buzzbo on
@@ -137,25 +154,11 @@ After the `./configure`, the `make` may output something like:
     make: *** [ape.o] Error 1
 
 This error is due to an implicit function declaration that is incorrect. Add
-this to the top of the offending files (`xmalloc.h`):
+this after all the includes of the offending files (`xmalloc.h`):
 
     :::c
     char *strndup(const char *s, size_t n);
 
-# cmus
-
-But our installation is not completed we need to recompile
-[cmus](https://cmus.github.io/) with the support
-of this new library and if you just launch the 3 basic commands it will not
-work. In fact, gcc does not search libraries in `/usr/local` by default. We need
-to add a flag at the configure step:
-
-    ./configure CPPFLAGS=-I/usr/local/include LDFLAGS=-L/usr/local/lib
-    make
-    make install
-
-And now you can launch [cmus](https://cmus.github.io/) and re-add your mp3
-files and **it works!**
 
 ### Workflow - TL;DR
 
