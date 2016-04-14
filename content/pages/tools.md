@@ -47,3 +47,4 @@ This is my list of tools.
   * [cmus](https://cmus.github.io/) is a small, fast and powerful console music player
   * [vlc](http://www.videolan.org/) a free and open source cross-platform multimedia player
   * [nevernote](http://nevernote.sourceforge.net/) an open source clone of Evernote
+  * [nemo](https://github.com/linuxmint/nemo) a File browser
