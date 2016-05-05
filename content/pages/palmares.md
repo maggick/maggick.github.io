@@ -3,7 +3,8 @@ Status: hidden
 
 ## 2016
 
-* Semi marathon d'Antony - 20.03.2015: 1h56m45s (**PR** | [strava](https://www.strava.com/activities/523187078)
+* Marathon de Sénart - 01.05.2016: 4h41m30s (**PR** | [strava](https://www.strava.com/activities/565906848))
+* Semi marathon d'Antony - 20.03.2016: 1h56m45s (**PR** | [strava](https://www.strava.com/activities/523187078))
 
 ## 2015
 
@@ -14,7 +15,7 @@ Status: hidden
 
 ## 2013
 
-* Mud day - 21.09.2013: No time record
+* Mud day - 21.09.2013: No time recorded
 * 10km de Paris l'équipe - 23.06.2013: 52m26s ([strava](https://www.strava.com/activities/304020954))
 * Semi marathon d'Antony - 24.03.2013: 2h07m16s ([strava](https://www.strava.com/activities/304018173))
 * 10km de Malakoff - 16.02.2013: 57m21s ([strava](https://www.strava.com/activities/304016904))
