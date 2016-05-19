@@ -43,6 +43,6 @@ This commands will deploy an environment where you can use the theme.
 
 <a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/deed.en_US"><img alt="Creative Commons License" style="b
 order-width:0" src="http://i.creativecommons.org/l/by-sa/3.0/88x31.png" /></a><br /><span xmlns:dct="http://purl.org/dc/terms
-/" property="dct:title">This website</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="lol" p
+/" property="dct:title">This website</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="http://matthieukeller.com" p
 roperty="cc:attributionName" rel="cc:attributionURL">Matthieu Keller</a> is licensed under a <a rel="license" href="http://cr
 eativecommons.org/licenses/by-sa/3.0/deed.en_US">Creative Commons Attribution-ShareAlike 3.0 Unported License</a>.<br />
