@@ -40,9 +40,6 @@ SOCIAL = (('github', 'https://github.com/maggick'),
           ('linkedin', 'https://linkedin.com/in/matthieukeller'),
           ('stackoverflow', 'http://stackoverflow.com/users/1827067/maggick'),
           )
-# Social button
-TWITTER_USERNAME = 'matthieukeller'
-GOOGLE_PLUS = '1'
 
 # Menu
 MENUITEMS = (
