@@ -49,3 +49,6 @@ This is my list of tools.
   * [vlc](http://www.videolan.org/) a free and open source cross-platform multimedia player
   * [nevernote](http://nevernote.sourceforge.net/) an open source clone of Evernote
   * [nemo](https://github.com/linuxmint/nemo) a File browser
+  * [krita](https://krita.org/) a FREE sketching and painting program
+  * [rawtherapee](http://www.rawtherapee.com/) a powerful cross-platform raw photo processing program
+  * [darktable](http://www.darktable.org/) an open source photography workflow application and RAW developer.
