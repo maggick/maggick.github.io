@@ -24,6 +24,8 @@ This is my list of tools.
   * [crunch](http://crunch-wordlist.sourceforge.net/) a password list generator
   * [cewl](https://digi.ninja/projects/cewl.php) a password list generator from
     a webpage
+  * [searsploit](https://github.com/joostvanveen/php-security-pitfalls) allow to
+    searh for an exploit localy
 
 ## Firefox
 
