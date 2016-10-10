@@ -3,6 +3,8 @@ Status: hidden
 
 ## 2016
 
+* Triathlon de La Baule (M) - 25.09.2016: 3:38:16.6 > 0:51:00 | 1:35:39 | 1:11:39 (**PR** | [strava - Swim](https://www.strava.com/activities/740109648) [Bike](https://www.strava.com/activities/740109671) [Run](https://www.strava.com/activities/740109665))
+* Triahtlon de Versaille (S) - 16.05.2015: 01:56:53 > 0:19:01 | 1:03:09 | 0:31:49 (**PR** | [strava - Swim](https://www.strava.com/activities/585576437) [Bike](https://www.strava.com/activities/585576478) [Run](https://www.strava.com/activities/585576464))
 * Marathon de Sénart - 01.05.2016: 4h41m30s (**PR** | [strava](https://www.strava.com/activities/565906848))
 * Semi marathon d'Antony - 20.03.2016: 1h56m45s (**PR** | [strava](https://www.strava.com/activities/523187078))
 
@@ -21,4 +23,3 @@ Status: hidden
 * 10km de Malakoff - 16.02.2013: 57m21s ([strava](https://www.strava.com/activities/304016904))
 
 *PR: Personal Record*
-
