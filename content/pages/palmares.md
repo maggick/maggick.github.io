@@ -3,6 +3,7 @@ Status: hidden
 
 ## 2016
 
+* Marathon de l'eure - 16.10.2016 5h05:00 ([strava](https://www.strava.com/activities/752638180)
 * Triathlon de La Baule (M) - 25.09.2016: 3:38:16.6 > 0:51:00 | 1:35:39 | 1:11:39 (**PR** | [strava - Swim](https://www.strava.com/activities/740109648) [Bike](https://www.strava.com/activities/740109671) [Run](https://www.strava.com/activities/740109665))
 * Triahtlon de Versaille (S) - 16.05.2015: 01:56:53 > 0:19:01 | 1:03:09 | 0:31:49 (**PR** | [strava - Swim](https://www.strava.com/activities/585576437) [Bike](https://www.strava.com/activities/585576478) [Run](https://www.strava.com/activities/585576464))
 * Marathon de Sénart - 01.05.2016: 4h41m30s (**PR** | [strava](https://www.strava.com/activities/565906848))
