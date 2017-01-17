@@ -31,7 +31,7 @@ DISPLAY_CATEGORIES_ON_MENU = True
 # Plugins
 PLUGIN_PATHS = ['/home/maggick/work/pelican-plugins/']
 PLUGINS = ['summary']
-MD_EXTENSIONS = ['codehilite(css_class=highlight)','extra','toc']
+MARKDOWN = {'extensions':['markdown.extensions.codehilite(css_class=highlight)', 'markdown.extensions.extra', 'markdown.extensions.toc']}
 
 # Social
 # Social widget
