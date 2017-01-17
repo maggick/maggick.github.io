@@ -29,7 +29,7 @@ ARTICLE_SAVE_AS = '{date:%Y}/{date:%m}/{slug}.html'
 DISPLAY_CATEGORIES_ON_MENU = True
 
 # Plugins
-PLUGIN_PATHS = ['/home/maggick/work/pelican-plugins/']
+PLUGIN_PATHS = ['./pelican-plugins/']
 PLUGINS = ['summary']
 MARKDOWN = {'extensions':['markdown.extensions.codehilite(css_class=highlight)', 'markdown.extensions.extra', 'markdown.extensions.toc']}
 
@@ -51,7 +51,7 @@ MENUITEMS = (
 
 DEFAULT_PAGINATION = 10
 
-THEME = "/home/maggick/work/pelican-themes/maggner-pelican/"
+THEME = "./maggner-pelican/"
 STATIC_PATHS = ['media', 'extra/CNAME']
 EXTRA_PATH_METADATA = {'extra/CNAME': {'path': 'CNAME'},}
 FAVICON_URL = "%s/media/favicon.ico" % SITEURL
