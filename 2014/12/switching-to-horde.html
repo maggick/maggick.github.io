@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>Switching to Horde | maggick's logs</title>
+
+    <meta name="author" content="Matthieu Keller">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="http://matthieukeller.com/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css">
+    <link rel="stylesheet" href="http://matthieukeller.com/theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="http://matthieukeller.com/index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+                <li>
+                  <a href="http://matthieukeller.com/category/misc.html">Misc</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/programming.html">programming</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/programming-security.html">programming, security</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/security.html">security</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/sports.html">Sports</a>
+                </li>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="http://matthieukeller.com/pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="http://matthieukeller.com/pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="http://matthieukeller.com/2014/12/switching-to-horde.html" title="Read more" class="entry-title-link">
+                Switching to Horde</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2014-12-27T00:00:00+01:00">27 Dec 2014</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="http://matthieukeller.com/author/matthieu-keller.html" title="Read more posts from Matthieu Keller" class="meta-link">Matthieu Keller</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="http://matthieukeller.com/tag/server.html" title="Read more with the label server" class="meta-link">server</a> 
+          <a href="http://matthieukeller.com/tag/mail.html" title="Read more with the label mail" class="meta-link">mail</a> 
+      </span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p>I host my own services with a web access, for my mail and calendar I used
+<a href="http://roundcube.org">Roundcube</a> a wonderful webmail and
+<a href="http://agendav.org">agendav</a> for my calendar. Nevertheless I am used to have
+everything in one place (<em>thank you Google for the bad habit</em>) and agendav was
+no more working on my server. Therefore I decided to switch to Horde, a all in
+one webmail which manage e-mails, calendars, contacts, notes and todo lists.</p>
+<p>Horde is written in PHP and is accessible using Pear (PHP Extension and
+Application Repository).</p>
+<h1 id="installing-horde">Installing Horde</h1>
+<p>Let us see how to install Horde.</p>
+<h2 id="necessary-packages">Necessary packages</h2>
+<p>First of all some dependencies should be meet. Considering you are on Debian
+and using <code>apt-get</code> you may run the following command:</p>
+<div class="highlight"><pre><span></span>apt-get install php5-sasl php5-intl libssh2-php php5-curl php-http php5-xmlrpc php5-geoip php5-ldap php5-memcache php5-memcached php5-tidy
+</pre></div>
+
+
+<h2 id="pear-install">Pear install</h2>
+<p>We want to use Pear to get the last version of Horde. So we add the channel, the
+Horde role, and we install Horde.
+You will be prompt with the question <code>Filesystem installation for base Horde
+application: /var/www/horde</code> you can change this location the only
+constrain to configure your web server (Apache, Nginx, or whatever) in order to
+make this folder accessible.</p>
+<div class="highlight"><pre><span></span>pear channel-discover pear.horde.org
+pear install horde/horde_role
+pear run-scripts horde/horde_role
+pear install -a -B horde/webmail
+</pre></div>
+
+
+<h2 id="database-creation">Database creation</h2>
+<p>Horde use a database to store your calendars, contact, task lists and
+notes. Nevertheless the script does not create this database. Therefore we must
+do it manually for instance with the following commands and a MySQL database:</p>
+<div class="highlight"><pre><span></span>mysql -u root -p
+CREATE DATABASE horde;
+*GRANT ALL ON horde.* TO horde@localhost IDENTIFIED BY &#39;PASSWORD&#39;;
+FLUSH PRIVILEGES;
+exit;
+</pre></div>
+
+
+<p>You'll be asked the following questions:</p>
+<blockquote>
+<p>What database backend should we use? <em>mysql</em></p>
+<p>Request persistent connections? <em>no</em></p>
+<p>Username to connect to the database as: <em>The username you set in the previous step</em></p>
+<p>Password to connect with: <em>The password you set in the previous step</em></p>
+<p>How should we connect to the database? <em>unix</em></p>
+<p>Location of UNIX socket: <em>Just press [enter]</em></p>
+<p>Database name to use: <em>The database name you set in the previous step</em></p>
+<p>Internally used charset: <em>utf-8</em></p>
+<p>Use SSL to connect to the server: <em>no</em></p>
+<p>Certification Authority to use for SSL connection: <em>Just press [enter]</em></p>
+<p>Split reads to a different server? <em>false</em></p>
+<p>Filesystem installation for base Horde application: <em>/var/www/horde</em></p>
+<p>Specify an existing mail user who you want to give administrator permissions (optional): <em>user@domain.com</em> This user will have access to the administration interface within horde.</p>
+</blockquote>
+<p>This is all an you should get access to the horde interface.</p>
+<h1 id="activating-the-exchange-server">Activating the exchange server</h1>
+<p>The administrator user will have a lot of options one of them is the activation
+of the exchange server.</p>
+<p>That is all for this article about Horde, the install process can be found on
+<a href="http://www.matthieukeller.com/notes/#!server/horde.md">the notes part of my website</a>.</p>
+    </div>
+
+        <footer>
+<div class="social-buttons">
+
+
+</div>        </footer>
+
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = "matthieukeller";
+        var disqus_identifier = "2014/12/switching-to-horde.html";
+
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-books"></span>
+                    <a href="/pages/books.html">books</a>
+                </li>
+                <li>
+                    <span class= "icons icons-palmares"></span>
+                    <a href="/pages/palmares.html">palmares</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/matthieukeller">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-linkedin"></span>
+                    <a href="https://linkedin.com/in/matthieukeller">linkedin</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+    <script>
+        (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+        function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+        e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+        e.src='//www.google-analytics.com/analytics.js';
+        r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+        ga('create','UA-63314567-1');ga('send','pageview');
+    </script>
+
+</div>
+</body>
+</html>

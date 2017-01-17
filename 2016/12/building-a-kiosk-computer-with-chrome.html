@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>Building a kiosk computer with Chrome | maggick's logs</title>
+
+    <meta name="author" content="Matthieu Keller">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="http://matthieukeller.com/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css">
+    <link rel="stylesheet" href="http://matthieukeller.com/theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="http://matthieukeller.com/index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+                <li>
+                  <a href="http://matthieukeller.com/category/misc.html">Misc</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/programming.html">programming</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/programming-security.html">programming, security</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/security.html">security</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/sports.html">Sports</a>
+                </li>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="http://matthieukeller.com/pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="http://matthieukeller.com/pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="http://matthieukeller.com/2016/12/building-a-kiosk-computer-with-chrome.html" title="Read more" class="entry-title-link">
+                Building a kiosk computer with Chrome</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2016-12-26T09:10:00+01:00">26 Dec 2016</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="http://matthieukeller.com/author/matthieu-keller.html" title="Read more posts from Matthieu Keller" class="meta-link">Matthieu Keller</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="http://matthieukeller.com/tag/programming.html" title="Read more with the label programming" class="meta-link">programming</a> 
+          <a href="http://matthieukeller.com/tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="http://matthieukeller.com/tag/chrome.html" title="Read more with the label chrome" class="meta-link">chrome</a> 
+          <a href="http://matthieukeller.com/tag/kiosk.html" title="Read more with the label kiosk" class="meta-link">kiosk</a> 
+      </span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p>Building a Kiosk where Google Chrome is running in full screen and user
+interaction with the system are reduced to the minimum.</p>
+
+
+<h2 id="debian-installation">Debian installation</h2>
+<p>This will be pass as most of you should be able to install a basic Debian
+system. Just set lvm encryption, strong password for root and for the user and
+mostly do not install useless program, check only the program you need (ssh for
+instance).</p>
+<h2 id="installing-the-packages">Installing the packages</h2>
+<p>We will need a few more packages to be able to run things:</p>
+<ul>
+<li>X (display server)</li>
+<li>A light window manager able to run Chrome in full screen</li>
+<li>Google Chrome</li>
+<li>sudo to be able to impersonate the user</li>
+</ul>
+<p>The first operations will be done using root as the sudo command is not
+installed yet.</p>
+<p>First we add the Google Chrome repository and the key to check the package
+integrity:</p>
+<ul>
+<li>Edit the file <code>/etc/apt/source.list</code> and add the following repository:</li>
+</ul>
+<p><code>deb http://dl.google.com/linux/chrome/deb/ stable main</code></p>
+<ul>
+<li>Execute the following command:</li>
+</ul>
+<p><code>wget -qO- https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -</code></p>
+<p>Then we need to update the package list and install all necessary packages:</p>
+<div class="highlight"><pre><span></span>apt-get update
+apt-get install --no-install-recommends xorg openbox sudo google-chrome-stable
+</pre></div>
+
+
+<p>Without the <code>--no-install-recommends</code>parameter some useless packages will be
+installed.</p>
+<h2 id="load-chrome-in-kiosk-at-startup">Load Chrome in kiosk at startup</h2>
+<p>We need a script that will configure and load Chrome at the X server startup.
+As we don't want any data saved between each session we will delete the Chrome
+profile each time the script is used. Moreover it is in this script that we
+choose the starting page of Chrome.</p>
+<p>Create and edit the script:</p>
+<div class="highlight"><pre><span></span>sudo vi /opt/kiosk.sh
+</pre></div>
+
+
+<p>The file content is the following:</p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7
+8</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
+
+xset -dpms
+xset s off
+openbox-session <span class="p">&amp;</span>
+<span class="k">while</span> true<span class="p">;</span> <span class="k">do</span> rm -rf ~/.<span class="o">{</span>config,cache<span class="o">}</span>/google-chrome/
+  google-chrome --kiosk --no-first-run  <span class="s1">&#39;http://localhost&#39;</span>
+<span class="k">done</span>
+</pre></div>
+</td></tr></table>
+
+<p>Give the execution right to the script:</p>
+<div class="highlight"><pre><span></span>sudo chmod +x /opt/kiosk.sh
+</pre></div>
+
+
+<p>In order to start the X server and launch the <code>kiosk.sh</code> script, we need to
+create a systemd service.</p>
+<p>In order to to that, create and edit the file <code>/etc/systemd/system/kiosk.service</code>:</p>
+<div class="highlight"><pre><span></span>sudo vi /etc/systemd/system/kiosk.service
+</pre></div>
+
+
+<p>The content of the file is the following:</p>
+<div class="highlight"><pre><span></span><span class="k">[Unit]</span>
+<span class="na">Description</span><span class="o">=</span><span class="s">Kiosk</span>
+
+<span class="k">[Service]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">oneshot</span>
+<span class="na">ExecStart</span><span class="o">=</span><span class="s">/usr/bin/sudo –u user /usr/bin/startx /etc/X11/Xsession /opt/kiosk.sh --</span>
+
+<span class="k">[Install]</span>
+<span class="na">WantedBy</span><span class="o">=</span><span class="s">multi-user.target</span>
+</pre></div>
+
+
+<p>We need to enable the script with the following command:</p>
+<div class="highlight"><pre><span></span>systemctl enable kiosk
+</pre></div>
+
+
+<p>To run the script use the following command:</p>
+<div class="highlight"><pre><span></span>systemctl start kiosk »
+</pre></div>
+
+
+<p>You can also reboot in order to check that the script is automatically launch at
+startup.</p>
+<p>If you need a terminal, you can use <ctrl>+<alt>+<F2-9> to get one.</p>
+<h2 id="automatically-mount-usb-key">Automatically mount USB key</h2>
+<p>If your users need to copy data from the machine this paragraph is for you.
+Otherwise this is just informational.</p>
+<p>As our users don't have a shell access they are unable to mount USB key.
+Therefore we need to automatically mount them.</p>
+<p>We need the <code>usbmount</code> package:</p>
+<div class="highlight"><pre><span></span>apt-get install --no-install-recommends usbmount
+</pre></div>
+
+
+<p>The USB keys will be automatically mount into <code>/mnt/usbX</code>.In order for the user
+to have the permissions to right on it we need to add its <code>uid</code> and <code>gid</code> in the
+<code>usbmount</code> configuration.</p>
+<p>Edit the file <code>/etc/usbmount/usbmount.conf</code> and the user <code>uid</code> and <code>guid</code> to the
+following line (the <code>uid</code> and <code>gid</code> can be found in <code>/etc/passwd</code>):</p>
+<div class="highlight"><pre><span></span>FS_MOUNTOPTIONS=&quot; &quot;
+</pre></div>
+
+
+<p>The line would be something like the following:</p>
+<div class="highlight"><pre><span></span>FS_MOUNTOPTIONS=&quot;uid=1000,gid=1000&quot;
+</pre></div>
+
+
+<h2 id="sources">Sources</h2>
+<ul>
+<li><a href="https://thepcspy.com/read/building-a-kiosk-computer-ubuntu-1404-chrome/">https://thepcspy.com/read/building-a-kiosk-computer-ubuntu-1404-chrome/</a></li>
+<li><a href="https://lukas.zapletalovi.com/2013/08/execute-command-during-start-with-systemd.html">https://lukas.zapletalovi.com/2013/08/execute-command-during-start-with-systemd.html</a></li>
+</ul>
+    </div>
+
+        <footer>
+<div class="social-buttons">
+
+
+</div>        </footer>
+
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = "matthieukeller";
+        var disqus_identifier = "2016/12/building-a-kiosk-computer-with-chrome.html";
+
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-books"></span>
+                    <a href="/pages/books.html">books</a>
+                </li>
+                <li>
+                    <span class= "icons icons-palmares"></span>
+                    <a href="/pages/palmares.html">palmares</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/matthieukeller">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-linkedin"></span>
+                    <a href="https://linkedin.com/in/matthieukeller">linkedin</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+    <script>
+        (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+        function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+        e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+        e.src='//www.google-analytics.com/analytics.js';
+        r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+        ga('create','UA-63314567-1');ga('send','pageview');
+    </script>
+
+</div>
+</body>
+</html>

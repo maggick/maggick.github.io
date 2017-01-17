@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>Mails | maggick's logs</title>
+
+    <meta name="author" content="Matthieu Keller">
+    <meta name="description" content="">
+    <meta name="robots" content="index,follow">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="http://matthieukeller.com/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="http://matthieukeller.com/pages/mails.html">
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css">
+    <link rel="stylesheet" href="http://matthieukeller.com/theme/css/main.css">
+</head>
+<body>
+<div id="page" class="">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="http://matthieukeller.com/index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+                <li>
+                  <a href="http://matthieukeller.com/category/misc.html">Misc</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/programming.html">programming</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/programming-security.html">programming, security</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/security.html">security</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/sports.html">Sports</a>
+                </li>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="http://matthieukeller.com/pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="http://matthieukeller.com/pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <h1 class="page-title">Mails</h1>
+
+    <div class="entry-content">
+        <h1 id="mail">Mail</h1>
+<p>When I start to install my own mail server to never be dependent of a service
+as Gmail, hotmail or whatever.
+I choose postifix as SMTP server.</p>
+<h2 id="spf">SPF</h2>
+<p>Sender Policy Framework (SPF) is an email validation system designed to prevent
+email spam by detecting email spoofing, a common vulnerability, by verifying 
+sender IP addresses.</p>
+<p>It is really easy to put an SPF in place.
+You just have to add a DNS TXT entry :</p>
+<div class="highlight"><pre><span></span>yourdomain.com. IN TXT &quot;v=spf1 a mx ~all&quot;
+</pre></div>
+
+
+<p>Source: <a href="http://nickwilsdon.com/spf-domain-records/">nickwilsdon</a></p>
+<h2 id="dkim">DKIM</h2>
+<p>DomainKeys Identified Mail (DKIM) is a method for associating a domain name to
+an email message.</p>
+<h3 id="install">Install</h3>
+<p>First of all you need to install your DKIM solution, I use opendkim and debian:</p>
+<div class="highlight"><pre><span></span>aptitude install opendkim opendkim-tools
+</pre></div>
+
+
+<h3 id="keys-generation">Keys generation</h3>
+<p>We should choose the directory were to put the keys, we choose
+<code>/etc/opendkim/yourdomain/</code> (create the directory).
+Then we need to create the private and the public rsa keys for singing:</p>
+<div class="highlight"><pre><span></span>opendkim-genkey -b 2048 -r -d yourdomain.tld
+</pre></div>
+
+
+<p>the <code>-b 2048</code> define the longer of the key, here 2048 bits, the <code>-r</code> is for
+restrict the key for use in e-mail signing only and the <code>-t yourdomain.tld</code> is
+for a comment in the TXT record file.</p>
+<h3 id="configuration">Configuration</h3>
+<p>Now we need to edit the configuration files:</p>
+<ol>
+<li>/etc/opendkim.conf – OpenDKIM’s main configuration file</li>
+<li>/etc/opendkim/KeyTable – a list of keys available for signing</li>
+<li>/etc/opendkim/SigningTable - a list of domains and accounts allowed to sign</li>
+<li>/etc/opendkim/TrustedHosts – a list of servers to “trust” when signing or
+verifying</li>
+</ol>
+<p>(You may have to create folders and files).</p>
+<h4 id="etcopendkimconf">/etc/opendkim.conf</h4>
+<p>You may have to uncomment some lines:</p>
+<div class="highlight"><pre><span></span>Umask         002
+UserID        opendkim:opendkim
+Socket        inet:8891@localhost
+Domain        yourdomain.tld
+</pre></div>
+
+
+<p>Next, add the following line to the configuration in order to give the location of the
+other configuration to opendkim:</p>
+<div class="highlight"><pre><span></span>Selector                deflaut
+KeyTable                refile:/etc/opendkim/KeyTable
+SigningTable            refile:/etc/opendkim/SigningTable
+ExternalIgnoreList      refile:/etc/opendkim/TrustedHosts
+InternalHosts           refile:/etc/opendkim/TrustedHosts
+</pre></div>
+
+
+<h4 id="etcopendkimkeytable">/etc/opendkim/KeyTable</h4>
+<p>This file contains the path to your DKIM keys (one per line) , here we have only
+one key so our file is just one line:</p>
+<div class="highlight"><pre><span></span>yourdomain.tld yourdomain.tld:default:/etc/opendkim/yourdomain/default.private
+</pre></div>
+
+
+<h4 id="etcopendkimsigningtable">/etc/opendkim/SigningTable</h4>
+<p>This file tells to opendkim how to use the keys, here we want every mails
+send from our domain to be signed:</p>
+<div class="highlight"><pre><span></span>*@yourdomain.tld yourdomain.tld
+</pre></div>
+
+
+<h4 id="etcopendkimtrustedhosts">/etc/opendkim/TrustedHosts</h4>
+<p>This file tells OpenDKIM who to let use your keys:</p>
+<div class="highlight"><pre><span></span>127.0.0.1
+yourdomain.tld
+mail.yourdomain.tld
+</pre></div>
+
+
+<h3 id="dns-record">DNS record</h3>
+<p>The DNS record is the last part of this operation. You need to do it properbly
+otherwise your signature would be false and unreconized by the mailing servers.
+you should have a filed who describe the way you handle your DKIM:</p>
+<div class="highlight"><pre><span></span>_domainkey                IN TXT    &quot;o=-;&quot;
+</pre></div>
+
+
+<p>And an other where you put your public key:</p>
+<div class="highlight"><pre><span></span>default._domainkey        IN TXT    ( &quot;k=rsa;
+p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz33vJpYC9pgwtm4JyRWLLDM5LLIn66IhgMODhW1PX7zk1eMuCdp8509sUmpk47RDbJq2VhFDGElC/9zkCMo6hrep241fVnwmOfuxA5Nvcu8YxbAvXacwusU9ct4r9Re2NjO9kshbIWBAVJ66CxBzWWsi6+ikChHbv7GsF2jbx+VG1rwbShr8AD5FbFGIh5CEVs83E&quot;
+&quot;qJ6g8Nla+BX2A2V2gwOxT2Xp0mCIqjIFqfoyhxIcftKHHBDFxiun2WLwsUD5ivFewy54ntgphkWJUXfob+NtZ6M8sv531Zd/mgdBgnYAPzWNy5m5MGquNZNEnA44o0sAcKiCRMb7nKpTvfDQQIDAQAB&quot;
+)
+</pre></div>
+
+
+<p>Source: <a href="http://stevejenkins.com/blog/2011/08/installing-opendkim-rpm-via-yum-with-postfix-or-sendmail-for-rhel-centos-fedora/">stevejenkins</a>  <br />
+<a href="http://domainkeys.sourceforge.net/policycheck.html">A DomainKey Policy Record
+Tester</a>  <br />
+<a href="http://domainkeys.sourceforge.net/selectorcheck.html">A DomainKey Selector Record
+Tester</a></p>
+<h2 id="catch-all">Catch all</h2>
+<p>Is is really interesting to catch all e-mails directed to your domain. For
+instance you will catch wahtever@yourdomain.com.
+To define a catch all create the <code>virtual</code> file and add it to postmap :</p>
+<div class="highlight"><pre><span></span># echo &#39;@yourdomain.com emailusername&#39; &gt; /etc/postfix/virtual
+# postmap /etc/postfix/virtual
+</pre></div>
+
+
+<p>Check that the virtual map is defined in postfix's configuration 
+by verifing that the following line is in the <code>/etc/postfix/main.cf</code> file.</p>
+<div class="highlight"><pre><span></span># postmap /etc/postfix/virtual
+</pre></div>
+
+
+<p>and restart the postfix service :</p>
+<div class="highlight"><pre><span></span># service postfix reload
+</pre></div>
+
+
+<p>Source: <a href="http://www.cyberciti.biz/faq/howto-setup-postfix-catch-all-email-accounts/">cyberciti</a></p>
+<h3 id="trouble">Trouble</h3>
+<p>In odrder that the existing users can get their e-mails when
+there is a cath all :</p>
+<p>edit the virtual_map in <code>/etc/postfix/virtual</code> and add the following line :</p>
+<div class="highlight"><pre><span></span>user@domain.tld user
+</pre></div>
+
+
+<p>next execute the following commands:</p>
+<div class="highlight"><pre><span></span>postmap /etc/postfix/virtual
+service postfix restart
+</pre></div>
+
+
+<h3 id="catch-all-with-regex">Catch all with regex :</h3>
+<p>You can configure some regex catch all for instance you can catch
+whatever.youruser@yourdomain.com
+In order to make a catch all for an user :
+edit (or create) the file </p>
+<div class="highlight"><pre><span></span>/etc/postfix/virtual-regexp
+</pre></div>
+
+
+<p>add regexp:/etc/postfix/virtual-regexp to virtual_maps in /etc/postfix/main.cf
+this will look like </p>
+<div class="highlight"><pre><span></span>virtual_maps = hash:/etc/postfix/virtual, regexp:/etc/postfix/virtual-regexp
+</pre></div>
+
+
+<p>add the line:</p>
+<div class="highlight"><pre><span></span>/^.*user@domnain.tld/ user
+</pre></div>
+
+
+<p>The user will receive all mail in the form *.user@domain.tld (where * is the
+classic Unix joker)</p>
+    </div>
+
+</article>
+
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-books"></span>
+                    <a href="/pages/books.html">books</a>
+                </li>
+                <li>
+                    <span class= "icons icons-palmares"></span>
+                    <a href="/pages/palmares.html">palmares</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/matthieukeller">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-linkedin"></span>
+                    <a href="https://linkedin.com/in/matthieukeller">linkedin</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+    <script>
+        (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+        function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+        e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+        e.src='//www.google-analytics.com/analytics.js';
+        r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+        ga('create','UA-63314567-1');ga('send','pageview');
+    </script>
+
+</div>
+</body>
+</html>

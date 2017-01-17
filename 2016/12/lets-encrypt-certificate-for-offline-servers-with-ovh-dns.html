@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>Let's encrypt certificate for offline servers with OVH DNS | maggick's logs</title>
+
+    <meta name="author" content="Matthieu Keller">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="http://matthieukeller.com/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css">
+    <link rel="stylesheet" href="http://matthieukeller.com/theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="http://matthieukeller.com/index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+                <li>
+                  <a href="http://matthieukeller.com/category/misc.html">Misc</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/programming.html">programming</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/programming-security.html">programming, security</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/security.html">security</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/sports.html">Sports</a>
+                </li>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="http://matthieukeller.com/pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="http://matthieukeller.com/pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="http://matthieukeller.com/2016/12/lets-encrypt-certificate-for-offline-servers-with-ovh-dns.html" title="Read more" class="entry-title-link">
+                Let's encrypt certificate for offline servers with OVH DNS</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2016-12-27T11:58:00+01:00">27 Dec 2016</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="http://matthieukeller.com/author/matthieu-keller.html" title="Read more posts from Matthieu Keller" class="meta-link">Matthieu Keller</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="http://matthieukeller.com/tag/programming.html" title="Read more with the label programming" class="meta-link">programming</a> 
+          <a href="http://matthieukeller.com/tag/ssl.html" title="Read more with the label SSL" class="meta-link">SSL</a> 
+          <a href="http://matthieukeller.com/tag/lets-encrypt.html" title="Read more with the label let's encrypt" class="meta-link">let's encrypt</a> 
+      </span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><a href="https://letsencrypt.org/">Let's encrypt</a> provide free and easy SSL certificates. Nevertheless it need to verify that
+you own the machine. In order to do that we usually use HTTP verification with
+the .well-known directory.</p>
+<p>But sometime our servers are not reachable from the internet. Therefore the HTTP
+validation is not possible. Hopefully there is another way the <a href="https://letsencrypt.github.io/acme-spec/">acme</a> challenge can be
+validated: <a href="https://letsencrypt.github.io/acme-spec/#rfc.section.7.4">DNS validation</a>.</p>
+<p>In this post we will see how we can generate <a href="https://letsencrypt.org/">Let's encrypt</a> SSL certificate for
+offline machine with DNS validation for domains hosts by <a href="https://ovh.com">OVH</a>.</p>
+
+
+<h2 id="certificate-generation">Certificate generation</h2>
+<h3 id="requirements">Requirements</h3>
+<ul>
+<li>A domain name with its DNS hosted by <a href="https://ovh.com">OVH</a></li>
+<li>curl (sudo apt-get install curl)</li>
+<li>Python 2 or 3 and pip (sudo apt-get install python-pip)</li>
+<li>python-ovh (pip install ovh)</li>
+<li>dehydrated (git clone https://github.com/lukas2511/dehydrated)</li>
+<li>OVH hook (git clone https://github.com/antoiner77/letsencrypt.sh-ovh)</li>
+</ul>
+<h3 id="api-key-generation">API Key generation</h3>
+<p>We need API keys in order to use the hook script for the DNS validation. For
+that, register the application on [OVH API] (https://eu.api.ovh.com/createApp/ https://eu.api.ovh.com/createApp/).</p>
+<p>We get two elements from the website:
+<em> APP_KEY
+</em> APP_SECRET</p>
+<p>We need to put them in our <code>ovh.conf</code> file in the OVH hook script:</p>
+<div class="highlight"><pre><span></span>[default]
+; general configuration: default endpoint
+endpoint=ovh-eu
+
+[ovh-eu]
+; configuration specific to &#39;ovh-eu&#39; endpoint
+application_key=APP_KEY
+application_secret=APP_SECRET
+; uncomment following line when writing a script application
+; with a single consumer key.
+;consumer_key=MA_CLEFS
+</pre></div>
+
+
+<p>Now we need to generate the use token in order to validation our keys (you may
+need to had execution permissions to the script):</p>
+<div class="highlight"><pre><span></span>./ovhdns.py --init
+</pre></div>
+
+
+<p>We get an other link where we need to authenticate one more time. When it is
+done just press the <code>ENTER</code> key.</p>
+<p>The script indicate the user token to insert in the <code>ovh.conf</code> file. Be sure to
+uncomment the line by deleting the <code>;</code> at the beginning of the line.</p>
+<p>The configuration file will be needed in the <code>dehydrated</code> folder, let's just
+create a symlink:</p>
+<div class="highlight"><pre><span></span>ln -s /home/user/letsencrypt.sh-ovh/ovh.conf /home/user/dehydrated/ovh.conf
+</pre></div>
+
+
+<p>The hook script configuration is finished, now let's configure the <code>dehydrated</code>
+script.</p>
+<h3 id="dehydrated-configuration">dehydrated configuration</h3>
+<p>In the domains.txt file, indicate the certificates that you want to generate.
+Each line will be a certificate but one certificate can be valid for several
+domains. For instance, the following configuration will generate two certificates
+each for two domains.</p>
+<div class="highlight"><pre><span></span>example.org www.example.org
+gitlab.example.com wikimedia.example.com
+</pre></div>
+
+
+<h3 id="certificates-generation">Certificates generation</h3>
+<p>Just launch the dehydrated script (you may need to had execution permission):</p>
+<div class="highlight"><pre><span></span>./dehydrated -c -t dns-01 -k &#39;/home/user/letsencrypt.sh-ovh/ovhdns.py&#39;
+</pre></div>
+
+
+<ul>
+<li><code>-c</code> (re)generate certificates, will renew them if they expire in less than one month</li>
+<li><code>-t dns-01</code> use the DNS challenge for acme validation</li>
+<li><code>-k</code> use specific script for hook</li>
+</ul>
+<p>The certificates are stored in <code>/home/user/dehydrated/certs/</code>.</p>
+<h2 id="automatically-renew-certificates">Automatically renew certificates</h2>
+<p>In order to automatically renew certificate:</p>
+<p>Create a symlink in order to use the certificate and the necessary key. This
+is the only moment where we will need root permissions. For
+instance, for the gitlab certificate we need <code>gitlab.crt</code> and <code>gitlab.key</code>:</p>
+<div class="highlight"><pre><span></span># ln -s /home/user/dehydrated/certs/git.exemple.fr/fullchain.pem /etc/gitlab/ssl/gitlab.crt
+# ln -s /home/user/dehydrated/certs/git.exemple.fr/privkey.pem /etc/gitlab/ssl/gitlab.key
+</pre></div>
+
+
+<p>Add the following line to the crontab (<code>crontab -e</code>):</p>
+<div class="highlight"><pre><span></span>0 15 * * * cd /home/user/dehydrated/; ./dehydrated  -c -t dns-01 -k &#39;/home/user/letsencrypt.sh-ovh/ovhdns.py&#39;
+</pre></div>
+
+
+<h2 id="source">Source</h2>
+<p><a href="https://ungeek.fr/letsencrypt-api-ovh/">https://ungeek.fr/letsencrypt-api-ovh/</a></p>
+    </div>
+
+        <footer>
+<div class="social-buttons">
+
+
+</div>        </footer>
+
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = "matthieukeller";
+        var disqus_identifier = "2016/12/lets-encrypt-certificate-for-offline-servers-with-ovh-dns.html";
+
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-books"></span>
+                    <a href="/pages/books.html">books</a>
+                </li>
+                <li>
+                    <span class= "icons icons-palmares"></span>
+                    <a href="/pages/palmares.html">palmares</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/matthieukeller">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-linkedin"></span>
+                    <a href="https://linkedin.com/in/matthieukeller">linkedin</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+    <script>
+        (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+        function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+        e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+        e.src='//www.google-analytics.com/analytics.js';
+        r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+        ga('create','UA-63314567-1');ga('send','pageview');
+    </script>
+
+</div>
+</body>
+</html>

