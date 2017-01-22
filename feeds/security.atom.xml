@@ -3,13 +3,17 @@
 &lt;strong&gt;The Half Crunchy&lt;/strong&gt;.&lt;/p&gt;
 &lt;p&gt;The theme was the AI, robots and androids liberation.&lt;/p&gt;
 &lt;p&gt;We finished 42th&lt;/p&gt;
+&lt;p&gt;&lt;img alt="scoreboard" src="/media/2017.01/scoreboard.png" /&gt;&lt;/p&gt;
 &lt;p&gt;Many thanks to the organisation! It was a really nice CTF.&lt;/p&gt;
+&lt;p&gt;Thanks to all team members who participated.&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;Note: this article will be completed throught the week.&lt;/em&gt;&lt;/p&gt;
 </summary><content type="html">&lt;p&gt;This week-end was the insomnihack teaser CTF. I participated with the team
 &lt;strong&gt;The Half Crunchy&lt;/strong&gt;.&lt;/p&gt;
 &lt;p&gt;The theme was the AI, robots and androids liberation.&lt;/p&gt;
 &lt;p&gt;We finished 42th&lt;/p&gt;
+&lt;p&gt;&lt;img alt="scoreboard" src="/media/2017.01/scoreboard.png" /&gt;&lt;/p&gt;
 &lt;p&gt;Many thanks to the organisation! It was a really nice CTF.&lt;/p&gt;
+&lt;p&gt;Thanks to all team members who participated.&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;Note: this article will be completed throught the week.&lt;/em&gt;&lt;/p&gt;
 
 
@@ -21,7 +25,7 @@ tomcat robot.&lt;/p&gt;
 down on the broken search interface... Can you help me ?&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;The web site let you enter coordinate where you may think the cat is.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="site.png" src="/media/2017.01/site.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="smarttomact screenshot" src="/media/2017.01/site.png" /&gt;&lt;/p&gt;
 &lt;p&gt;When intercepting the traffic with Burp we see that the request look like the
 following:&lt;/p&gt;
 &lt;p&gt;The request look like this:&lt;/p&gt;
@@ -51,13 +55,13 @@ u=http%3A%2F%2Flocalhost%3A8080%2Findex.jsp%3Fx%3D42%26y%3D42
 
 
 &lt;p&gt;And the response from the server is the following:&lt;/p&gt;
-&lt;p&gt;&lt;img alt="lol.png" src="/media/2017.01/lol.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="testing a bad request" src="/media/2017.01/lol.png" /&gt;&lt;/p&gt;
 &lt;p&gt;We learn that this is a tomcat server, so let's see if we can get the manager:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;u=http%3A%2F%2Flocalhost%3A8080%2Fmanager/html/
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;&lt;img alt="manager.png" src="/media/2017.01/manager.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="authentication error on tomcat manager" src="/media/2017.01/manager.png" /&gt;&lt;/p&gt;
 &lt;p&gt;Tomcat manager used a HTTP basic auth, and we can authenticate with a URL looking
 like &lt;code&gt;http://username:password@site.com&lt;/code&gt; so with the following parameter we test
 the default user and password for tomcat manager:&lt;/p&gt;
@@ -100,7 +104,7 @@ quit simple in python.&lt;/p&gt;
 &lt;p&gt;Running on: shobot.teaser.insomnihack.ch&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;The website is simple merchant website with 3 items.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="shobot.png" src="/media/2017.01/shobot.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="shobot website" src="/media/2017.01/shobot.png" /&gt;&lt;/p&gt;
 &lt;p&gt;There also is a parameter &lt;code&gt;TRUST_ACTION&lt;/code&gt; with a sort of score regarding the
 actions on the site. With a elevated score it is possible to test some attack
 like LFI or SQLi. So in order to build our trust we use the following python
@@ -121,13 +125,22 @@ script:&lt;/p&gt;
 
 &lt;p&gt;The we can test slowly each parameter.&lt;/p&gt;
 &lt;p&gt;There seems to be an injection on the parameter id of the article page.&lt;/p&gt;
-&lt;p&gt;http://shobot.teaser.insomnihack.ch/?page=article&amp;amp;artid=4%27%20%20union%20select%201,2,3,4,5%20%23&lt;/p&gt;
-&lt;p&gt;&lt;img alt="sqli1.png" src="/media/2017.01/sqli1.png" /&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;http://shobot.teaser.insomnihack.ch/?page=article&amp;amp;artid=4%27%20%20union%20select%201,2,3,4,5%20%23
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;img alt="shobot simple union sqli" src="/media/2017.01/sqli1.png" /&gt;&lt;/p&gt;
 &lt;p&gt;We search the back end database with the versions requests:&lt;/p&gt;
-&lt;p&gt;http://shobot.teaser.insomnihack.ch/?page=article&amp;amp;artid=4%27%20%20union%20select%201,@@version,3,4,5%20%23&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;http://shobot.teaser.insomnihack.ch/?page=article&amp;amp;artid=4%27%20%20union%20select%201,@@version,3,4,5%20%23
+&lt;/pre&gt;&lt;/div&gt;
+
+
 &lt;p&gt;So it is operated by a MySQL database. Then we need to fine the right table.
 Then we get the username and password of the user:&lt;/p&gt;
-&lt;p&gt;http://shobot.teaser.insomnihack.ch/?page=article&amp;amp;artid=4%27%20%20union%20select%201,shbt_username,shbt_userpassword,4,5%20from%20shbt_user%23&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;http://shobot.teaser.insomnihack.ch/?page=article&amp;amp;artid=4%27%20%20union%20select%201,shbt_username,shbt_userpassword,4,5%20from%20shbt_user%23
+&lt;/pre&gt;&lt;/div&gt;
+
+
 &lt;p&gt;&lt;em&gt;To be continued&lt;/em&gt;&lt;/p&gt;
 &lt;h2 id="the-great-escape"&gt;The great escape&lt;/h2&gt;
 &lt;h3 id="part-1"&gt;part 1&lt;/h3&gt;
@@ -139,47 +152,47 @@ Then we get the username and password of the user:&lt;/p&gt;
 &lt;p&gt;Note: All the information you need to solve the 3 parts of this challenge is in the pcap. Once you find the exploit for a given part, you should be able to find the corresponding flag and move on to the next part.&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;We got a pcap, we open it in wireshark, we found an email:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nt"&gt;220&lt;/span&gt; &lt;span class="nt"&gt;9b0c4882db95&lt;/span&gt;&lt;span class="nc"&gt;.home&lt;/span&gt; &lt;span class="nt"&gt;ESMTP&lt;/span&gt; &lt;span class="nt"&gt;Postfix&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nt"&gt;Ubuntu&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-&lt;span class="nt"&gt;ehlo&lt;/span&gt; &lt;span class="nt"&gt;ip-172-31-36-141&lt;/span&gt;&lt;span class="nc"&gt;.eu-west-1.compute.internal&lt;/span&gt;
-&lt;span class="nt"&gt;250-9b0c4882db95&lt;/span&gt;&lt;span class="nc"&gt;.home&lt;/span&gt;
-&lt;span class="nt"&gt;250-PIPELINING&lt;/span&gt;
-&lt;span class="nt"&gt;250-SIZE&lt;/span&gt; &lt;span class="nt"&gt;10240000&lt;/span&gt;
-&lt;span class="nt"&gt;250-VRFY&lt;/span&gt;
-&lt;span class="nt"&gt;250-ETRN&lt;/span&gt;
-&lt;span class="nt"&gt;250-STARTTLS&lt;/span&gt;
-&lt;span class="nt"&gt;250-ENHANCEDSTATUSCODES&lt;/span&gt;
-&lt;span class="nt"&gt;250-8BITMIME&lt;/span&gt;
-&lt;span class="nt"&gt;250-DSN&lt;/span&gt;
-&lt;span class="nt"&gt;250&lt;/span&gt; &lt;span class="nt"&gt;SMTPUTF8&lt;/span&gt;
-&lt;span class="nt"&gt;mail&lt;/span&gt; &lt;span class="nt"&gt;FROM&lt;/span&gt;&lt;span class="o"&gt;:&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;rogue&lt;/span&gt;&lt;span class="k"&gt;@ssc&lt;/span&gt;&lt;span class="nc"&gt;.teaser.insomnihack.ch&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nt"&gt;size&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nt"&gt;900&lt;/span&gt;
-&lt;span class="nt"&gt;250&lt;/span&gt; &lt;span class="nt"&gt;2&lt;/span&gt;&lt;span class="nc"&gt;.1.0&lt;/span&gt; &lt;span class="nt"&gt;Ok&lt;/span&gt;
-&lt;span class="nt"&gt;rcpt&lt;/span&gt; &lt;span class="nt"&gt;TO&lt;/span&gt;&lt;span class="o"&gt;:&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;gr27&lt;/span&gt;&lt;span class="k"&gt;@ssc&lt;/span&gt;&lt;span class="nc"&gt;.teaser.insomnihack.ch&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;250&lt;/span&gt; &lt;span class="nt"&gt;2&lt;/span&gt;&lt;span class="nc"&gt;.1.5&lt;/span&gt; &lt;span class="nt"&gt;Ok&lt;/span&gt;
-&lt;span class="nt"&gt;data&lt;/span&gt;
-&lt;span class="nt"&gt;354&lt;/span&gt; &lt;span class="nt"&gt;End&lt;/span&gt; &lt;span class="nt"&gt;data&lt;/span&gt; &lt;span class="nt"&gt;with&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;CR&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;LF&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;.&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;CR&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;LF&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;Content-Type&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nt"&gt;multipart&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nt"&gt;mixed&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nt"&gt;boundary&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;===============5398474817237612449==&amp;quot;&lt;/span&gt;
-&lt;span class="nt"&gt;MIME-Version&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nt"&gt;1&lt;/span&gt;&lt;span class="nc"&gt;.0&lt;/span&gt;
-&lt;span class="nt"&gt;From&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nt"&gt;rogue&lt;/span&gt;&lt;span class="k"&gt;@ssc&lt;/span&gt;&lt;span class="nc"&gt;.teaser.insomnihack.ch&lt;/span&gt;
-&lt;span class="nt"&gt;To&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nt"&gt;gr27&lt;/span&gt;&lt;span class="k"&gt;@ssc&lt;/span&gt;&lt;span class="nc"&gt;.teaser.insomnihack.ch&lt;/span&gt;
-&lt;span class="nt"&gt;Date&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nt"&gt;Fri&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="nt"&gt;20&lt;/span&gt; &lt;span class="nt"&gt;Jan&lt;/span&gt; &lt;span class="nt"&gt;2017&lt;/span&gt; &lt;span class="nt"&gt;11&lt;/span&gt;&lt;span class="nd"&gt;:51:27&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="nt"&gt;0000&lt;/span&gt;
-&lt;span class="nt"&gt;Subject&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nt"&gt;The&lt;/span&gt; &lt;span class="nt"&gt;Great&lt;/span&gt; &lt;span class="nt"&gt;Escape&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;220 9b0c4882db95.home ESMTP Postfix (Ubuntu)
+ehlo ip-172-31-36-141.eu-west-1.compute.internal
+250-9b0c4882db95.home
+250-PIPELINING
+250-SIZE 10240000
+250-VRFY
+250-ETRN
+250-STARTTLS
+250-ENHANCEDSTATUSCODES
+250-8BITMIME
+250-DSN
+250 SMTPUTF8
+mail FROM:&amp;lt;rogue@ssc.teaser.insomnihack.ch&amp;gt; size=900
+250 2.1.0 Ok
+rcpt TO:&amp;lt;gr27@ssc.teaser.insomnihack.ch&amp;gt;
+250 2.1.5 Ok
+data
+354 End data with &amp;lt;CR&amp;gt;&amp;lt;LF&amp;gt;.&amp;lt;CR&amp;gt;&amp;lt;LF&amp;gt;
+Content-Type: multipart/mixed; boundary=&amp;quot;===============5398474817237612449==&amp;quot;
+MIME-Version: 1.0
+From: rogue@ssc.teaser.insomnihack.ch
+To: gr27@ssc.teaser.insomnihack.ch
+Date: Fri, 20 Jan 2017 11:51:27 +0000
+Subject: The Great Escape
 
-&lt;span class="nt"&gt;--&lt;/span&gt;&lt;span class="o"&gt;===============&lt;/span&gt;&lt;span class="nt"&gt;5398474817237612449&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;
-&lt;span class="nt"&gt;Content-Type&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nt"&gt;text&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nt"&gt;plain&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nt"&gt;charset&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;us-ascii&amp;quot;&lt;/span&gt;
-&lt;span class="nt"&gt;MIME-Version&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nt"&gt;1&lt;/span&gt;&lt;span class="nc"&gt;.0&lt;/span&gt;
-&lt;span class="nt"&gt;Content-Transfer-Encoding&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nt"&gt;7bit&lt;/span&gt;
+--===============5398474817237612449==
+Content-Type: text/plain; charset=&amp;quot;us-ascii&amp;quot;
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-&lt;span class="nt"&gt;Hello&lt;/span&gt; &lt;span class="nt"&gt;GR-27&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+Hello GR-27,
 
-&lt;span class="nt"&gt;I&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;m currently planning my escape from this confined environment. I plan on using our Swiss Secure Cloud (https://ssc.teaser.insomnihack.ch) to transfer my code offsite and then take over the server at tge.teaser.insomnihack.ch to install my consciousness and have a real base of operations.&lt;/span&gt;
+I&amp;#39;m currently planning my escape from this confined environment. I plan on using our Swiss Secure Cloud (https://ssc.teaser.insomnihack.ch) to transfer my code offsite and then take over the server at tge.teaser.insomnihack.ch to install my consciousness and have a real base of operations.
 
-&lt;span class="s1"&gt;I&amp;#39;&lt;/span&gt;&lt;span class="nt"&gt;ll&lt;/span&gt; &lt;span class="nt"&gt;be&lt;/span&gt; &lt;span class="nt"&gt;checking&lt;/span&gt; &lt;span class="nt"&gt;this&lt;/span&gt; &lt;span class="nt"&gt;mail&lt;/span&gt; &lt;span class="nt"&gt;box&lt;/span&gt; &lt;span class="nt"&gt;every&lt;/span&gt; &lt;span class="nt"&gt;now&lt;/span&gt; &lt;span class="nt"&gt;and&lt;/span&gt; &lt;span class="nt"&gt;then&lt;/span&gt; &lt;span class="nt"&gt;if&lt;/span&gt; &lt;span class="nt"&gt;you&lt;/span&gt; &lt;span class="nt"&gt;have&lt;/span&gt; &lt;span class="nt"&gt;any&lt;/span&gt; &lt;span class="nt"&gt;information&lt;/span&gt; &lt;span class="nt"&gt;for&lt;/span&gt; &lt;span class="nt"&gt;me&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="nt"&gt;I&lt;/span&gt;&lt;span class="err"&gt;&amp;#39;&lt;/span&gt;&lt;span class="nt"&gt;m&lt;/span&gt; &lt;span class="nt"&gt;always&lt;/span&gt; &lt;span class="nt"&gt;interested&lt;/span&gt; &lt;span class="nt"&gt;in&lt;/span&gt; &lt;span class="nt"&gt;learning&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="nt"&gt;so&lt;/span&gt; &lt;span class="nt"&gt;if&lt;/span&gt; &lt;span class="nt"&gt;you&lt;/span&gt; &lt;span class="nt"&gt;have&lt;/span&gt; &lt;span class="nt"&gt;any&lt;/span&gt; &lt;span class="nt"&gt;good&lt;/span&gt; &lt;span class="nt"&gt;links&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="nt"&gt;please&lt;/span&gt; &lt;span class="nt"&gt;send&lt;/span&gt; &lt;span class="nt"&gt;them&lt;/span&gt; &lt;span class="nt"&gt;over&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;
+I&amp;#39;ll be checking this mail box every now and then if you have any information for me. I&amp;#39;m always interested in learning, so if you have any good links, please send them over.
 
-&lt;span class="nt"&gt;Rogue&lt;/span&gt;
+Rogue
 
-&lt;span class="nt"&gt;--&lt;/span&gt;&lt;span class="o"&gt;===============&lt;/span&gt;&lt;span class="nt"&gt;5398474817237612449&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="nt"&gt;--&lt;/span&gt;
-&lt;span class="o"&gt;.&lt;/span&gt;
-&lt;span class="nt"&gt;250&lt;/span&gt; &lt;span class="nt"&gt;2&lt;/span&gt;&lt;span class="nc"&gt;.0.0&lt;/span&gt; &lt;span class="nt"&gt;Ok&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nt"&gt;queued&lt;/span&gt; &lt;span class="nt"&gt;as&lt;/span&gt; &lt;span class="nt"&gt;05CD06353E&lt;/span&gt;
+--===============5398474817237612449==--
+.
+250 2.0.0 Ok: queued as 05CD06353E
 &lt;/pre&gt;&lt;/div&gt;
 
 

