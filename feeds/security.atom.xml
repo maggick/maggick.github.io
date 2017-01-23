@@ -9,6 +9,7 @@
 &lt;li&gt;&lt;a href="#cryptquizz"&gt;Cryptquizz&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="#shobot"&gt;Shobot&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="#the-great-escape-part-1"&gt;The great escape - part 1&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#the-great-escape-part-2"&gt;The great escape - part 2&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;&lt;img alt="scoreboard" src="/media/2017.01/scoreboard.png" /&gt;&lt;/p&gt;
@@ -25,6 +26,7 @@
 &lt;li&gt;&lt;a href="#cryptquizz"&gt;Cryptquizz&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="#shobot"&gt;Shobot&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="#the-great-escape-part-1"&gt;The great escape - part 1&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#the-great-escape-part-2"&gt;The great escape - part 2&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/div&gt;
 &lt;p&gt;&lt;img alt="scoreboard" src="/media/2017.01/scoreboard.png" /&gt;&lt;/p&gt;
@@ -487,7 +489,144 @@ action=login&amp;amp;name=rogue&amp;amp;password=rogue
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;The header include the flag for this part and the URL for the second part.&lt;/p&gt;</content><category term="security"></category><category term="ctf"></category></entry><entry><title>CVE 2016-5195 dirtycow</title><link href="http://matthieukeller.com/2016/12/cve-2016-5195-dirtycow.html" rel="alternate"></link><published>2016-12-11T19:20:00+01:00</published><updated>2016-12-11T19:20:00+01:00</updated><author><name>Matthieu Keller</name></author><id>tag:matthieukeller.com,2016-12-11:/2016/12/cve-2016-5195-dirtycow.html</id><summary type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2016.12/cow.png" alt="Ðirtycow logo" width="162"&gt;&lt;/p&gt;
+&lt;p&gt;The header include the flag for this part and the URL for the second part and
+the file send by Rogue. But the file is encrypted. This is part 2.&lt;/p&gt;
+&lt;h2 id="the-great-escape-part-2"&gt;The great escape - part 2&lt;/h2&gt;
+&lt;p&gt;&lt;em&gt;No write up for this challenge&lt;/em&gt;&lt;/p&gt;</content><category term="security"></category><category term="ctf"></category></entry><entry><title>Building a kiosk computer with Chrome</title><link href="http://matthieukeller.com/2016/12/building-a-kiosk-computer-with-chrome.html" rel="alternate"></link><published>2016-12-26T09:10:00+01:00</published><updated>2016-12-26T09:10:00+01:00</updated><author><name>Matthieu Keller</name></author><id>tag:matthieukeller.com,2016-12-26:/2016/12/building-a-kiosk-computer-with-chrome.html</id><summary type="html">&lt;p&gt;Building a Kiosk where Google Chrome is running in full screen and user
+interaction with the system are reduced to the minimum.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;Building a Kiosk where Google Chrome is running in full screen and user
+interaction with the system are reduced to the minimum.&lt;/p&gt;
+
+
+&lt;h2 id="debian-installation"&gt;Debian installation&lt;/h2&gt;
+&lt;p&gt;This will be pass as most of you should be able to install a basic Debian
+system. Just set lvm encryption, strong password for root and for the user and
+mostly do not install useless program, check only the program you need (ssh for
+instance).&lt;/p&gt;
+&lt;h2 id="installing-the-packages"&gt;Installing the packages&lt;/h2&gt;
+&lt;p&gt;We will need a few more packages to be able to run things:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;X (display server)&lt;/li&gt;
+&lt;li&gt;A light window manager able to run Chrome in full screen&lt;/li&gt;
+&lt;li&gt;Google Chrome&lt;/li&gt;
+&lt;li&gt;sudo to be able to impersonate the user&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The first operations will be done using root as the sudo command is not
+installed yet.&lt;/p&gt;
+&lt;p&gt;First we add the Google Chrome repository and the key to check the package
+integrity:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Edit the file &lt;code&gt;/etc/apt/source.list&lt;/code&gt; and add the following repository:&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;deb http://dl.google.com/linux/chrome/deb/ stable main&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Execute the following command:&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;wget -qO- https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Then we need to update the package list and install all necessary packages:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;apt-get update
+apt-get install --no-install-recommends xorg openbox sudo google-chrome-stable
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Without the &lt;code&gt;--no-install-recommends&lt;/code&gt;parameter some useless packages will be
+installed.&lt;/p&gt;
+&lt;h2 id="load-chrome-in-kiosk-at-startup"&gt;Load Chrome in kiosk at startup&lt;/h2&gt;
+&lt;p&gt;We need a script that will configure and load Chrome at the X server startup.
+As we don't want any data saved between each session we will delete the Chrome
+profile each time the script is used. Moreover it is in this script that we
+choose the starting page of Chrome.&lt;/p&gt;
+&lt;p&gt;Create and edit the script:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sudo vi /opt/kiosk.sh
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The file content is the following:&lt;/p&gt;
+&lt;table class="highlighttable"&gt;&lt;tr&gt;&lt;td class="linenos"&gt;&lt;div class="linenodiv"&gt;&lt;pre&gt;1
+2
+3
+4
+5
+6
+7
+8&lt;/pre&gt;&lt;/div&gt;&lt;/td&gt;&lt;td class="code"&gt;&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="ch"&gt;#!/bin/bash&lt;/span&gt;
+
+xset -dpms
+xset s off
+openbox-session &lt;span class="p"&gt;&amp;amp;&lt;/span&gt;
+&lt;span class="k"&gt;while&lt;/span&gt; true&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;do&lt;/span&gt; rm -rf ~/.&lt;span class="o"&gt;{&lt;/span&gt;config,cache&lt;span class="o"&gt;}&lt;/span&gt;/google-chrome/
+  google-chrome --kiosk --no-first-run  &lt;span class="s1"&gt;&amp;#39;http://localhost&amp;#39;&lt;/span&gt;
+&lt;span class="k"&gt;done&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+
+&lt;p&gt;Give the execution right to the script:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sudo chmod +x /opt/kiosk.sh
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;In order to start the X server and launch the &lt;code&gt;kiosk.sh&lt;/code&gt; script, we need to
+create a systemd service.&lt;/p&gt;
+&lt;p&gt;In order to to that, create and edit the file &lt;code&gt;/etc/systemd/system/kiosk.service&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sudo vi /etc/systemd/system/kiosk.service
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The content of the file is the following:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;[Unit]&lt;/span&gt;
+&lt;span class="na"&gt;Description&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;Kiosk&lt;/span&gt;
+
+&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;span class="na"&gt;Type&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;oneshot&lt;/span&gt;
+&lt;span class="na"&gt;ExecStart&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;/usr/bin/sudo –u user /usr/bin/startx /etc/X11/Xsession /opt/kiosk.sh --&lt;/span&gt;
+
+&lt;span class="k"&gt;[Install]&lt;/span&gt;
+&lt;span class="na"&gt;WantedBy&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;multi-user.target&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We need to enable the script with the following command:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;systemctl enable kiosk
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;To run the script use the following command:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;systemctl start kiosk »
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;You can also reboot in order to check that the script is automatically launch at
+startup.&lt;/p&gt;
+&lt;p&gt;If you need a terminal, you can use &lt;ctrl&gt;+&lt;alt&gt;+&lt;F2-9&gt; to get one.&lt;/p&gt;
+&lt;h2 id="automatically-mount-usb-key"&gt;Automatically mount USB key&lt;/h2&gt;
+&lt;p&gt;If your users need to copy data from the machine this paragraph is for you.
+Otherwise this is just informational.&lt;/p&gt;
+&lt;p&gt;As our users don't have a shell access they are unable to mount USB key.
+Therefore we need to automatically mount them.&lt;/p&gt;
+&lt;p&gt;We need the &lt;code&gt;usbmount&lt;/code&gt; package:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;apt-get install --no-install-recommends usbmount
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The USB keys will be automatically mount into &lt;code&gt;/mnt/usbX&lt;/code&gt;.In order for the user
+to have the permissions to right on it we need to add its &lt;code&gt;uid&lt;/code&gt; and &lt;code&gt;gid&lt;/code&gt; in the
+&lt;code&gt;usbmount&lt;/code&gt; configuration.&lt;/p&gt;
+&lt;p&gt;Edit the file &lt;code&gt;/etc/usbmount/usbmount.conf&lt;/code&gt; and the user &lt;code&gt;uid&lt;/code&gt; and &lt;code&gt;guid&lt;/code&gt; to the
+following line (the &lt;code&gt;uid&lt;/code&gt; and &lt;code&gt;gid&lt;/code&gt; can be found in &lt;code&gt;/etc/passwd&lt;/code&gt;):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;FS_MOUNTOPTIONS=&amp;quot; &amp;quot;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The line would be something like the following:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;FS_MOUNTOPTIONS=&amp;quot;uid=1000,gid=1000&amp;quot;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="sources"&gt;Sources&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://thepcspy.com/read/building-a-kiosk-computer-ubuntu-1404-chrome/"&gt;https://thepcspy.com/read/building-a-kiosk-computer-ubuntu-1404-chrome/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://lukas.zapletalovi.com/2013/08/execute-command-during-start-with-systemd.html"&gt;https://lukas.zapletalovi.com/2013/08/execute-command-during-start-with-systemd.html&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><category term="programming"></category><category term="security"></category><category term="chrome"></category><category term="kiosk"></category></entry><entry><title>CVE 2016-5195 dirtycow</title><link href="http://matthieukeller.com/2016/12/cve-2016-5195-dirtycow.html" rel="alternate"></link><published>2016-12-11T19:20:00+01:00</published><updated>2016-12-11T19:20:00+01:00</updated><author><name>Matthieu Keller</name></author><id>tag:matthieukeller.com,2016-12-11:/2016/12/cve-2016-5195-dirtycow.html</id><summary type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2016.12/cow.png" alt="Ðirtycow logo" width="162"&gt;&lt;/p&gt;
 &lt;p&gt;Dirty COW (CVE-2016-5195) is a privilege escalation vulnerability in the Linux
 Kernel.
 "&lt;a href="https://en.wikipedia.org/wiki/Race_condition"&gt;A race condition&lt;/a&gt; was found in
