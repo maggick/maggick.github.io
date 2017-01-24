@@ -45,7 +45,6 @@ SOCIAL = (('github', 'https://github.com/maggick'),
 MENUITEMS = (
              ('archives', '/archives'),
              ('feeds', '/feeds/all.atom.xml'),
-             ('books', '/pages/books.html'),
              ('palmares', '/pages/palmares.html'),
             )
 
