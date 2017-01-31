@@ -2,7 +2,7 @@
 <html class="no-js">
 <head>
     <meta charset="utf-8">
-    <title>Git, remove unwanted data from history | maggick's logs</title>
+    <title>Installing OSMC without installer | maggick's logs</title>
 
     <meta name="author" content="Matthieu Keller">
     <meta name="description" content="">
@@ -70,12 +70,12 @@
 
     <header class="entry-header">
         <h1 class="entry-title">
-      <a href="http://matthieukeller.com/2014/11/git-remove-unwanted-data-from-history.html" title="Read more" class="entry-title-link">
-                Git, remove unwanted data from history</a>
+      <a href="http://matthieukeller.com/2016/04/installing-osmc-without-installer.html" title="Read more" class="entry-title-link">
+                Installing OSMC without installer</a>
         </h1>
 
         <div class="entry-date">
-            <time datetime="2014-11-23T00:00:00+01:00">23 Nov 2014</time>
+            <time datetime="2016-04-14T23:49:00+02:00">14 Apr 2016</time>
         </div>
 
     <div class="entry-meta">
@@ -86,26 +86,79 @@
 
       <span class="meta entry-tags">
         <span class="icons icons-category"></span>
-          <a href="http://matthieukeller.com/tag/git.html" title="Read more with the label git" class="meta-link">git</a> 
+          <a href="http://matthieukeller.com/tag/osmc.html" title="Read more with the label osmc" class="meta-link">osmc</a> 
+          <a href="http://matthieukeller.com/tag/raspberry.html" title="Read more with the label raspberry" class="meta-link">raspberry</a> 
+          <a href="http://matthieukeller.com/tag/smb.html" title="Read more with the label smb" class="meta-link">smb</a> 
       </span>
     </div>
     </header>
 
     <div class="entry-content">
-            <p>Recently I put unwanted data (a password) in one of my git commit.
-This commit was not push to an public server (like github or bitbucket)
-therefore there was no real security breach other than my git history.</p>
-<p>The problem was to remove the data by rewriting the git history, I search on the
-internet and found and interesting command using git filter-branch
-To rewrite the git history use the following command:</p>
-<div class="highlight"><pre><span></span>git filter-branch --tree-filter &#39;git ls-files -z &quot;*.py&quot; |xargs -0 perl -p -i -e &quot;s#(PASSWORD1|PASSWORD2)#youPassowrd#g&quot;&#39; -- --all
+            <p>I bought the new raspberry pi 3 with integrated Wi-Fi. Currently I still have a
+Ethernet cable running through my living room to my old raspberry pi 1.</p>
+<p>Just willing to download the last raspbmc version I figured that it was no more
+raspbmc but osmc which is basically the same but with much marketing around it.
+The most annoying one is that you need to install an install (such meta). I was
+pretty much sure it was not really necessary and moreover there is no version of the
+installer for Arch Linux.</p>
+
+
+<p>So instead using their installer you can download directly the image (you need to
+click a button to display it) by selecting the right device and the last monthly
+version.</p>
+<p>After the download just decompress the archive:</p>
+<div class="highlight"><pre><span></span>gunzip OSMC_TGT_rbp2_20160403.img.gz
 </pre></div>
 
 
-<p>This command will just change the history of python files (.py) and replace
-"PASSWORD1" and "PASSWORD2" whit "youPassword".</p>
-<p><strong>WARNING</strong> rewriting git history is dangerous, make a backup before doing anything.</p>
-<p>You can found a short version in <a href="http://matthieukeller.com/pages/git-tricks.html">my notes</a>.</p>
+<p>Now you will need to know on which device is the sdcard. On Arch Linux with
+system d, you may use <code>dmesg</code> to have some info:</p>
+<div class="highlight"><pre><span></span>[  953.910932] mmc0: new high speed SDHC card at address e624
+[  953.973940] mmcblk0: mmc0:e624 SD04G 3.69 GiB
+[  953.982627]  mmcblk0: p1 p2
+</pre></div>
+
+
+<p>On my own computer the sdcard is named mmcblk0 and have two partition <code>p1</code> and
+<code>p2</code>. From there you just need to copy the image to your sdcard (be sure to
+remove the <code>p1</code> or <code>p2</code> if any, you need to write directly on the disk <strong>NOT</strong>
+on the partition):</p>
+<div class="highlight"><pre><span></span>dd if=OSMC_TGT_rbp2_20160403.img of=/dev/mmcblk0
+</pre></div>
+
+
+<p>Then put the sdcard back on the raspberry pi and OSMC will install itself on the
+device. Next it will prompt you with the home screen and guide you through the
+first install settings. You will need to set language, location, wireless
+password and so on.</p>
+<p>If you need to connect to osmc, default username and password are:</p>
+<div class="highlight"><pre><span></span><span class="n">username</span><span class="o">:</span> <span class="n">osmc</span>
+<span class="n">password</span><span class="o">:</span> <span class="n">osmc</span>
+</pre></div>
+
+
+<p>If you need to add a SMB shared folder with authentication you will need to add
+the share normally, get the error and then directly connect to the OSMC with
+SSH and modify the XML file located at <code>home/osmc/.kodi/userdata/sources.xml</code> by
+adding the user and password as in the following:</p>
+<div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">sources</span><span class="o">&gt;</span>
+    <span class="p">...</span>
+    <span class="o">&lt;</span><span class="n">video</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="k">default</span> <span class="n">pathversion</span><span class="o">=</span><span class="s">&quot;1&quot;</span><span class="o">&gt;&lt;/</span><span class="k">default</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="n">source</span><span class="o">&gt;</span>
+            <span class="o">&lt;</span><span class="n">name</span><span class="o">&gt;</span><span class="n">Prime</span><span class="o">&lt;/</span><span class="n">name</span><span class="o">&gt;</span>
+            <span class="o">&lt;</span><span class="n">path</span> <span class="n">pathversion</span><span class="o">=</span><span class="s">&quot;1&quot;</span><span class="o">&gt;</span><span class="nl">smb</span><span class="p">:</span><span class="c1">//user:password@10.0.0.111/video/&lt;/path&gt;</span>
+        <span class="o">&lt;/</span><span class="n">source</span><span class="o">&gt;</span>
+    <span class="o">&lt;/</span><span class="n">video</span><span class="o">&gt;</span>
+    <span class="p">...</span>
+<span class="o">&lt;/</span><span class="n">sources</span><span class="o">&gt;</span>
+</pre></div>
+
+
+<p>Save, <strong>REBOOT</strong>, and it will work.</p>
+<p>Thanks to
+<a href="http://codetitans.pl/blog/post/osmc--smb-share-with-credentials">http://codetitans.pl</a>
+for this last part.</p>
     </div>
 
         <footer>
@@ -117,7 +170,7 @@ To rewrite the git history use the following command:</p>
     <div id="disqus_thread"></div>
     <script type="text/javascript">
         var disqus_shortname = "matthieukeller";
-        var disqus_identifier = "2014/11/git-remove-unwanted-data-from-history.html";
+        var disqus_identifier = "2016/04/installing-osmc-without-installer.html";
 
         (function() {
         var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
