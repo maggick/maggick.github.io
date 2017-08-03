@@ -9,4 +9,5 @@ Just some interesting links.
    a list of the different SSL vulnerabilities.
  * [Arr0way penetration testing cheat-sheet](https://highon.coffee/blog/penetration-testing-tools-cheat-sheet/)
  * [Pentesting naked with chromium](https://highon.coffee/blog/kali-chromium-install/)
- 
+ * [Tools list for RE](http://malwareanalysis.tools/)
+
