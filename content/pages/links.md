@@ -10,4 +10,5 @@ Just some interesting links.
  * [Arr0way penetration testing cheat-sheet](https://highon.coffee/blog/penetration-testing-tools-cheat-sheet/)
  * [Pentesting naked with chromium](https://highon.coffee/blog/kali-chromium-install/)
  * [Tools list for RE](http://malwareanalysis.tools/)
+ * [Google dorks cheatsheet](https://www.exploit-db.com/google-hacking-database/13/)
 
