@@ -11,4 +11,5 @@ Just some interesting links.
  * [Pentesting naked with chromium](https://highon.coffee/blog/kali-chromium-install/)
  * [Tools list for RE](http://malwareanalysis.tools/)
  * [Google dorks cheatsheet](https://www.exploit-db.com/google-hacking-database/13/)
+ * [PDF tools list from Didier Stevens](https://blog.didierstevens.com/programs/pdf-tools/)
 
