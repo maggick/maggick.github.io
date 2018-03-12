@@ -12,4 +12,5 @@ Just some interesting links.
  * [Tools list for RE](http://malwareanalysis.tools/)
  * [Google dorks cheatsheet](https://www.exploit-db.com/google-hacking-database/13/)
  * [PDF tools list from Didier Stevens](https://blog.didierstevens.com/programs/pdf-tools/)
+ * [Password stroage, server side](https://paragonie.com/blog/2016/02/how-safely-store-password-in-2016)
 
