@@ -5,7 +5,7 @@ import os
 import sys
 sys.path.append(os.curdir)
 
-SITEURL = 'http://matthieukeller.com'
+SITEURL = 'https://matthieukeller.com'
 RELATIVE_URLS = False
 
 # DELETE_OUTPUT_DIRECTORY = True
