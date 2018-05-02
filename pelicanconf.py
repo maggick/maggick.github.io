@@ -51,8 +51,8 @@ MENUITEMS = (
 DEFAULT_PAGINATION = 10
 
 THEME = "./maggner-pelican/"
-#STATIC_PATHS = ['media', 'extra/CNAME']
-#EXTRA_PATH_METADATA = {'extra/CNAME': {'path': 'CNAME'},}
+STATIC_PATHS = ['media', 'extra/CNAME']
+EXTRA_PATH_METADATA = {'extra/CNAME': {'path': 'CNAME'},}
 FAVICON_URL = "%s/media/favicon.ico" % SITEURL
 
 # Third party
