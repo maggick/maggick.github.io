@@ -4,9 +4,6 @@
 
 This project is my actual website, my window on the cyberspace.
 
-It is the fourth version of my website. You would found more information in the
-about website section.
-
 ## Blog
 
 This blog is:
