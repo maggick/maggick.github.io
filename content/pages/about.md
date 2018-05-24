@@ -19,11 +19,6 @@ first GNU/Linux installation was an Ubuntu 10.04 Lucid Linx in June 2010. So on
 I always have a GNU/Linux distribution installed on my computer or my servers.
 Actually my servers run on Debian and my desktops run on Arch Linux.
 
-## maggick
-
-I used maggick as a pseudo. This was given to me by my colleagues at Bearstech
-in summer 2012. I used it on irc on github and on some forums.
-
 ## Contact
 
 The social links in the right panel give your four different ways to contact me:
