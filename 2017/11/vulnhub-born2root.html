@@ -99,7 +99,7 @@ src="/media/2017.11/born2root/1.png" alt="Born2root homepage" width="162"></p>
 A simple boot2root machine by <a href="https://twitter.com/h4d3sw0rm">Hadi Mene</a>.</p>
 
 
-<h2 id="discovery">Discovery</h2>
+<h2>Discovery</h2>
 <p>First we scan all port of the VM:</p>
 <div class="highlight"><pre><span></span>root@kalili:~# nmap -sSV 10.0.2.5
 
@@ -121,9 +121,9 @@ Nmap done: 1 IP address (1 host up) scanned in 6.74 seconds
 
 <p>So we got a SSH service on port 22 and a web service on the port 80.
 Let's see what the website propose:</p>
-<h2 id="web">Web</h2>
+<h2>Web</h2>
 <p>The website simulate a company selling security services:</p>
-<p><img alt="Landing page" src="/media/2017.11/born2root/1.png" /></p>
+<p><img alt="Landing page" src="/media/2017.11/born2root/1.png"></p>
 <p>The robots.txt file contain 2 url:</p>
 <div class="highlight"><pre><span></span>User-agent: *
 Disallow: /wordpress-blog
@@ -132,9 +132,9 @@ Disallow: /files
 
 
 <p>The <code>/wordpress-blog</code> lead us to a simple image:</p>
-<p><img alt="Troll" src="/media/2017.11/born2root/2.png" /></p>
+<p><img alt="Troll" src="/media/2017.11/born2root/2.png"></p>
 <p>The /files give us an empty directory listing:</p>
-<p><img alt="Directory listing" src="/media/2017.11/born2root/4.png" /></p>
+<p><img alt="Directory listing" src="/media/2017.11/born2root/4.png"></p>
 <p>We launch <code>dirb</code> against the site:</p>
 <div class="highlight"><pre><span></span>root@kalili:~# dirb http://10.0.2.5)
 -----------------
@@ -151,10 +151,10 @@ WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt
 GENERATED WORDS: 4612
 
 ---- Scanning URL: http://10.0.2.5/ ----
-==&gt; DIRECTORY: http://10.0.2.5/files/
-==&gt; DIRECTORY: http://10.0.2.5/icons/
+==&amp;gt; DIRECTORY: http://10.0.2.5/files/
+==&amp;gt; DIRECTORY: http://10.0.2.5/icons/
 + http://10.0.2.5/index.html (CODE:200|SIZE:5651)
-==&gt; DIRECTORY: http://10.0.2.5/manual/
+==&amp;gt; DIRECTORY: http://10.0.2.5/manual/
 + http://10.0.2.5/robots.txt (CODE:200|SIZE:57)
 + http://10.0.2.5/server-status (CODE:403|SIZE:296)
 
@@ -163,8 +163,8 @@ GENERATED WORDS: 4612
 ---- Entering directory: http://10.0.2.5/icons/ ----
 (!) WARNING: Directory IS LISTABLE. No need to scan it. (Use mode &#39;-w&#39; if you want to scan it anyway)
 ---- Entering directory: http://10.0.2.5/manual/ ----
-==&gt; DIRECTORY: http://10.0.2.5/manual/da/
-&lt;SNIP&gt;
+==&amp;gt; DIRECTORY: http://10.0.2.5/manual/da/
+&amp;lt;SNIP&amp;gt;
 </pre></div>
 
 
@@ -230,7 +230,7 @@ Last login: Tue Nov 14 15:57:00 2017 from 10.0.2.15
 READY TO ACCESS THE SECRET LAB ?
 
 secret password : ^CTraceback (most recent call last):
-  File &quot;/var/tmp/login.py&quot;, line 8, in &lt;module&gt;
+  File &quot;/var/tmp/login.py&quot;, line 8, in &amp;lt;module&amp;gt;
     password = raw_input(&quot;secret password : &quot;)
 KeyboardInterrupt
 </pre></div>
@@ -255,11 +255,11 @@ KeyboardInterrupt
 </pre></div>
 
 
-<h2 id="privilege-elevation">Privilege elevation</h2>
+<h2>Privilege elevation</h2>
 <p>As always a bit of reconnaissance is needed.</p>
 <div class="highlight"><pre><span></span>martin@debian:~$ ls -alRh /home/
 /home/:
-&lt;SNIP&gt;
+&amp;lt;SNIP&amp;gt;
 
 /home/hadi:
 total 60K
@@ -276,22 +276,22 @@ drwxr-xr-x 5 root root 4,0K juin   9 20:17 ..
 -rw-r--r-- 1 root root    5 juin   5 13:40 peda-session-overflow.txt
 -rw-r--r-- 1 hadi hadi  675 avril 26  2017 .profile
 drwxr-xr-x 2 hadi hadi 4,0K mai    1  2017 .ssh
-&lt;SNIP&gt;
+&amp;lt;SNIP&amp;gt;
 </pre></div>
 
 
 <p>Okay we got a program <code>buff</code> owned by root and and file <code>buff.c</code> readable by anybody but there is no suid, so no need to bother here.
 <code>martin@debian:/home/hadi$ ls -laRh /etc/cron.d</code> doesn't get us something useful but <code>cat /etc/crontab</code> seems usable:</p>
 <div class="highlight"><pre><span></span>martin@debian:/home/hadi$ cat /etc/crontab 
-&lt;SNIP&gt;
+&amp;lt;SNIP&amp;gt;
 SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
 # m h dom mon dow user  command
-17 *    * * *   root    cd / &amp;&amp; run-parts --report /etc/cron.hourly
-25 6    * * *   root    test -x /usr/sbin/anacron || ( cd / &amp;&amp; run-parts --report /etc/cron.daily )
-47 6    * * 7   root    test -x /usr/sbin/anacron || ( cd / &amp;&amp; run-parts --report /etc/cron.weekly )
-52 6    1 * *   root    test -x /usr/sbin/anacron || ( cd / &amp;&amp; run-parts --report /etc/cron.monthly )
+17 *    * * *   root    cd / &amp;amp;&amp;amp; run-parts --report /etc/cron.hourly
+25 6    * * *   root    test -x /usr/sbin/anacron || ( cd / &amp;amp;&amp;amp; run-parts --report /etc/cron.daily )
+47 6    * * 7   root    test -x /usr/sbin/anacron || ( cd / &amp;amp;&amp;amp; run-parts --report /etc/cron.weekly )
+52 6    1 * *   root    test -x /usr/sbin/anacron || ( cd / &amp;amp;&amp;amp; run-parts --report /etc/cron.monthly )
 */5   * * * *   jimmy   python /tmp/sekurity.py
 </pre></div>
 
@@ -307,7 +307,7 @@ uid=1002(jimmy) gid=1002(jimmy) groupes=1002(jimmy)
 <p>We add our ssh key to be able to connect with ssh:</p>
 <div class="highlight"><pre><span></span><span class="nv">$</span> <span class="nv">cd</span> <span class="sr">/home/</span><span class="n">jimmy</span>
 <span class="nv">$</span> <span class="nv">mkdir</span> <span class="o">.</span><span class="n">ssh</span>
-<span class="nv">$</span> <span class="nv">cat</span> <span class="sr">/home/m</span><span class="n">artin</span><span class="sr">/.ssh/</span><span class="n">authorized_keys</span> <span class="o">&gt;</span> <span class="o">.</span><span class="n">ssh</span><span class="o">/</span><span class="n">authorized_keys</span>
+<span class="nv">$</span> <span class="nv">cat</span> <span class="sr">/home/m</span><span class="n">artin</span><span class="sr">/.ssh/</span><span class="n">authorized_keys</span> <span class="o">&amp;</span><span class="ow">gt</span><span class="p">;</span> <span class="o">.</span><span class="n">ssh</span><span class="o">/</span><span class="n">authorized_keys</span>
 </pre></div>
 
 
@@ -361,13 +361,13 @@ Vous avez du nouveau courrier dans /var/mail/jimmy
 
 <p>Getting the strings in the program give us the following:</p>
 <div class="highlight"><pre><span></span>jimmy@debian:~$ strings networker 
-&lt;SNIP&gt;
+&amp;lt;SNIP&amp;gt;
 *** Networker 2.0 *** 
 /sbin/ifconfig
 /bin/ping -c 1  localhost 
 Done 
 echo &#39;echo linux tool version 5&#39;
-&lt;SNIP&gt;
+&amp;lt;SNIP&amp;gt;
 </pre></div>
 
 
