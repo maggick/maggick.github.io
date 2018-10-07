@@ -30,8 +30,7 @@ DISPLAY_CATEGORIES_ON_MENU = True
 
 # Plugins
 PLUGIN_PATHS = ['./pelican-plugins/']
-PLUGINS = ['summary']
-#PLUGINS = ['summary', 'Better code samples']
+PLUGINS = ['summary', 'Better code samples']
 #MARKDOWN = {'extensions':['markdown.extensions.codehilite(css_class=highlight)', 'markdown.extensions.extra', 'markdown.extensions.toc']}
 
 # Social
