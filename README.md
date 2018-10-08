@@ -7,7 +7,7 @@ This project is my actual website, my window on the cyberspace.
 ## Blog
 
 This blog is:
-  * publish with [Pelican] (http://blog.getpelican.com) a static blog generator
+  * publish with [Pelican](http://blog.getpelican.com) a static blog generator
   * build by [travis](https://travis-ci.org/maggick/blog)
   * hosted by [github](https://github.com) with github pages
 
