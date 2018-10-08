@@ -10,7 +10,7 @@ RELATIVE_URLS = False
 
 # DELETE_OUTPUT_DIRECTORY = True
 
-AUTHOR = u'Matthieu Keller'
+AUTHOR = u'maggick'
 SITENAME = u"maggick's logs"
 
 PATH = 'content'
@@ -30,7 +30,8 @@ DISPLAY_CATEGORIES_ON_MENU = True
 
 # Plugins
 PLUGIN_PATHS = ['./pelican-plugins/']
-PLUGINS = ['summary', 'Better code samples']
+PLUGINS = ['summary']
+#PLUGINS = ['summary', 'better code samples', 'pelican-toc']
 #MARKDOWN = {'extensions':['markdown.extensions.codehilite(css_class=highlight)', 'markdown.extensions.extra', 'markdown.extensions.toc']}
 
 # Social
@@ -57,7 +58,7 @@ FAVICON_URL = "%s/media/favicon.ico" % SITEURL
 
 # Third party
 DISQUS_SITENAME = "matthieukeller"
-GOOGLE_ANALYTICS = "UA-63314567-1"
+#GOOGLE_ANALYTICS = "UA-63314567-1"
 
 # License
 LICENSE = 'Creative Commons Attribution 4.0'
