@@ -13,4 +13,5 @@ Just some interesting links.
  * [Google dorks cheatsheet](https://www.exploit-db.com/google-hacking-database/13/)
  * [PDF tools list from Didier Stevens](https://blog.didierstevens.com/programs/pdf-tools/)
  * [Password stroage, server side](https://paragonie.com/blog/2016/02/how-safely-store-password-in-2016)
+ * [Everything you should know about certificates and PKI but are too afraid to ask](https://smallstep.com/blog/everything-pki.html)
 
