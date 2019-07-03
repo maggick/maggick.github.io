@@ -30,6 +30,9 @@ We fetch and merge the first:
     git fetch first
     git merge first/master
 
+If you have a message like `fatal: refusing to merge unrelated histories` you
+need to force git to merge the projects using `--allow-unrelated-histories`.
+
 We fetch and merge the second:
 
     git remote add second pathTo/second
