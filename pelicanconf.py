@@ -5,7 +5,7 @@ import os
 import sys
 sys.path.append(os.curdir)
 
-SITEURL = 'https://matthieukeller.com'
+SITEURL = 'https://maggick.fr'
 RELATIVE_URLS = False
 
 # DELETE_OUTPUT_DIRECTORY = True
@@ -37,8 +37,7 @@ PLUGINS = ['summary']
 # Social
 # Social widget
 SOCIAL = (('github', 'https://github.com/maggick'),
-          ('twitter', 'https://twitter.com/matthieukeller'),
-          ('linkedin', 'https://linkedin.com/in/matthieukeller'),
+          ('twitter', 'https://twitter.com/maggick_fr'),
           ('stackoverflow', 'http://stackoverflow.com/users/1827067/maggick'),
           )
 
