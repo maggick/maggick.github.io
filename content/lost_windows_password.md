@@ -24,5 +24,5 @@ password by a known one.
 
 She was happy, nevertheless the needed program was not on this laptop.
 
-[You can found the manipulations in my notes section](http://www.matthieukeller.com/pages/lost-windows-password.html).
+[You can found the manipulations in my notes section](http://www.maggick.fr/pages/lost-windows-password.html).
 

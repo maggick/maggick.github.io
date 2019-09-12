@@ -5,10 +5,10 @@ tags:blog
 meta:blog
 
 Today I start my blog using Pelican and hosting it with github pages.
-It is located at [www.matthieukeller.com/blog](http://www.matthieukeller.com/blog).
-On [www.matthieukeller.com](http://www.matthieukeller.com) you will find a sort
+It is located at [www.maggick.fr/blog](http://maggick.fr/blog).
+On [www.maggick.fr](http://maggick.fr) you will find a sort
 of portal where I redirect travelers to this blog or to my notes located at
-[www.mattieukeller.com/notes](http://www.matthieukeller.com/notes). My notes are is
+[www.maggick.fr/notes](http://www.maggick.fr/notes). My notes are is
 the place where is store my "how to" and the things that may help other peoples,
 they are also hosted with github pages.
 
@@ -27,6 +27,6 @@ _Edit:_
 
 29 Oct. 2014: I use discuss for the comments and I use the maggner for pelican
 theme. You can read more about the theme in the
-[blog changes](http://www.matthieukeller.com/blog/2014/10/27/blog-changes.html)
+[blog changes](http://www.maggick.fr/blog/2014/10/27/blog-changes.html)
 article.
 

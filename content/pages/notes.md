@@ -1,6 +1,6 @@
 Title: Notes
 
-This are my notes previously available at www.matthieukeller.com/notes.
+This are my personnal notes.
 
 [My list of useful **tools**](/pages/tools.html).
 
