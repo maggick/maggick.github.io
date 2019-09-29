@@ -94,7 +94,7 @@
     </header>
 
     <div class="entry-content">
-            <p><a href="https://letsencrypt.org/">Let's encrypt</a> provide free and easy SSL certificates. Nevertheless it need to verify that
+            <p><a href="https://letsencrypt.org/">Let's encrypt</a> provide free and easy SSL&nbsp;certificates. Nevertheless it need to verify that
 you own the machine. In order to do that we usually use HTTP verification with
 the .well-known directory.</p>
 <p>But sometime our servers are not reachable from the internet. Therefore the HTTP
@@ -102,10 +102,9 @@ validation is not possible. Hopefully there is another way the <a href="https://
 validated: <a href="https://letsencrypt.github.io/acme-spec/#rfc.section.7.4">DNS validation</a>.</p>
 <p>In this post we will see how we can generate <a href="https://letsencrypt.org/">Let's encrypt</a> SSL certificate for
 offline machine with DNS validation for domains hosts by <a href="https://ovh.com">OVH</a>.</p>
-<!-- PELICAN_END_SUMMARY -->
 
-<h2>Certificate generation</h2>
-<h3>Requirements</h3>
+<h2 id="certificate generation">Certificate generation</h2>
+<h3 id="requirements">Requirements</h3>
 <ul>
 <li>A domain name with its DNS hosted by <a href="https://ovh.com">OVH</a></li>
 <li>curl (sudo apt-get install curl)</li>
@@ -114,7 +113,7 @@ offline machine with DNS validation for domains hosts by <a href="https://ovh.co
 <li>dehydrated (git clone https://github.com/lukas2511/dehydrated)</li>
 <li>OVH hook (git clone https://github.com/antoiner77/letsencrypt.sh-ovh)</li>
 </ul>
-<h3>API Key generation</h3>
+<h3 id="api key generation">API Key generation</h3>
 <p>We need API keys in order to use the hook script for the DNS validation. For
 that, register the application on [OVH API] (https://eu.api.ovh.com/createApp/).</p>
 <p>We get two elements from the website:
@@ -126,21 +125,17 @@ that, register the application on [OVH API] (https://eu.api.ovh.com/createApp/).
 endpoint=ovh-eu
 
 [ovh-eu]
-; configuration specific to &#39;ovh-eu&#39; endpoint
+; configuration specific to 'ovh-eu' endpoint
 application_key=APP_KEY
 application_secret=APP_SECRET
 ; uncomment following line when writing a script application
 ; with a single consumer key.
 ;consumer_key=MA_CLEFS
 </pre></div>
-
-
 <p>Now we need to generate the use token in order to validation our keys (you may
 need to had execution permissions to the script):</p>
 <div class="highlight"><pre><span></span><span class="p">.</span><span class="o">/</span><span class="n">ovhdns</span><span class="p">.</span><span class="n">py</span> <span class="c1">--init</span>
 </pre></div>
-
-
 <p>We get an other link where we need to authenticate one more time. When it is
 done just press the <code>ENTER</code> key.</p>
 <p>The script indicate the user token to insert in the <code>ovh.conf</code> file. Be sure to
@@ -149,11 +144,9 @@ uncomment the line by deleting the <code>;</code> at the beginning of the line.<
 create a symlink:</p>
 <div class="highlight"><pre><span></span><span class="n">ln</span> <span class="o">-</span><span class="n">s</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="k">user</span><span class="o">/</span><span class="n">letsencrypt</span><span class="p">.</span><span class="n">sh</span><span class="o">-</span><span class="n">ovh</span><span class="o">/</span><span class="n">ovh</span><span class="p">.</span><span class="n">conf</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="k">user</span><span class="o">/</span><span class="n">dehydrated</span><span class="o">/</span><span class="n">ovh</span><span class="p">.</span><span class="n">conf</span>
 </pre></div>
-
-
 <p>The hook script configuration is finished, now let's configure the <code>dehydrated</code>
 script.</p>
-<h3>dehydrated configuration</h3>
+<h3 id="dehydrated configuration">dehydrated configuration</h3>
 <p>In the domains.txt file, indicate the certificates that you want to generate.
 Each line will be a certificate but one certificate can be valid for several
 domains. For instance, the following configuration will generate two certificates
@@ -161,21 +154,17 @@ each for two domains.</p>
 <div class="highlight"><pre><span></span><span class="n">example</span><span class="p">.</span><span class="n">org</span> <span class="n">www</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">org</span>
 <span class="n">gitlab</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">com</span> <span class="n">wikimedia</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">com</span>
 </pre></div>
-
-
-<h3>Certificates generation</h3>
+<h3 id="certificates generation">Certificates generation</h3>
 <p>Just launch the dehydrated script (you may need to had execution permission):</p>
-<div class="highlight"><pre><span></span><span class="p">.</span><span class="o">/</span><span class="n">dehydrated</span> <span class="o">-</span><span class="k">c</span> <span class="o">-</span><span class="n">t</span> <span class="n">dns</span><span class="o">-</span><span class="mi">01</span> <span class="o">-</span><span class="n">k</span> <span class="s1">&#39;/home/user/letsencrypt.sh-ovh/ovhdns.py&#39;</span>
+<div class="highlight"><pre><span></span><span class="p">.</span><span class="o">/</span><span class="n">dehydrated</span> <span class="o">-</span><span class="k">c</span> <span class="o">-</span><span class="n">t</span> <span class="n">dns</span><span class="o">-</span><span class="mi">01</span> <span class="o">-</span><span class="n">k</span> <span class="s1">'/home/user/letsencrypt.sh-ovh/ovhdns.py'</span>
 </pre></div>
-
-
 <ul>
 <li><code>-c</code> (re)generate certificates, will renew them if they expire in less than one month</li>
 <li><code>-t dns-01</code> use the DNS challenge for acme validation</li>
 <li><code>-k</code> use specific script for hook</li>
 </ul>
 <p>The certificates are stored in <code>/home/user/dehydrated/certs/</code>.</p>
-<h2>Automatically renew certificates</h2>
+<h2 id="automatically renew certificates_1">Automatically renew certificates</h2>
 <p>In order to automatically renew certificate:</p>
 <p>Create a symlink in order to use the certificate and the necessary key. This
 is the only moment where we will need root permissions. For
@@ -183,14 +172,10 @@ instance, for the gitlab certificate we need <code>gitlab.crt</code> and <code>g
 <div class="highlight"><pre><span></span><span class="o">#</span> <span class="n">ln</span> <span class="o">-</span><span class="n">s</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="k">user</span><span class="o">/</span><span class="n">dehydrated</span><span class="o">/</span><span class="n">certs</span><span class="o">/</span><span class="n">git</span><span class="p">.</span><span class="n">exemple</span><span class="p">.</span><span class="n">fr</span><span class="o">/</span><span class="n">fullchain</span><span class="p">.</span><span class="n">pem</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">gitlab</span><span class="o">/</span><span class="n">ssl</span><span class="o">/</span><span class="n">gitlab</span><span class="p">.</span><span class="n">crt</span>
 <span class="o">#</span> <span class="n">ln</span> <span class="o">-</span><span class="n">s</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="k">user</span><span class="o">/</span><span class="n">dehydrated</span><span class="o">/</span><span class="n">certs</span><span class="o">/</span><span class="n">git</span><span class="p">.</span><span class="n">exemple</span><span class="p">.</span><span class="n">fr</span><span class="o">/</span><span class="n">privkey</span><span class="p">.</span><span class="n">pem</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">gitlab</span><span class="o">/</span><span class="n">ssl</span><span class="o">/</span><span class="n">gitlab</span><span class="p">.</span><span class="k">key</span>
 </pre></div>
-
-
 <p>Add the following line to the crontab (<code>crontab -e</code>):</p>
-<div class="highlight"><pre><span></span><span class="mi">0</span> <span class="mi">15</span> <span class="o">*</span> <span class="o">*</span> <span class="o">*</span> <span class="n">cd</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="k">user</span><span class="o">/</span><span class="n">dehydrated</span><span class="o">/</span><span class="p">;</span> <span class="p">.</span><span class="o">/</span><span class="n">dehydrated</span>  <span class="o">-</span><span class="k">c</span> <span class="o">-</span><span class="n">t</span> <span class="n">dns</span><span class="o">-</span><span class="mi">01</span> <span class="o">-</span><span class="n">k</span> <span class="s1">&#39;/home/user/letsencrypt.sh-ovh/ovhdns.py&#39;</span>
+<div class="highlight"><pre><span></span><span class="mi">0</span> <span class="mi">15</span> <span class="o">*</span> <span class="o">*</span> <span class="o">*</span> <span class="n">cd</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="k">user</span><span class="o">/</span><span class="n">dehydrated</span><span class="o">/</span><span class="p">;</span> <span class="p">.</span><span class="o">/</span><span class="n">dehydrated</span>  <span class="o">-</span><span class="k">c</span> <span class="o">-</span><span class="n">t</span> <span class="n">dns</span><span class="o">-</span><span class="mi">01</span> <span class="o">-</span><span class="n">k</span> <span class="s1">'/home/user/letsencrypt.sh-ovh/ovhdns.py'</span>
 </pre></div>
-
-
-<h2>Source</h2>
+<h2 id="source">Source</h2>
 <p><a href="https://ungeek.fr/letsencrypt-api-ovh/">https://ungeek.fr/letsencrypt-api-ovh/</a></p>
     </div>
 

