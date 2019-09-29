@@ -25,4 +25,4 @@ The social links in the right panel give your four different ways to contact me:
 
   1. [Twitter](https://twitter.com/maggick_fr)
   2. [GitHub](https://github.com/maggick).
-  3. [Stackoverflow](https://http://stackoverflow.com/users/1827067/maggick)
+  3. [Stackoverflow](https://stackoverflow.com/users/1827067/maggick)
