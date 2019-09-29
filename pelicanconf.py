@@ -32,7 +32,16 @@ DISPLAY_CATEGORIES_ON_MENU = True
 PLUGIN_PATHS = ['./pelican-plugins/']
 PLUGINS = ['summary', 'tag_cloud', 'better_codeblock_line_numbering']
 #PLUGINS = ['summary', 'tag_cloud', 'extract_toc', 'better_codeblock_line_numbering']
-MARKDOWN = {'extensions':['markdown.extensions.codehilite(css_class=highlight)', 'markdown.extensions.extra', 'markdown.extensions.toc']}
+#MARKDOWN = {'extensions_config':{'markdown.extensions.codehilite(css_class=highlight)', 'markdown.extensions.extra', 'markdown.extensions.toc']}
+MARKDOWN = {
+    'extension_configs': {
+        'markdown.extensions.codehilite': {'css_class': 'highlight'},
+        'markdown.extensions.extra': {},
+        'markdown.extensions.toc': {},
+    },
+    'output_format': 'html5',
+}
+
 
 # Social
 # Social widget
