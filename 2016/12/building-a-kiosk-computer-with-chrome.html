@@ -125,8 +125,8 @@ integrity:</p>
 </ul>
 <p><code>wget -qO- https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -</code></p>
 <p>Then we need to update the package list and install all necessary packages:</p>
-<div class="highlight"><pre><span></span>apt-get update
-apt-get install --no-install-recommends xorg openbox sudo google-chrome-stable
+<div class="highlight"><pre><span class="code-line"><span></span>apt-get update</span>
+<span class="code-line">apt-get install --no-install-recommends xorg openbox sudo google-chrome-stable</span>
 </pre></div>
 
 
@@ -138,61 +138,61 @@ As we don't want any data saved between each session we will delete the Chrome
 profile each time the script is used. Moreover it is in this script that we
 choose the starting page of Chrome.</p>
 <p>Create and edit the script:</p>
-<div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">vi</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">kiosk</span><span class="p">.</span><span class="n">sh</span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="n">sudo</span> <span class="n">vi</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">kiosk</span><span class="p">.</span><span class="n">sh</span></span>
 </pre></div>
 
 
 <p>The file content is the following:</p>
-<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2
-3
-4
-5
-6
-7
-8</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
-
-xset -dpms
-xset s off
-openbox-session <span class="p">&amp;</span>
-<span class="k">while</span> true<span class="p">;</span> <span class="k">do</span> rm -rf ~/.<span class="o">{</span>config,cache<span class="o">}</span>/google-chrome/
-  google-chrome --kiosk --no-first-run  <span class="s1">&#39;http://localhost&#39;</span>
-<span class="k">done</span>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="code-line">1</span>
+<span class="code-line">2</span>
+<span class="code-line">3</span>
+<span class="code-line">4</span>
+<span class="code-line">5</span>
+<span class="code-line">6</span>
+<span class="code-line">7</span>
+<span class="code-line">8</pre></div></td><td class="code"><div class="highlight"><pre><span class="code-line"><span></span><span class="ch">#!/bin/bash</span></span>
+<span class="code-line"></span>
+<span class="code-line">xset -dpms</span>
+<span class="code-line">xset s off</span>
+<span class="code-line">openbox-session <span class="p">&amp;</span></span>
+<span class="code-line"><span class="k">while</span> true<span class="p">;</span> <span class="k">do</span> rm -rf ~/.<span class="o">{</span>config,cache<span class="o">}</span>/google-chrome/</span>
+<span class="code-line">  google-chrome --kiosk --no-first-run  <span class="s1">&#39;http://localhost&#39;</span></span>
+<span class="code-line"><span class="k">done</span></span>
 </pre></div>
 </td></tr></table>
 
 <p>Give the execution right to the script:</p>
-<div class="highlight"><pre><span></span>sudo chmod +x /opt/kiosk.sh
+<div class="highlight"><pre><span class="code-line"><span></span>sudo chmod +x /opt/kiosk.sh</span>
 </pre></div>
 
 
 <p>In order to start the X server and launch the <code>kiosk.sh</code> script, we need to
 create a systemd service.</p>
 <p>In order to to that, create and edit the file <code>/etc/systemd/system/kiosk.service</code>:</p>
-<div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">vi</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">systemd</span><span class="o">/</span><span class="k">system</span><span class="o">/</span><span class="n">kiosk</span><span class="p">.</span><span class="n">service</span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="n">sudo</span> <span class="n">vi</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">systemd</span><span class="o">/</span><span class="k">system</span><span class="o">/</span><span class="n">kiosk</span><span class="p">.</span><span class="n">service</span></span>
 </pre></div>
 
 
 <p>The content of the file is the following:</p>
-<div class="highlight"><pre><span></span><span class="k">[Unit]</span>
-<span class="na">Description</span><span class="o">=</span><span class="s">Kiosk</span>
-
-<span class="k">[Service]</span>
-<span class="na">Type</span><span class="o">=</span><span class="s">oneshot</span>
-<span class="na">ExecStart</span><span class="o">=</span><span class="s">/usr/bin/sudo –u user /usr/bin/startx /etc/X11/Xsession /opt/kiosk.sh --</span>
-
-<span class="k">[Install]</span>
-<span class="na">WantedBy</span><span class="o">=</span><span class="s">multi-user.target</span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="k">[Unit]</span></span>
+<span class="code-line"><span class="na">Description</span><span class="o">=</span><span class="s">Kiosk</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">[Service]</span></span>
+<span class="code-line"><span class="na">Type</span><span class="o">=</span><span class="s">oneshot</span></span>
+<span class="code-line"><span class="na">ExecStart</span><span class="o">=</span><span class="s">/usr/bin/sudo –u user /usr/bin/startx /etc/X11/Xsession /opt/kiosk.sh --</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">[Install]</span></span>
+<span class="code-line"><span class="na">WantedBy</span><span class="o">=</span><span class="s">multi-user.target</span></span>
 </pre></div>
 
 
 <p>We need to enable the script with the following command:</p>
-<div class="highlight"><pre><span></span>systemctl enable kiosk
+<div class="highlight"><pre><span class="code-line"><span></span>systemctl enable kiosk</span>
 </pre></div>
 
 
 <p>To run the script use the following command:</p>
-<div class="highlight"><pre><span></span>systemctl start kiosk »
+<div class="highlight"><pre><span class="code-line"><span></span>systemctl start kiosk »</span>
 </pre></div>
 
 
@@ -205,7 +205,7 @@ Otherwise this is just informational.</p>
 <p>As our users don't have a shell access they are unable to mount USB key.
 Therefore we need to automatically mount them.</p>
 <p>We need the <code>usbmount</code> package:</p>
-<div class="highlight"><pre><span></span><span class="n">apt</span><span class="o">-</span><span class="k">get</span> <span class="n">install</span> <span class="c1">--no-install-recommends usbmount</span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="n">apt</span><span class="o">-</span><span class="k">get</span> <span class="n">install</span> <span class="c1">--no-install-recommends usbmount</span></span>
 </pre></div>
 
 
@@ -214,12 +214,12 @@ to have the permissions to right on it we need to add its <code>uid</code> and <
 <code>usbmount</code> configuration.</p>
 <p>Edit the file <code>/etc/usbmount/usbmount.conf</code> and the user <code>uid</code> and <code>guid</code> to the
 following line (the <code>uid</code> and <code>gid</code> can be found in <code>/etc/passwd</code>):</p>
-<div class="highlight"><pre><span></span><span class="n">FS_MOUNTOPTIONS</span><span class="o">=</span><span class="ss">&quot; &quot;</span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="n">FS_MOUNTOPTIONS</span><span class="o">=</span><span class="ss">&quot; &quot;</span></span>
 </pre></div>
 
 
 <p>The line would be something like the following:</p>
-<div class="highlight"><pre><span></span><span class="n">FS_MOUNTOPTIONS</span><span class="o">=</span><span class="ss">&quot;uid=1000,gid=1000&quot;</span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="n">FS_MOUNTOPTIONS</span><span class="o">=</span><span class="ss">&quot;uid=1000,gid=1000&quot;</span></span>
 </pre></div>
 
 

