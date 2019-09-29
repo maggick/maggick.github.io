@@ -101,9 +101,27 @@ the solution to root it.</p>
 <p><img class="align-left" src="/media/2019.09/swagshop_card.png" alt="Swagshop Card" width="262"></p>
 
 
-<p>[TOC]</p>
-<h1>Recon</h1>
-<h2>nmap</h2>
+<div class="toc">
+<ul>
+<li><a href="#recon">Recon</a><ul>
+<li><a href="#nmap">nmap</a></li>
+<li><a href="#web">Web</a></li>
+<li><a href="#getting-admin">Getting Admin</a></li>
+<li><a href="#to-the-user-flag">To the user flag</a><ul>
+<li><a href="#the-rce-way">The RCE way</a></li>
+</ul>
+</li>
+<li><a href="#lets-get-root">let's get root</a><ul>
+<li><a href="#reverse-shell-way">Reverse shell way</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#wrapping-up">Wrapping up</a></li>
+</ul>
+</div>
+<h1 id="recon">Recon</h1>
+<h2 id="nmap">nmap</h2>
 <div class="highlight"><pre><span class="code-line"><span></span># Nmap 7.80 scan initiated Tue Sep 17 14:15:38 2019 as: nmap -oA 10.10.10.140 -sS 10.10.10.140</span>
 <span class="code-line">Nmap scan report for 10.10.10.140</span>
 <span class="code-line">Host is up (0.019s latency).</span>
@@ -116,7 +134,7 @@ the solution to root it.</p>
 </pre></div>
 
 
-<h2>Web</h2>
+<h2 id="web">Web</h2>
 <p>As there is only an SSH and a HTTP port, we continue our recon on the web part.</p>
 <p>When accessing the website we can observe a Magento website.</p>
 <p><img alt="Swag shop homepage" src="/media/2019.09/swagshop_3.png"></p>
@@ -189,7 +207,7 @@ gives us some information by the version of the application:</p>
 <li>Magento eCommerce - Remote Code Execution (exploits/xml/webapps/37977.py)</li>
 <li>Magento CE &lt; 1.9.0.1 - (Authenticated) Remote Code Execution (exploits/php/webapps/37811.py)</li>
 </ul>
-<h2>Getting Admin</h2>
+<h2 id="getting-admin">Getting Admin</h2>
 <p>The second exploit allow to create an admin account on the application.</p>
 <p>But the exploit's script use a wrong URL. We add "/index.php/admin/" to the
 target URL:</p>
@@ -200,7 +218,7 @@ target URL:</p>
 <p>This will create an administrator account named "forme" with the same password.
 We can then login to the admin panel and access the full magento framework.</p>
 <p><img alt="magenta admin panel" src="/media/2019.09/swagshop_1.png"></p>
-<h2>To the user flag</h2>
+<h2 id="to-the-user-flag">To the user flag</h2>
 <p>From there a few possibility will allow us to execute code on the application:</p>
 <p>The first one is to upload a magento extension using the download. A blog
 post from jvoisin explain how to write this "simple" backdoor:
@@ -250,7 +268,7 @@ this parameter in the exploit code (we put 2 years to be safe):</p>
 <p>We get a remote code execution. From there we can get a reverse shell or do
 everything only with the RCE. I struggle a bit with the reverse shell before
 finding the right one. Therefore I will start with the RCE only exploitation.</p>
-<h3>The RCE way</h3>
+<h3 id="the-rce-way">The RCE way</h3>
 <p>As the box is often reset by other players we chain the two exploit in a bash
 script.</p>
 <div class="highlight"><pre><span class="code-line"><span></span>python <span class="m">37977</span>.py</span>
@@ -280,7 +298,7 @@ Linux One). So we look at the user directory:</p>
 </pre></div>
 
 
-<h2>let's get root</h2>
+<h2 id="lets-get-root">let's get root</h2>
 <p>We start by enumerating our permissions on the box</p>
 <div class="highlight"><pre><span class="code-line"><span></span>sudo -l</span>
 <span class="code-line">Matching Defaults entries for www-data on swagshop:</span>
@@ -307,7 +325,7 @@ this command without a shell. For that we can use the vi "-c" option:</p>
 </pre></div>
 
 
-<h3>Reverse shell way</h3>
+<h3 id="reverse-shell-way">Reverse shell way</h3>
 <p>There is another way to resolve this part of the box: using a reverse shell!</p>
 <p>My classic python reverse shell was not working as there was no python on the box and
 the bash reverse was also not working. Nevertheless, the netcat one was working:</p>
@@ -360,7 +378,7 @@ We can easily find the user flag:</p>
 </pre></div>
 
 
-<h1>Wrapping up</h1>
+<h1 id="wrapping-up">Wrapping up</h1>
 <p>This box was really interesting. I learned a lot about magento admin panel. As
 the downloader was disabled, the easiest way to execute code on the box was not
 available and I had to find other ways to execute code on a magento website from

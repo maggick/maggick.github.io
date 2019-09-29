@@ -106,9 +106,9 @@ day. Otherwise you kids might not understand :)</p>
 </blockquote>
 
 
-<h1>Discovery</h1>
+<h1 id="discovery">Discovery</h1>
 <p>First of all we determine the VM IP address a with a simple <code>nmap -sP</code>.</p>
-<h2>Nmap</h2>
+<h2 id="nmap">Nmap</h2>
 <p>As always we start by <a href="http://nmap.org/">nmaping</a> the server in order to see the open ports:</p>
 <div class="highlight"><pre><span class="code-line"><span></span>[<span class="nv">maggick</span>@<span class="nv">arch</span> <span class="nv">FartKnocker</span>]$ <span class="nv">nmap</span> <span class="o">-</span><span class="nv">A</span> <span class="mi">10</span>.<span class="mi">0</span>.<span class="mi">2</span>.<span class="mi">6</span></span>
 <span class="code-line"># <span class="nv">Nmap</span> <span class="mi">6</span>.<span class="mi">47</span> <span class="nv">scan</span> <span class="nv">initiated</span> <span class="nv">Thu</span> <span class="nv">Apr</span> <span class="mi">23</span> <span class="mi">16</span>:<span class="mi">21</span>:<span class="mi">05</span> <span class="mi">2015</span> <span class="nv">as</span>: <span class="nv">nmap</span> <span class="o">-</span><span class="nv">oA</span> <span class="nv">nmap</span> <span class="o">-</span><span class="nv">A</span> <span class="mi">10</span>.<span class="mi">0</span>.<span class="mi">2</span>.<span class="mi">6</span></span>
@@ -127,10 +127,10 @@ day. Otherwise you kids might not understand :)</p>
 <p>Only the port 80 is open with an HTTP server.</p>
 <p>As always I had launch a <a href="https://cirt.net/nikto2">nikto</a> against the server
 but no interesting result.</p>
-<h1>Exploitation</h1>
+<h1 id="exploitation">Exploitation</h1>
 <p>We go to the web page and only found a pcap file which is a capture of some
 network traffic.</p>
-<h2>pcap1</h2>
+<h2 id="pcap1">pcap1</h2>
 <p>We analyse the <code>pcap1.pcap</code> file. The packets and the VM name leads us to ports
 knocking. As I do not know anything about it I have done some research on internet to
 understand the principle (which is quite simple: send packets to a ports sequence
@@ -169,7 +169,7 @@ what port will open:</p>
 
 <p>This port run an other HTTP service which give us a second url <code>/burgerworld</code>
 and a second pcap file.</p>
-<h2>pcap2</h2>
+<h2 id="pcap2">pcap2</h2>
 <p>After trying a bit to replay and understand the file I used the follow  TCP
 stream function from <a href="https://www.wireshark.org">wireshark</a>, and the following
 appears:</p>
@@ -178,7 +178,7 @@ appears:</p>
 useful, well it was of some use during the NDH qualifications too).</p>
 <p>Once again we knock on port 1, 3, 3 and 7, the port 1337 open and show us an
 other URL: <code>/iamcornholio/</code>. We got some code looking like base64.</p>
-<h2>base64</h2>
+<h2 id="base64">base64</h2>
 <p>The code is:  T3BlbiB1cCBTU0g6IDg4ODggOTk5OSA3Nzc3IDY2NjYK which is (after
 base64 decode) "Open up SSH: 8888 9999 7777 6666". Once more, port knocking on
 port 8888, 9999, 7777 and 6666. This time I simply use netcat to knock:</p>
@@ -211,7 +211,7 @@ port 8888, 9999, 7777 and 6666. This time I simply use netcat to knock:</p>
 
 
 <p>Well, the ssh port 22 is now open.</p>
-<h2>SSH</h2>
+<h2 id="ssh">SSH</h2>
 <p>We try to connect to it:</p>
 <div class="highlight"><pre><span class="code-line"><span></span>[maggick@arch FartKnocker]$ ssh 10.0.2.6</span>
 <span class="code-line">The authenticity of host &#39;10.0.2.6 (10.0.2.6)&#39; can&#39;t be established.</span>
@@ -265,7 +265,7 @@ but this is not so simple this time. Nevertheless we can get a shell buy using
 
 <p>The next step seems to get a beavis or root shell from the butthead one. This a
 privilege escalation.</p>
-<h2>Guessing</h2>
+<h2 id="guessing">Guessing</h2>
 <p><strong>Disclaimer:</strong> during my long guessing period for privilege escalation I looked at
 the other writeup to see if I missed something but they all used password
 bruteforce. I do not like bruteforce, so I continue looking for something else.</p>
@@ -331,7 +331,7 @@ race condition against it. I have not dig into the subject.</p>
 <p>I also used
 <a href="http://pentestmonkey.net/tools/audit/unix-privesc-check">unix-privsec-check</a>
 in order to search for the privilege escalation.</p>
-<h2>CVE-2015-1328</h2>
+<h2 id="cve-2015-1328">CVE-2015-1328</h2>
 <p>I had a bit stop to search for the privilege escalation when I saw that an
 exploit as been published for the
 <a href="http://people.canonical.com/~ubuntu-security/cve/2015/CVE-2015-1328.html">CVE-2015-1328</a>,
@@ -349,7 +349,7 @@ launch it, well it works and give me immediately a root shell.</p>
 </pre></div>
 
 
-<h1>Conclusion</h1>
+<h1 id="conclusion">Conclusion</h1>
 <p>This was a nice challenge as I learned a lot about the port knocking. The
 privilege escalation was quit interesting to search for and the CVE-2015-1328
 exploitation was a lot of fun.</p>

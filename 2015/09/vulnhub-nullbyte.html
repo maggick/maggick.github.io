@@ -103,11 +103,11 @@ download since a while:
 
 
 <p>The goal is to root the server.</p>
-<h2>Host discovery</h2>
+<h2 id="host-discovery">Host discovery</h2>
 <p>As always, we start with the host discovery with <a href="http://nmap.org">nmap</a>,
 <a href="https://cirt.net/Nikto2">nikto</a> and
 <a href="https://www.owasp.org/index.php/Category:OWASP_DirBuster_Project">dirbuster</a>:</p>
-<h3>nmap</h3>
+<h3 id="nmap">nmap</h3>
 <div class="highlight"><pre><span class="code-line"><span></span>nmap 192.168.0.20 -p0-65535 -A -oA nmap</span>
 <span class="code-line"># Nmap 6.47 scan initiated Thu Sep 10 10:01:29 2015 as: nmap -p0-65535 -A -oA nmap 192.168.0.20</span>
 <span class="code-line">Nmap scan report for 192.168.0.20</span>
@@ -137,10 +137,10 @@ download since a while:
 
 
 <p>There is an HTTP server on the port 80 and an ssh service on port 777.</p>
-<h2>Exploitation</h2>
+<h2 id="exploitation">Exploitation</h2>
 <p>The web server display a picture with a simple message. Neither nikto nor
 dirbuster give us some lead.  Let us run <code>exiftool</code> on the picture:</p>
-<h3>main.gif</h3>
+<h3 id="maingif">main.gif</h3>
 <p><img alt="main.gif" src="/media/2015.09/main.gif"></p>
 <p>The comment filed is interesting:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><span class="n">ExifTool</span> <span class="k">Version</span> <span class="nb">Number</span>         <span class="p">:</span> <span class="mi">8</span><span class="p">.</span><span class="mi">60</span></span>
@@ -164,7 +164,7 @@ dirbuster give us some lead.  Let us run <code>exiftool</code> on the picture:</
 
 
 <p>What can we do with that?</p>
-<h3>kzMb5nVYJw</h3>
+<h3 id="kzmb5nvyjw">kzMb5nVYJw</h3>
 <p>If we put this at the end of our url with land on another page. Dirbuster will
 never have find something like that!</p>
 <p>It is a simple web page asking us for a key. When looking at the page code we
@@ -193,7 +193,7 @@ password dictionary (mostly common word).</p>
 
 
 <p>The password was "elite" and by entering it, we land on a new page.</p>
-<h3>420search.php</h3>
+<h3 id="420searchphp">420search.php</h3>
 <p>The <code>420search.php</code> page let us query for an user. If we search 'plop' we got:</p>
 <blockquote>
 <p>Fetched data successfully</p>
@@ -218,7 +218,7 @@ that corresponds to your MySQL server version for the right syntax to use near
 '%"' at line 1</p>
 </blockquote>
 <p>It looks like an SQL injection.</p>
-<h3>SQLi</h3>
+<h3 id="sqli">SQLi</h3>
 <p>Let us launch <a href="http://sqlmap.org">sqlmap</a>:</p>
 <div class="highlight"><pre><span class="code-line"><span></span>[<span class="nv">maggick</span>@<span class="nv">rootine</span> <span class="nv">sqlmap</span>]$ <span class="nv">python2</span> <span class="nv">sqlmap</span>.<span class="nv">py</span> <span class="o">-</span><span class="nv">u</span> <span class="s1">&#39;</span><span class="s">http://192.168.0.20/kzMb5nVYJw/420search.php?usrtosearch=plop</span><span class="s1">&#39;</span></span>
 <span class="code-line">         <span class="nv">_</span></span>
@@ -277,8 +277,8 @@ got us the list of the tables in the database <strong>seth</strong>. There is on
 google search give us the associated password: <strong>omega</strong>.</p>
 <p>We have a username and a password. We have also seen a ssh port at the nmap
 stage.</p>
-<h2>Shell exploitation</h2>
-<h3>ssh</h3>
+<h2 id="shell-exploitation">Shell exploitation</h2>
+<h3 id="ssh">ssh</h3>
 <p>We try to connect to the non standard ssh port as ramses:</p>
 <div class="highlight"><pre><span class="code-line"><span></span>$ ssh 192.168.0.20 -p 777 -lramses</span>
 <span class="code-line">ramses@192.168.0.20&#39;s password:</span>
@@ -287,7 +287,7 @@ stage.</p>
 
 
 <p>And it works.</p>
-<h3>Privilege elevation</h3>
+<h3 id="privilege-elevation">Privilege elevation</h3>
 <p>We got a shell as a user now we need privilege escalation to become root. After
 trying <code>sudo su</code> we look at the <code>bash_history</code>:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><span class="nv">ramses</span>@<span class="nv">NullByte</span>:<span class="o">~</span>$ <span class="nv">cat</span> .<span class="nv">bash_history</span></span>
@@ -395,7 +395,7 @@ wanted by the program.</p>
 </pre></div>
 
 
-<h2>Conclusion</h2>
+<h2 id="conclusion">Conclusion</h2>
 <p>This box was fun. The url were unpredictable and dirbuster doesn't spoil all the
 fun for us. Thank to <a href="https://twitter.com/@ly0nx">@ly0nx</a> for this box and
 <a href="http://vulnhub.com">vulnhub</a> as always.</p>

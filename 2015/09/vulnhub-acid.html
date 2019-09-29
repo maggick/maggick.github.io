@@ -104,11 +104,11 @@ I got some time this week, therefore I tried the
 
 
 <p>The goal is as usual, get root on the virtual machine. Let's go:</p>
-<h2>Host Discovery</h2>
+<h2 id="host-discovery">Host Discovery</h2>
 <p>As always, we start with host discovery:
 <a href="http://nmap.org">Nmap</a> and <a href="https://cirt.net/Nikto2">nikto</a> are our friends for
 this step.</p>
-<h3>nmap</h3>
+<h3 id="nmap">nmap</h3>
 <p>We launch nmap against the virtual machine:</p>
 <div class="highlight"><pre><span class="code-line"><span></span>$ nmap 192.168.0.18 -p0-65535 -A -oA nmap</span>
 <span class="code-line">Starting Nmap 6.47 ( http://nmap.org ) at 2015-09-08 12:08 CEST</span>
@@ -128,10 +128,10 @@ this step.</p>
 
 <p>We got a nice Apache web server with a simple splash screen. Notice the page
 title: <strong>/Challenge</strong>.</p>
-<h3>Nikto</h3>
+<h3 id="nikto">Nikto</h3>
 <p>I ran nikto on the target but nothing pop out.</p>
-<h2>Web exploitation</h2>
-<h3>Page source</h3>
+<h2 id="web-exploitation">Web exploitation</h2>
+<h3 id="page-source">Page source</h3>
 <p>As we come pretty empty handed, we check the page source and two interesting
 things came out:</p>
 <ul>
@@ -139,7 +139,7 @@ things came out:</p>
 <li>the title of the page (we can see it in the nmap scan) is /Challenge
     and there is an other web page at this address.</li>
 </ul>
-<h4>Hexa code</h4>
+<h4 id="hexa-code">Hexa code</h4>
 <p>We will start with the first lead the hexadecimal code:</p>
 <p><strong>0x643239334c6d70775a773d3d</strong></p>
 <p>We convert it to string and we got:</p>
@@ -152,7 +152,7 @@ web page):</p>
 <p>As a result we got a nice image that reward us for our success.</p>
 <p><img alt="wow.jpg" src="/media/2015.09/wow.jpg"></p>
 <p>Yeah it seems to be some troll :)</p>
-<h3>/Challenge</h3>
+<h3 id="challenge">/Challenge</h3>
 <p>Let us dig the second lead: the page title. By adding <code>/Challenge</code> in the URL,
 we land on an authentication interface.</p>
 <p>I tried to use SQL injection but nothing. We will try
@@ -239,7 +239,7 @@ again:</p>
 
 
 <p>We got some nice result mostly the <code>/command.php</code> page.</p>
-<h3>Command execution</h3>
+<h3 id="command-execution">Command execution</h3>
 <p>The page let us ping an other machine in the network. Nevertheless the page name
 let us think that we can use command exploitation. If we add a <code>;</code> in the filed
 and a command it seems to works, for instance with <code>; ls</code> we got (I use
@@ -258,7 +258,7 @@ command is in the response page):</p>
 <p>We can also read <code>/etc/passwd</code>: there is two users on the server: acid and
 saman.</p>
 <p>Let us try to get a reverse shell with that.</p>
-<h3>reverse shell</h3>
+<h3 id="reverse-shell">reverse shell</h3>
 <p>As always, a good source of information is
 <a href="http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet">pentest monkey</a>.</p>
 <p>We know the site use php so we will try the php reverse shell first:</p>
@@ -279,7 +279,7 @@ from burp:</p>
 
 
 <p>Now that we have a shell, let us see what we can do.</p>
-<h2>Shell exploitation</h2>
+<h2 id="shell-exploitation">Shell exploitation</h2>
 <p>First we discover what is at our disposal, mostly in the <code>/home/</code>
 (<code>bash_history</code>). In the <code>/home/acid/</code> there is something interesting but
 empty:</p>
@@ -329,7 +329,7 @@ empty:</p>
 
 <p>That is interesting the php file in <code>/s.bin/</code> clearly tell us to investigate.
 But what we need know is a privilege escalation ti gain root access.</p>
-<h3>Privilege escalation</h3>
+<h3 id="privilege-escalation">Privilege escalation</h3>
 <p>I tried the overlayfs exploit (the same as with
 <a href="http://maggick.fr/2015/06/vulnhub-fart-knocker.html">Fart knocker</a>)
 without success:</p>
@@ -347,7 +347,7 @@ exploit failed</p>
 </li>
 </ul>
 <p>But we were given an hint.</p>
-<h3>More investigations</h3>
+<h3 id="more-investigations">More investigations</h3>
 <p>The <a href="http://pwnwiki.io/#!privesc/linux/index.md">pwnwiki.io</a> wiki is always a
 good source of information. So with more investigation we look at bash_history,
 search for <code>*txt*</code> files, an so on. Then <code>*pcap*</code> files:</p>
@@ -381,7 +381,7 @@ search for <code>*txt*</code> files, an so on. Then <code>*pcap*</code> files:</
 
 
 <p>Yes <code>/sbin/raw_vs_isi/hint.pcapng</code>!</p>
-<h3>pcap</h3>
+<h3 id="pcap">pcap</h3>
 <p>We transfer the file with netcat:</p>
 <ul>
 <li>On our attack machine: <code>nc -lp 1234 &gt; pcap</code></li>
@@ -403,7 +403,7 @@ What was the name of the Culprit ???</p>
 </blockquote>
 <p>Great, what does it means? We know that saman is one of the user on the machine.
 Maybe we got some hints about it password or something like that.</p>
-<h3>interactive shell</h3>
+<h3 id="interactive-shell">interactive shell</h3>
 <p>In order to execute a su, we need a interactive shell (with
 <a href="https://en.wikipedia.org/wiki/Pseudoterminal">pty/tty</a>).
 Once more <a href="http://pentestmonkey.net/blog/post-exploitation-without-a-tty">pentest monkey</a>
@@ -418,7 +418,7 @@ will help us:</p>
 
 
 <p>We now need to try to connect as saman.</p>
-<h2>Saman</h2>
+<h2 id="saman">Saman</h2>
 <p>With our beautiful shell we jut have to <code>su saman</code> to try to connect as saman:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><span class="n">www</span><span class="o">-</span><span class="k">data</span><span class="nv">@acid</span><span class="err">:</span><span class="o">/</span><span class="nf">var</span><span class="o">/</span><span class="n">www</span><span class="o">/</span><span class="n">html</span><span class="o">/</span><span class="n">Challenge</span><span class="o">/</span><span class="n">Magic_Box</span><span class="err">$</span><span class="w"> </span><span class="n">su</span><span class="w"> </span><span class="n">saman</span><span class="w"></span></span>
 <span class="code-line"><span class="n">su</span><span class="w"> </span><span class="n">saman</span><span class="w"></span></span>
@@ -446,7 +446,7 @@ will help us:</p>
 </pre></div>
 
 
-<h2>Conclusion</h2>
+<h2 id="conclusion">Conclusion</h2>
 <p>It was a nice box to root but as I read the other write up it seems that my way
 was not the one expected.
 Nevertheless, thank to <a href="https://twitter.com/m_avinash143">Avinash Kumar Thapa</a>

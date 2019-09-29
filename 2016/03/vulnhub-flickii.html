@@ -102,8 +102,26 @@ associated. It would be a great exercice to play with mobile application,
 decompile it and see what is in the inside.</p>
 
 
-<p>[TOC]</p>
-<h2>Host discovery</h2>
+<div class="toc">
+<ul>
+<li><a href="#host-discovery">Host discovery</a></li>
+<li><a href="#apk-analysis">APK analysis</a><ul>
+<li><a href="#api-token-and-doregisteractivityjava">API token and DoRegisterActivity.java</a></li>
+<li><a href="#command-execution-and-commandactivityjava">Command execution and CommandActivity.java</a></li>
+</ul>
+</li>
+<li><a href="#shell-exploitation">Shell exploitation</a><ul>
+<li><a href="#reverse-shell">Reverse shell</a></li>
+<li><a href="#batman-and-robin">Batman and Robin?</a></li>
+<li><a href="#where-is-bryan">Where is bryan?</a></li>
+<li><a href="#sean">sean</a></li>
+<li><a href="#root-me">root me?</a></li>
+</ul>
+</li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+</div>
+<h2 id="host-discovery">Host discovery</h2>
 <p>Connecting to host-only network:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><span class="n">sudo</span> <span class="n">ip</span> <span class="n">addr</span> <span class="k">add</span> <span class="mi">192</span><span class="p">.</span><span class="mi">168</span><span class="p">.</span><span class="mi">56</span><span class="p">.</span><span class="mi">1</span><span class="o">/</span><span class="mi">24</span> <span class="n">dev</span> <span class="n">vboxnet</span></span>
 </pre></div>
@@ -136,7 +154,7 @@ decompile it and see what is in the inside.</p>
 </pre></div>
 
 
-<h2>APK analysis</h2>
+<h2 id="apk-analysis">APK analysis</h2>
 <p>We got an apk. If we unzip it we got lots of xml files and a dex file.</p>
 <div class="highlight"><pre><span class="code-line"><span></span><span class="n">ls</span> <span class="o">~/</span><span class="n">Downloads</span><span class="o">/</span><span class="n">flickII</span><span class="o">/</span><span class="n">flick</span><span class="o">-</span><span class="k">check</span><span class="o">-</span><span class="n">dist</span></span>
 <span class="code-line"><span class="n">AndroidManifest</span><span class="p">.</span><span class="n">xml</span>  <span class="n">classes</span><span class="p">.</span><span class="n">dex</span>  <span class="n">META</span><span class="o">-</span><span class="n">INF</span>  <span class="n">README</span>  <span class="n">res</span>  <span class="n">resources</span><span class="p">.</span><span class="n">arsc</span></span>
@@ -179,7 +197,7 @@ com/flick/flickeck folder:</p>
 
 <p>We take a look at each file in this directory in order to understand the
 application goal and how it works.</p>
-<h3>API token and DoRegisterActivity.java</h3>
+<h3 id="api-token-and-doregisteractivityjava">API token and DoRegisterActivity.java</h3>
 <p>The file DoRegisterActivity.java show us how to register a new device. By
 testing the URL presented in the file we got:</p>
 <div class="highlight"><pre><span class="code-line"><span></span>[maggick@rootine ~]$ curl   https://192.168.56.101/register/new --insecure</span>
@@ -239,7 +257,7 @@ it HelloWorld):</p>
 
 
 <p>Great we are registered, what's next?</p>
-<h3>Command execution and CommandActivity.java</h3>
+<h3 id="command-execution-and-commandactivityjava">Command execution and CommandActivity.java</h3>
 <p>Line 111 in the file <code>CommandActivity.java</code> we see the doCmd method that seems
 to execute commands on the server via HTTP:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><span class="kd">public</span> <span class="kt">void</span> <span class="nf">doCmd</span><span class="o">(</span><span class="n">View</span> <span class="n">object</span><span class="o">)</span> <span class="o">{</span></span>
@@ -287,8 +305,8 @@ us and forgive us to directly use <code>ls</code> but the absolute path works):<
 </pre></div>
 
 
-<h2>Shell exploitation</h2>
-<h3>Reverse shell</h3>
+<h2 id="shell-exploitation">Shell exploitation</h2>
+<h3 id="reverse-shell">Reverse shell</h3>
 <p>From there we can get an interactive reverse shell. Let us use the php reverse
 shell from
 <a href="http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet">pentestmonkey</a>:</p>
@@ -309,7 +327,7 @@ shell from
 </pre></div>
 
 
-<h3>Batman and Robin?</h3>
+<h3 id="batman-and-robin">Batman and Robin?</h3>
 <p>We can get a look at the <code>/etc/passwd</code> file:</p>
 <div class="highlight"><pre><span class="code-line"><span></span>cat /etc/passwd</span>
 <span class="code-line">root:x:0:0:root:/root:/bin/bash</span>
@@ -353,7 +371,7 @@ as the robin user:</p>
 </pre></div>
 
 
-<h3>Where is bryan?</h3>
+<h3 id="where-is-bryan">Where is bryan?</h3>
 <p>For the next part of the challenge we may need a real pty shell, Once more
 <a href="http://pentestmonkey.net/blog/post-exploitation-without-a-tty">pentest monkey</a>
 will help us:</p>
@@ -479,7 +497,7 @@ Now we can run the program as bryan and load the shared library:</p>
 </pre></div>
 
 
-<h3>sean</h3>
+<h3 id="sean">sean</h3>
 <p>Now that we have a shell as bryan we may execute the <code>backup</code> script own by
 sean with the SUID set:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><span class="o">[</span><span class="n">bryan@fII bin</span><span class="o">]</span><span class="err">$</span><span class="w"> </span><span class="n">ls</span><span class="w"> </span><span class="o">-</span><span class="n">al</span><span class="w"></span></span>
@@ -567,7 +585,7 @@ that we can exploit it using the <code>checkpoint</code>. The backup directory i
 </pre></div>
 
 
-<h3>root me?</h3>
+<h3 id="root-me">root me?</h3>
 <p>Let get us back a real shell:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s1">&#39;import pty; pty.spawn(&quot;/bin/bash&quot;)&#39;</span></span>
 </pre></div>
@@ -730,7 +748,7 @@ choosing the output directory for the restore program:</p>
 </pre></div>
 
 
-<h2>Conclusion</h2>
+<h2 id="conclusion">Conclusion</h2>
 <p>This was a really great challange! The android part was a really new to me. The
 exploitation part was very interesting!.</p>
 <p>Many thanks to TurboSmouem for the challange and as usual thanks to vulnhub.</p>
