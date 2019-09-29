@@ -98,12 +98,13 @@
             <p>Building a Kiosk where Google Chrome is running in full screen and user
 interaction with the system are reduced to the minimum.</p>
 
-<h2 id="debian installation">Debian installation</h2>
+
+<h2>Debian installation</h2>
 <p>This will be pass as most of you should be able to install a basic Debian
 system. Just set lvm encryption, strong password for root and for the user and
 mostly do not install useless program, check only the program you need (ssh for
 instance).</p>
-<h2 id="installing the packages">Installing the packages</h2>
+<h2>Installing the packages</h2>
 <p>We will need a few more packages to be able to run things:</p>
 <ul>
 <li>X (display server)</li>
@@ -127,9 +128,11 @@ integrity:</p>
 <div class="highlight"><pre><span></span>apt-get update
 apt-get install --no-install-recommends xorg openbox sudo google-chrome-stable
 </pre></div>
+
+
 <p>Without the <code>--no-install-recommends</code>parameter some useless packages will be
 installed.</p>
-<h2 id="load chrome in kiosk at startup">Load Chrome in kiosk at startup</h2>
+<h2>Load Chrome in kiosk at startup</h2>
 <p>We need a script that will configure and load Chrome at the X server startup.
 As we don't want any data saved between each session we will delete the Chrome
 profile each time the script is used. Moreover it is in this script that we
@@ -137,6 +140,8 @@ choose the starting page of Chrome.</p>
 <p>Create and edit the script:</p>
 <div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">vi</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">kiosk</span><span class="p">.</span><span class="n">sh</span>
 </pre></div>
+
+
 <p>The file content is the following:</p>
 <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
@@ -151,39 +156,50 @@ xset -dpms
 xset s off
 openbox-session <span class="p">&amp;</span>
 <span class="k">while</span> true<span class="p">;</span> <span class="k">do</span> rm -rf ~/.<span class="o">{</span>config,cache<span class="o">}</span>/google-chrome/
-  google-chrome --kiosk --no-first-run  <span class="s1">'http://localhost'</span>
+  google-chrome --kiosk --no-first-run  <span class="s1">&#39;http://localhost&#39;</span>
 <span class="k">done</span>
 </pre></div>
 </td></tr></table>
+
 <p>Give the execution right to the script:</p>
 <div class="highlight"><pre><span></span>sudo chmod +x /opt/kiosk.sh
 </pre></div>
+
+
 <p>In order to start the X server and launch the <code>kiosk.sh</code> script, we need to
 create a systemd service.</p>
 <p>In order to to that, create and edit the file <code>/etc/systemd/system/kiosk.service</code>:</p>
 <div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">vi</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">systemd</span><span class="o">/</span><span class="k">system</span><span class="o">/</span><span class="n">kiosk</span><span class="p">.</span><span class="n">service</span>
 </pre></div>
+
+
 <p>The content of the file is the following:</p>
 <div class="highlight"><pre><span></span><span class="k">[Unit]</span>
 <span class="na">Description</span><span class="o">=</span><span class="s">Kiosk</span>
 
 <span class="k">[Service]</span>
 <span class="na">Type</span><span class="o">=</span><span class="s">oneshot</span>
-<span class="na">ExecStart</span><span class="o">=</span><span class="s">/usr/bin/sudo &ndash;u user /usr/bin/startx /etc/X11/Xsession /opt/kiosk.sh --</span>
+<span class="na">ExecStart</span><span class="o">=</span><span class="s">/usr/bin/sudo –u user /usr/bin/startx /etc/X11/Xsession /opt/kiosk.sh --</span>
 
 <span class="k">[Install]</span>
 <span class="na">WantedBy</span><span class="o">=</span><span class="s">multi-user.target</span>
 </pre></div>
+
+
 <p>We need to enable the script with the following command:</p>
 <div class="highlight"><pre><span></span>systemctl enable kiosk
 </pre></div>
+
+
 <p>To run the script use the following command:</p>
-<div class="highlight"><pre><span></span>systemctl start kiosk &raquo;
+<div class="highlight"><pre><span></span>systemctl start kiosk »
 </pre></div>
+
+
 <p>You can also reboot in order to check that the script is automatically launch at
 startup.</p>
-<p>If you need a terminal, you can use <ctrl>+<alt>+<f2-9> to get one.</f2-9></alt></ctrl></p>
-<h2 id="automatically mount usb key">Automatically mount USB key</h2>
+<p>If you need a terminal, you can use <ctrl>+<alt>+<F2-9> to get one.</p>
+<h2>Automatically mount USB key</h2>
 <p>If your users need to copy data from the machine this paragraph is for you.
 Otherwise this is just informational.</p>
 <p>As our users don't have a shell access they are unable to mount USB key.
@@ -191,17 +207,23 @@ Therefore we need to automatically mount them.</p>
 <p>We need the <code>usbmount</code> package:</p>
 <div class="highlight"><pre><span></span><span class="n">apt</span><span class="o">-</span><span class="k">get</span> <span class="n">install</span> <span class="c1">--no-install-recommends usbmount</span>
 </pre></div>
+
+
 <p>The USB keys will be automatically mount into <code>/mnt/usbX</code>.In order for the user
 to have the permissions to right on it we need to add its <code>uid</code> and <code>gid</code> in the
 <code>usbmount</code> configuration.</p>
 <p>Edit the file <code>/etc/usbmount/usbmount.conf</code> and the user <code>uid</code> and <code>guid</code> to the
 following line (the <code>uid</code> and <code>gid</code> can be found in <code>/etc/passwd</code>):</p>
-<div class="highlight"><pre><span></span><span class="n">FS_MOUNTOPTIONS</span><span class="o">=</span><span class="ss">" "</span>
+<div class="highlight"><pre><span></span><span class="n">FS_MOUNTOPTIONS</span><span class="o">=</span><span class="ss">&quot; &quot;</span>
 </pre></div>
+
+
 <p>The line would be something like the following:</p>
-<div class="highlight"><pre><span></span><span class="n">FS_MOUNTOPTIONS</span><span class="o">=</span><span class="ss">"uid=1000,gid=1000"</span>
+<div class="highlight"><pre><span></span><span class="n">FS_MOUNTOPTIONS</span><span class="o">=</span><span class="ss">&quot;uid=1000,gid=1000&quot;</span>
 </pre></div>
-<h2 id="sources">Sources</h2>
+
+
+<h2>Sources</h2>
 <ul>
 <li><a href="https://thepcspy.com/read/building-a-kiosk-computer-ubuntu-1404-chrome/">https://thepcspy.com/read/building-a-kiosk-computer-ubuntu-1404-chrome/</a></li>
 <li><a href="https://lukas.zapletalovi.com/2013/08/execute-command-during-start-with-systemd.html">https://lukas.zapletalovi.com/2013/08/execute-command-during-start-with-systemd.html</a></li>

