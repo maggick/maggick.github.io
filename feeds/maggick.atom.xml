@@ -17,14 +17,12 @@ the solution to root it.&lt;/p&gt;
 &lt;li&gt;&lt;a href="#nmap"&gt;nmap&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="#web"&gt;Web&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="#getting-admin"&gt;Getting Admin&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="#to-the-user-flag"&gt;To the user flag&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;&lt;a href="#the-rce-way"&gt;The RCE way&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#the-rce-way"&gt;The RCE way&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#to-the-user-flag"&gt;To the user flag&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#lets-get-root"&gt;let's get root&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;a href="#lets-get-root"&gt;let's get root&lt;/a&gt;&lt;ul&gt;
 &lt;li&gt;&lt;a href="#reverse-shell-way"&gt;Reverse shell way&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;&lt;a href="#wrapping-up"&gt;Wrapping up&lt;/a&gt;&lt;/li&gt;
@@ -89,9 +87,9 @@ gives us some information by the version of the application:&lt;/p&gt;
 &lt;p&gt;An admin panel is also accessible on the application:&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Swag shop admin panel" src="/media/2019.09/swagshop_4.png"&gt;&lt;/p&gt;
 &lt;p&gt;Let us see what CVE are available for magento. Our version is 1.7.0.2.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;searchsploit magento&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;# searchsploit magento&lt;/span&gt;
 &lt;span class="code-line"&gt;-------------------------------------------------------------------------------------------------------------- ----------------------------------&lt;/span&gt;
-&lt;span class="code-line"&gt;  Exploit Title                                                                                                |  Path&lt;/span&gt;
+&lt;span class="code-line"&gt; Exploit Title                                                                                                |  Path&lt;/span&gt;
 &lt;span class="code-line"&gt;                                                                                                              | (/usr/share/exploitdb/)&lt;/span&gt;
 &lt;span class="code-line"&gt;-------------------------------------------------------------------------------------------------------------- ----------------------------------&lt;/span&gt;
 &lt;span class="code-line"&gt;Magento 1.2 - &amp;#39;/app/code/core/Mage/Admin/Model/Session.php?login[&amp;#39;Username&amp;#39;]&amp;#39; Cross-Site Scripting            | exploits/php/webapps/32808.txt&lt;/span&gt;
@@ -126,7 +124,8 @@ target URL:&lt;/p&gt;
 &lt;p&gt;This will create an administrator account named "forme" with the same password.
 We can then login to the admin panel and access the full magento framework.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="magenta admin panel" src="/media/2019.09/swagshop_1.png"&gt;&lt;/p&gt;
-&lt;h2 id="to-the-user-flag"&gt;To the user flag&lt;/h2&gt;
+&lt;h2 id="the-rce-way"&gt;The RCE way&lt;/h2&gt;
+&lt;h3 id="to-the-user-flag"&gt;To the user flag&lt;/h3&gt;
 &lt;p&gt;From there a few possibility will allow us to execute code on the application:&lt;/p&gt;
 &lt;p&gt;The first one is to upload a magento extension using the download. A blog
 post from jvoisin explain how to write this "simple" backdoor:
@@ -176,7 +175,6 @@ this parameter in the exploit code (we put 2 years to be safe):&lt;/p&gt;
 &lt;p&gt;We get a remote code execution. From there we can get a reverse shell or do
 everything only with the RCE. I struggle a bit with the reverse shell before
 finding the right one. Therefore I will start with the RCE only exploitation.&lt;/p&gt;
-&lt;h3 id="the-rce-way"&gt;The RCE way&lt;/h3&gt;
 &lt;p&gt;As the box is often reset by other players we chain the two exploit in a bash
 script.&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;python &lt;span class="m"&gt;37977&lt;/span&gt;.py&lt;/span&gt;
@@ -206,7 +204,7 @@ Linux One). So we look at the user directory:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h2 id="lets-get-root"&gt;let's get root&lt;/h2&gt;
+&lt;h3 id="lets-get-root"&gt;let's get root&lt;/h3&gt;
 &lt;p&gt;We start by enumerating our permissions on the box&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;sudo -l&lt;/span&gt;
 &lt;span class="code-line"&gt;Matching Defaults entries for www-data on swagshop:&lt;/span&gt;
@@ -233,7 +231,7 @@ this command without a shell. For that we can use the vi "-c" option:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h3 id="reverse-shell-way"&gt;Reverse shell way&lt;/h3&gt;
+&lt;h2 id="reverse-shell-way"&gt;Reverse shell way&lt;/h2&gt;
 &lt;p&gt;There is another way to resolve this part of the box: using a reverse shell!&lt;/p&gt;
 &lt;p&gt;My classic python reverse shell was not working as there was no python on the box and
 the bash reverse was also not working. Nevertheless, the netcat one was working:&lt;/p&gt;

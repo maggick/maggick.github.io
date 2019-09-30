@@ -107,14 +107,12 @@ the solution to root it.</p>
 <li><a href="#nmap">nmap</a></li>
 <li><a href="#web">Web</a></li>
 <li><a href="#getting-admin">Getting Admin</a></li>
-<li><a href="#to-the-user-flag">To the user flag</a><ul>
-<li><a href="#the-rce-way">The RCE way</a></li>
+<li><a href="#the-rce-way">The RCE way</a><ul>
+<li><a href="#to-the-user-flag">To the user flag</a></li>
+<li><a href="#lets-get-root">let's get root</a></li>
 </ul>
 </li>
-<li><a href="#lets-get-root">let's get root</a><ul>
 <li><a href="#reverse-shell-way">Reverse shell way</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li><a href="#wrapping-up">Wrapping up</a></li>
@@ -179,9 +177,9 @@ gives us some information by the version of the application:</p>
 <p>An admin panel is also accessible on the application:</p>
 <p><img alt="Swag shop admin panel" src="/media/2019.09/swagshop_4.png"></p>
 <p>Let us see what CVE are available for magento. Our version is 1.7.0.2.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>searchsploit magento</span>
+<div class="highlight"><pre><span class="code-line"><span></span># searchsploit magento</span>
 <span class="code-line">-------------------------------------------------------------------------------------------------------------- ----------------------------------</span>
-<span class="code-line">  Exploit Title                                                                                                |  Path</span>
+<span class="code-line"> Exploit Title                                                                                                |  Path</span>
 <span class="code-line">                                                                                                              | (/usr/share/exploitdb/)</span>
 <span class="code-line">-------------------------------------------------------------------------------------------------------------- ----------------------------------</span>
 <span class="code-line">Magento 1.2 - &#39;/app/code/core/Mage/Admin/Model/Session.php?login[&#39;Username&#39;]&#39; Cross-Site Scripting            | exploits/php/webapps/32808.txt</span>
@@ -216,7 +214,8 @@ target URL:</p>
 <p>This will create an administrator account named "forme" with the same password.
 We can then login to the admin panel and access the full magento framework.</p>
 <p><img alt="magenta admin panel" src="/media/2019.09/swagshop_1.png"></p>
-<h2 id="to-the-user-flag">To the user flag</h2>
+<h2 id="the-rce-way">The RCE way</h2>
+<h3 id="to-the-user-flag">To the user flag</h3>
 <p>From there a few possibility will allow us to execute code on the application:</p>
 <p>The first one is to upload a magento extension using the download. A blog
 post from jvoisin explain how to write this "simple" backdoor:
@@ -266,7 +265,6 @@ this parameter in the exploit code (we put 2 years to be safe):</p>
 <p>We get a remote code execution. From there we can get a reverse shell or do
 everything only with the RCE. I struggle a bit with the reverse shell before
 finding the right one. Therefore I will start with the RCE only exploitation.</p>
-<h3 id="the-rce-way">The RCE way</h3>
 <p>As the box is often reset by other players we chain the two exploit in a bash
 script.</p>
 <div class="highlight"><pre><span class="code-line"><span></span>python <span class="m">37977</span>.py</span>
@@ -296,7 +294,7 @@ Linux One). So we look at the user directory:</p>
 </pre></div>
 
 
-<h2 id="lets-get-root">let's get root</h2>
+<h3 id="lets-get-root">let's get root</h3>
 <p>We start by enumerating our permissions on the box</p>
 <div class="highlight"><pre><span class="code-line"><span></span>sudo -l</span>
 <span class="code-line">Matching Defaults entries for www-data on swagshop:</span>
@@ -323,7 +321,7 @@ this command without a shell. For that we can use the vi "-c" option:</p>
 </pre></div>
 
 
-<h3 id="reverse-shell-way">Reverse shell way</h3>
+<h2 id="reverse-shell-way">Reverse shell way</h2>
 <p>There is another way to resolve this part of the box: using a reverse shell!</p>
 <p>My classic python reverse shell was not working as there was no python on the box and
 the bash reverse was also not working. Nevertheless, the netcat one was working:</p>
