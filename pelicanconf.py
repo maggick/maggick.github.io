@@ -30,7 +30,8 @@ DISPLAY_CATEGORIES_ON_MENU = True
 
 # Plugins
 PLUGIN_PATHS = ['./pelican-plugins/']
-PLUGINS = ['summary', 'tag_cloud', 'neighbors', 'readtime', 'better_codeblock_line_numbering']
+PLUGINS = ['summary', 'tag_cloud', 'neighbors', 'readtime', 'sitemap',
+        'better_codeblock_line_numbering']
 MARKDOWN = {
     'extension_configs': {
         'markdown.extensions.codehilite': {'css_class': 'highlight'},
@@ -39,6 +40,21 @@ MARKDOWN = {
     },
     'output_format': 'html5',
 }
+
+# sitemap plugin configuration
+SITEMAP = {
+        'format': 'xml',
+        'priorities': {
+            'articles': 0.8,
+            'indexes': 0.9,
+            'pages': 0.5
+            },
+        'changefreqs': {
+            'articles': 'monthly',
+            'indexes': 'weekly',
+            'pages': 'yearly'
+            }
+          }
 
 
 # Social
