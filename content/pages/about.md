@@ -29,7 +29,7 @@ The social links in the right panel give your four different ways to contact me:
 
 ### public key
 
-If you need some privacy, please this GPG public key:
+If you need some privacy, please use my GPG public key:
 
     :::text
     -----BEGIN PGP PUBLIC KEY BLOCK-----
