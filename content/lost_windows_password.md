@@ -1,7 +1,7 @@
 Title:Lost Windows password
 Date: 10-07-2014
 category:Security
-tags:windows,security
+tags:windows,security,password
 meta:windows,security,password
 
 Few weeks ago my girlfriend lost her laptop Windows password, I do not have any

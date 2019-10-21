@@ -1,8 +1,8 @@
 Title:Compiling cmus for cygwin
 Date: 01-21-2015
 category:Programming
-tags:cygwin,cmus
-meta:cygwin,cmus,compilation
+tags:cygwin,cmus, programming, windows
+meta:cygwin,cmus, programming, windows
 
 <img class="align-left" src="/media/2015.01/2015.01.cmus.png" alt="cmus" width="342">
 I work on a Windows machine for my dally job.

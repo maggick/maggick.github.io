@@ -1,8 +1,8 @@
 Title:LAMPSecurity: CTF4
 Date:08-29-2014
 Category:security
-tags:challenge,security,vulnhub
-meta:challenge,security,vulnhub
+tags:challenge,security,vulnhub, boot2root
+meta:challenge,security,vulnhub, boot2root
 
 I start the LAMPSecurity CTF4 challenge of vulnhub
 [available here](http://vulnhub.com/entry/lampsecurity-ctf4,83/).

@@ -1,8 +1,8 @@
 Title:Blog Start
 Date:08-18-2014
 category:Misc
-tags:blog
-meta:blog
+tags:blog, misc
+meta:blog, misc
 
 Today I start my blog using Pelican and hosting it with github pages.
 It is located at [www.maggick.fr/blog](http://maggick.fr/blog).
