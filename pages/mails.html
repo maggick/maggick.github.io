@@ -67,7 +67,7 @@ email spam by detecting email spoofing, a common vulnerability, by verifying
 sender IP addresses.</p>
 <p>It is really easy to put an SPF in place.
 You just have to add a DNS TXT entry :</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="n">yourdomain</span><span class="p">.</span><span class="n">com</span><span class="p">.</span> <span class="k">IN</span> <span class="n">TXT</span> <span class="ss">&quot;v=spf1 a mx ~all&quot;</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">yourdomain.com. IN TXT &quot;v=spf1 a mx ~all&quot;</span></span>
 </pre></div>
 
 
@@ -77,7 +77,7 @@ You just have to add a DNS TXT entry :</p>
 an email message.</p>
 <h3 id="install">Install</h3>
 <p>First of all you need to install your DKIM solution, I use opendkim and debian:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="n">aptitude</span> <span class="n">install</span> <span class="n">opendkim</span> <span class="n">opendkim</span><span class="o">-</span><span class="n">tools</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">aptitude install opendkim opendkim-tools</span></span>
 </pre></div>
 
 
@@ -85,7 +85,7 @@ an email message.</p>
 <p>We should choose the directory were to put the keys, we choose
 <code>/etc/opendkim/yourdomain/</code> (create the directory).
 Then we need to create the private and the public rsa keys for singing:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="n">opendkim</span><span class="o">-</span><span class="n">genkey</span> <span class="o">-</span><span class="n">b</span> <span class="mi">2048</span> <span class="o">-</span><span class="n">r</span> <span class="o">-</span><span class="n">d</span> <span class="n">yourdomain</span><span class="p">.</span><span class="n">tld</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">opendkim-genkey -b 2048 -r -d yourdomain.tld</span></span>
 </pre></div>
 
 
@@ -104,42 +104,42 @@ verifying</li>
 <p>(You may have to create folders and files).</p>
 <h4 id="etcopendkimconf">/etc/opendkim.conf</h4>
 <p>You may have to uncomment some lines:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="n">Umask</span><span class="w">         </span><span class="mi">002</span><span class="w"></span></span>
-<span class="code-line"><span class="n">UserID</span><span class="w">        </span><span class="nl">opendkim</span><span class="p">:</span><span class="n">opendkim</span><span class="w"></span></span>
-<span class="code-line"><span class="n">Socket</span><span class="w">        </span><span class="nl">inet</span><span class="p">:</span><span class="mi">8891</span><span class="nv">@localhost</span><span class="w"></span></span>
-<span class="code-line"><span class="k">Domain</span><span class="w">        </span><span class="n">yourdomain</span><span class="p">.</span><span class="n">tld</span><span class="w"></span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">Umask         002</span></span>
+<span class="code-line"><span class="err">UserID        opendkim:opendkim</span></span>
+<span class="code-line"><span class="err">Socket        inet:8891@localhost</span></span>
+<span class="code-line"><span class="err">Domain        yourdomain.tld</span></span>
 </pre></div>
 
 
 <p>Next, add the following line to the configuration in order to give the location of the
 other configuration to opendkim:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="n">Selector</span>                <span class="n">deflaut</span></span>
-<span class="code-line"><span class="n">KeyTable</span>                <span class="n">refile</span><span class="p">:</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">opendkim</span><span class="o">/</span><span class="n">KeyTable</span></span>
-<span class="code-line"><span class="n">SigningTable</span>            <span class="n">refile</span><span class="p">:</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">opendkim</span><span class="o">/</span><span class="n">SigningTable</span></span>
-<span class="code-line"><span class="n">ExternalIgnoreList</span>      <span class="n">refile</span><span class="p">:</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">opendkim</span><span class="o">/</span><span class="n">TrustedHosts</span></span>
-<span class="code-line"><span class="n">InternalHosts</span>           <span class="n">refile</span><span class="p">:</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">opendkim</span><span class="o">/</span><span class="n">TrustedHosts</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">Selector                deflaut</span></span>
+<span class="code-line"><span class="err">KeyTable                refile:/etc/opendkim/KeyTable</span></span>
+<span class="code-line"><span class="err">SigningTable            refile:/etc/opendkim/SigningTable</span></span>
+<span class="code-line"><span class="err">ExternalIgnoreList      refile:/etc/opendkim/TrustedHosts</span></span>
+<span class="code-line"><span class="err">InternalHosts           refile:/etc/opendkim/TrustedHosts</span></span>
 </pre></div>
 
 
 <h4 id="etcopendkimkeytable">/etc/opendkim/KeyTable</h4>
 <p>This file contains the path to your DKIM keys (one per line) , here we have only
 one key so our file is just one line:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="n">yourdomain</span><span class="p">.</span><span class="n">tld</span> <span class="n">yourdomain</span><span class="p">.</span><span class="n">tld</span><span class="p">:</span><span class="k">default</span><span class="p">:</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">opendkim</span><span class="o">/</span><span class="n">yourdomain</span><span class="o">/</span><span class="k">default</span><span class="p">.</span><span class="n">private</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">yourdomain.tld yourdomain.tld:default:/etc/opendkim/yourdomain/default.private</span></span>
 </pre></div>
 
 
 <h4 id="etcopendkimsigningtable">/etc/opendkim/SigningTable</h4>
 <p>This file tells to opendkim how to use the keys, here we want every mails
 send from our domain to be signed:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="o">*</span><span class="nv">@yourdomain</span><span class="p">.</span><span class="n">tld</span><span class="w"> </span><span class="n">yourdomain</span><span class="p">.</span><span class="n">tld</span><span class="w"></span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">*@yourdomain.tld yourdomain.tld</span></span>
 </pre></div>
 
 
 <h4 id="etcopendkimtrustedhosts">/etc/opendkim/TrustedHosts</h4>
 <p>This file tells OpenDKIM who to let use your keys:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="mi">127</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">1</span></span>
-<span class="code-line"><span class="n">yourdomain</span><span class="p">.</span><span class="n">tld</span></span>
-<span class="code-line"><span class="n">mail</span><span class="p">.</span><span class="n">yourdomain</span><span class="p">.</span><span class="n">tld</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">127.0.0.1</span></span>
+<span class="code-line"><span class="err">yourdomain.tld</span></span>
+<span class="code-line"><span class="err">mail.yourdomain.tld</span></span>
 </pre></div>
 
 
@@ -147,15 +147,15 @@ send from our domain to be signed:</p>
 <p>The DNS record is the last part of this operation. You need to do it properbly
 otherwise your signature would be false and unreconized by the mailing servers.
 you should have a filed who describe the way you handle your DKIM:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="n">_domainkey</span>                <span class="k">IN</span> <span class="n">TXT</span>    <span class="ss">&quot;o=-;&quot;</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">_domainkey                IN TXT    &quot;o=-;&quot;</span></span>
 </pre></div>
 
 
 <p>And an other where you put your public key:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="k">default</span><span class="p">.</span><span class="n">_domainkey</span>        <span class="k">IN</span> <span class="n">TXT</span>    <span class="p">(</span> <span class="ss">&quot;k=rsa;</span></span>
-<span class="code-line"><span class="ss">p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz33vJpYC9pgwtm4JyRWLLDM5LLIn66IhgMODhW1PX7zk1eMuCdp8509sUmpk47RDbJq2VhFDGElC/9zkCMo6hrep241fVnwmOfuxA5Nvcu8YxbAvXacwusU9ct4r9Re2NjO9kshbIWBAVJ66CxBzWWsi6+ikChHbv7GsF2jbx+VG1rwbShr8AD5FbFGIh5CEVs83E&quot;</span></span>
-<span class="code-line"><span class="ss">&quot;qJ6g8Nla+BX2A2V2gwOxT2Xp0mCIqjIFqfoyhxIcftKHHBDFxiun2WLwsUD5ivFewy54ntgphkWJUXfob+NtZ6M8sv531Zd/mgdBgnYAPzWNy5m5MGquNZNEnA44o0sAcKiCRMb7nKpTvfDQQIDAQAB&quot;</span></span>
-<span class="code-line"><span class="p">)</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">default._domainkey        IN TXT    ( &quot;k=rsa;</span></span>
+<span class="code-line"><span class="err">p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz33vJpYC9pgwtm4JyRWLLDM5LLIn66IhgMODhW1PX7zk1eMuCdp8509sUmpk47RDbJq2VhFDGElC/9zkCMo6hrep241fVnwmOfuxA5Nvcu8YxbAvXacwusU9ct4r9Re2NjO9kshbIWBAVJ66CxBzWWsi6+ikChHbv7GsF2jbx+VG1rwbShr8AD5FbFGIh5CEVs83E&quot;</span></span>
+<span class="code-line"><span class="err">&quot;qJ6g8Nla+BX2A2V2gwOxT2Xp0mCIqjIFqfoyhxIcftKHHBDFxiun2WLwsUD5ivFewy54ntgphkWJUXfob+NtZ6M8sv531Zd/mgdBgnYAPzWNy5m5MGquNZNEnA44o0sAcKiCRMb7nKpTvfDQQIDAQAB&quot;</span></span>
+<span class="code-line"><span class="err">)</span></span>
 </pre></div>
 
 
@@ -168,19 +168,19 @@ Tester</a></p>
 <p>Is is really interesting to catch all e-mails directed to your domain. For
 instance you will catch wahtever@yourdomain.com.
 To define a catch all create the <code>virtual</code> file and add it to postmap :</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="err">#</span><span class="w"> </span><span class="n">echo</span><span class="w"> </span><span class="s1">&#39;@yourdomain.com emailusername&#39;</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="k">postfix</span><span class="o">/</span><span class="n">virtual</span><span class="w"></span></span>
-<span class="code-line"><span class="err">#</span><span class="w"> </span><span class="n">postmap</span><span class="w"> </span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="k">postfix</span><span class="o">/</span><span class="n">virtual</span><span class="w"></span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err"># echo &#39;@yourdomain.com emailusername&#39; &gt; /etc/postfix/virtual</span></span>
+<span class="code-line"><span class="err"># postmap /etc/postfix/virtual</span></span>
 </pre></div>
 
 
 <p>Check that the virtual map is defined in postfix's configuration 
 by verifing that the following line is in the <code>/etc/postfix/main.cf</code> file.</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="o">#</span> <span class="n">postmap</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="k">postfix</span><span class="o">/</span><span class="n">virtual</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err"># postmap /etc/postfix/virtual</span></span>
 </pre></div>
 
 
 <p>and restart the postfix service :</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="o">#</span> <span class="n">service</span> <span class="k">postfix</span> <span class="n">reload</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err"># service postfix reload</span></span>
 </pre></div>
 
 
@@ -189,13 +189,13 @@ by verifing that the following line is in the <code>/etc/postfix/main.cf</code> 
 <p>In odrder that the existing users can get their e-mails when
 there is a cath all :</p>
 <p>edit the virtual_map in <code>/etc/postfix/virtual</code> and add the following line :</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="k">user</span><span class="nv">@domain</span><span class="p">.</span><span class="n">tld</span><span class="w"> </span><span class="k">user</span><span class="w"></span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">user@domain.tld user</span></span>
 </pre></div>
 
 
 <p>next execute the following commands:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="n">postmap</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="k">postfix</span><span class="o">/</span><span class="n">virtual</span></span>
-<span class="code-line"><span class="n">service</span> <span class="k">postfix</span> <span class="k">restart</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">postmap /etc/postfix/virtual</span></span>
+<span class="code-line"><span class="err">service postfix restart</span></span>
 </pre></div>
 
 
@@ -204,18 +204,18 @@ there is a cath all :</p>
 whatever.youruser@yourdomain.com
 In order to make a catch all for an user :
 edit (or create) the file </p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="k">postfix</span><span class="o">/</span><span class="n">virtual</span><span class="o">-</span><span class="n">regexp</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">/etc/postfix/virtual-regexp</span></span>
 </pre></div>
 
 
 <p>add regexp:/etc/postfix/virtual-regexp to virtual_maps in /etc/postfix/main.cf
 this will look like </p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="n">virtual_maps</span> <span class="o">=</span> <span class="n">hash</span><span class="p">:</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="k">postfix</span><span class="o">/</span><span class="n">virtual</span><span class="p">,</span> <span class="n">regexp</span><span class="p">:</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="k">postfix</span><span class="o">/</span><span class="n">virtual</span><span class="o">-</span><span class="n">regexp</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">virtual_maps = hash:/etc/postfix/virtual, regexp:/etc/postfix/virtual-regexp</span></span>
 </pre></div>
 
 
 <p>add the line:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="o">/^</span><span class="p">.</span><span class="o">*</span><span class="k">user</span><span class="nv">@domnain</span><span class="p">.</span><span class="n">tld</span><span class="o">/</span><span class="w"> </span><span class="k">user</span><span class="w"></span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">/^.*user@domnain.tld/ user</span></span>
 </pre></div>
 
 
@@ -273,17 +273,137 @@ classic Unix joker)</p>
     <h3 class="title module-title">Tags</h3>
 
     <ul>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/htb.html">HTB</a>
+            </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/mail.html">mail</a>
+              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/security.html">security</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ndh.html">ndh</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/drupal.html">drupal</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/exchange.html">exchange</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/rop.html">ROP</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/python.html">python</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/cve.html">cve</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/hash.html">hash</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/code-review.html">code review</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/mail.html">mail</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/git.html">git</a>
             </li>
             <li class="tag tag-2">
               <a href="https://maggick.fr/tag/blog.html">blog</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
+              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/raspberry.html">raspberry</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/lorem-ipsum.html">lorem ipsum</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/smb.html">smb</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/ctf.html">ctf</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/procdump.html">procdump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/sstic.html">sstic</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/microsoft.html">microsoft</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/leak.html">leak</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cygwin.html">cygwin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/server.html">server</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cmus.html">cmus</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
@@ -291,116 +411,8 @@ classic Unix joker)</p>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/reverse.html">reverse</a>
             </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/ctf.html">ctf</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cygwin.html">cygwin</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/security.html">security</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/exchange.html">exchange</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/python.html">python</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/programming.html">programming</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/smb.html">smb</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cmus.html">cmus</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/leak.html">leak</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/microsoft.html">microsoft</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/code-review.html">code review</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/drupal.html">drupal</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/lorem-ipsum.html">lorem ipsum</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/rop.html">ROP</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/server.html">server</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/devops.html">devops</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/sstic.html">sstic</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/git.html">git</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/hash.html">hash</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/windows.html">windows</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/exploit.html">exploit</a>
-            </li>
             <li class="tag tag-2">
               <a href="https://maggick.fr/tag/misc.html">misc</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/raspberry.html">raspberry</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/cve.html">cve</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/htb.html">HTB</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ndh.html">ndh</a>
             </li>
     </ul>
 </section>
