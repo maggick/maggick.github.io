@@ -27,6 +27,15 @@ This is my list of tools.
   * [searsploit](https://github.com/joostvanveen/php-security-pitfalls) allow to
     searh for an exploit localy
 
+### Burp extensions
+
+  * [Wsdler](https://portswigger.net/bappstore/594a49bb233748f2bc80a9eb18a2e08f)
+    "This extension takes a WSDL request, parses out the operations that are
+    associated with the targeted web service, and generates SOAP requests that
+    can then be sent to the SOAP endpoints."
+  * [Hackvertor](https://portswigger.net/bappstore/65033cbd2c344fbabe57ac060b5dd100)
+    replace the decoder
+
 ## Firefox
 
   * [firebug](https://addons.mozilla.org/en-US/firefox/addon/firebug/) a wealth of development tools
