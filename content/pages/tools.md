@@ -38,7 +38,6 @@ This is my list of tools.
 
 ## Firefox
 
-  * [firebug](https://addons.mozilla.org/en-US/firefox/addon/firebug/) a wealth of development tools
   * [foxyproxy](https://addons.mozilla.org/en-US/firefox/addon/foxyproxy-standard/) an advanced proxy management tool
 
 ## tools for linux and i3
@@ -47,19 +46,19 @@ This is my list of tools.
     [my config on github](https://github.com/maggick/dotfiles/tree/master/i3)
   * [vim](http://www.vim.org/) a highly configurable text editor, see
     [my config on github](https://github.com/maggick/dotfiles/blob/master/vimrc)
+  * [neovim](https://neovim.io/) a highly configurable text editor, see
+    [my config on github](https://github.com/maggick/dotfiles/tree/master/config/nvim)
+  * [ranger](https://ranger.github.io/) A VIM-inspired filemanager for the console,
+    see [my config on github](https://github.com/maggick/dotfiles/tree/master/config/ranger)
   * [git](http://git-scm.com/) a distributed version control system
   * [tig](http://jonas.nitro.dk/tig/) an ncurses-based text-mode interface for git
-  * [tree](http://mama.indstate.edu/users/ice/tree/) sniffs sensitive data from interface or pcap
   * [htop](http://hisham.hm/htop/) an interactive process viewer for Linux
   * [ncdu](http://dev.yorhel.nl/ncdu) a disk usage analyzer with an ncurses interface
   * [pacgraph](http://kmkeen.com/pacgraph/) draws a pretty picture of your installed packages
   * [evince](https://wiki.gnome.org/Apps/Evince) a document viewer for multiple document formats
-  * [feh](http://feh.finalrewind.org/) an X11 image viewer aimed mostly at console users
   * [sxiv](https://github.com/muennich/sxiv) Simple X Image Viewer
   * [cmus](https://cmus.github.io/) is a small, fast and powerful console music player
   * [vlc](http://www.videolan.org/) a free and open source cross-platform multimedia player
-  * [nevernote](http://nevernote.sourceforge.net/) an open source clone of Evernote
   * [nemo](https://github.com/linuxmint/nemo) a File browser
   * [krita](https://krita.org/) a FREE sketching and painting program
-  * [rawtherapee](http://www.rawtherapee.com/) a powerful cross-platform raw photo processing program
   * [darktable](http://www.darktable.org/) an open source photography workflow application and RAW developer.
