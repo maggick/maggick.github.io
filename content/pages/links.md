@@ -14,4 +14,5 @@ Just some interesting links.
  * [PDF tools list from Didier Stevens](https://blog.didierstevens.com/programs/pdf-tools/)
  * [Password stroage, server side](https://paragonie.com/blog/2016/02/how-safely-store-password-in-2016)
  * [Everything you should know about certificates and PKI but are too afraid to ask](https://smallstep.com/blog/everything-pki.html)
+ * [How to undo (almost) anything with Git](https://github.blog/2015-06-08-how-to-undo-almost-anything-with-git/)
 
