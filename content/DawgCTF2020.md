@@ -1,8 +1,29 @@
+Title:DawgCTF 2020
+Date: 04-13-2020 10:00
+category:security
+tags:security, CTF, crypto, RSA
+meta:security, CTF, crypto, RSA
+
+<img class="align-left" src="/media/2020.04/cyberdawgs_logo.png" alt="Cyberdawgs logo" width="262">
+
+This weekend I participate to the DawgCTF with the team
+`hackers for the jilted generation`. We finished 46th with 4530 points.
+Here are some writeup about the cryptography challenges.
+
+<!-- PELICAN_END_SUMMARY -->
 
 # Crypto
+
+For most of the crypto challenges we are provided with client python script that
+allow to connect to the oracle service.
+
 ## Take It Back Now, Y'all (25)
 
+The first crypto challenge is a simple sanity check.
 
+Here is the provided client:
+
+    :::python
     # -*- coding: utf-8 -*-
     """
     Created for Spring 2020 CTF
@@ -25,6 +46,9 @@ We connect using telnet and call the `flg` method.
 
 ## One Hop This Time, One Hop This Time (75)
 
+The second one is nothing complicated either.
+
+Here is the client:
 
     :::python
     # -*- coding: utf-8 -*-
@@ -64,6 +88,7 @@ We open a socket, grab the encrypted flag and decrypt it.
 
 ## Right Foot Two Stomps (200)
 
+Here is the provided client:
 
     :::python
     # -*- coding: utf-8 -*-
@@ -110,9 +135,23 @@ send back the flag with the IV to decrypt it.
 
 ## Left Foot Two Stomps (250)
 
->n=960242069 e=347 c=346046109,295161774,616062960,790750242,259677897,945606673,321883599,625021022,731220302,556994500,118512782,843462311,321883599,202294479,725148418,725148418,636253020,70699533,475241234,530533280,860892522,530533280,657690757,110489031,271790171,221180981,221180981,278854535,202294479,231979042,725148418,787183046,346046109,657690757,530533280,770057231,271790171,584652061,405302860,137112544,137112544,851931432,118512782,683778547,616062960,508395428,271790171,185391473,923405109,227720616,563542899,770121847,185391473,546341739,851931432,657690757,851931432,284629213,289862692,788320338,770057231,770121847
+This the only offline challenge and we didn't get any client for this one.
+The only information was the following:
 
-RSA with "small number" ;)
+>n=960242069 e=347 c=346046109,295161774,616062960,790750242,259677897,
+>945606673,321883599,625021022,731220302,556994500,118512782,843462311,
+>321883599,202294479,725148418,725148418,636253020,70699533,475241234,
+>530533280,860892522,530533280,657690757,110489031,271790171,221180981,
+>221180981,278854535,202294479,231979042,725148418,787183046,346046109,
+>657690757,530533280,770057231,271790171,584652061,405302860,137112544,
+>137112544,851931432,118512782,683778547,616062960,508395428,271790171,
+>185391473,923405109,227720616,563542899,770121847,185391473,546341739,
+>851931432,657690757,851931432,284629213,289862692,788320338,770057231,
+>770121847
+
+This looks like some RSA with "small numbers" ;)
+
+We can easily factorise `n`. Once we know `n` we can compute `phi`.
 
     :::text
     n=960242069=151*6359219
@@ -120,36 +159,46 @@ RSA with "small number" ;)
     e = 347
     ed = 1 mod 953882700
 
+Then, as we already know `e` we can compute `d` with a simple python loop.
+
+    :::text
+    >>> i = 347
     >>> while (347*i%953882700 !=1):
     ...     i+=1
     ...
     >>> i
     5497883
 
-We create a list `c` of the number as in the challenge description.
+We create a list `c` of the number as in the challenge description and decode
+every element using our RSA numbers.
 
     :::text
+    >>> c=[346046109,295161774,616062960,<SNIP>,770057231,770121847]
     >>> for elem in c:
     ...     print(chr((elem**5497883)%960242069))
 
-xhBQCUIcbPf7IN88AT9FDFsqEOOjNM8uxsFrEJZRRifKB1E=|key=visionary
+This was a bit long as a single process is involved but at the end we got the
+following output: `xhBQCUIcbPf7IN88AT9FDFsqEOOjNM8uxsFrEJZRRifKB1E=|key=visionary`
 
-I struggle a lot before thinking about that beeing a Vigenere cipher.
+I struggle a lot before thinking about that being a Vigenere cipher using the
+key `visionary`. At first I was thinking about AES (as the other challenges) but
+we don't have any IV here.
 
-zJIOHIldUx7QF88MG9FMHxiMGAwNV8wckNjQWZATnxST1Q=
+Once decrypted with the key we get the following: `zJIOHIldUx7QF88MG9FMHxiMGAwNV8wckNjQWZATnxST1Q=`
 
- echo -ne 'czJIOHIldUx7QF88MG9FMHxiMGAwNV8wckNjQWZATnxST1Q=' | base64 -d
-s2H8r%uL{@_<0oE0|b0`05_0rCcAf@N|ROT
+We decrypt the base64:
 
-And then a ROT47 give us the flag.
+    :::text
+    $ echo -ne 'czJIOHIldUx7QF88MG9FMHxiMGAwNV8wckNjQWZATnxST1Q=' | base64 -d
+    s2H8r%uL{@_<0oE0|b0`05_0rCcAf@N|ROT
 
-DawgCTF{Lo0k_@t_M3_1_d0_Cr4p7o}
+And then a ROT47 give us the flag: `DawgCTF{Lo0k_@t_M3_1_d0_Cr4p7o}`
 
-here is the [Cyber Chef receipe](https://gchq.github.io/CyberChef/#recipe=Vigen%C3%A8re_Decode('visionary')From_Base64('A-Za-z0-9%2B/%3D',true)ROT47(47)&input=eGhCUUNVSWNiUGY3SU44OEFUOUZERnNxRU9Pak5NOHV4c0ZyRUpaUlJpZktCMUU9)
+Here is the [Cyber Chef recipe](https://gchq.github.io/CyberChef/#recipe=Vigen%C3%A8re_Decode('visionary')From_Base64('A-Za-z0-9%2B/%3D',true)ROT47(47)&input=eGhCUUNVSWNiUGY3SU44OEFUOUZERnNxRU9Pak5NOHV4c0ZyRUpaUlJpZktCMUU9)
 
 ## Slide To The Left (350)
 
-The code is exactly the same as "Right Foot Two Stomps".
+The client code is exactly the same as "Right Foot Two Stomps".
 
     :::python
     # -*- coding: utf-8 -*-
@@ -169,53 +218,40 @@ The code is exactly the same as "Right Foot Two Stomps".
     @author: pleoxconfusa
     """
 
-    import socket
+If we rerun the code for the previous challenge we get: `b'We already did this one.'`
 
-
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    server_address = ('crypto.ctf.umbccd.io', 13373)
-    sock.connect(server_address)
-
-    #available methods: flg, enc, dec.
-
-    msg = 'flg'.encode()
-    sock.sendall(msg)
-    ct = sock.recv(1024)
-    print(ct)#not decoded, because now the oracle sends encrypted bytes.
-
-    msg = 'enc:LET ME IN!!!'.encode()
-    sock.sendall(msg)
-    enc = sock.recv(1024)#receive the encryption as 16 bytes of iv followed by ct.
-    print(enc)
-
-    iv = enc[:16]
-    ct = enc[16:]
-
-    msg = b'dec:' + iv + ct #sanity check, also other way to encode
-    sock.sendall(msg)
-    dec = sock.recv(1024)
-    print(dec)
-
-    sock.close()
-
-If we rerun the code for the previous challenge we get:
-
-b'We already did this one.'
-
-Which is obviously is not the flag.
+Which is obviously is not the flag. We didn't solve this challenge in time.
+I tried solve it using
+[Oracle padding](https://en.wikipedia.org/wiki/Padding_oracle_attack) but this
+was for the next challenge :(
 
 # Misc
 
+There was one "Misc" challenge that actually was crypto.
+
 ## Let Her Eat Cake! 75
 
-Hwyjpgxwkmgvbxaqgzcsnmaknbjktpxyezcrmlja?
+We got some description and photo about
+[Elizebeth Smith Friedman](https://en.wikipedia.org/wiki/Elizebeth_Smith_Friedman)
+and then a cipher text
 
-GqxkiqvcbwvzmmxhspcsqwxyhqentihuLivnfzaknagxfxnctLcchKCH{CtggsMmie_kteqbx}
+> Hwyjpgxwkmgvbxaqgzcsnmaknbjktpxyezcrmlja?
+> GqxkiqvcbwvzmmxhspcsqwxyhqentihuLivnfzaknagxfxnctLcchKCH{CtggsMmie_kteqbx}
 
-Simple viegener cipher
+This clearly look like some Polyalphabetic substitution. In fact this is a simple
+Viegenere cipher using the key `AICGBIJC` (we decode it using
+[dcode.fr](https://www.dcode.fr/vigenere-cipher)).
 
-AICGBIJC
-Howdoyoukeepaprogrammerintheshowerallday?
+> Howdoyoukeepaprogrammerintheshowerallday?
+> GivehimabottleofshampoowhichsaysLatherrinserepeatDawgCTF{ClearEdge_crypto}
 
-GivehimabottleofshampoowhichsaysLatherrinserepeatDawgCTF{ClearEdge_crypto}
+
+# Wrapping up
+
+This CTF was fun as there was a lot of task but "easy" ones. Which give you some
+need to continue solving the other ones.
+
+I am really proud of the team as we get nice score!
+
+![Scoreboard](/media/2020.04/dawgctf_01.png)
+
