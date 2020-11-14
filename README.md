@@ -1,6 +1,6 @@
 # My personal website.
 
-[![Build Status](https://travis-ci.org/maggick/blog.svg?branch=master)](https://travis-ci.org/maggick/blog)
+[![Build Status](https://travis-ci.com/maggick/blog.svg?branch=master)](https://travis-ci.org/maggick/blog)
 
 This project is my actual website, my window on the cyberspace.
 
