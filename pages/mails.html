@@ -67,7 +67,7 @@ email spam by detecting email spoofing, a common vulnerability, by verifying
 sender IP addresses.</p>
 <p>It is really easy to put an SPF in place.
 You just have to add a DNS TXT entry :</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">yourdomain.com. IN TXT &quot;v=spf1 a mx ~all&quot;</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>yourdomain.com. IN TXT &quot;v=spf1 a mx ~all&quot;</span>
 <span class="code-line"></code></pre></div>
 
 <p>Source: <a href="http://nickwilsdon.com/spf-domain-records/">nickwilsdon</a></p>
@@ -76,14 +76,14 @@ You just have to add a DNS TXT entry :</p>
 an email message.</p>
 <h3 id="install">Install</h3>
 <p>First of all you need to install your DKIM solution, I use opendkim and debian:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">aptitude install opendkim opendkim-tools</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">aptitude</span> <span class="n">install</span> <span class="n">opendkim</span> <span class="n">opendkim</span><span class="o">-</span><span class="n">tools</span></span>
 <span class="code-line"></code></pre></div>
 
 <h3 id="keys-generation">Keys generation</h3>
 <p>We should choose the directory were to put the keys, we choose
 <code>/etc/opendkim/yourdomain/</code> (create the directory).
 Then we need to create the private and the public rsa keys for singing:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">opendkim-genkey -b 2048 -r -d yourdomain.tld</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>opendkim-genkey -b 2048 -r -d yourdomain.tld</span>
 <span class="code-line"></code></pre></div>
 
 <p>the <code>-b 2048</code> define the longer of the key, here 2048 bits, the <code>-r</code> is for
@@ -101,52 +101,52 @@ verifying</li>
 <p>(You may have to create folders and files).</p>
 <h4 id="etcopendkimconf">/etc/opendkim.conf</h4>
 <p>You may have to uncomment some lines:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">Umask         002</span></span>
-<span class="code-line"><span class="err">UserID        opendkim:opendkim</span></span>
-<span class="code-line"><span class="err">Socket        inet:8891@localhost</span></span>
-<span class="code-line"><span class="err">Domain        yourdomain.tld</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">Umask</span><span class="w">         </span><span class="mi">002</span><span class="w"></span></span>
+<span class="code-line"><span class="n">UserID</span><span class="w">        </span><span class="nl">opendkim</span><span class="p">:</span><span class="n">opendkim</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Socket</span><span class="w">        </span><span class="nl">inet</span><span class="p">:</span><span class="mi">8891</span><span class="nv">@localhost</span><span class="w"></span></span>
+<span class="code-line"><span class="k">Domain</span><span class="w">        </span><span class="n">yourdomain</span><span class="p">.</span><span class="n">tld</span><span class="w"></span></span>
 <span class="code-line"></code></pre></div>
 
 <p>Next, add the following line to the configuration in order to give the location of the
 other configuration to opendkim:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">Selector                deflaut</span></span>
-<span class="code-line"><span class="err">KeyTable                refile:/etc/opendkim/KeyTable</span></span>
-<span class="code-line"><span class="err">SigningTable            refile:/etc/opendkim/SigningTable</span></span>
-<span class="code-line"><span class="err">ExternalIgnoreList      refile:/etc/opendkim/TrustedHosts</span></span>
-<span class="code-line"><span class="err">InternalHosts           refile:/etc/opendkim/TrustedHosts</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>Selector                deflaut</span>
+<span class="code-line">KeyTable                refile:/etc/opendkim/KeyTable</span>
+<span class="code-line">SigningTable            refile:/etc/opendkim/SigningTable</span>
+<span class="code-line">ExternalIgnoreList      refile:/etc/opendkim/TrustedHosts</span>
+<span class="code-line">InternalHosts           refile:/etc/opendkim/TrustedHosts</span>
 <span class="code-line"></code></pre></div>
 
 <h4 id="etcopendkimkeytable">/etc/opendkim/KeyTable</h4>
 <p>This file contains the path to your DKIM keys (one per line) , here we have only
 one key so our file is just one line:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">yourdomain.tld yourdomain.tld:default:/etc/opendkim/yourdomain/default.private</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>yourdomain.tld yourdomain.tld:default:/etc/opendkim/yourdomain/default.private</span>
 <span class="code-line"></code></pre></div>
 
 <h4 id="etcopendkimsigningtable">/etc/opendkim/SigningTable</h4>
 <p>This file tells to opendkim how to use the keys, here we want every mails
 send from our domain to be signed:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">*@yourdomain.tld yourdomain.tld</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="o">*</span><span class="nv">@yourdomain</span><span class="p">.</span><span class="n">tld</span><span class="w"> </span><span class="n">yourdomain</span><span class="p">.</span><span class="n">tld</span><span class="w"></span></span>
 <span class="code-line"></code></pre></div>
 
 <h4 id="etcopendkimtrustedhosts">/etc/opendkim/TrustedHosts</h4>
 <p>This file tells OpenDKIM who to let use your keys:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">127.0.0.1</span></span>
-<span class="code-line"><span class="err">yourdomain.tld</span></span>
-<span class="code-line"><span class="err">mail.yourdomain.tld</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="mf">127.0.0.1</span></span>
+<span class="code-line"><span class="n">yourdomain</span><span class="mf">.</span><span class="n">tld</span></span>
+<span class="code-line"><span class="n">mail</span><span class="mf">.</span><span class="n">yourdomain</span><span class="mf">.</span><span class="n">tld</span></span>
 <span class="code-line"></code></pre></div>
 
 <h3 id="dns-record">DNS record</h3>
 <p>The DNS record is the last part of this operation. You need to do it properbly
 otherwise your signature would be false and unreconized by the mailing servers.
 you should have a filed who describe the way you handle your DKIM:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">_domainkey                IN TXT    &quot;o=-;&quot;</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>_domainkey                IN TXT    &quot;o=-;&quot;</span>
 <span class="code-line"></code></pre></div>
 
 <p>And an other where you put your public key:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">default._domainkey        IN TXT    ( &quot;k=rsa;</span></span>
-<span class="code-line"><span class="err">p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz33vJpYC9pgwtm4JyRWLLDM5LLIn66IhgMODhW1PX7zk1eMuCdp8509sUmpk47RDbJq2VhFDGElC/9zkCMo6hrep241fVnwmOfuxA5Nvcu8YxbAvXacwusU9ct4r9Re2NjO9kshbIWBAVJ66CxBzWWsi6+ikChHbv7GsF2jbx+VG1rwbShr8AD5FbFGIh5CEVs83E&quot;</span></span>
-<span class="code-line"><span class="err">&quot;qJ6g8Nla+BX2A2V2gwOxT2Xp0mCIqjIFqfoyhxIcftKHHBDFxiun2WLwsUD5ivFewy54ntgphkWJUXfob+NtZ6M8sv531Zd/mgdBgnYAPzWNy5m5MGquNZNEnA44o0sAcKiCRMb7nKpTvfDQQIDAQAB&quot;</span></span>
-<span class="code-line"><span class="err">)</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>default._domainkey        IN TXT    ( &quot;k=rsa;</span>
+<span class="code-line">p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz33vJpYC9pgwtm4JyRWLLDM5LLIn66IhgMODhW1PX7zk1eMuCdp8509sUmpk47RDbJq2VhFDGElC/9zkCMo6hrep241fVnwmOfuxA5Nvcu8YxbAvXacwusU9ct4r9Re2NjO9kshbIWBAVJ66CxBzWWsi6+ikChHbv7GsF2jbx+VG1rwbShr8AD5FbFGIh5CEVs83E&quot;</span>
+<span class="code-line">&quot;qJ6g8Nla+BX2A2V2gwOxT2Xp0mCIqjIFqfoyhxIcftKHHBDFxiun2WLwsUD5ivFewy54ntgphkWJUXfob+NtZ6M8sv531Zd/mgdBgnYAPzWNy5m5MGquNZNEnA44o0sAcKiCRMb7nKpTvfDQQIDAQAB&quot;</span>
+<span class="code-line">)</span>
 <span class="code-line"></code></pre></div>
 
 <p>Source: <a href="http://stevejenkins.com/blog/2011/08/installing-opendkim-rpm-via-yum-with-postfix-or-sendmail-for-rhel-centos-fedora/">stevejenkins</a>  <br>
@@ -158,17 +158,17 @@ Tester</a></p>
 <p>Is is really interesting to catch all e-mails directed to your domain. For
 instance you will catch wahtever@yourdomain.com.
 To define a catch all create the <code>virtual</code> file and add it to postmap :</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err"># echo &#39;@yourdomain.com emailusername&#39; &gt; /etc/postfix/virtual</span></span>
-<span class="code-line"><span class="err"># postmap /etc/postfix/virtual</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">#</span><span class="w"> </span><span class="n">echo</span><span class="w"> </span><span class="s1">&#39;@yourdomain.com emailusername&#39;</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="k">postfix</span><span class="o">/</span><span class="n">virtual</span><span class="w"></span></span>
+<span class="code-line"><span class="err">#</span><span class="w"> </span><span class="n">postmap</span><span class="w"> </span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="k">postfix</span><span class="o">/</span><span class="n">virtual</span><span class="w"></span></span>
 <span class="code-line"></code></pre></div>
 
 <p>Check that the virtual map is defined in postfix's configuration 
 by verifing that the following line is in the <code>/etc/postfix/main.cf</code> file.</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err"># postmap /etc/postfix/virtual</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code># postmap /etc/postfix/virtual</span>
 <span class="code-line"></code></pre></div>
 
 <p>and restart the postfix service :</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err"># service postfix reload</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="c1"># service postfix reload</span></span>
 <span class="code-line"></code></pre></div>
 
 <p>Source: <a href="http://www.cyberciti.biz/faq/howto-setup-postfix-catch-all-email-accounts/">cyberciti</a></p>
@@ -176,12 +176,12 @@ by verifing that the following line is in the <code>/etc/postfix/main.cf</code> 
 <p>In odrder that the existing users can get their e-mails when
 there is a cath all :</p>
 <p>edit the virtual_map in <code>/etc/postfix/virtual</code> and add the following line :</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">user@domain.tld user</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="k">user</span><span class="nv">@domain</span><span class="p">.</span><span class="n">tld</span><span class="w"> </span><span class="k">user</span><span class="w"></span></span>
 <span class="code-line"></code></pre></div>
 
 <p>next execute the following commands:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">postmap /etc/postfix/virtual</span></span>
-<span class="code-line"><span class="err">service postfix restart</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>postmap /etc/postfix/virtual</span>
+<span class="code-line">service postfix restart</span>
 <span class="code-line"></code></pre></div>
 
 <h3 id="catch-all-with-regex">Catch all with regex :</h3>
@@ -189,16 +189,16 @@ there is a cath all :</p>
 whatever.youruser@yourdomain.com
 In order to make a catch all for an user :
 edit (or create) the file </p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">/etc/postfix/virtual-regexp</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">postfix</span><span class="o">/</span><span class="n">virtual</span><span class="o">-</span><span class="n">regexp</span></span>
 <span class="code-line"></code></pre></div>
 
 <p>add regexp:/etc/postfix/virtual-regexp to virtual_maps in /etc/postfix/main.cf
 this will look like </p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">virtual_maps = hash:/etc/postfix/virtual, regexp:/etc/postfix/virtual-regexp</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">virtual_maps</span> <span class="o">=</span> <span class="nl">hash:</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">postfix</span><span class="o">/</span><span class="n">virtual</span><span class="p">,</span> <span class="nl">regexp:</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">postfix</span><span class="o">/</span><span class="n">virtual</span><span class="o">-</span><span class="n">regexp</span></span>
 <span class="code-line"></code></pre></div>
 
 <p>add the line:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">/^.*user@domnain.tld/ user</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="o">/^</span><span class="p">.</span><span class="o">*</span><span class="k">user</span><span class="nv">@domnain</span><span class="p">.</span><span class="n">tld</span><span class="o">/</span><span class="w"> </span><span class="k">user</span><span class="w"></span></span>
 <span class="code-line"></code></pre></div>
 
 <p>The user will receive all mail in the form *.user@domain.tld (where * is the
@@ -256,109 +256,142 @@ classic Unix joker)</p>
 
     <ul>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/web.html">web</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/logrotate.html">logrotate</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/htb.html">HTB</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/code-review.html">code review</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/re.html">RE</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/net.html">.NET</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/laravel.html">laravel</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/mangento.html">mangento</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/chisel.html">chisel</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bludit.html">bludit</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/screen.html">screen</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/openbsd.html">OpenBSD</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ldap.html">LDAP</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/enumeration.html">enumeration</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bolt-cms.html">bolt CMS</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
+              <a href="https://maggick.fr/tag/jackson.html">jackson</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/upload.html">Upload</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
+              <a href="https://maggick.fr/tag/restic.html">restic</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/programming.html">programming</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/windows.html">Windows</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/devops.html">devops</a>
+              <a href="https://maggick.fr/tag/vb.html">VB</a>
             </li>
             <li class="tag tag-3">
               <a href="https://maggick.fr/tag/lxc.html">lxc</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/teamviewer.html">teamviewer</a>
+              <a href="https://maggick.fr/tag/net.html">.NET</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
+              <a href="https://maggick.fr/tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/waf.html">WAF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/redis.html">redis</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/mangento.html">mangento</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/security.html">security</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/api.html">api</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bypass.html">bypass</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/xss.html">XSS</a>
+              <a href="https://maggick.fr/tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/git.html">git</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/windows.html">Windows</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/procdump.html">procdump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/screen.html">screen</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bloodhound.html">bloodhound</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cloudme.html">cloudme</a>
             </li>
             <li class="tag tag-2">
               <a href="https://maggick.fr/tag/cve.html">CVE</a>
             </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/impacket.html">impacket</a>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/dnsadmins.html">DnsAdmins</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cewl.html">cewl</a>
+              <a href="https://maggick.fr/tag/rsa.html">RSA</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/reverse.html">reverse</a>
@@ -367,49 +400,10 @@ classic Unix joker)</p>
               <a href="https://maggick.fr/tag/postgresql.html">postgresql</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cloudme.html">cloudme</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/vb.html">VB</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/splunk.html">Splunk</a>
+              <a href="https://maggick.fr/tag/journalctl.html">journalctl</a>
             </li>
             <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/openemr.html">openEMR</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/memcache.html">memcache</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/phs.html">PHS</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/linux.html">linux</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/pth.html">PTH</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/rop.html">ROP</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/openadmin.html">openAdmin</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/dnsadmins.html">DnsAdmins</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bloodhound.html">bloodhound</a>
+              <a href="https://maggick.fr/tag/misc.html">misc</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/pypi.html">pypi</a>
@@ -417,26 +411,116 @@ classic Unix joker)</p>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/ad-recycle-bin.html">AD Recycle bin</a>
             </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/impacket.html">impacket</a>
+            </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/nano.html">nano</a>
+              <a href="https://maggick.fr/tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/webmin.html">webmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/pth.html">PTH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/phishing.html">phishing</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/rsa.html">RSA</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/iot.html">IOT</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/api.html">api</a>
+              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/lfi.html">LFI</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/composer.html">composer</a>
+              <a href="https://maggick.fr/tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/web.html">web</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/code-review.html">code review</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/deserialization.html">deserialization</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/nosql.html">NoSQL</a>
@@ -444,116 +528,32 @@ classic Unix joker)</p>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/hash.html">hash</a>
             </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/lxd.html">lxd</a>
-            </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/azure.html">Azure</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/smb.html">SMB</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/vnc.html">VNC</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/procdump.html">procdump</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/adminer.html">adminer</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/nostromo.html">nostromo</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
+              <a href="https://maggick.fr/tag/chisel.html">chisel</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/dll.html">DLL</a>
             </li>
             <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bypass.html">bypass</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/tomcat.html">tomcat</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/docker.html">docker</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/misc.html">misc</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/zip.html">zip</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/crypto.html">Crypto</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/webmin.html">webmin</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/umbraco.html">umbraco</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/suid.html">SUID</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/restic.html">restic</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/exploit.html">exploit</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/redis.html">redis</a>
-            </li>
-            <li class="tag tag-3">
               <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/waf.html">WAF</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/ctf.html">CTF</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/ssti.html">SSTI</a>
             </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/blog.html">blog</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/vault.html">vault</a>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
             </li>
             <li class="tag tag-3">
               <a href="https://maggick.fr/tag/sudo.html">sudo</a>
             </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/security.html">security</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/git.html">git</a>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/nostromo.html">nostromo</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
+              <a href="https://maggick.fr/tag/rop.html">ROP</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/journalctl.html">journalctl</a>
+              <a href="https://maggick.fr/tag/laravel.html">laravel</a>
             </li>
     </ul>
 </section>

