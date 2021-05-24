@@ -79,7 +79,7 @@ EXTRA_PATH_METADATA = {'extra/CNAME': {'path': 'CNAME'}, 'extra/.nojekyll':{'pat
 FAVICON_URL = "%s/media/favicon.ico" % SITEURL
 
 # Third party
-DISQUS_SITENAME = "matthieukeller"
+# DISQUS_SITENAME = "matthieukeller"
 GOOGLE_ANALYTICS = "UA-63314567-1"
 
 # License
