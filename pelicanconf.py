@@ -6,7 +6,7 @@ import sys
 sys.path.append(os.curdir)
 
 SITEURL = 'https://maggick.fr'
-RELATIVE_URLS = False
+RELATIVE_URLS = True
 
 # DELETE_OUTPUT_DIRECTORY = True
 
