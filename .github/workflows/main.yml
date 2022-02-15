@@ -1,0 +1,39 @@
+name: build
+
+on: push
+
+env:
+  # color output for pytest and tox
+  PYTEST_ADDOPTS: "--color=yes"
+  PY_COLORS: 1
+  API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+
+jobs:
+  build:
+    name: test and build
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - name: install package
+        run: pip install requests LinkChecker pelican markdown BeautifulSoup4
+
+      - name: install theme
+        run: git clone https://github.com/maggick/maggner-pelican
+
+      - name: grab the pelican plugins
+        run: git clone --recursive https://github.com/getpelican/pelican-plugins
+
+      - name: linkechecker
+        run: linkchecker ./content
+
+      - name: grab the latest published version in order to not erase rss feed
+        run:  git clone https://github.com/maggick/maggick.github.io output
+
+      - name: build
+        run: pelican
+
+      - name: publish
+        run: cd output && git add ./ && git -c user.name="GH Action" -c user.email="maggick@users.noreply.github.com" commit -m 'CI update' && git push https://${API_TOKEN_GITHUB}@github.com/maggick/maggick.github.io.git master
