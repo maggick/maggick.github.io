@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>DawgCTF 2020 | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2020/04/dawgctf-2020.html" title="Read more" class="entry-title-link">
+                DawgCTF 2020</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2020-04-13T10:00:00+02:00">13 Apr 2020</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/ctf.html" title="Read more with the label CTF" class="meta-link">CTF</a> 
+          <a href="../../tag/crypto.html" title="Read more with the label crypto" class="meta-link">crypto</a> 
+          <a href="../../tag/rsa.html" title="Read more with the label RSA" class="meta-link">RSA</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 5 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2020.04/cyberdawgs_logo.png" alt="Cyberdawgs logo" width="262"></p>
+<p>This weekend I participate to the DawgCTF with the team
+<code>hackers for the jilted generation</code>. We finished 46th with 4530 points.
+Here are some writeup about the cryptography challenges.</p>
+
+
+<h1 id="crypto">Crypto</h1>
+<p>For most of the crypto challenges we are provided with client python script that
+allow to connect to the oracle service.</p>
+<h2 id="take-it-back-now-yall-25">Take It Back Now, Y'all (25)</h2>
+<p>The first crypto challenge is a simple sanity check.</p>
+<p>Here is the provided client:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="c1"># -*- coding: utf-8 -*-</span></span>
+<span class="code-line"><span class="s2">&quot;&quot;&quot;</span></span>
+<span class="code-line"><span class="s2">Created for Spring 2020 CTF</span></span>
+<span class="code-line"><span class="s2">Cryptography 0</span></span>
+<span class="code-line"><span class="s2">10 Points</span></span>
+<span class="code-line"><span class="s2">Welcome to my sanity check.  You&#39;ll find this to be fairly easy.</span></span>
+<span class="code-line"><span class="s2">The oracle is found at umbccd.io:13370, and your methods are:</span></span>
+<span class="code-line"><span class="s2">    flg - returns the flag</span></span>
+<span class="code-line"><span class="s2">    tst - returns the message after the : in &quot;tst:...&quot;</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>We connect using telnet and call the <code>flg</code> method.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>telnet crypto.ctf.umbccd.io 13370</span>
+<span class="code-line">Trying 3.81.180.84...</span>
+<span class="code-line">Connected to crypto.ctf.umbccd.io.</span>
+<span class="code-line">Escape character is &#39;^]&#39;.</span>
+<span class="code-line">flg</span>
+<span class="code-line">DawgCTF{H3ll0_W0rld!}Connection closed by foreign host.</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="one-hop-this-time-one-hop-this-time-75">One Hop This Time, One Hop This Time (75)</h2>
+<p>The second one is nothing complicated either.</p>
+<p>Here is the client:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="c1"># -*- coding: utf-8 -*-</span></span>
+<span class="code-line"><span class="sd">&quot;&quot;&quot;</span></span>
+<span class="code-line"><span class="sd">Created for Spring 2020 CTF</span></span>
+<span class="code-line"><span class="sd">Cryptography 1</span></span>
+<span class="code-line"><span class="sd">40 Points</span></span>
+<span class="code-line"><span class="sd">Welcome to the one time pad oracle!</span></span>
+<span class="code-line"><span class="sd">Our oracle&#39;s function is enc := key ^ msg | dec := key ^ ct</span></span>
+<span class="code-line"><span class="sd">The oracle is found at umbccd.io:13371, and your methods are:</span></span>
+<span class="code-line"><span class="sd">    flg - returns the encrypted flag</span></span>
+<span class="code-line"><span class="sd">    enc - returns the encryption of the message after the : in &quot;enc:...&quot;</span></span>
+<span class="code-line"><span class="sd">    dec - returns the decryption of the ciphertext after the : in &quot;dec:...&quot;</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="sd">@author: pleoxconfusa</span></span>
+<span class="code-line"><span class="sd">&quot;&quot;&quot;</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>We open a socket, grab the encrypted flag and decrypt it.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="kn">import</span> <span class="nn">socket</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">()</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">port</span> <span class="o">=</span> <span class="mi">13371</span></span>
+<span class="code-line"><span class="n">host</span> <span class="o">=</span> <span class="s1">&#39;crypto.ctf.umbccd.io&#39;</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="c1"># connect to the server on local computer</span></span>
+<span class="code-line"><span class="n">s</span><span class="o">.</span><span class="n">connect</span><span class="p">((</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">))</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">s</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;flg&#39;</span><span class="p">)</span></span>
+<span class="code-line"><span class="n">flag</span><span class="o">=</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1024</span><span class="p">))</span></span>
+<span class="code-line"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span></span>
+<span class="code-line"><span class="n">s</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;dec:&#39;</span><span class="o">+</span><span class="n">flag</span><span class="p">)</span></span>
+<span class="code-line"><span class="nb">print</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1024</span><span class="p">))</span></span>
+<span class="code-line"><span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="right-foot-two-stomps-200">Right Foot Two Stomps (200)</h2>
+<p>Here is the provided client:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="c1"># -*- coding: utf-8 -*-</span></span>
+<span class="code-line"><span class="s2">&quot;&quot;&quot;</span></span>
+<span class="code-line"><span class="s2">Created for Spring 2020 CTF</span></span>
+<span class="code-line"><span class="s2">Cryptography 2</span></span>
+<span class="code-line"><span class="s2">100 Points</span></span>
+<span class="code-line"><span class="s2">Welcome to the AES-CBC oracle!</span></span>
+<span class="code-line"><span class="s2">Our oracle&#39;s function is AES-CBC.</span></span>
+<span class="code-line"><span class="s2">The oracle is found at umbccd.io:13372, and your methods are:</span></span>
+<span class="code-line"><span class="s2">    flg - returns the encrypted flag</span></span>
+<span class="code-line"><span class="s2">    enc - returns the encryption of the message after the : in &quot;enc:...&quot;</span></span>
+<span class="code-line"><span class="s2">          as 16 bytes of initialization vector followed by the ciphertext.</span></span>
+<span class="code-line"><span class="s2">    dec - returns the decryption of the ciphertext after the : in &quot;dec:&lt;16 bytes iv&gt;...&quot;</span></span>
+<span class="code-line"><span class="s2">          as a bytes string.</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>We open a socket, grab the encrypted flag, send some data to get the IV, and
+send back the flag with the IV to decrypt it.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="kn">import</span> <span class="nn">socket</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">()</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">port</span> <span class="o">=</span> <span class="mi">13372</span></span>
+<span class="code-line"><span class="n">host</span> <span class="o">=</span> <span class="s1">&#39;crypto.ctf.umbccd.io&#39;</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">s</span><span class="o">.</span><span class="n">connect</span><span class="p">((</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">))</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">s</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;flg&#39;</span><span class="p">)</span></span>
+<span class="code-line"><span class="n">flag</span><span class="o">=</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1024</span><span class="p">))</span></span>
+<span class="code-line"><span class="c1">#print(flag)</span></span>
+<span class="code-line"><span class="n">s</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;enc:test&#39;</span><span class="p">)</span></span>
+<span class="code-line"><span class="n">r</span><span class="o">=</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1024</span><span class="p">))</span></span>
+<span class="code-line"><span class="c1">#print(r)</span></span>
+<span class="code-line"><span class="n">iv</span><span class="o">=</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">16</span><span class="p">]</span></span>
+<span class="code-line"><span class="c1">#print(iv)</span></span>
+<span class="code-line"><span class="n">s</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;dec:&#39;</span><span class="o">+</span><span class="n">iv</span><span class="o">+</span><span class="n">flag</span><span class="p">)</span></span>
+<span class="code-line"><span class="n">r</span><span class="o">=</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1024</span><span class="p">))</span></span>
+<span class="code-line"><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="p">)</span></span>
+<span class="code-line"><span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></span>
+<span class="code-line"></code></pre></div>
+
+<p><code>b"\xd6z\xbd\xfb\x9a\x82\xb91\xa5\x12\n['\xfb\x92\xb5DawgCTF{!_Th0ugh7_Th3_C!ph3rt3x7_W@s_Sh0rt3r.}"</code></p>
+<h2 id="left-foot-two-stomps-250">Left Foot Two Stomps (250)</h2>
+<p>This the only offline challenge and we didn't get any client for this one.
+The only information was the following:</p>
+<blockquote>
+<p>n=960242069 e=347 c=346046109,295161774,616062960,790750242,259677897,945606673,
+321883599,625021022,731220302,556994500,118512782,843462311,321883599,202294479,
+725148418,725148418,636253020,70699533,475241234,530533280,860892522,530533280,
+657690757,110489031,271790171,221180981,221180981,278854535,202294479,231979042,
+725148418,787183046,346046109,657690757,530533280,770057231,271790171,584652061,
+405302860,137112544,137112544,851931432,118512782,683778547,616062960,508395428,
+271790171,185391473,923405109,227720616,563542899,770121847,185391473,546341739,
+851931432,657690757,851931432,284629213,289862692,788320338,770057231,770121847</p>
+</blockquote>
+<p>This looks like some RSA with "small numbers" ;)</p>
+<p>We can easily factorise <code>n</code>. Once we know <code>n</code> we can compute <code>phi</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>n=960242069=151*6359219</span>
+<span class="code-line">Phi = (p-1)(q-1) = 150*6359218 = 953882700</span>
+<span class="code-line">e = 347</span>
+<span class="code-line">ed = 1 mod 953882700</span>
+<span class="code-line"></code></pre></div>
+
+<p>Then, as we already know <code>e</code> we can compute <code>d</code> with a simple python loop.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>&gt;&gt;&gt; i = 347</span>
+<span class="code-line">&gt;&gt;&gt; while (347*i%953882700 !=1):</span>
+<span class="code-line">...     i+=1</span>
+<span class="code-line">...</span>
+<span class="code-line">&gt;&gt;&gt; i</span>
+<span class="code-line">5497883</span>
+<span class="code-line"></code></pre></div>
+
+<p>We create a list <code>c</code> of the number as in the challenge description and decode
+every element using our RSA numbers.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>&gt;&gt;&gt; c=[346046109,295161774,616062960,&lt;SNIP&gt;,770057231,770121847]</span>
+<span class="code-line">&gt;&gt;&gt; for elem in c:</span>
+<span class="code-line">...     print(chr((elem**5497883)%960242069))</span>
+<span class="code-line"></code></pre></div>
+
+<p>This was a bit long as a single process is involved but at the end we got the
+following output: <code>xhBQCUIcbPf7IN88AT9FDFsqEOOjNM8uxsFrEJZRRifKB1E=|key=visionary</code></p>
+<p>I struggle a lot before thinking about that being a Vigenere cipher using the
+key <code>visionary</code>. At first I was thinking about AES-CBC (as the other challenges) but
+we don't have any IV here.</p>
+<p>Once decrypted with the key we get the following: <code>zJIOHIldUx7QF88MG9FMHxiMGAwNV8wckNjQWZATnxST1Q=</code></p>
+<p>We decrypt the base64:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$ echo -ne &#39;czJIOHIldUx7QF88MG9FMHxiMGAwNV8wckNjQWZATnxST1Q=&#39; | base64 -d</span>
+<span class="code-line">s2H8r%uL{@_&lt;0oE0|b0`05_0rCcAf@N|ROT</span>
+<span class="code-line"></code></pre></div>
+
+<p>And then a ROT47 give us the flag: <code>DawgCTF{Lo0k_@t_M3_1_d0_Cr4p7o}</code></p>
+<p>Here is the <a href="https://gchq.github.io/CyberChef/#recipe=Vigen%C3%A8re_Decode('visionary')From_Base64('A-Za-z0-9%2B/%3D',true)ROT47(47)&input=eGhCUUNVSWNiUGY3SU44OEFUOUZERnNxRU9Pak5NOHV4c0ZyRUpaUlJpZktCMUU9">Cyber Chef recipe</a>.</p>
+<h2 id="slide-to-the-left-350">Slide To The Left (350)</h2>
+<p>The client code is exactly the same as "Right Foot Two Stomps".</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="c1"># -*- coding: utf-8 -*-</span></span>
+<span class="code-line"><span class="sd">&quot;&quot;&quot;</span></span>
+<span class="code-line"><span class="sd">Created for Spring 2020 CTF</span></span>
+<span class="code-line"><span class="sd">Cryptography 2.5</span></span>
+<span class="code-line"><span class="sd">200 Points</span></span>
+<span class="code-line"><span class="sd">Welcome to the AES-CBC oracle!</span></span>
+<span class="code-line"><span class="sd">Our oracle&#39;s function is AES-CBC.</span></span>
+<span class="code-line"><span class="sd">The oracle is found at umbccd.io:13373, and your methods are:</span></span>
+<span class="code-line"><span class="sd">    flg - returns the encrypted flag</span></span>
+<span class="code-line"><span class="sd">    enc - returns the encryption of the message after the : in &quot;enc:...&quot;</span></span>
+<span class="code-line"><span class="sd">          as 16 bytes of initialization vector followed by the ciphertext.</span></span>
+<span class="code-line"><span class="sd">    dec - returns the decryption of the ciphertext after the : in &quot;dec:&lt;16 bytes iv&gt;...&quot;</span></span>
+<span class="code-line"><span class="sd">          as a bytes string.</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="sd">@author: pleoxconfusa</span></span>
+<span class="code-line"><span class="sd">&quot;&quot;&quot;</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>If we rerun the code for the previous challenge we get: <code>b'We already did this one.'</code></p>
+<p>Which is obviously is not the flag. We didn't solve this challenge in time.
+I tried solve it using
+<a href="https://en.wikipedia.org/wiki/Padding_oracle_attack">Oracle padding</a> but this
+was for the next challenge :(</p>
+<h1 id="misc">Misc</h1>
+<p>There was one "Misc" challenge that actually was crypto.</p>
+<h2 id="let-her-eat-cake-75">Let Her Eat Cake! 75</h2>
+<p>We got some description and photo about
+<a href="https://en.wikipedia.org/wiki/Elizebeth_Smith_Friedman">Elizebeth Smith Friedman</a>
+and then a cipher text</p>
+<blockquote>
+<p>Hwyjpgxwkmgvbxaqgzcsnmaknbjktpxyezcrmlja?
+GqxkiqvcbwvzmmxhspcsqwxyhqentihuLivnfzaknagxfxnctLcchKCH{CtggsMmie_kteqbx}</p>
+</blockquote>
+<p>This clearly look like some Polyalphabetic substitution. In fact this is a simple
+Viegenere cipher using the key <code>AICGBIJC</code> (we decode it using
+<a href="https://www.dcode.fr/vigenere-cipher">dcode.fr</a>).</p>
+<blockquote>
+<p>Howdoyoukeepaprogrammerintheshowerallday?
+GivehimabottleofshampoowhichsaysLatherrinserepeatDawgCTF{ClearEdge_crypto}</p>
+</blockquote>
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>This CTF was fun as there was a lot of task but "easy" ones. Which give you some
+need to continue solving the other ones.</p>
+<p>I am really proud of the team as we get nice score!</p>
+<p><img alt="Scoreboard" src="/media/2020.04/dawgctf_01.png"></p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2020/04/htb-traverxec.html"> HTB: Traverxec </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2020/04/htb-mango.html"> HTB: Mango </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

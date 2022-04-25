@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - programming, security</title><link href="http://matthieukeller.com/" rel="alternate"></link><link href="http://matthieukeller.com/feeds/programming-security.atom.xml" rel="self"></link><id>http://matthieukeller.com/</id><updated>2016-12-27T11:58:00+01:00</updated><entry><title>Let's encrypt certificate for offline servers with OVH DNS</title><link href="http://matthieukeller.com/2016/12/lets-encrypt-certificate-for-offline-servers-with-ovh-dns.html" rel="alternate"></link><published>2016-12-27T11:58:00+01:00</published><updated>2016-12-27T11:58:00+01:00</updated><author><name>Matthieu Keller</name></author><id>tag:matthieukeller.com,2016-12-27:/2016/12/lets-encrypt-certificate-for-offline-servers-with-ovh-dns.html</id><summary type="html">&lt;p&gt;&lt;a href="https://letsencrypt.org/"&gt;Let's encrypt&lt;/a&gt; provide free and easy SSL certificates. Nevertheless it need to verify that
+you own the machine. In order to do that we usually use HTTP verification with
+the .well-known directory.&lt;/p&gt;
+&lt;p&gt;But sometime our servers are not reachable from the internet. Therefore the HTTP
+validation is not possible. Hopefully there is another way the &lt;a href="https://letsencrypt.github.io/acme-spec/"&gt;acme&lt;/a&gt; challenge can be
+validated: &lt;a href="https://letsencrypt.github.io/acme-spec/#rfc.section.7.4"&gt;DNS validation&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;In this post we will see how we can generate &lt;a href="https://letsencrypt.org/"&gt;Let's encrypt&lt;/a&gt; SSL certificate for
+offline machine with DNS validation for domains hosts by &lt;a href="https://ovh.com"&gt;OVH&lt;/a&gt;.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;a href="https://letsencrypt.org/"&gt;Let's encrypt&lt;/a&gt; provide free and easy SSL certificates. Nevertheless it need to verify that
+you own the machine. In order to do that we usually use HTTP verification with
+the .well-known directory.&lt;/p&gt;
+&lt;p&gt;But sometime our servers are not reachable from the internet. Therefore the HTTP
+validation is not possible. Hopefully there is another way the &lt;a href="https://letsencrypt.github.io/acme-spec/"&gt;acme&lt;/a&gt; challenge can be
+validated: &lt;a href="https://letsencrypt.github.io/acme-spec/#rfc.section.7.4"&gt;DNS validation&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;In this post we will see how we can generate &lt;a href="https://letsencrypt.org/"&gt;Let's encrypt&lt;/a&gt; SSL certificate for
+offline machine with DNS validation for domains hosts by &lt;a href="https://ovh.com"&gt;OVH&lt;/a&gt;.&lt;/p&gt;
+
+
+&lt;h2 id="certificate-generation"&gt;Certificate generation&lt;/h2&gt;
+&lt;h3 id="requirements"&gt;Requirements&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;A domain name with its DNS hosted by &lt;a href="https://ovh.com"&gt;OVH&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;curl (sudo apt-get install curl)&lt;/li&gt;
+&lt;li&gt;Python 2 or 3 and pip (sudo apt-get install python-pip)&lt;/li&gt;
+&lt;li&gt;python-ovh (pip install ovh)&lt;/li&gt;
+&lt;li&gt;dehydrated (git clone https://github.com/lukas2511/dehydrated)&lt;/li&gt;
+&lt;li&gt;OVH hook (git clone https://github.com/antoiner77/letsencrypt.sh-ovh)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="api-key-generation"&gt;API Key generation&lt;/h3&gt;
+&lt;p&gt;We need API keys in order to use the hook script for the DNS validation. For
+that, register the application on [OVH API] (https://eu.api.ovh.com/createApp/ https://eu.api.ovh.com/createApp/).&lt;/p&gt;
+&lt;p&gt;We get two elements from the website:
+&lt;em&gt; APP_KEY
+&lt;/em&gt; APP_SECRET&lt;/p&gt;
+&lt;p&gt;We need to put them in our &lt;code&gt;ovh.conf&lt;/code&gt; file in the OVH hook script:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;[default]
+; general configuration: default endpoint
+endpoint=ovh-eu
+
+[ovh-eu]
+; configuration specific to &amp;#39;ovh-eu&amp;#39; endpoint
+application_key=APP_KEY
+application_secret=APP_SECRET
+; uncomment following line when writing a script application
+; with a single consumer key.
+;consumer_key=MA_CLEFS
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Now we need to generate the use token in order to validation our keys (you may
+need to had execution permissions to the script):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;./ovhdns.py --init
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We get an other link where we need to authenticate one more time. When it is
+done just press the &lt;code&gt;ENTER&lt;/code&gt; key.&lt;/p&gt;
+&lt;p&gt;The script indicate the user token to insert in the &lt;code&gt;ovh.conf&lt;/code&gt; file. Be sure to
+uncomment the line by deleting the &lt;code&gt;;&lt;/code&gt; at the beginning of the line.&lt;/p&gt;
+&lt;p&gt;The configuration file will be needed in the &lt;code&gt;dehydrated&lt;/code&gt; folder, let's just
+create a symlink:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ln -s /home/user/letsencrypt.sh-ovh/ovh.conf /home/user/dehydrated/ovh.conf
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The hook script configuration is finished, now let's configure the &lt;code&gt;dehydrated&lt;/code&gt;
+script.&lt;/p&gt;
+&lt;h3 id="dehydrated-configuration"&gt;dehydrated configuration&lt;/h3&gt;
+&lt;p&gt;In the domains.txt file, indicate the certificates that you want to generate.
+Each line will be a certificate but one certificate can be valid for several
+domains. For instance, the following configuration will generate two certificates
+each for two domains.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;example.org www.example.org
+gitlab.example.com wikimedia.example.com
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h3 id="certificates-generation"&gt;Certificates generation&lt;/h3&gt;
+&lt;p&gt;Just launch the dehydrated script (you may need to had execution permission):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;./dehydrated -c -t dns-01 -k &amp;#39;/home/user/letsencrypt.sh-ovh/ovhdns.py&amp;#39;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;-c&lt;/code&gt; (re)generate certificates, will renew them if they expire in less than one month&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-t dns-01&lt;/code&gt; use the DNS challenge for acme validation&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-k&lt;/code&gt; use specific script for hook&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The certificates are stored in &lt;code&gt;/home/user/dehydrated/certs/&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 id="automatically-renew-certificates"&gt;Automatically renew certificates&lt;/h2&gt;
+&lt;p&gt;In order to automatically renew certificate:&lt;/p&gt;
+&lt;p&gt;Create a symlink in order to use the certificate and the necessary key. This
+is the only moment where we will need root permissions. For
+instance, for the gitlab certificate we need &lt;code&gt;gitlab.crt&lt;/code&gt; and &lt;code&gt;gitlab.key&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# ln -s /home/user/dehydrated/certs/git.exemple.fr/fullchain.pem /etc/gitlab/ssl/gitlab.crt
+# ln -s /home/user/dehydrated/certs/git.exemple.fr/privkey.pem /etc/gitlab/ssl/gitlab.key
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Add the following line to the crontab (&lt;code&gt;crontab -e&lt;/code&gt;):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;0 15 * * * cd /home/user/dehydrated/; ./dehydrated  -c -t dns-01 -k &amp;#39;/home/user/letsencrypt.sh-ovh/ovhdns.py&amp;#39;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="source"&gt;Source&lt;/h2&gt;
+&lt;p&gt;&lt;a href="https://ungeek.fr/letsencrypt-api-ovh/"&gt;https://ungeek.fr/letsencrypt-api-ovh/&lt;/a&gt;&lt;/p&gt;</content><category term="programming"></category><category term="SSL"></category><category term="let's encrypt"></category></entry><entry><title>Building a kiosk computer with Chrome</title><link href="http://matthieukeller.com/2016/12/building-a-kiosk-computer-with-chrome.html" rel="alternate"></link><published>2016-12-26T09:10:00+01:00</published><updated>2016-12-26T09:10:00+01:00</updated><author><name>Matthieu Keller</name></author><id>tag:matthieukeller.com,2016-12-26:/2016/12/building-a-kiosk-computer-with-chrome.html</id><summary type="html">&lt;p&gt;Building a Kiosk where Google Chrome is running in full screen and user
+interaction with the system are reduced to the minimum.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;Building a Kiosk where Google Chrome is running in full screen and user
+interaction with the system are reduced to the minimum.&lt;/p&gt;
+
+
+&lt;h2 id="debian-installation"&gt;Debian installation&lt;/h2&gt;
+&lt;p&gt;This will be pass as most of you should be able to install a basic Debian
+system. Just set lvm encryption, strong password for root and for the user and
+mostly do not install useless program, check only the program you need (ssh for
+instance).&lt;/p&gt;
+&lt;h2 id="installing-the-packages"&gt;Installing the packages&lt;/h2&gt;
+&lt;p&gt;We will need a few more packages to be able to run things:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;X (display server)&lt;/li&gt;
+&lt;li&gt;A light window manager able to run Chrome in full screen&lt;/li&gt;
+&lt;li&gt;Google Chrome&lt;/li&gt;
+&lt;li&gt;sudo to be able to impersonate the user&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The first operations will be done using root as the sudo command is not
+installed yet.&lt;/p&gt;
+&lt;p&gt;First we add the Google Chrome repository and the key to check the package
+integrity:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Edit the file &lt;code&gt;/etc/apt/source.list&lt;/code&gt; and add the following repository:&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;deb http://dl.google.com/linux/chrome/deb/ stable main&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Execute the following command:&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;wget -qO- https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Then we need to update the package list and install all necessary packages:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;apt-get update
+apt-get install --no-install-recommends xorg openbox sudo google-chrome-stable
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Without the &lt;code&gt;--no-install-recommends&lt;/code&gt;parameter some useless packages will be
+installed.&lt;/p&gt;
+&lt;h2 id="load-chrome-in-kiosk-at-startup"&gt;Load Chrome in kiosk at startup&lt;/h2&gt;
+&lt;p&gt;We need a script that will configure and load Chrome at the X server startup.
+As we don't want any data saved between each session we will delete the Chrome
+profile each time the script is used. Moreover it is in this script that we
+choose the starting page of Chrome.&lt;/p&gt;
+&lt;p&gt;Create and edit the script:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sudo vi /opt/kiosk.sh
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The file content is the following:&lt;/p&gt;
+&lt;table class="highlighttable"&gt;&lt;tr&gt;&lt;td class="linenos"&gt;&lt;div class="linenodiv"&gt;&lt;pre&gt;1
+2
+3
+4
+5
+6
+7
+8&lt;/pre&gt;&lt;/div&gt;&lt;/td&gt;&lt;td class="code"&gt;&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="ch"&gt;#!/bin/bash&lt;/span&gt;
+
+xset -dpms
+xset s off
+openbox-session &lt;span class="p"&gt;&amp;amp;&lt;/span&gt;
+&lt;span class="k"&gt;while&lt;/span&gt; true&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;do&lt;/span&gt; rm -rf ~/.&lt;span class="o"&gt;{&lt;/span&gt;config,cache&lt;span class="o"&gt;}&lt;/span&gt;/google-chrome/
+  google-chrome --kiosk --no-first-run  &lt;span class="s1"&gt;&amp;#39;http://localhost&amp;#39;&lt;/span&gt;
+&lt;span class="k"&gt;done&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+
+&lt;p&gt;Give the execution right to the script:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sudo chmod +x /opt/kiosk.sh
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;In order to start the X server and launch the &lt;code&gt;kiosk.sh&lt;/code&gt; script, we need to
+create a systemd service.&lt;/p&gt;
+&lt;p&gt;In order to to that, create and edit the file &lt;code&gt;/etc/systemd/system/kiosk.service&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sudo vi /etc/systemd/system/kiosk.service
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The content of the file is the following:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;[Unit]&lt;/span&gt;
+&lt;span class="na"&gt;Description&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;Kiosk&lt;/span&gt;
+
+&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;span class="na"&gt;Type&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;oneshot&lt;/span&gt;
+&lt;span class="na"&gt;ExecStart&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;/usr/bin/sudo –u user /usr/bin/startx /etc/X11/Xsession /opt/kiosk.sh --&lt;/span&gt;
+
+&lt;span class="k"&gt;[Install]&lt;/span&gt;
+&lt;span class="na"&gt;WantedBy&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;multi-user.target&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We need to enable the script with the following command:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;systemctl enable kiosk
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;To run the script use the following command:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;systemctl start kiosk »
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;You can also reboot in order to check that the script is automatically launch at
+startup.&lt;/p&gt;
+&lt;p&gt;If you need a terminal, you can use &lt;ctrl&gt;+&lt;alt&gt;+&lt;F2-9&gt; to get one.&lt;/p&gt;
+&lt;h2 id="automatically-mount-usb-key"&gt;Automatically mount USB key&lt;/h2&gt;
+&lt;p&gt;If your users need to copy data from the machine this paragraph is for you.
+Otherwise this is just informational.&lt;/p&gt;
+&lt;p&gt;As our users don't have a shell access they are unable to mount USB key.
+Therefore we need to automatically mount them.&lt;/p&gt;
+&lt;p&gt;We need the &lt;code&gt;usbmount&lt;/code&gt; package:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;apt-get install --no-install-recommends usbmount
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The USB keys will be automatically mount into &lt;code&gt;/mnt/usbX&lt;/code&gt;.In order for the user
+to have the permissions to right on it we need to add its &lt;code&gt;uid&lt;/code&gt; and &lt;code&gt;gid&lt;/code&gt; in the
+&lt;code&gt;usbmount&lt;/code&gt; configuration.&lt;/p&gt;
+&lt;p&gt;Edit the file &lt;code&gt;/etc/usbmount/usbmount.conf&lt;/code&gt; and the user &lt;code&gt;uid&lt;/code&gt; and &lt;code&gt;guid&lt;/code&gt; to the
+following line (the &lt;code&gt;uid&lt;/code&gt; and &lt;code&gt;gid&lt;/code&gt; can be found in &lt;code&gt;/etc/passwd&lt;/code&gt;):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;FS_MOUNTOPTIONS=&amp;quot; &amp;quot;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The line would be something like the following:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;FS_MOUNTOPTIONS=&amp;quot;uid=1000,gid=1000&amp;quot;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="sources"&gt;Sources&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://thepcspy.com/read/building-a-kiosk-computer-ubuntu-1404-chrome/"&gt;https://thepcspy.com/read/building-a-kiosk-computer-ubuntu-1404-chrome/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://lukas.zapletalovi.com/2013/08/execute-command-during-start-with-systemd.html"&gt;https://lukas.zapletalovi.com/2013/08/execute-command-during-start-with-systemd.html&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><category term="programming"></category><category term="security"></category><category term="chrome"></category><category term="kiosk"></category></entry></feed>

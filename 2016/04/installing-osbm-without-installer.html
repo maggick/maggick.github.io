@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>Installing OSBM without installer | maggick's logs</title>
+
+    <meta name="author" content="Matthieu Keller">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="http://matthieukeller.com/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css">
+    <link rel="stylesheet" href="http://matthieukeller.com/theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="http://matthieukeller.com/index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+                <li>
+                  <a href="http://matthieukeller.com/category/misc.html">Misc</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/programming.html">programming</a>
+                </li>
+                <li>
+                  <a href="http://matthieukeller.com/category/security.html">security</a>
+                </li>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="http://matthieukeller.com/pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="http://matthieukeller.com/pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="http://matthieukeller.com/2016/04/installing-osbm-without-installer.html" title="Read more" class="entry-title-link">
+                Installing OSBM without installer</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2016-04-14T23:49:00+02:00">14 Apr 2016</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="http://matthieukeller.com/author/matthieu-keller.html" title="Read more posts from Matthieu Keller" class="meta-link">Matthieu Keller</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="http://matthieukeller.com/tag/osmc.html" title="Read more with the label osmc" class="meta-link">osmc</a> 
+          <a href="http://matthieukeller.com/tag/raspberry.html" title="Read more with the label raspberry" class="meta-link">raspberry</a> 
+          <a href="http://matthieukeller.com/tag/smb.html" title="Read more with the label smb" class="meta-link">smb</a> 
+      </span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p>I bought the new raspberry pi 3 with integrated Wi-Fi. Currently I still have a
+Ethernet cable running through my living room to my old raspberry pi 1.</p>
+<p>Just willing to download the last raspbmc version I figured that it was no more
+raspbmc but osmc which is basically the same but with much marketing around it.
+The most annoying one is that you need to install an install (such meta). I was
+pretty much it was not really necessary and moreover there is no version of the
+installer for Arch Linux.</p>
+
+
+<p>So instead using their installer you can download directly the image (you need to
+click a button to display it) by selecting the right device and the last monthly
+version.</p>
+<p>After the download just decompress the archive:</p>
+<div class="highlight"><pre><span></span>gunzip OSMC_TGT_rbp2_20160403.img.gz
+</pre></div>
+
+
+<p>Now you will need to know on which device is the sdcard. On Arch Linux with
+system d, you may use <code>dmesg</code> to have some info:</p>
+<div class="highlight"><pre><span></span>[  953.910932] mmc0: new high speed SDHC card at address e624
+[  953.973940] mmcblk0: mmc0:e624 SD04G 3.69 GiB
+[  953.982627]  mmcblk0: p1 p2
+</pre></div>
+
+
+<p>On my own computer the sdcard is named mmcblk0 and have two partition <code>p1</code> and
+<code>p2</code>. From there you just need to copy the image to your sdcard (be sure to
+remove the <code>p1</code> or <code>p2</code> if any, you need to write directly on the disk <strong>NOT</strong>
+on the partition):</p>
+<div class="highlight"><pre><span></span>dd if=OSMC_TGT_rbp2_20160403.img of=/dev/mmcblk0
+</pre></div>
+
+
+<p>Then put the sdcard back on the raspberry pi and OSMC will install itself on the
+device. Next it will prompt you with the home screen and guide you through the
+first install settings. You will need to set language, location, wireless
+password and so on.</p>
+<p>If you need to connect to osmc, default username and password are:</p>
+<div class="highlight"><pre><span></span><span class="n">username</span><span class="o">:</span> <span class="n">osmc</span>
+<span class="n">password</span><span class="o">:</span> <span class="n">osmc</span>
+</pre></div>
+
+
+<p>If you need to add a SMB shared folder with authentication you will need to add
+the share normally, get the error and then directly connect to the OSMC with
+SSH and modify the XML file located at <code>home/osmc/.kodi/userdata/sources.xml</code> by
+adding the user and password as in the following:</p>
+<div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">sources</span><span class="o">&gt;</span>
+    <span class="p">...</span>
+    <span class="o">&lt;</span><span class="n">video</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="k">default</span> <span class="n">pathversion</span><span class="o">=</span><span class="s">&quot;1&quot;</span><span class="o">&gt;&lt;/</span><span class="k">default</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="n">source</span><span class="o">&gt;</span>
+            <span class="o">&lt;</span><span class="n">name</span><span class="o">&gt;</span><span class="n">Prime</span><span class="o">&lt;/</span><span class="n">name</span><span class="o">&gt;</span>
+            <span class="o">&lt;</span><span class="n">path</span> <span class="n">pathversion</span><span class="o">=</span><span class="s">&quot;1&quot;</span><span class="o">&gt;</span><span class="nl">smb</span><span class="p">:</span><span class="c1">//user:password@10.0.0.111/video/&lt;/path&gt;</span>
+        <span class="o">&lt;/</span><span class="n">source</span><span class="o">&gt;</span>
+    <span class="o">&lt;/</span><span class="n">video</span><span class="o">&gt;</span>
+    <span class="p">...</span>
+<span class="o">&lt;/</span><span class="n">sources</span><span class="o">&gt;</span>
+</pre></div>
+
+
+<p>Save, <strong>REBOOT</strong>, and it will work.</p>
+<p>Thanks to
+<a href="http://codetitans.pl/blog/post/osmc--smb-share-with-credentials">http://codetitans.pl</a>
+for this last part.</p>
+    </div>
+
+        <footer>
+<div class="social-buttons">
+
+
+</div>        </footer>
+
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = "matthieukeller";
+        var disqus_identifier = "2016/04/installing-osbm-without-installer.html";
+
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-books"></span>
+                    <a href="/pages/books.html">books</a>
+                </li>
+                <li>
+                    <span class= "icons icons-palmares"></span>
+                    <a href="/pages/palmares.html">palmares</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/matthieukeller">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-linkedin"></span>
+                    <a href="https://linkedin.com/in/matthieukeller">linkedin</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+    <script>
+        (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+        function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+        e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+        e.src='//www.google-analytics.com/analytics.js';
+        r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+        ga('create','UA-63314567-1');ga('send','pageview');
+    </script>
+
+</div>
+</body>
+</html>

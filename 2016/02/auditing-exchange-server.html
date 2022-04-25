@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>Auditing Exchange Server | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2016/02/auditing-exchange-server.html" title="Read more" class="entry-title-link">
+                Auditing Exchange Server</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2016-02-29T21:49:00+01:00">29 Feb 2016</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/exchange.html" title="Read more with the label exchange" class="meta-link">exchange</a> 
+          <a href="../../tag/microsoft.html" title="Read more with the label microsoft" class="meta-link">microsoft</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 5 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left"
+src="/media/2016.02/exchange.png" alt="ExchangeAnalyser" width="252"></p>
+<p>Recently I performed a MS Exchange configuration review. For the "old" version
+of exchange we can use the
+<a href="https://www.microsoft.com/en-us/download/details.aspx?id=22485">Microsoft Exchange Best Practices
+Analyzer</a>.
+For the new version of MS Exchange (2013 and 2016) the tools must be download
+from <a href="https://community.office365.com/en-us/w/deploy/office-365-best-practices-analyzer-for-exchange-server-2013">the office 365
+market</a>.
+But most of the MS Exchange server are not directly connected to internet. That
+is why I used a tool developed by Paul Cunningham: <a href="https://github.com/cunninghamp/ExchangeAnalyzer">Exchange Analyzer available
+on github</a>.</p>
+
+
+<h2 id="getting-and-installing-the-script">Getting and installing the script</h2>
+<p>The documentation is clear, you just need to download the last zip archive on
+the <a href="http://exchangeserverpro.com/exchangeanalyzer/">"official website"</a>,
+extract the files, put files in the <code>Modules</code> folder into
+<code>C:\Windows\System32\WindowsPowerShell\V1.0\Modules</code> and launch the script.</p>
+<h2 id="tests">Tests</h2>
+<p>There is actually seven tests implemented:</p>
+<ol>
+<li>EXSRV001: checks that all MS Exchange servers in the organization use MS
+   Exchange 2013 or 2016.</li>
+<li>EXSRV002: checks the build version of each server to determine whether it is
+   running the last build for the MS Exchange version (<em>Internet connection is
+   required</em>).</li>
+<li>CAS001: tests each Exchange site to determine whether more than one CAS URL/namespace
+   exists for each HTTPS service.</li>
+<li>CAS002: tests each CAS URL to determine whether it contains a server FQDN.</li>
+<li>DB001: tests each mailbox database to determine whether the database has been
+   backed up in the last 24 hours.</li>
+<li>AD001: verifies that the Active Directory Domain level is at the correct
+   level.</li>
+<li>AD002: verifies that the Active Directory Forest level is Windows 2008 or
+   greater.</li>
+</ol>
+<p>More tests will come in a quite near future as both
+<a href="https://github.com/cunninghamp/ExchangeAnalyzer/pulls">pull requests</a> and
+<a href="https://github.com/cunninghamp/ExchangeAnalyzer/issues">issues</a> are currently
+open on github.</p>
+<h2 id="results">Results</h2>
+<p>The result is simple, it is a HTML file with the different tests and a past or
+fail attribute. The script need an internet connection to check the latest build
+number. As there where no direct access to the internet from the MS Exchange
+servers of my client, the test failed with a Warning and output the error
+message: "Unable to connect to remote server".
+Moreover my client did not wish to backup its databases so the test DB001
+failed.</p>
+<p>Below is a sample of this output, I have just anonymize it and reduce the
+number of server.</p>
+<h2 id="output">Output</h2>
+<p><html>
+      <style>
+      BODY{font-family: Arial; font-size: 10pt;}
+      H1{font-size: 22px;}
+      H2{font-size: 20px; padding-top: 10px;}
+      H3{font-size: 16px; padding-top: 8px;}
+      TABLE{border: 1px solid black; border-collapse: collapse; font-size: 8pt;}
+      TH{border: 1px solid black; background: #dddddd; padding: 5px; color: #000000;}
+      TD{border: 1px solid black; padding: 5px; }
+      td.pass{background: #7FFF00;}
+      td.warn{background: #FFE600;}
+      td.fail{background: #FF0000; color: #ffffff;}
+      td.info{background: #85D4FF;}
+            ul{list-style: inside; padding-left: 0px;}
+      </style>
+      <body><h1 align="center">Exchange Analyzer Report</h1>
+      <h3 align="center">Generated: 02/18/2016 11:38:42</h3>
+            <h3 align="center">Organization: CLIENT</h3>
+            <p>The following guidelines apply to this report:
+            <ul>
+                <li>This tests included in this report are documented on the <a href="https://github.com/cunninghamp/ExchangeAnalyzer/wiki/Exchange-Analyzer-Tests">Exchange Analyzer Wiki</a>.</li>
+                <li>Click the "More Info" link for each test to learn more about that test, what a pass or fail means, and recommendations for how to respond.</li>
+                <li>A test can fail if it can't complete successfully, or if a condition was encountered that requires manual assessment.</li>
+                <li>For some organizations a failed test may be due to a deliberate design or operational decision.</li>
+                <li>Please review the <a href="https://github.com/cunninghamp/ExchangeAnalyzer/wiki/Frequently-Asked-Questions">Frequently Asked Questions</a> if you have any further questions.</li>
+            </ul>
+            </p><h2 align="center">Summary:</h2>
+                      <p align="center">
+                      <table>
+                      <tr>
+                      <th>Passed</th>
+                      <th>Warning</th>
+                      <th>Failed</th>
+                      <th>Info</th>
+                      </tr>
+                      <tr>
+                      <td class="pass">4</td>
+                      <td class="warn">1</td>
+                      <td class="fail">2</td>
+                      <td class="info">0</td>
+                      </tr>
+                      </table>
+                      </p><h2>Category: Exchange Servers</h2><p>
+                  <table>
+                  <tr>
+                  <th>Test ID</th>
+                  <th>Test Category</th>
+                  <th>Test Name</th>
+                  <th>Test Outcome</th>
+                  <th>Passed Objects</th>
+                  <th>Failed Objects</th>
+                  <th>Comments</th>
+                  <th>Reference</th>
+                  </tr><tr><td>EXSRV001</td><td>Exchange Servers</td><td>Exchange Versions</td><td class="pass">Passed</td><td><ul><li>WindowsServer1</li><li>WindowsServer2</li><li>WindowsServer3</ul></td><td>n/a</td><td>All Exchange servers in the organization are Exchange 2013/2016.</td><td><a href="https://github.com/cunninghamp/ExchangeAnalyzer/wiki/EXSRV001" target="_blank">More Info</a></td><tr><td>EXSRV002</td><td>Exchange Servers</td><td>Build Numbers</td><td class="warn">Warning</td><td>n/a</td><td>n/a</td><td>Errors were encountered. An error occurred. Unable to connect to remote server</td><td><a href="https://github.com/cunninghamp/ExchangeAnalyzer/wiki/EXSRV002" target="_blank">More Info</a></td></table></p><h2>Category: Client Access</h2><p>Summary of Client Access URLs/Namespaces:</p><table>
+                            <tr>
+                            <th colspan="3">Server: WindowsServer1, Site: </th>
+                            </tr>
+                            <tr>
+                            <th>Service</th>
+                            <th>Internal URL</th>
+                            <th>External Url</th>
+                            </tr>
+                            <tr>
+                            <td>Outlook Anywhere</td>
+                            <td>outlook-csh-ge.client.com</td>
+                            <td>Not set</td>
+                            </tr>
+                            <tr>
+                            <td>MAPI/HTTP</td>
+                            <td>https://windowsserver1.client.local/mapi</td>
+                            <td>Not set</td>
+                            </tr>
+                            <tr>
+                            <td>Outlook on the web (OWA)</td>
+                            <td>https://mail.client.com/OWA https://mail.client.com/OWA</td>
+                            <td> </td>
+                            </tr>
+                            <tr>
+                            <td>Exchange Control Panel</td>
+                            <td>https://mail.client.com/ecp https://mail.client.com/ecp</td>
+                            <td> </td>
+                            </tr>
+                            <tr>
+                            <td>ActiveSync</td>
+                            <td>https://eas.client.com/Microsoft-Server-ActiveSync</td>
+                            <td>Not set</td>
+                            </tr>
+                            <tr>
+                            <td>Offline Address Book</td>
+                            <td>https://oab-csh-ge.client.com/OAB</td>
+                            <td>Not set</td>
+                            </tr>
+                            <tr>
+                            <td>Exchange Web Access</td>
+                            <td>https://ews-csh-ge.client.com/EWS/Exchange.asmx</td>
+                            <td>Not set</td>
+                            </tr>
+                            <tr>
+                            <td>AutoDiscover</td>
+                            <td>https://autodiscover-csh-ge.client.com/autodiscover/autodiscover.xml</td>
+                            <td>n/a</td>
+                            </tr>
+                            </table>
+                            </p><table>
+                            <tr>
+                            <th colspan="3">Server: WindowsServer2, Site: </th>
+                            </tr>
+                            <tr>
+                            <th>Service</th>
+                            <th>Internal URL</th>
+                            <th>External Url</th>
+                            </tr>
+                            <tr>
+                            <td>Outlook Anywhere</td>
+                            <td>outlook-csh-ge.client.com</td>
+                            <td>Not set</td>
+                            </tr>
+                            <tr>
+                            <td>MAPI/HTTP</td>
+                            <td>https://windowsserver2.client.local/mapi</td>
+                            <td>Not set</td>
+                            </tr>
+                            <tr>
+                            <td>Outlook on the web (OWA)</td>
+                            <td>https://mail.client.com/OWA https://mail.client.com/OWA</td>
+                            <td> </td>
+                            </tr>
+                            <tr>
+                            <td>Exchange Control Panel</td>
+                            <td>https://mail.client.com/ecp https://mail.client.com/ecp</td>
+                            <td> </td>
+                            </tr>
+                            <tr>
+                            <td>ActiveSync</td>
+                            <td>https://eas.client.com/Microsoft-Server-ActiveSync</td>
+                            <td>Not set</td>
+                            </tr>
+                            <tr>
+                            <td>Offline Address Book</td>
+                            <td>https://oab-csh-ge.client.com/OAB</td>
+                            <td>Not set</td>
+                            </tr>
+                            <tr>
+                            <td>Exchange Web Access</td>
+                            <td>https://ews-csh-ge.client.com/EWS/Exchange.asmx</td>
+                            <td>Not set</td>
+                            </tr>
+                            <tr>
+                            <td>AutoDiscover</td>
+                            <td>https://autodiscover-csh-ge.client.com/autodiscover/autodiscover.xml</td>
+                            <td>n/a</td>
+                            </tr>
+                            </table>
+                            </p><table>
+                            <tr>
+                            <th colspan="3">Server: WindowsServer3, Site: </th>
+                            </tr>
+                            <tr>
+                            <th>Service</th>
+                            <th>Internal URL</th>
+                            <th>External Url</th>
+                            </tr>
+                            <tr>
+                            <td>Outlook Anywhere</td>
+                            <td>outlook-csh-ge.client.com</td>
+                            <td>Not set</td>
+                            </tr>
+                            <tr>
+                            <td>MAPI/HTTP</td>
+                            <td>https://windowsserver3.client.local/mapi</td>
+                            <td>Not set</td>
+                            </tr>
+                            <tr>
+                            <td>Outlook on the web (OWA)</td>
+                            <td>https://mail.client.com/OWA https://mail.client.com/OWA</td>
+                            <td> </td>
+                            </tr>
+                            <tr>
+                            <td>Exchange Control Panel</td>
+                            <td>https://mail.client.com/ecp https://mail.client.com/ecp</td>
+                            <td> </td>
+                            </tr>
+                            <tr>
+                            <td>ActiveSync</td>
+                            <td>https://eas.client.com/Microsoft-Server-ActiveSync</td>
+                            <td>Not set</td>
+                            </tr>
+                            <tr>
+                            <td>Offline Address Book</td>
+                            <td>https://oab-csh-ge.client.com/OAB</td>
+                            <td>Not set</td>
+                            </tr>
+                            <tr>
+                            <td>Exchange Web Access</td>
+                            <td>https://ews-csh-ge.client.com/EWS/Exchange.asmx</td>
+                            <td>Not set</td>
+                            </tr>
+                            <tr>
+                            <td>AutoDiscover</td>
+                            <td>https://autodiscover-csh-ge.client.com/autodiscover/autodiscover.xml</td>
+                            <td>n/a</td>
+                            </tr>
+                            </table>
+                            </p><p>
+                  <table>
+                  <tr>
+                  <th>Test ID</th>
+                  <th>Test Category</th>
+                  <th>Test Name</th>
+                  <th>Test Outcome</th>
+                  <th>Passed Objects</th>
+                  <th>Failed Objects</th>
+                  <th>Comments</th>
+                  <th>Reference</th>
+                  </tr><tr><td>CAS001</td><td>Client Access</td><td>Client Access Namespaces</td><td class="fail">Failed</td><td>n/a</td><td><ul><li>AAA-BB-PROJET</li><li>AAA-SUD-PROJET</li></ul></td><td>One or more Exchange sites has more than one namespace per HTTPS protocol.</td><td><a href="https://github.com/cunninghamp/ExchangeAnalyzer/wiki/CAS001" target="_blank">More Info</a></td><tr><td>CAS002</td><td>Client Access</td><td>Server FQDNs in URLs</td><td class="pass">Passed</td><td><ul><li>WindowsServer1</li><li>WindowsServer2</li><li>WindowsServer3</li></ul></td><td>n/a</td><td>No Exchange HTTPS services have URLs containing server FQDNs.</td><td><a href="https://github.com/cunninghamp/ExchangeAnalyzer/wiki/CAS002" target="_blank">More Info</a></td></table></p><h2>Category: Databases</h2><p>
+                  <table>
+                  <tr>
+                  <th>Test ID</th>
+                  <th>Test Category</th>
+                  <th>Test Name</th>
+                  <th>Test Outcome</th>
+                  <th>Passed Objects</th>
+                  <th>Failed Objects</th>
+                  <th>Comments</th>
+                  <th>Reference</th>
+                  </tr><tr><td>DB001</td><td>Databases</td><td>Database Backups</td><td class="fail">Failed</td><td>n/a</td><td><ul><li>DAG2-DB01 (Never)</li><li>DAG2-DB13 (Never)</li><li>DAG1-DB36 (Never)</li></ul></td><td>One or more Exchange databases has not been backed up within the last 24 hours.</td><td><a href="https://github.com/cunninghamp/ExchangeAnalyzer/wiki/DB001" target="_blank">More Info</a></td></table></p><h2>Category: Active Directory</h2><p>
+                  <table>
+                  <tr>
+                  <th>Test ID</th>
+                  <th>Test Category</th>
+                  <th>Test Name</th>
+                  <th>Test Outcome</th>
+                  <th>Passed Objects</th>
+                  <th>Failed Objects</th>
+                  <th>Comments</th>
+                  <th>Reference</th>
+                  </tr><tr><td>AD001</td><td>Active Directory</td><td>AD Domain Level</td><td class="pass">Passed</td><td><ul><li>client.local (Windows Server 2008 R2)</li></ul></td><td>n/a</td><td>All Active Directory domains meet the required functional level.</td><td><a href="https://github.com/cunninghamp/ExchangeAnalyzer/wiki/AD001" target="_blank">More Info</a></td><tr><td>AD002</td><td>Active Directory</td><td>AD Forest Level</td><td class="pass">Passed</td><td><ul><li>client.local (Windows Server 2008 R2)</li></ul></td><td>n/a</td><td>The Active Directory forest meets the required functional level.</td><td><a href="https://github.com/cunninghamp/ExchangeAnalyzer/wiki/AD002" target="_blank">More Info</a></td></table></p><p align="center">Report created by <a href="http://exchangeanalyzer.com">Exchange Analyzer</a></p>
+        </body>
+</html></p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2015/09/vulnhub-nullbyte.html"> Vulnhub - NullByte </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2016/03/vulnhub-flickii.html"> Vulnhub - FlickII </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

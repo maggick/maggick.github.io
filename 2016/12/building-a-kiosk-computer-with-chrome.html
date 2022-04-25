@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>Building a kiosk computer with Chrome | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2016/12/building-a-kiosk-computer-with-chrome.html" title="Read more" class="entry-title-link">
+                Building a kiosk computer with Chrome</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2016-12-26T09:10:00+01:00">26 Dec 2016</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/programming.html" title="Read more with the label programming" class="meta-link">programming</a> 
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/chrome.html" title="Read more with the label chrome" class="meta-link">chrome</a> 
+          <a href="../../tag/kiosk.html" title="Read more with the label kiosk" class="meta-link">kiosk</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 3 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p>Building a Kiosk where Google Chrome is running in full screen and user
+interaction with the system are reduced to the minimum.</p>
+
+
+<h2 id="debian-installation">Debian installation</h2>
+<p>This will be pass as most of you should be able to install a basic Debian
+system. Just set lvm encryption, strong password for root and for the user and
+mostly do not install useless program, check only the program you need (ssh for
+instance).</p>
+<h2 id="installing-the-packages">Installing the packages</h2>
+<p>We will need a few more packages to be able to run things:</p>
+<ul>
+<li>X (display server)</li>
+<li>A light window manager able to run Chrome in full screen</li>
+<li>Google Chrome</li>
+<li>sudo to be able to impersonate the user</li>
+</ul>
+<p>The first operations will be done using root as the sudo command is not
+installed yet.</p>
+<p>First we add the Google Chrome repository and the key to check the package
+integrity:</p>
+<ul>
+<li>Edit the file <code>/etc/apt/source.list</code> and add the following repository:</li>
+</ul>
+<p><code>deb http://dl.google.com/linux/chrome/deb/ stable main</code></p>
+<ul>
+<li>Execute the following command:</li>
+</ul>
+<p><code>wget -qO- https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -</code></p>
+<p>Then we need to update the package list and install all necessary packages:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>apt-get update</span>
+<span class="code-line">apt-get install --no-install-recommends xorg openbox sudo google-chrome-stable</span>
+<span class="code-line"></code></pre></div>
+
+<p>Without the <code>--no-install-recommends</code>parameter some useless packages will be
+installed.</p>
+<h2 id="load-chrome-in-kiosk-at-startup">Load Chrome in kiosk at startup</h2>
+<p>We need a script that will configure and load Chrome at the X server startup.
+As we don't want any data saved between each session we will delete the Chrome
+profile each time the script is used. Moreover it is in this script that we
+choose the starting page of Chrome.</p>
+<p>Create and edit the script:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>sudo vi /opt/kiosk.sh</span>
+<span class="code-line"></code></pre></div>
+
+<p>The file content is the following:</p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="code-line"><span class="normal">1</span></span>
+<span class="code-line"><span class="normal">2</span></span>
+<span class="code-line"><span class="normal">3</span></span>
+<span class="code-line"><span class="normal">4</span></span>
+<span class="code-line"><span class="normal">5</span></span>
+<span class="code-line"><span class="normal">6</span></span>
+<span class="code-line"><span class="normal">7</span></span>
+<span class="code-line"><span class="normal">8</span></pre></div></td><td class="code"><div class="highlight"><pre><span class="code-line"><span></span><code><span class="ch">#!/bin/bash</span></span>
+<span class="code-line"></span>
+<span class="code-line">xset -dpms</span>
+<span class="code-line">xset s off</span>
+<span class="code-line">openbox-session <span class="p">&amp;</span></span>
+<span class="code-line"><span class="k">while</span> true<span class="p">;</span> <span class="k">do</span> rm -rf ~/.<span class="o">{</span>config,cache<span class="o">}</span>/google-chrome/</span>
+<span class="code-line">  google-chrome --kiosk --no-first-run  <span class="s1">&#39;http://localhost&#39;</span></span>
+<span class="code-line"><span class="k">done</span></span>
+<span class="code-line"></code></pre></div>
+</td></tr></table>
+<p>Give the execution right to the script:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>sudo chmod +x /opt/kiosk.sh</span>
+<span class="code-line"></code></pre></div>
+
+<p>In order to start the X server and launch the <code>kiosk.sh</code> script, we need to
+create a systemd service.</p>
+<p>In order to to that, create and edit the file <code>/etc/systemd/system/kiosk.service</code>:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>sudo vi /etc/systemd/system/kiosk.service</span>
+<span class="code-line"></code></pre></div>
+
+<p>The content of the file is the following:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="k">[Unit]</span><span class="w"></span></span>
+<span class="code-line"><span class="na">Description</span><span class="o">=</span><span class="s">Kiosk</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">[Service]</span><span class="w"></span></span>
+<span class="code-line"><span class="na">Type</span><span class="o">=</span><span class="s">oneshot</span><span class="w"></span></span>
+<span class="code-line"><span class="na">ExecStart</span><span class="o">=</span><span class="s">/usr/bin/sudo –u user /usr/bin/startx /etc/X11/Xsession /opt/kiosk.sh --</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">[Install]</span><span class="w"></span></span>
+<span class="code-line"><span class="na">WantedBy</span><span class="o">=</span><span class="s">multi-user.target</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>We need to enable the script with the following command:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>systemctl enable kiosk</span>
+<span class="code-line"></code></pre></div>
+
+<p>To run the script use the following command:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>systemctl start kiosk »</span>
+<span class="code-line"></code></pre></div>
+
+<p>You can also reboot in order to check that the script is automatically launch at
+startup.</p>
+<p>If you need a terminal, you can use <ctrl>+<alt>+<F2-9> to get one.</p>
+<h2 id="automatically-mount-usb-key">Automatically mount USB key</h2>
+<p>If your users need to copy data from the machine this paragraph is for you.
+Otherwise this is just informational.</p>
+<p>As our users don't have a shell access they are unable to mount USB key.
+Therefore we need to automatically mount them.</p>
+<p>We need the <code>usbmount</code> package:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>apt-get install --no-install-recommends usbmount</span>
+<span class="code-line"></code></pre></div>
+
+<p>The USB keys will be automatically mount into <code>/mnt/usbX</code>.In order for the user
+to have the permissions to right on it we need to add its <code>uid</code> and <code>gid</code> in the
+<code>usbmount</code> configuration.</p>
+<p>Edit the file <code>/etc/usbmount/usbmount.conf</code> and the user <code>uid</code> and <code>guid</code> to the
+following line (the <code>uid</code> and <code>gid</code> can be found in <code>/etc/passwd</code>):</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>FS_MOUNTOPTIONS=&quot; &quot;</span>
+<span class="code-line"></code></pre></div>
+
+<p>The line would be something like the following:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>FS_MOUNTOPTIONS=&quot;uid=1000,gid=1000&quot;</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="sources">Sources</h2>
+<ul>
+<li><a href="https://thepcspy.com/read/building-a-kiosk-computer-ubuntu-1404-chrome/">https://thepcspy.com/read/building-a-kiosk-computer-ubuntu-1404-chrome/</a></li>
+<li><a href="https://lukas.zapletalovi.com/2013/08/execute-command-during-start-with-systemd.html">https://lukas.zapletalovi.com/2013/08/execute-command-during-start-with-systemd.html</a></li>
+</ul>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2016/12/cve-2016-5195-dirtycow.html"> CVE 2016-5195 dirtycow </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2016/12/lets-encrypt-certificate-for-offline-servers-with-ovh-dns.html"> Let's encrypt certificate for offline servers with OVH DNS </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

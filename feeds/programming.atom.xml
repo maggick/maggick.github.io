@@ -1,0 +1,486 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - programming</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/programming.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2017-03-04T09:30:00+01:00</updated><entry><title>Building this blog with travis</title><link href="https://maggick.fr/2017/03/building-this-blog-with-travis.html" rel="alternate"></link><published>2017-03-04T09:30:00+01:00</published><updated>2017-03-04T09:30:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2017-03-04:/2017/03/building-this-blog-with-travis.html</id><summary type="html">&lt;p&gt;Since January this blog is automatically build using &lt;a href="https://travis-ci.org/"&gt;Travis CI&lt;/a&gt;. The
+main advantage is to always use the latest version of &lt;a href="https://blog.getpelican.com/"&gt;Pelican&lt;/a&gt; as
+&lt;a href="https://travis-ci.org/"&gt;travis CI&lt;/a&gt; always build its environment from scratch. An other
+advantage is that I am able to update the site just from my browser for minor
+modifications (spell correction for instance).&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;Since January this blog is automatically build using &lt;a href="https://travis-ci.org/"&gt;Travis CI&lt;/a&gt;. The
+main advantage is to always use the latest version of &lt;a href="https://blog.getpelican.com/"&gt;Pelican&lt;/a&gt; as
+&lt;a href="https://travis-ci.org/"&gt;travis CI&lt;/a&gt; always build its environment from scratch. An other
+advantage is that I am able to update the site just from my browser for minor
+modifications (spell correction for instance).&lt;/p&gt;
+
+
+&lt;p&gt;Here is the &lt;code&gt;travis.yml&lt;/code&gt; configuration file pass to &lt;a href="https://travis-ci.org/"&gt;Travis CI&lt;/a&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;language: python&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;install:&lt;/span&gt;
+&lt;span class="code-line"&gt;  # https://github.com/wummel/linkchecker/issues/649&lt;/span&gt;
+&lt;span class="code-line"&gt;  - pip install requests==2.9.1&lt;/span&gt;
+&lt;span class="code-line"&gt;  - pip install LinkChecker==9.3&lt;/span&gt;
+&lt;span class="code-line"&gt;  - pip install pelican markdown&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  # grab the build theme&lt;/span&gt;
+&lt;span class="code-line"&gt;  - git clone -b build https://github.com/maggick/maggner-pelican&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  # grab the pelican plugins&lt;/span&gt;
+&lt;span class="code-line"&gt;  - git clone https://github.com/getpelican/pelican-plugins&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  # grab the latest published version in order to not erase rss feed&lt;/span&gt;
+&lt;span class="code-line"&gt;  - git clone https://github.com/maggick/maggick.github.io output&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;script:&lt;/span&gt;
+&lt;span class="code-line"&gt;  - linkchecker --check-extern ./content&lt;/span&gt;
+&lt;span class="code-line"&gt;  - pelican&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;after_success:&lt;/span&gt;
+&lt;span class="code-line"&gt;  - cd output&lt;/span&gt;
+&lt;span class="code-line"&gt;  - git add ./&lt;/span&gt;
+&lt;span class="code-line"&gt;  - git -c user.name=&amp;quot;Travis CI for maggick&amp;quot; -c user.email=&amp;quot;&amp;lt;redacted&amp;gt;@gmail.com&amp;quot; commit -m &amp;#39;Travis update documentation&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;  - git push https://${GH_TOKEN}@github.com/maggick/maggick.github.io.git master&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="declaration"&gt;Declaration&lt;/h2&gt;
+&lt;p&gt;Let us break it a bit. First the declaration part:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;language&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;python&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We do not need the root right so &lt;code&gt;sudo&lt;/code&gt; is not needed. Moreover we use the
+python language.&lt;/p&gt;
+&lt;h2 id="install"&gt;install&lt;/h2&gt;
+&lt;p&gt;The installation part:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;install:&lt;/span&gt;
+&lt;span class="code-line"&gt;  # https://github.com/wummel/linkchecker/issues/649&lt;/span&gt;
+&lt;span class="code-line"&gt;  - pip install requests==2.9.1&lt;/span&gt;
+&lt;span class="code-line"&gt;  - pip install LinkChecker==9.3&lt;/span&gt;
+&lt;span class="code-line"&gt;  - pip install pelican markdown&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  # grab the build theme&lt;/span&gt;
+&lt;span class="code-line"&gt;  - git clone -b build https://github.com/maggick/maggner-pelican&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  # grab the pelican plugins&lt;/span&gt;
+&lt;span class="code-line"&gt;  - git clone https://github.com/getpelican/pelican-plugins&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  # grab the latest published version in order to not erase rss feed&lt;/span&gt;
+&lt;span class="code-line"&gt;  - git clone https://github.com/maggick/maggick.github.io output&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We install:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="http://docs.python-requests.org/en/master/"&gt;request&lt;/a&gt; in version 2.9.1, this is a python library used by pelican&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://pypi.python.org/pypi/LinkChecker"&gt;LinkChecker&lt;/a&gt; in version 9.3, this is a tool that will check
+   that the link in the different articles give a 200 HTTP response&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://getpelican.com/"&gt;pelican&lt;/a&gt; which is used to build the site&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://pypi.python.org/pypi/Markdown"&gt;mardkown&lt;/a&gt; because the articles are wrote in markdown&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Then we grab the theme used by the site on the build branch directly on
+&lt;a href="https://github.com/maggick/maggner-pelican"&gt;github&lt;/a&gt;, we also download the &lt;a href="https://github.com/getpelican/pelican-plugins"&gt;pelican plugins&lt;/a&gt;.
+We need to get the last build of the site in order to not re publish all the
+articles in the RSS feed (it happened once when writing this configuration).&lt;/p&gt;
+&lt;h2 id="script"&gt;Script&lt;/h2&gt;
+&lt;p&gt;The script part is where the magic happen, this part will build the site and
+give a red or green status depending of the output of each script. If all of
+them exit without error the build is green otherwise the build is red.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;script:&lt;/span&gt;
+&lt;span class="code-line"&gt;  - linkchecker --check-extern ./content&lt;/span&gt;
+&lt;span class="code-line"&gt;  - pelican&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The script part used &lt;a href="https://pypi.python.org/pypi/LinkChecker"&gt;LinkChecker&lt;/a&gt; on the content directory where
+are all articles in the markdown format. This script will test every link on
+every file and exit with an error if a link return something else that an HTTP
+200 OK.&lt;/p&gt;
+&lt;p&gt;Then we use &lt;a href="http://getpelican.com/"&gt;pelican&lt;/a&gt; to build the site. If an error happened during
+the build the script will also exit with an error.&lt;/p&gt;
+&lt;h2 id="after-success"&gt;After success&lt;/h2&gt;
+&lt;p&gt;Finally, after the success of the two script we deploy the site on github pages,
+we publish the site on &lt;a href="https://pages.github.com/"&gt;github pages&lt;/a&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;after_success:&lt;/span&gt;
+&lt;span class="code-line"&gt;  - cd output&lt;/span&gt;
+&lt;span class="code-line"&gt;  - git add ./&lt;/span&gt;
+&lt;span class="code-line"&gt;  - git -c user.name=&amp;quot;Travis CI for maggick&amp;quot; -c user.email=&amp;quot;&lt;span class="nt"&gt;&amp;lt;redacted&amp;gt;&lt;/span&gt;@gmail.com&amp;quot; commit -m &amp;#39;Travis update documentation&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;  - git push https://&lt;span class="cp"&gt;${&lt;/span&gt;&lt;span class="n"&gt;GH_TOKEN&lt;/span&gt;&lt;span class="cp"&gt;}&lt;/span&gt;@github.com/maggick/maggick.github.io.git master&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We go in the &lt;code&gt;output&lt;/code&gt; directory of the build, we add everything for git, we
+commit everything using a user crafted for the occasion and my public email
+address. The commit message is a generic one. Then we push everything on the
+branch &lt;code&gt;master&lt;/code&gt; of the &lt;a href="https://pages.github.com/"&gt;github pages&lt;/a&gt; repository.&lt;/p&gt;
+&lt;p&gt;For this last step I was forced to give a write access to all my repositories to
+&lt;a href="https://travis-ci.org/"&gt;Travis CI&lt;/a&gt; using the &lt;a href="https://github.com"&gt;github&lt;/a&gt; API. I do not really like
+that but as I am monitoring the commit on my own repository I should be able to
+detect a hack  or a malicious action of &lt;a href="https://travis-ci.org/"&gt;Travis CI&lt;/a&gt;. The next
+step will be to sign all my commit using GPG but I have not find a suitable
+solution yet (mostly for commit from browser).&lt;/p&gt;</content><category term="programming"></category><category term="programming"></category><category term="devops"></category></entry><entry><title>Installing OSMC without installer</title><link href="https://maggick.fr/2016/04/installing-osmc-without-installer.html" rel="alternate"></link><published>2016-04-14T23:49:00+02:00</published><updated>2016-04-14T23:49:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2016-04-14:/2016/04/installing-osmc-without-installer.html</id><summary type="html">&lt;p&gt;I bought the new raspberry pi 3 with integrated Wi-Fi. Currently I still have a
+Ethernet cable running through my living room to my old raspberry pi 1.&lt;/p&gt;
+&lt;p&gt;Just willing to download the last raspbmc version I figured that it was no more
+raspbmc but osmc which is basically the same but with much marketing around it.
+The most annoying one is that you need to install an install (such meta). I was
+pretty much sure it was not really necessary and moreover there is no version of the
+installer for Arch Linux.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;I bought the new raspberry pi 3 with integrated Wi-Fi. Currently I still have a
+Ethernet cable running through my living room to my old raspberry pi 1.&lt;/p&gt;
+&lt;p&gt;Just willing to download the last raspbmc version I figured that it was no more
+raspbmc but osmc which is basically the same but with much marketing around it.
+The most annoying one is that you need to install an install (such meta). I was
+pretty much sure it was not really necessary and moreover there is no version of the
+installer for Arch Linux.&lt;/p&gt;
+
+
+&lt;p&gt;So instead using their installer you can download directly the image (you need to
+click a button to display it) by selecting the right device and the last monthly
+version.&lt;/p&gt;
+&lt;p&gt;After the download just decompress the archive:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;gunzip OSMC_TGT_rbp2_20160403.img.gz&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Now you will need to know on which device is the sdcard. On Arch Linux with
+system d, you may use &lt;code&gt;dmesg&lt;/code&gt; to have some info:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;[  953.910932] mmc0: new high speed SDHC card at address e624&lt;/span&gt;
+&lt;span class="code-line"&gt;[  953.973940] mmcblk0: mmc0:e624 SD04G 3.69 GiB&lt;/span&gt;
+&lt;span class="code-line"&gt;[  953.982627]  mmcblk0: p1 p2&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;On my own computer the sdcard is named mmcblk0 and have two partition &lt;code&gt;p1&lt;/code&gt; and
+&lt;code&gt;p2&lt;/code&gt;. From there you just need to copy the image to your sdcard (be sure to
+remove the &lt;code&gt;p1&lt;/code&gt; or &lt;code&gt;p2&lt;/code&gt; if any, you need to write directly on the disk &lt;strong&gt;NOT&lt;/strong&gt;
+on the partition):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nv"&gt;dd&lt;/span&gt; &lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nv"&gt;OSMC_TGT_rbp2_20160403&lt;/span&gt;.&lt;span class="nv"&gt;img&lt;/span&gt; &lt;span class="nv"&gt;of&lt;/span&gt;&lt;span class="o"&gt;=/&lt;/span&gt;&lt;span class="nv"&gt;dev&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;mmcblk0&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Then put the sdcard back on the raspberry pi and OSMC will install itself on the
+device. Next it will prompt you with the home screen and guide you through the
+first install settings. You will need to set language, location, wireless
+password and so on.&lt;/p&gt;
+&lt;p&gt;If you need to connect to osmc, default username and password are:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;osmc&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;password&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;osmc&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;If you need to add a SMB shared folder with authentication you will need to add
+the share normally, get the error and then directly connect to the OSMC with
+SSH and modify the XML file located at &lt;code&gt;home/osmc/.kodi/userdata/sources.xml&lt;/code&gt; by
+adding the user and password as in the following:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;sources&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;...&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;video&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="k"&gt;default&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pathversion&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;1&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;lt;/&lt;/span&gt;&lt;span class="k"&gt;default&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;source&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;Prime&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pathversion&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;1&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;smb&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="c1"&gt;//user:password@10.0.0.111/video/&amp;lt;/path&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="n"&gt;source&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="n"&gt;video&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;...&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="o"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="n"&gt;sources&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Save, &lt;strong&gt;REBOOT&lt;/strong&gt;, and it will work.&lt;/p&gt;
+&lt;p&gt;Thanks to
+&lt;a href="http://codetitans.pl/blog/post/osmc--smb-share-with-credentials"&gt;http://codetitans.pl&lt;/a&gt;
+for this last part.&lt;/p&gt;</content><category term="programming"></category><category term="osmc"></category><category term="raspberry"></category><category term="smb"></category><category term="programming"></category></entry><entry><title>Localipsum, a sample text generator</title><link href="https://maggick.fr/2015/08/localipsum-a-sample-text-generator.html" rel="alternate"></link><published>2015-08-23T22:30:00+02:00</published><updated>2015-08-23T22:30:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2015-08-23:/2015/08/localipsum-a-sample-text-generator.html</id><summary type="html">&lt;p&gt;&lt;img alt="Localipsum" class="align-left" src="/media/2015.08/localipsum.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;Localipsum is a simple python program that aim to generate sample text for
+designers and developers as the well known
+&lt;a href="http://lipsum.co.uk/"&gt;Lorem Ipsum website&lt;/a&gt;. The main difference is that it use
+your own dictionaries on your computer.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left"
+src="/media/2015.08/localipsum.png" alt="Localipsum" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;Localipsum is a simple python program that aim to generate sample text for
+designers and developers as the well known
+&lt;a href="http://lipsum.co.uk/"&gt;Lorem Ipsum website&lt;/a&gt;. The main difference is that it use
+your own dictionaries on your computer.&lt;/p&gt;
+
+
+&lt;p&gt;I worked on this program at the beginning of the year on the basis of a fun idea:
+use my own dictionaries to generate sample text.
+This was a quick program to write but the vim's dictionaries were (and still
+are) a problem (more on the dedicated section).&lt;/p&gt;
+&lt;p&gt;I have stopped to work on this program as it fulfil my current need.&lt;/p&gt;
+&lt;p&gt;The program is available on github under public license:
+&lt;a href="http://github.com/maggick/localipsum"&gt;github.com/maggick/localipsum&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id="usage"&gt;Usage&lt;/h2&gt;
+&lt;p&gt;The documentation is display with the --help, -h option:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ ./localipsum.py -h&lt;/span&gt;
+&lt;span class="code-line"&gt;usage: localipsum.py [-h] [--paragraphs] [--sentences] [--words] [--lorem] integer&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Localispum is a simple program providing sample text generating from your own&lt;/span&gt;
+&lt;span class="code-line"&gt;dictionaries&lt;/span&gt;
+&lt;span class="code-line"&gt;...&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The program take in argument a integer and a "type" of text. The available
+"type" of text are:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;words (--words, -w)&lt;/li&gt;
+&lt;li&gt;sentences (--sentences, -s)&lt;/li&gt;
+&lt;li&gt;paragraphs (--paragraphs, -p)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The integer will indicate how many quantity of this object it should print.&lt;/p&gt;
+&lt;p&gt;An optional argument (--lorem, -l) will put "Lorem ipsum dolor sit amet," at the
+beginning of the generated text.&lt;/p&gt;
+&lt;p&gt;And for instance:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ ./localipsum.py --sentences 5&lt;/span&gt;
+&lt;span class="code-line"&gt;Crutch&amp;#39;s just dissociable pick, janitors contractions appropriating multipliers&lt;/span&gt;
+&lt;span class="code-line"&gt;beguiling patrimonial escorted opalescent penetrations coweringly forging await&lt;/span&gt;
+&lt;span class="code-line"&gt;furtive northland roves humidification relentlessly tomb&amp;#39;s will. Styrofoam&lt;/span&gt;
+&lt;span class="code-line"&gt;pediatric exposer incubator&amp;#39;s exam alibi&amp;#39;s misnomer, vi scope armpits swung&lt;/span&gt;
+&lt;span class="code-line"&gt;commutative osteopathic serving chortle dreading rates composite chalked expose&lt;/span&gt;
+&lt;span class="code-line"&gt;agreer preconceive magnanimity railroad. Filmstrip gases flatulent incant&lt;/span&gt;
+&lt;span class="code-line"&gt;footstep purchasing, gyroscope&amp;#39;s furtiveness nun putnam pungent genuineness&lt;/span&gt;
+&lt;span class="code-line"&gt;equator&amp;#39;s far transference. Carla bhutan, soundings protect jabbing knower&lt;/span&gt;
+&lt;span class="code-line"&gt;pyramids reintroducing riven cumbersome. Siltstone consider amphibole,&lt;/span&gt;
+&lt;span class="code-line"&gt;incident&amp;#39;s cherub clam&amp;#39;s should carolingian expired abatement charlemagne.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="dictionaries"&gt;Dictionaries&lt;/h2&gt;
+&lt;p&gt;The program use the dictionaries from the &lt;code&gt;./locations&lt;/code&gt; file (one path per
+line). Some basic dictionaries are already in it.&lt;/p&gt;
+&lt;h3 id="usrsharedict"&gt;/usr/share/dict/&lt;/h3&gt;
+&lt;p&gt;This directory may contain dictionaries on Unix system, on my own it contain a
+dictionary for passwords cracking.&lt;/p&gt;
+&lt;h3 id="firefox"&gt;Firefox&lt;/h3&gt;
+&lt;p&gt;The Firefox dictionaries are located in a file like:
+&lt;code&gt;~/.mozilla/firefox/xxxxxxxx.default/extensions/fr-dicollecte@dictionaries.addons.mozilla.org/dictionaries/&lt;/code&gt;
+where xxxxxxxx is the identifier of your Firefox profile.&lt;/p&gt;
+&lt;p&gt;If you have more than one profile each one will have a different name.&lt;/p&gt;
+&lt;h3 id="vim"&gt;vim&lt;/h3&gt;
+&lt;p&gt;The vim dictionaries are &lt;code&gt;spl&lt;/code&gt; and &lt;code&gt;sug&lt;/code&gt; files. The main ones are located in a
+path like &lt;code&gt;/usr/share/vim/vimXX/spell/&lt;/code&gt; where XX is your version of vim (for me
+it is 74 right now).&lt;/p&gt;
+&lt;p&gt;Your personal dictionaries are located in &lt;code&gt;~/.vim/spell/&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;This files are not directly readable in python. The command &lt;code&gt;vim -c spelldump&lt;/code&gt;
+let you display the current dictionary in a vim buffer. From there it is quit
+simple to redirect it to a file. Nevertheless this suppose that vim is install
+on the system and the file are not clean and include lots of non word in them.&lt;/p&gt;
+&lt;p&gt;I choose not to include them in the program for now.&lt;/p&gt;
+&lt;h2 id="technical-stuff"&gt;Technical stuff&lt;/h2&gt;
+&lt;p&gt;The program is written in python 3, it is actually 128 lines written in 29
+commits.&lt;/p&gt;
+&lt;p&gt;It supposes that that the paths are Unix like.&lt;/p&gt;
+&lt;h3 id="random-generation"&gt;Random generation&lt;/h3&gt;
+&lt;p&gt;The &lt;strong&gt;words&lt;/strong&gt; are chosen with the &lt;code&gt;random.randint(0, len(dictionaries)-1)&lt;/code&gt; function.
+We also put a comma if there is more than 7 words. This comma is placed randomly
+with more and more probability to be place as the words are generated.&lt;/p&gt;
+&lt;p&gt;In order to generate &lt;strong&gt;sentences&lt;/strong&gt;, we suppose that one sentence is composed of 10
+to 25 words.&lt;/p&gt;
+&lt;p&gt;In order to generate &lt;strong&gt;paragraphs&lt;/strong&gt;, we suppose that one paragraph is composed from
+4 to 8 sentences.&lt;/p&gt;</content><category term="programming"></category><category term="python"></category><category term="programming"></category><category term="lorem ipsum"></category></entry><entry><title>Compiling cmus for cygwin</title><link href="https://maggick.fr/2015/01/compiling-cmus-for-cygwin.html" rel="alternate"></link><published>2015-01-21T00:00:00+01:00</published><updated>2015-01-21T00:00:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2015-01-21:/2015/01/compiling-cmus-for-cygwin.html</id><summary type="html">&lt;p&gt;&lt;img alt="cmus" class="align-left" src="/media/2015.01/2015.01.cmus.png" width="342"/&gt;
+I work on a Windows machine for my dally job.
+On my personal desktop I use Arch Linux and i3 therefore my music player is in
+curses and does not need any mouse. In fact I use
+&lt;a href="https://cmus.github.io/"&gt;cmus&lt;/a&gt;. So I tried to replace my old media player
+&lt;a href="https://www.clementine-player.org/"&gt;clementine&lt;/a&gt; with
+&lt;a href="https://cmus.github.io/"&gt;cmus&lt;/a&gt; on Windows in &lt;a href="https://www.cygwin.com/"&gt;cygwin&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;For that we need to compile &lt;a href="https://cmus.github.io/"&gt;cmus&lt;/a&gt; from sources.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2015.01/2015.01.cmus.png" alt="cmus" width="342"&gt;
+I work on a Windows machine for my dally job.
+On my personal desktop I use Arch Linux and i3 therefore my music player is in
+curses and does not need any mouse. In fact I use
+&lt;a href="https://cmus.github.io/"&gt;cmus&lt;/a&gt;. So I tried to replace my old media player
+&lt;a href="https://www.clementine-player.org/"&gt;clementine&lt;/a&gt; with
+&lt;a href="https://cmus.github.io/"&gt;cmus&lt;/a&gt; on Windows in &lt;a href="https://www.cygwin.com/"&gt;cygwin&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;For that we need to compile &lt;a href="https://cmus.github.io/"&gt;cmus&lt;/a&gt; from sources.&lt;/p&gt;
+
+
+&lt;p&gt;&lt;strong&gt;A &lt;a href="https://en.wikipedia.org/wiki/TL;DR"&gt;TL;DR&lt;/a&gt; is available at the end of
+the article.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;It is really easy, you just need to download the &lt;code&gt;tar.gz&lt;/code&gt; archive, untar it, and
+run :&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;./configure&lt;/span&gt;
+&lt;span class="code-line"&gt;make&lt;/span&gt;
+&lt;span class="code-line"&gt;make install&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Then &lt;a href="https://cmus.github.io/"&gt;cmus&lt;/a&gt; will be directly accessible in your
+&lt;a href="https://www.cygwin.com/"&gt;cygwin&lt;/a&gt; environment. You can access a file explorer
+by pressing the &lt;code&gt;5&lt;/code&gt; key and then navigate through your files and add a folder
+to your libarary with the &lt;code&gt;a&lt;/code&gt; key. To know more about how to use
+&lt;a href="https://cmus.github.io/"&gt;cmus&lt;/a&gt; please refer to the official documentation.&lt;/p&gt;
+&lt;p&gt;Okay then why a whole blog post about 3 classical commands ?
+Well you may notice that when adding your folder(s) to your library not all your
+files are added to it, in fact &lt;a href="https://www.cygwin.com/"&gt;cygwin&lt;/a&gt; does not
+package any mp3 codec so your &lt;code&gt;flac&lt;/code&gt; files will be read by
+&lt;a href="https://cmus.github.io/"&gt;cmus&lt;/a&gt; but not the &lt;code&gt;mp3&lt;/code&gt; one (as long as you have
+install the flac codec).&lt;/p&gt;
+&lt;p&gt;In oder to read mp3 files with &lt;a href="https://cmus.github.io/"&gt;cmus&lt;/a&gt; we need to
+install (so to build) a library that read this file format: libmad&lt;/p&gt;
+&lt;h1 id="libmad"&gt;libmad&lt;/h1&gt;
+&lt;p&gt;First of all we need to download the source package from the official web site :
+&lt;a href="http://www.underbit.com/products/mad/"&gt;http://www.underbit.com/products/mad/&lt;/a&gt;
+now we extract the files and make the classical commands:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;./configure&lt;/span&gt;
+&lt;span class="code-line"&gt;make&lt;/span&gt;
+&lt;span class="code-line"&gt;make install&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;You may encounter the "guess build" error:&lt;/p&gt;
+&lt;h2 id="guess-error"&gt;guess error&lt;/h2&gt;
+&lt;p&gt;This append during the make command&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;configure&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;error&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cannot&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;guess&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;build&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;type&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;you&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;must&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;specify&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;one&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;You may need the &lt;code&gt;automake&lt;/code&gt; package and moreover you may need to replace the two
+old files config.guess and config.sub from libmad with the new ones downloadable
+at : &lt;a href="ftp://ftp.gnu.org/pub/gnu/config/README"&gt;ftp://ftp.gnu.org/pub/gnu/config/README&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;An other classical error is the &lt;code&gt;-fforce-memi&lt;/code&gt; one:&lt;/strong&gt;&lt;/p&gt;
+&lt;h2 id="-fforce-mem-gcc-error"&gt;&lt;code&gt;-fforce-mem&lt;/code&gt; gcc error&lt;/h2&gt;
+&lt;p&gt;This error is characterize by the following trace:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nl"&gt;gcc&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nl"&gt;error&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;unrecognized&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;command&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;line&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;option&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;-fforce-mem&amp;#39;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nl"&gt;Makefile&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;383&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;recipe&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;target&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;version.lo&amp;#39;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;failed&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;make&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;2&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;***&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;version.lo&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Error&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;make&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;2&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Leaving&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;directory&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;/cygdrive/c/Users/user/Downloads/libmad-0.15.1b&amp;#39;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nl"&gt;Makefile&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;424&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;recipe&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;target&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;all-recursive&amp;#39;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;failed&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;make&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;1&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;***&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;all-recursive&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Error&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;make&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;1&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Leaving&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;directory&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;/cygdrive/c/Users/user/Downloads/libmad-0.15.1b&amp;#39;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nl"&gt;Makefile&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;249&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;recipe&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;target&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;all&amp;#39;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;failed&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nl"&gt;make&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;***&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;all&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Error&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;From GCC 4.3 release notes:&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;The -fforce-mem option has been removed because it has had no effect in the
+last few GCC releases.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;So we need to remove this option from our configure script, &lt;a href="http://www.linuxfromscratch.org/blfs/view/svn/multimedia/libmad.html"&gt;some people wrote a
+patch for it&lt;/a&gt;
+but it is just a &lt;code&gt;sed&lt;/code&gt; command&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sed -i &amp;#39;/-fforce-mem/d&amp;#39; configure&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We need to redo the 3 basics commands:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;./configure&lt;/span&gt;
+&lt;span class="code-line"&gt;make&lt;/span&gt;
+&lt;span class="code-line"&gt;make install&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;At this point you should not have any error, but a classical one is the
+missing library error:&lt;/strong&gt;&lt;/p&gt;
+&lt;h2 id="missing-library-error"&gt;missing library error&lt;/h2&gt;
+&lt;p&gt;The error is indicating the precise missing library (here &lt;code&gt;libtool&lt;/code&gt;):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;Makefile&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;am&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;27&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Libtool&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;library&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;used&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;but&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;`&lt;/span&gt;&lt;span class="n"&gt;LIBTOOL&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39; is undefined&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;Makefile&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;am&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;27&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;Makefile&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;am&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;27&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;The&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;usual&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;way&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;to&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;define&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;`&lt;/span&gt;&lt;span class="n"&gt;LIBTOOL&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39; is to add `AC_PROG_LIBTOOL&amp;#39;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;Makefile&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;am&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;27&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;to&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;`&lt;/span&gt;&lt;span class="n"&gt;configure&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ac&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39; and run `aclocal&amp;#39;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ow"&gt;and&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;`&lt;/span&gt;&lt;span class="n"&gt;autoconf&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39; again.&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;Makefile&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;256&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;recipe&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;target&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Makefile.in&amp;#39;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;failed&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;make&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;***&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;Makefile&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="ow"&gt;in&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Error&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;And we just need to install the missing library using &lt;a href="https://www.cygwin.com/"&gt;cygwin&lt;/a&gt; package manager.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Now we have libmad install in &lt;code&gt;/usr/local/lib/&lt;/code&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;h1 id="cmus"&gt;cmus&lt;/h1&gt;
+&lt;p&gt;But our installation is not completed we need to recompile
+&lt;a href="https://cmus.github.io/"&gt;cmus&lt;/a&gt; with the support
+of this new library and if you just launch the 3 basic commands it will not
+work. In fact, gcc does not search libraries in &lt;code&gt;/usr/local&lt;/code&gt; by default. We need
+to add a flag at the configure step:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;.&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;configure&lt;/span&gt; &lt;span class="nv"&gt;CPPFLAGS&lt;/span&gt;&lt;span class="o"&gt;=-&lt;/span&gt;&lt;span class="nv"&gt;I&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;usr&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;local&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="k"&gt;include&lt;/span&gt; &lt;span class="nv"&gt;LDFLAGS&lt;/span&gt;&lt;span class="o"&gt;=-&lt;/span&gt;&lt;span class="nv"&gt;L&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;usr&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;local&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;lib&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nv"&gt;make&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nv"&gt;make&lt;/span&gt; &lt;span class="nv"&gt;install&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;And now you can launch &lt;a href="https://cmus.github.io/"&gt;cmus&lt;/a&gt; and re-add your mp3
+files and &lt;strong&gt;it works!&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;You can still have some erros, mostly with the newest cygwin versions.&lt;/p&gt;
+&lt;h2 id="recipe-for-target-apeo-failed"&gt;recipe for target 'ape.o' failed&lt;/h2&gt;
+&lt;p&gt;&lt;em&gt;This error was first mention by buzzbo on
+&lt;a href="https://github.com/cmus/cmus/issues/343"&gt;github&lt;/a&gt; and resolved by mahkoh.
+Thanks to them.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;After the &lt;code&gt;./configure&lt;/code&gt;, the &lt;code&gt;make&lt;/code&gt; may output something like:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;   CC     ape.o&lt;/span&gt;
+&lt;span class="code-line"&gt;In file included from ape.c:23:0:&lt;/span&gt;
+&lt;span class="code-line"&gt;xmalloc.h: In function &amp;#39;xstrndup&amp;#39;:&lt;/span&gt;
+&lt;span class="code-line"&gt;xmalloc.h:79:2: error: implicit declaration of function &amp;#39;strndup&amp;#39; [-Werror=implicit-function-declaration]&lt;/span&gt;
+&lt;span class="code-line"&gt;  char *s = strndup(str, n);&lt;/span&gt;
+&lt;span class="code-line"&gt;  ^&lt;/span&gt;
+&lt;span class="code-line"&gt;xmalloc.h:79:12: warning: incompatible implicit declaration of built-in function &amp;#39;strndup&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;  char *s = strndup(str, n);&lt;/span&gt;
+&lt;span class="code-line"&gt;            ^&lt;/span&gt;
+&lt;span class="code-line"&gt;cc1: some warnings being treated as errors&lt;/span&gt;
+&lt;span class="code-line"&gt;scripts/lib.mk:66: recipe for target &amp;#39;ape.o&amp;#39; failed&lt;/span&gt;
+&lt;span class="code-line"&gt;make: *** [ape.o] Error 1&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This error is due to an implicit function declaration that is incorrect. Add
+this after all the includes of the offending files (&lt;code&gt;xmalloc.h&lt;/code&gt;):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nf"&gt;strndup&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;size_t&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id="workflow-tldr"&gt;Workflow - TL;DR&lt;/h3&gt;
+&lt;p&gt;Here is the &lt;a href="https://en.wikipedia.org/wiki/TL;DR"&gt;TL;DR&lt;/a&gt;.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Cygwin dependencies&lt;/li&gt;
+&lt;li&gt;flac-devel&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;ncurses&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Install &lt;a href="http://www.underbit.com/products/mad/"&gt;libmad&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;change the &lt;code&gt;config.gess&lt;/code&gt; and &lt;code&gt;config.sub&lt;/code&gt; files with the one from &lt;a href="http://ftp.gnu.org/gnu/config/README"&gt;this readme&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;patch the configuration to not use the &lt;code&gt;-fforce-mem&lt;/code&gt; option with sed: &lt;code&gt;sed -i '/-fforce-mem/d' configure&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;run the 3 classical commands:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;./configure&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;make&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;make install&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Install &lt;a href="https://cmus.github.io/"&gt;cmus&lt;/a&gt; from source and add the &lt;code&gt;gcc&lt;/code&gt; flags to load libraries in /usr/local:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;./configure CPPFLAGS=-I/usr/local/include LDFLAGS=-L/usr/local/lib&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;make&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;make install&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;em&gt;If you run a classical linux distribution to install cmus use &lt;code&gt;aptitude install
+cmus&lt;/code&gt; or &lt;code&gt;pacman -S cmus&lt;/code&gt;. It is so much easier!&lt;/em&gt;&lt;/p&gt;
+&lt;h1 id="disqus-comments"&gt;Disqus comments&lt;/h1&gt;
+&lt;p&gt;&lt;em&gt;This is a copy of the Disqus comments for this page&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;snapdeus - 2019&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Thanks for this guide! I've been referring to it frequently.&lt;/p&gt;
+&lt;p&gt;I'm running into an issue trying to get .m4a files to work in cmus.&lt;/p&gt;
+&lt;p&gt;Have you had success with this?&lt;/p&gt;
+&lt;p&gt;So far, I've tried including libmp4v2.dll.a in /usr/local/lib, like you did with the libmad.a library, but that did not work.&lt;/p&gt;
+&lt;p&gt;I'm not aware of a good method for adding libraries to build dependencies - but that is my own fault.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;strong&gt;maggick - 2019&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Hi snapdeus, I didn't use cmus on Windows for a while. Probably the right library to decode .m4a is missing.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Abhishek upadhyay - 2017&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Thank you very much for this awesome tutorial. I did exactly the same in babun and it worked! LOved it Thank you very much&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;strong&gt;James - 2017&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Another post just to say thanks so much for this tutorial.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;strong&gt;AerialB - 2015&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Thank you so much for this. I am forced by circumstance to use Windows atm, and although I like foobar, cmus is just the best.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Lee - 2015&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Thank you for minimizing a serious headache! Have you managed to get flac compatability figured out? I've not had much luck.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;strong&gt;maggick - 2015&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Thank you for your interest, flac compatibility is given with the flac codec package (the first one in the following capture) directly in the cygwin installer / package manager.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img alt="cygwin package manager" src="/media/2015.01/cmus_disqus.jpg"&gt;&lt;/p&gt;</content><category term="Programming"></category><category term="cygwin"></category><category term="cmus"></category><category term="programming"></category><category term="windows"></category></entry><entry><title>Git, remove unwanted data from history</title><link href="https://maggick.fr/2014/11/git-remove-unwanted-data-from-history.html" rel="alternate"></link><published>2014-11-23T00:00:00+01:00</published><updated>2014-11-23T00:00:00+01:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2014-11-23:/2014/11/git-remove-unwanted-data-from-history.html</id><summary type="html">&lt;p&gt;Recently I put unwanted data (a password) in one of my git commit.
+This commit was not push to an public server (like github or bitbucket)
+therefore there was no real security breach other than my git history.&lt;/p&gt;
+&lt;p&gt;The problem was to remove the data by rewriting the git history …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Recently I put unwanted data (a password) in one of my git commit.
+This commit was not push to an public server (like github or bitbucket)
+therefore there was no real security breach other than my git history.&lt;/p&gt;
+&lt;p&gt;The problem was to remove the data by rewriting the git history, I search on the
+internet and found and interesting command using git filter-branch
+To rewrite the git history use the following command:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;git filter-branch --tree-filter &amp;#39;git ls-files -z &amp;quot;*.py&amp;quot; |xargs -0 perl -p -i -e &amp;quot;s#(PASSWORD1|PASSWORD2)#youPassowrd#g&amp;quot;&amp;#39; -- --all&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This command will just change the history of python files (.py) and replace
+"PASSWORD1" and "PASSWORD2" whit "youPassword".&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;WARNING&lt;/strong&gt; rewriting git history is dangerous, make a backup before doing anything.&lt;/p&gt;
+&lt;p&gt;You can found a short version in &lt;a href="http://maggick.fr/pages/git-tricks.html"&gt;my notes&lt;/a&gt;.&lt;/p&gt;</content><category term="Programming"></category><category term="git"></category><category term="programming"></category><category term="leak"></category></entry></feed>

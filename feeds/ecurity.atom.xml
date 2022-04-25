@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - ecurity</title><link href="http://matthieukeller.com/" rel="alternate"></link><link href="http://matthieukeller.com/feeds/ecurity.atom.xml" rel="self"></link><id>http://matthieukeller.com/</id><updated>2016-12-27T11:58:00+01:00</updated><entry><title>Let's encrypt certificate for offline servers with OVH DNS</title><link href="http://matthieukeller.com/2016/12/lets-encrypt-certificate-for-offline-servers-with-ovh-dns.html" rel="alternate"></link><published>2016-12-27T11:58:00+01:00</published><updated>2016-12-27T11:58:00+01:00</updated><author><name>Matthieu Keller</name></author><id>tag:matthieukeller.com,2016-12-27:/2016/12/lets-encrypt-certificate-for-offline-servers-with-ovh-dns.html</id><summary type="html">&lt;p&gt;&lt;a href="https://letsencrypt.org/"&gt;Let's encrypt&lt;/a&gt; provide free and easy SSL certificates. Nevertheless it need to verify that
+you own the machine. In order to do that we usually use HTTP verification with
+the .well-known directory.&lt;/p&gt;
+&lt;p&gt;But sometime our servers are not reachable from the internet. Therefore the HTTP
+validation is not possible. Hopefully there is another way the &lt;a href="https://letsencrypt.github.io/acme-spec/"&gt;acme&lt;/a&gt; challenge can be
+validated: &lt;a href="https://letsencrypt.github.io/acme-spec/#rfc.section.7.4"&gt;DNS validation&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;In this post we will see how we can generate &lt;a href="https://letsencrypt.org/"&gt;Let's encrypt&lt;/a&gt; SSL certificate for
+offline machine with DNS validation for domains hosts by &lt;a href="https://ovh.com"&gt;OVH&lt;/a&gt;.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;a href="https://letsencrypt.org/"&gt;Let's encrypt&lt;/a&gt; provide free and easy SSL certificates. Nevertheless it need to verify that
+you own the machine. In order to do that we usually use HTTP verification with
+the .well-known directory.&lt;/p&gt;
+&lt;p&gt;But sometime our servers are not reachable from the internet. Therefore the HTTP
+validation is not possible. Hopefully there is another way the &lt;a href="https://letsencrypt.github.io/acme-spec/"&gt;acme&lt;/a&gt; challenge can be
+validated: &lt;a href="https://letsencrypt.github.io/acme-spec/#rfc.section.7.4"&gt;DNS validation&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;In this post we will see how we can generate &lt;a href="https://letsencrypt.org/"&gt;Let's encrypt&lt;/a&gt; SSL certificate for
+offline machine with DNS validation for domains hosts by &lt;a href="https://ovh.com"&gt;OVH&lt;/a&gt;.&lt;/p&gt;
+
+
+&lt;h2 id="certificate-generation"&gt;Certificate generation&lt;/h2&gt;
+&lt;h3 id="requirements"&gt;Requirements&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;A domain name with its DNS hosted by &lt;a href="https://ovh.com"&gt;OVH&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;curl (sudo apt-get install curl)&lt;/li&gt;
+&lt;li&gt;Python 2 or 3 and pip (sudo apt-get install python-pip)&lt;/li&gt;
+&lt;li&gt;python-ovh (pip install ovh)&lt;/li&gt;
+&lt;li&gt;dehydrated (git clone https://github.com/lukas2511/dehydrated)&lt;/li&gt;
+&lt;li&gt;OVH hook (git clone https://github.com/antoiner77/letsencrypt.sh-ovh)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="api-key-generation"&gt;API Key generation&lt;/h3&gt;
+&lt;p&gt;We need API keys in order to use the hook script for the DNS validation. For
+that, register the application on [OVH API] (https://eu.api.ovh.com/createApp/ https://eu.api.ovh.com/createApp/).&lt;/p&gt;
+&lt;p&gt;We get two elements from the website:
+&lt;em&gt; APP_KEY
+&lt;/em&gt; APP_SECRET&lt;/p&gt;
+&lt;p&gt;We need to put them in our &lt;code&gt;ovh.conf&lt;/code&gt; file in the OVH hook script:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;[default]
+; general configuration: default endpoint
+endpoint=ovh-eu
+
+[ovh-eu]
+; configuration specific to &amp;#39;ovh-eu&amp;#39; endpoint
+application_key=APP_KEY
+application_secret=APP_SECRET
+; uncomment following line when writing a script application
+; with a single consumer key.
+;consumer_key=MA_CLEFS
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Now we need to generate the use token in order to validation our keys (you may
+need to had execution permissions to the script):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;./ovhdns.py --init
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We get an other link where we need to authenticate one more time. When it is
+done just press the &lt;code&gt;ENTER&lt;/code&gt; key.&lt;/p&gt;
+&lt;p&gt;The script indicate the user token to insert in the &lt;code&gt;ovh.conf&lt;/code&gt; file. Be sure to
+uncomment the line by deleting the &lt;code&gt;;&lt;/code&gt; at the beginning of the line.&lt;/p&gt;
+&lt;p&gt;The configuration file will be needed in the &lt;code&gt;dehydrated&lt;/code&gt; folder, let's just
+create a symlink:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ln -s /home/user/letsencrypt.sh-ovh/ovh.conf /home/user/dehydrated/ovh.conf
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The hook script configuration is finished, now let's configure the &lt;code&gt;dehydrated&lt;/code&gt;
+script.&lt;/p&gt;
+&lt;h3 id="dehydrated-configuration"&gt;dehydrated configuration&lt;/h3&gt;
+&lt;p&gt;In the domains.txt file, indicate the certificates that you want to generate.
+Each line will be a certificate but one certificate can be valid for several
+domains. For instance, the following configuration will generate two certificates
+each for two domains.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;example.org www.example.org
+gitlab.example.com wikimedia.example.com
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h3 id="certificates-generation"&gt;Certificates generation&lt;/h3&gt;
+&lt;p&gt;Just launch the dehydrated script (you may need to had execution permission):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;./dehydrated -c -t dns-01 -k &amp;#39;/home/user/letsencrypt.sh-ovh/ovhdns.py&amp;#39;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;-c&lt;/code&gt; (re)generate certificates, will renew them if they expire in less than one month&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-t dns-01&lt;/code&gt; use the DNS challenge for acme validation&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-k&lt;/code&gt; use specific script for hook&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The certificates are stored in &lt;code&gt;/home/user/dehydrated/certs/&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 id="automatically-renew-certificates"&gt;Automatically renew certificates&lt;/h2&gt;
+&lt;p&gt;In order to automatically renew certificate:&lt;/p&gt;
+&lt;p&gt;Create a symlink in order to use the certificate and the necessary key. This
+is the only moment where we will need root permissions. For
+instance, for the gitlab certificate we need &lt;code&gt;gitlab.crt&lt;/code&gt; and &lt;code&gt;gitlab.key&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# ln -s /home/user/dehydrated/certs/git.exemple.fr/fullchain.pem /etc/gitlab/ssl/gitlab.crt
+# ln -s /home/user/dehydrated/certs/git.exemple.fr/privkey.pem /etc/gitlab/ssl/gitlab.key
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Add the following line to the crontab (&lt;code&gt;crontab -e&lt;/code&gt;):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;0 15 * * * cd /home/user/dehydrated/; ./dehydrated  -c -t dns-01 -k &amp;#39;/home/user/letsencrypt.sh-ovh/ovhdns.py&amp;#39;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2 id="source"&gt;Source&lt;/h2&gt;
+&lt;p&gt;&lt;a href="https://ungeek.fr/letsencrypt-api-ovh/"&gt;https://ungeek.fr/letsencrypt-api-ovh/&lt;/a&gt;&lt;/p&gt;</content><category term="programming"></category><category term="SSL"></category><category term="let's encrypt"></category></entry></feed>

