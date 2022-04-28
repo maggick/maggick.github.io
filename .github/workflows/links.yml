@@ -1,28 +1,31 @@
 name: Links
+name: Markdown Links Check
 
 on:
   repository_dispatch:
   workflow_dispatch:
+  # runs every monday at 7 am
   schedule:
-    - cron: "00 06 * * *"
+    - cron: "0 7 * * 1"
 
 jobs:
-  linkChecker:
+  check-links:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Link Checker
-        id: lychee
-        uses: lycheeverse/lychee-action@v1.4.1
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-
-      - name: Create Issue From File
-        if: steps.lychee.outputs.exit_code != 0
-        uses: peter-evans/create-issue-from-file@v3
+      - uses: actions/checkout@master
+      - uses: gaurav-nelson/github-action-markdown-link-check@v1
+        # checks all markdown files from /content including all subfolders
         with:
-          title: Link Checker Report
-          args: --exclude-all-private --no-progres 'content/*.md'
-          content-filepath: ./lychee/out.md
-          labels: report, automated issue
+          use-quiet-mode: 'yes'
+          use-verbose-mode: 'yes'
+          config-file: '.github/workflows/markdown.links.config.json'
+          folder-path: 'content/'
+
+      - uses: actions/checkout@master
+      - uses: gaurav-nelson/github-action-markdown-link-check@v1
+        # checks all markdown files from root (README.md) but ignores subfolders
+        with:
+          use-quiet-mode: 'yes'
+          use-verbose-mode: 'yes'
+          config-file: '.github/workflows/markdown.links.config.json'
+          max-depth: 0
