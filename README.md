@@ -1,28 +1,26 @@
 # My personal website.
 
-[![Build Status](https://travis-ci.com/maggick/blog.svg?branch=master)](https://travis-ci.com/maggick/blog)
+[![GitHub Pages](https://github.com/maggick/maggick.github.io/actions/workflows/ghpages.yml/badge.svg?branch=master)](https://github.com/maggick/maggick.github.io/actions/workflows/ghpages.yml)
+[![pages-build-deployment](https://github.com/maggick/maggick.github.io/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/maggick/maggick.github.io/actions/workflows/pages/pages-build-deployment)
 
 This project is my actual website, my window on the cyberspace.
 
 ## Blog
 
 This blog is:
-  * publish with [Pelican](http://blog.getpelican.com) a static blog generator
-  * build by [travis](https://travis-ci.org/maggick/blog)
+  * publish with [Pelican](https://blog.getpelican.com) a static blog generator
+  * build by [Github actions](https://github.com/features/actions)
   * hosted by [github](https://github.com) with github pages
 
 ## Theme
 
 The theme is based on Maggner theme, created by
-[Templateify](http://www.templateify.com/) and adapted to
+[Templateify](https://www.templateify.com/) and adapted to
 pelican by [Klaus Laube](https://github.com/kplaube/maggner-pelican) with
 my personal modifications in
 [a fork of the project](https://github.com/maggick/maggner-pelican).
 
 ## License
 
-<a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/deed.en_US"><img alt="Creative Commons License" style="b
-order-width:0" src="http://i.creativecommons.org/l/by-sa/3.0/88x31.png" /></a><br /><span xmlns:dct="http://purl.org/dc/terms
-/" property="dct:title">This website</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="https://maggick.fr" p
-roperty="cc:attributionName" rel="cc:attributionURL">maggick</a> is licensed under a <a rel="license" href="http://cr
-eativecommons.org/licenses/by-sa/3.0/deed.en_US">Creative Commons Attribution-ShareAlike 3.0 Unported License</a>.<br />
+<a rel="license" href="https://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://licensebuttons.net/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
+
