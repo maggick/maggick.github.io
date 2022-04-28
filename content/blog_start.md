@@ -5,8 +5,8 @@ tags:blog, misc
 meta:blog, misc
 
 Today I start my blog using Pelican and hosting it with github pages.
-It is located at [www.maggick.fr/blog](http://maggick.fr/blog).
-On [www.maggick.fr](http://maggick.fr) you will find a sort
+It is located at [www.maggick.fr/blog](https://maggick.fr/blog).
+On [www.maggick.fr](https://maggick.fr) you will find a sort
 of portal where I redirect travelers to this blog or to my notes located at
 [www.maggick.fr/notes](http://www.maggick.fr/notes). My notes are is
 the place where is store my "how to" and the things that may help other peoples,
