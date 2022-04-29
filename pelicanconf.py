@@ -84,8 +84,7 @@ FAVICON_URL = "%s/media/favicon.ico" % SITEURL
 
 # License
 LICENSE = 'Creative Commons Attribution 4.0'
-LICENSE_URL = 'http://creativecommons.org/licenses/by-sa/4.0/'
-LICENSE_TITLE = 'Share, adapt, use.\
-        But mention the author and keep the same license'
-SOURCE_CODE_URL = 'https://github.com/maggick/blog/'
+LICENSE_URL = 'https://creativecommons.org/licenses/by/4.0/'
+LICENSE_TITLE = 'Share, adapt, use. But mention the author.'
+SOURCE_CODE_URL = 'https://github.com/maggick/maggick.github.io/'
 SOURCE_CODE_REPOSITORY = 'GitHub'
