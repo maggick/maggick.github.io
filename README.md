@@ -1,7 +1,7 @@
 # My personal website.
 
-[![GitHub Pages](https://github.com/maggick/maggick.github.io/actions/workflows/ghpages.yml/badge.svg?branch=master)](https://github.com/maggick/maggick.github.io/actions/workflows/ghpages.yml)
-[![pages-build-deployment](https://github.com/maggick/maggick.github.io/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/maggick/maggick.github.io/actions/workflows/pages/pages-build-deployment)
+[![Pelican build](https://github.com/maggick/maggick.github.io/actions/workflows/pelican.yml/badge.svg)](https://github.com/maggick/maggick.github.io/actions/workflows/pelican.yml)
+[![Links Check](https://github.com/maggick/maggick.github.io/actions/workflows/links.yml/badge.svg)](https://github.com/maggick/maggick.github.io/actions/workflows/links.yml)
 
 This project is my actual website, my window on the cyberspace.
 
