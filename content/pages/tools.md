@@ -12,12 +12,12 @@ This is my list of tools.
   * [sqlninja](http://sqlninja.sourceforge.net/) a SQL Server injection & takeover tool
   * [wireshark](https://www.wireshark.org/) the world's foremost network protocol analyzer
   * [burp suite](http://portswigger.net/burp/) an integrated platform for performing security testing of web applications
-  * [hydra](https://www.thc.org/thc-hydra/)  very fast network logon cracker
+  * [hydra](https://github.com/vanhauser-thc/thc-hydra)  very fast network logon cracker
     which support many different services
   * [john the ripper](http://www.openwall.com/john/) a fast password cracker
   * [hashcat](http://hashcat.net) an advanced password recovery
   * [mimicatz](http://blog.gentilkiwi.com/mimikatz) a little tool to play with Windows security
-  * [wpscan](http://wpscan.org/) a black box WordPress vulnerability scanner
+  * [wpscan](https://wpscan.com/wordpress-security-scanner) a black box WordPress vulnerability scanner
   * [radare2](http://www.radare.org/r/) an unix-like reverse engineering framework and commandline tools
   * [volatility](http://www.volatilityfoundation.org/) an advanced memory forensics framework
   * [net-creds](https://github.com/DanMcInerney/net-creds) a pcap sniffer
@@ -51,7 +51,7 @@ This is my list of tools.
   * [ranger](https://ranger.github.io/) A VIM-inspired filemanager for the console,
     see [my config on github](https://github.com/maggick/dotfiles/tree/master/config/ranger)
   * [git](http://git-scm.com/) a distributed version control system
-  * [tig](http://jonas.nitro.dk/tig/) an ncurses-based text-mode interface for git
+  * [tig](https://github.com/jonas/tig/) an ncurses-based text-mode interface for git
   * [htop](http://hisham.hm/htop/) an interactive process viewer for Linux
   * [ncdu](http://dev.yorhel.nl/ncdu) a disk usage analyzer with an ncurses interface
   * [pacgraph](http://kmkeen.com/pacgraph/) draws a pretty picture of your installed packages

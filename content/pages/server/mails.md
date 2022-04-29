@@ -10,7 +10,7 @@ I choose postifix as SMTP server.
 ##SPF
 
 Sender Policy Framework (SPF) is an email validation system designed to prevent
-email spam by detecting email spoofing, a common vulnerability, by verifying 
+email spam by detecting email spoofing, a common vulnerability, by verifying
 sender IP addresses.
 
 It is really easy to put an SPF in place.
@@ -111,9 +111,9 @@ And an other where you put your public key:
     "qJ6g8Nla+BX2A2V2gwOxT2Xp0mCIqjIFqfoyhxIcftKHHBDFxiun2WLwsUD5ivFewy54ntgphkWJUXfob+NtZ6M8sv531Zd/mgdBgnYAPzWNy5m5MGquNZNEnA44o0sAcKiCRMb7nKpTvfDQQIDAQAB"
     )
 
-Source: [stevejenkins](http://stevejenkins.com/blog/2011/08/installing-opendkim-rpm-via-yum-with-postfix-or-sendmail-for-rhel-centos-fedora/)    
+Source: [stevejenkins](http://stevejenkins.com/blog/2011/08/installing-opendkim-rpm-via-yum-with-postfix-or-sendmail-for-rhel-centos-fedora/)
 [A DomainKey Policy Record
-Tester](http://domainkeys.sourceforge.net/policycheck.html)    
+Tester](http://domainkeys.sourceforge.net/policycheck.html)
 [A DomainKey Selector Record
 Tester](http://domainkeys.sourceforge.net/selectorcheck.html)
 
@@ -126,7 +126,7 @@ To define a catch all create the `virtual` file and add it to postmap :
     # echo '@yourdomain.com emailusername' > /etc/postfix/virtual
     # postmap /etc/postfix/virtual
 
-Check that the virtual map is defined in postfix's configuration 
+Check that the virtual map is defined in postfix's configuration
 by verifing that the following line is in the `/etc/postfix/main.cf` file.
 
     # postmap /etc/postfix/virtual
@@ -157,12 +157,12 @@ next execute the following commands:
 You can configure some regex catch all for instance you can catch
 whatever.youruser@yourdomain.com
 In order to make a catch all for an user :
-edit (or create) the file 
+edit (or create) the file
 
     /etc/postfix/virtual-regexp
 
 add regexp:/etc/postfix/virtual-regexp to virtual_maps in /etc/postfix/main.cf
-this will look like 
+this will look like
 
     virtual_maps = hash:/etc/postfix/virtual, regexp:/etc/postfix/virtual-regexp
 
