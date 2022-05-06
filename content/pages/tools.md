@@ -12,8 +12,7 @@ This is my list of tools.
   * [sqlninja](http://sqlninja.sourceforge.net/) a SQL Server injection & takeover tool
   * [wireshark](https://www.wireshark.org/) the world's foremost network protocol analyzer
   * [burp suite](http://portswigger.net/burp/) an integrated platform for performing security testing of web applications
-  * [hydra](https://github.com/vanhauser-thc/thc-hydra)  very fast network logon cracker
-    which support many different services
+  * [hydra](https://github.com/vanhauser-thc/thc-hydra)  very fast network logon cracker which support many different services
   * [john the ripper](http://www.openwall.com/john/) a fast password cracker
   * [hashcat](http://hashcat.net) an advanced password recovery
   * [mimicatz](http://blog.gentilkiwi.com/mimikatz) a little tool to play with Windows security
@@ -22,19 +21,14 @@ This is my list of tools.
   * [volatility](http://www.volatilityfoundation.org/) an advanced memory forensics framework
   * [net-creds](https://github.com/DanMcInerney/net-creds) a pcap sniffer
   * [crunch](http://crunch-wordlist.sourceforge.net/) a password list generator
-  * [cewl](https://digi.ninja/projects/cewl.php) a password list generator from
-    a webpage
-  * [searsploit](https://github.com/joostvanveen/php-security-pitfalls) allow to
-    searh for an exploit localy
+  * [cewl](https://digi.ninja/projects/cewl.php) a password list generator from a webpage
+  * [searsploit](https://github.com/joostvanveen/php-security-pitfalls) allow to searh for an exploit localy
 
 ### Burp extensions
 
-  * [Wsdler](https://portswigger.net/bappstore/594a49bb233748f2bc80a9eb18a2e08f)
-    "This extension takes a WSDL request, parses out the operations that are
-    associated with the targeted web service, and generates SOAP requests that
-    can then be sent to the SOAP endpoints."
-  * [Hackvertor](https://portswigger.net/bappstore/65033cbd2c344fbabe57ac060b5dd100)
-    replace the decoder
+  * [Wsdler](https://portswigger.net/bappstore/594a49bb233748f2bc80a9eb18a2e08f) "This extension takes a WSDL request, parses out the operations that are
+    associated with the targeted web service, and generates SOAP requests that can then be sent to the SOAP endpoints."
+  * [Hackvertor](https://portswigger.net/bappstore/65033cbd2c344fbabe57ac060b5dd100) replace the decoder
 
 ## Firefox
 
@@ -42,10 +36,8 @@ This is my list of tools.
 
 ## tools for linux and i3
 
-  * [i3](https://i3wm.org/) a tiling window manager, see
-    [my config on github](https://github.com/maggick/dotfiles/tree/master/i3)
-  * [vim](http://www.vim.org/) a highly configurable text editor, see
-    [my config on github](https://github.com/maggick/dotfiles/blob/master/vimrc)
+  * [i3](https://i3wm.org/) a tiling window manager, see [my config on github](https://github.com/maggick/dotfiles/tree/master/i3)
+  * [vim](http://www.vim.org/) a highly configurable text editor, see [my config on github](https://github.com/maggick/dotfiles/blob/master/vimrc)
   * [neovim](https://neovim.io/) a highly configurable text editor, see
     [my config on github](https://github.com/maggick/dotfiles/tree/master/config/nvim)
   * [ranger](https://ranger.github.io/) A VIM-inspired filemanager for the console,
