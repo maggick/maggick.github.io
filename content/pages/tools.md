@@ -53,5 +53,5 @@ This is my list of tools.
   * [sxiv](https://github.com/muennich/sxiv) Simple X Image Viewer
   * [vlc](http://www.videolan.org/) a free and open source cross-platform multimedia player
   * [nemo](https://github.com/linuxmint/nemo) a File browser
-  * [krita](https://krita.org/) a FREE sketching and painting program
+  * [pinta](https://www.pinta-project.com/) a Simple GTK# Paint Program
   * [darktable](http://www.darktable.org/) an open source photography workflow application and RAW developer.
