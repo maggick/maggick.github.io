@@ -10,7 +10,7 @@ RELATIVE_URLS = True
 
 # DELETE_OUTPUT_DIRECTORY = True
 
-AUTHOR = u'maggick'
+#AUTHOR = u'maggick'
 SITENAME = u"maggick's logs"
 
 PATH = 'content'
