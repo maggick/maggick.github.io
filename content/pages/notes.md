@@ -2,8 +2,6 @@ Title: Notes
 
 This are my personnal notes.
 
-[My list of useful **tools**](/pages/tools.html).
-
 ## Programming
 
   * [git tricks](/pages/git-tricks.html)

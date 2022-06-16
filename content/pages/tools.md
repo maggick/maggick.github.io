@@ -1,5 +1,4 @@
 Title: Tools
-Status: hidden
 
 This is my list of tools.
 
