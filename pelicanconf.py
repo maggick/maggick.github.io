@@ -43,7 +43,7 @@ DEFAULT_PAGINATION = 10
 STATIC_PATHS = ['media', 'extra/CNAME', 'extra/.nojekyll',]
 EXTRA_PATH_METADATA = {'extra/CNAME': {'path': 'CNAME'}, 'extra/.nojekyll':{'path':'.nojekyll'},}
 FAVICON_URL = "%s/media/favicon.ico" % SITEURL
-SITELOGO = "%s/meida/image.png" % SITEURL
+SITELOGO = "%s/media/image.png" % SITEURL
 
 COPYRIGHT_YEAR = 2022
 
