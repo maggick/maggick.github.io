@@ -1,90 +1,60 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*- #
-from __future__ import unicode_literals
-import os
-import sys
-sys.path.append(os.curdir)
-
+AUTHOR = 'maggick'
+SITENAME = "maggick's logs"
 SITEURL = 'https://maggick.fr'
 RELATIVE_URLS = True
 
-# DELETE_OUTPUT_DIRECTORY = True
-
-#AUTHOR = u'maggick'
-SITENAME = u"maggick's logs"
+THEME = "./Flex"
 
 PATH = 'content'
+DISABLE_URL_HASH = True
 DISPLAY_PAGES_ON_MENU = "True"
 ARTICLE_EXCLUDES = ('pages',)
-PAGE_URL = 'pages/{slug}.html'
-
 TIMEZONE = 'Europe/Paris'
 DEFAULT_DATE_FORMAT = '%d %b %Y'
-
 DEFAULT_LANG = 'en'
 
 # Article
+PAGE_URL = 'pages/{slug}.html'
 ARTICLE_URL = '{date:%Y}/{date:%m}/{slug}.html'
 ARTICLE_SAVE_AS = '{date:%Y}/{date:%m}/{slug}.html'
 DISPLAY_CATEGORIES_ON_MENU = False
 
 # Plugins
 PLUGIN_PATHS = ['./pelican-plugins/']
-PLUGINS = ['summary', 'tag_cloud', 'neighbors', 'readtime', 'sitemap',
-        'better_codeblock_line_numbering']
-MARKDOWN = {
-    'extension_configs': {
-        'markdown.extensions.codehilite': {'css_class': 'highlight'},
-        'markdown.extensions.extra': {},
-        'markdown.extensions.toc': {},
-    },
-    'output_format': 'html5',
-}
-
-# sitemap plugin configuration
-SITEMAP = {
-        'format': 'xml',
-        'priorities': {
-            'articles': 0.8,
-            'indexes': 0.9,
-            'pages': 0.5
-            },
-        'changefreqs': {
-            'articles': 'monthly',
-            'indexes': 'weekly',
-            'pages': 'yearly'
-            }
-          }
-
+PLUGINS = ['summary', 'neighbors', 'post_stats']
 
 # Social
-# Social widget
 SOCIAL = (('github', 'https://github.com/maggick'),
           ('twitter', 'https://twitter.com/maggick_fr'),
-          ('stackoverflow', 'http://stackoverflow.com/users/1827067/maggick'),
+          ('stack-overflow', 'http://stackoverflow.com/users/1827067/maggick'),
+          ('rss', 'https://maggick.fr/feeds/all.atom.xml'),
           )
 
 # Menu
+MAIN_MENU = True
 MENUITEMS = (
-             ('archives', '/archives'),
-             ('feeds', '/feeds/all.atom.xml'),
-             ('links', '/pages/links.html'),
-            )
+    ("Archives", "/archives.html"),
+    ("Categories", "/categories.html"),
+    ("Tags", "/tags.html"),
+)
 
 DEFAULT_PAGINATION = 10
 
-THEME = "./maggner-pelican/"
 STATIC_PATHS = ['media', 'extra/CNAME', 'extra/.nojekyll',]
 EXTRA_PATH_METADATA = {'extra/CNAME': {'path': 'CNAME'}, 'extra/.nojekyll':{'path':'.nojekyll'},}
 FAVICON_URL = "%s/media/favicon.ico" % SITEURL
 
-# Third party
-# DISQUS_SITENAME = "matthieukeller"
-# GOOGLE_ANALYTICS = "UA-63314567-1"
+COPYRIGHT_YEAR = 2022
 
-# License
-LICENSE = 'Creative Commons Attribution 4.0'
-LICENSE_URL = 'https://creativecommons.org/licenses/by/4.0/'
-LICENSE_TITLE = 'Share, adapt, use. But mention the author.'
-SOURCE_CODE_URL = 'https://github.com/maggick/maggick.github.io/'
-SOURCE_CODE_REPOSITORY = 'GitHub'
+THEME_COLOR = 'light'
+THEME_COLOR_AUTO_DETECT_BROWSER_PREFERENCE = True
+THEME_COLOR_ENABLE_USER_OVERRIDE = True
+
+PYGMENTS_STYLE = 'sas'
+PYGMENTS_STYLE_DARK = 'monokai'
+
+CC_LICENSE = {
+    "name": "Creative Commons Attribution",
+    "version": "4.0",
+    "slug": "by"
+}
