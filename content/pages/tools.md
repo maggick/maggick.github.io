@@ -29,6 +29,7 @@ This is my list of tools.
   * [Turbo Intruder](https://github.com/PortSwigger/turbo-intruder) Intruder on steroid
   * [Auth Analyzer](https://github.com/portswigger/auth-analyzer) Automated request repeating and parameter value extraction on the fly
   * [Hackvertor](https://portswigger.net/bappstore/65033cbd2c344fbabe57ac060b5dd100) replace the decoder
+  * [Copy-as-JavaScript-Request](https://github.com/celsogbezerra/Copy-as-JavaScript-Request/) Copy as JavaScript Request plugin for Burp Suite
 
 ## Firefox
 
