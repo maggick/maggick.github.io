@@ -1,10 +1,12 @@
 AUTHOR = 'maggick'
 SITENAME = "maggick's logs"
 SITEURL = 'https://maggick.fr'
-RELATIVE_URLS = True
+SITETITLE = SITENAME
+SITESUBTITLE = 'Offensive security tales'
 
 THEME = "./Flex"
 
+RELATIVE_URLS = True
 PATH = 'content'
 DISABLE_URL_HASH = True
 DISPLAY_PAGES_ON_MENU = "True"
