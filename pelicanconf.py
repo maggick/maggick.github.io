@@ -1,3 +1,5 @@
+from PIL import Image, ImageOps
+
 AUTHOR = 'maggick'
 SITENAME = "maggick's logs"
 SITEURL = 'https://maggick.fr'
@@ -64,7 +66,7 @@ CC_LICENSE = {
 
 def border(image):
     """Add a border to an image"""
-    return PIL.ImageOps.expand(PIL.Image.open(image),border=300,fill='black')
+    return ImageOps.expand(Image.open(image),border=300,fill='black')
 
 IMAGE_PROCESS_FORCE = True
 IMAGE_PROCESS = {
