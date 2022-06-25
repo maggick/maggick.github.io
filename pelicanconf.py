@@ -23,7 +23,7 @@ DISPLAY_CATEGORIES_ON_MENU = False
 
 # Plugins
 PLUGIN_PATHS = ['./pelican-plugins/']
-PLUGINS = ['summary', 'neighbors', 'post_stats']
+PLUGINS = ['summary', 'neighbors', 'post_stats', 'image_process']
 
 # Social
 SOCIAL = (('github', 'https://github.com/maggick'),
@@ -60,4 +60,11 @@ CC_LICENSE = {
     "name": "Creative Commons Attribution",
     "version": "4.0",
     "slug": "by"
+}
+
+IMAGE_PROCESS = {
+    "article-image": {
+        "type": "image",
+        "ops": ["contour"],# "scale_in 300 300 True"],
+    },
 }
