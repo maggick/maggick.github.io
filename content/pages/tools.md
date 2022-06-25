@@ -15,21 +15,21 @@ This is my list of tools.
   * [hashcat](http://hashcat.net) an advanced password recovery
   * [mimicatz](http://blog.gentilkiwi.com/mimikatz) a little tool to play with Windows security
   * [wpscan](https://wpscan.com/wordpress-security-scanner) a black box WordPress vulnerability scanner
-  * [radare2](http://www.radare.org/r/) an unix-like reverse engineering framework and command line tools
-  * [volatility](http://www.volatilityfoundation.org/) an advanced memory forensics framework
   * [net-creds](https://github.com/DanMcInerney/net-creds) a pcap sniffer
-  * [crunch](http://crunch-wordlist.sourceforge.net/) a password list generator
   * [cewl](https://digi.ninja/projects/cewl.php) a password list generator from a webpage
-  * [searsploit](https://github.com/joostvanveen/php-security-pitfalls) allow to search for an exploit locally
+  * [searsploit](https://github.com/offensive-security/exploitdb) allow to search for an exploit locally
 
 ### Burp extensions
 
-  * [Wsdler](https://portswigger.net/bappstore/594a49bb233748f2bc80a9eb18a2e08f) "This extension takes a WSDL request, parses out the operations that are
-    associated with the targeted web service, and generates SOAP requests that can then be sent to the SOAP endpoints."
   * [Turbo Intruder](https://github.com/PortSwigger/turbo-intruder) Intruder on steroid
   * [Auth Analyzer](https://github.com/portswigger/auth-analyzer) Automated request repeating and parameter value extraction on the fly
-  * [Hackvertor](https://portswigger.net/bappstore/65033cbd2c344fbabe57ac060b5dd100) replace the decoder
-  * [Copy-as-JavaScript-Request](https://github.com/celsogbezerra/Copy-as-JavaScript-Request/) Copy as JavaScript Request plugin for Burp Suite
+  * [PwnFox](https://github.com/yeswehack/PwnFox/) For better authorization testing
+  * [Copy-as-JavaScript-Request](https://github.com/celsogbezerra/Copy-as-JavaScript-Request/) Copy as JavaScript Request
+  plugin for Burp Suite
+  * [JWT-editor](https://github.com/PortSwigger/jwt-editor) For creating and editing JSON Web Tokens
+  * [Wsdler](https://portswigger.net/bappstore/594a49bb233748f2bc80a9eb18a2e08f) "This extension takes a WSDL request,
+  parses out the operations that are associated with the targeted web service, and generates SOAP requests
+  that can then be sent to the SOAP endpoints."
 
 ## Firefox
 
@@ -39,7 +39,6 @@ This is my list of tools.
 ## tools for linux and i3
 
   * [i3](https://i3wm.org/) a tiling window manager, see [my config on github](https://github.com/maggick/dotfiles/tree/master/i3)
-  * [vim](http://www.vim.org/) a highly configurable text editor, see [my config on github](https://github.com/maggick/dotfiles/blob/master/vimrc)
   * [neovim](https://neovim.io/) a highly configurable text editor, see
     [my config on github](https://github.com/maggick/dotfiles/tree/master/config/nvim)
   * [ranger](https://ranger.github.io/) A VIM-inspired filemanager for the console,
@@ -55,3 +54,4 @@ This is my list of tools.
   * [nemo](https://github.com/linuxmint/nemo) a File browser
   * [pinta](https://www.pinta-project.com/) a Simple GTK# Paint Program
   * [darktable](http://www.darktable.org/) an open source photography workflow application and RAW developer.
+  * [minder](https://github.com/phase1geo/Minder) Mind-mapping application
