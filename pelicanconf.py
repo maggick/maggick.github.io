@@ -64,15 +64,14 @@ CC_LICENSE = {
     "slug": "by"
 }
 
-def border(image):
-    """Add a border to an image"""
-    return image
+#def border(image):
+    #"""Add a border to an image"""
     #return ImageOps.expand(Image.open(image),border=300,fill='black').convert()
 
 IMAGE_PROCESS_FORCE = True
 IMAGE_PROCESS = {
     "article-image": {
         "type": "image",
-        "ops": [border],
+        "ops": [],
     },
 }
