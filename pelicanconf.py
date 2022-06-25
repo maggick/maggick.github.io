@@ -66,6 +66,7 @@ def border(image):
     """Add a border to an image"""
     return ImageOps.expand(Image.open(image),border=300,fill='black')
 
+IMAGE_PROCESS_FORCE = True
 IMAGE_PROCESS = {
     "article-image": {
         "type": "image",
