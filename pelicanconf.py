@@ -65,6 +65,6 @@ CC_LICENSE = {
 IMAGE_PROCESS = {
     "article-image": {
         "type": "image",
-        "ops": ["contour"],# "scale_in 300 300 True"],
+        "ops": []
     },
 }
