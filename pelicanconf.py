@@ -66,7 +66,7 @@ CC_LICENSE = {
 
 def border(image):
     """Add a border to an image"""
-    return ImageOps.expand(Image.open(image),border=300,fill='black')
+    return ImageOps.expand(Image.open(image),border=300,fill='black').convert()
 
 IMAGE_PROCESS_FORCE = True
 IMAGE_PROCESS = {
