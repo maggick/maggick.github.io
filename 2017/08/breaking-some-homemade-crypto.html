@@ -1,164 +1,118 @@
 
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="HandheldFriendly" content="True" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="" />
-
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" type="text/css" href="../../theme/stylesheet/style.min.css">
-
-    <link id="dark-theme-style" rel="stylesheet" type="text/css"
-          media="(prefers-color-scheme: dark)"
-    href="../../theme/stylesheet/dark-theme.min.css">
-
-    <link id="pygments-dark-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: dark)"
-          href="../../theme/pygments/monokai.min.css">
-    <link id="pygments-light-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
-          href="../../theme/pygments/sas.min.css">
-
-
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/fontawesome.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/brands.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/solid.css">
-
-
-    <link href="https://maggick.fr/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="maggick's logs Atom">
-
-
-
-  
-
-
- 
-
-<meta name="author" content="maggick" />
-<meta name="description" content="I recently did a code review assessment on an application for one of my client. The best part of the application was their own cryptography algorithm. Moreover, the application was written in PHP and PHP do some strange things with string, characters and XOR operations. It only needed a few lines of python in order to break it. TL;DR : please do not write your own crypto!" />
-<meta name="keywords" content="security, cryptography, code review">
-
-
-  <meta property="og:site_name" content="maggick's logs"/>
-  <meta property="og:title" content="Breaking some homemade crypto"/>
-  <meta property="og:description" content="I recently did a code review assessment on an application for one of my client. The best part of the application was their own cryptography algorithm. Moreover, the application was written in PHP and PHP do some strange things with string, characters and XOR operations. It only needed a few lines of python in order to break it. TL;DR : please do not write your own crypto!"/>
-  <meta property="og:locale" content="en_US"/>
-  <meta property="og:url" content="../../2017/08/breaking-some-homemade-crypto.html"/>
-  <meta property="og:type" content="article"/>
-  <meta property="article:published_time" content="2017-08-01 18:00:00+02:00"/>
-  <meta property="article:modified_time" content=""/>
-  <meta property="article:author" content="../../author/maggick.html">
-  <meta property="article:section" content="security"/>
-  <meta property="article:tag" content="security"/>
-  <meta property="article:tag" content="cryptography"/>
-  <meta property="article:tag" content="code review"/>
-  <meta property="og:image" content="https://maggick.fr/media/image.png">
-
-  <title>maggick's logs &ndash; Breaking some homemade crypto</title>
-
-</head>
-<body >
-  <aside>
-    <div>
-      <a href="../../">
-        <img src="https://maggick.fr/media/image.png" alt="maggick's logs" title="maggick's logs">
-      </a>
-
-      <h1>
-        <a href="../../">maggick's logs</a>
-      </h1>
-
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="True" name="HandheldFriendly"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="" name="robots"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&amp;family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="../../theme/stylesheet/style.min.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/stylesheet/dark-theme.min.css" id="dark-theme-style" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/monokai.min.css" id="pygments-dark-theme" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/sas.min.css" id="pygments-light-theme" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/fontawesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/brands.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/solid.css" rel="stylesheet" type="text/css"/>
+<link href="https://maggick.fr/feeds/all.atom.xml" rel="alternate" title="maggick's logs Atom" type="application/atom+xml"/>
+<meta content="maggick" name="author"/>
+<meta content="I recently did a code review assessment on an application for one of my client. The best part of the application was their own cryptography algorithm. Moreover, the application was written in PHP and PHP do some strange things with string, characters and XOR operations. It only needed a few lines of python in order to break it. TL;DR : please do not write your own crypto!" name="description"/>
+<meta content="security, cryptography, code review" name="keywords"/>
+<meta content="maggick's logs" property="og:site_name">
+<meta content="Breaking some homemade crypto" property="og:title"/>
+<meta content="I recently did a code review assessment on an application for one of my client. The best part of the application was their own cryptography algorithm. Moreover, the application was written in PHP and PHP do some strange things with string, characters and XOR operations. It only needed a few lines of python in order to break it. TL;DR : please do not write your own crypto!" property="og:description"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="../../2017/08/breaking-some-homemade-crypto.html" property="og:url"/>
+<meta content="article" property="og:type"/>
+<meta content="2017-08-01 18:00:00+02:00" property="article:published_time"/>
+<meta content="" property="article:modified_time"/>
+<meta content="../../author/maggick.html" property="article:author"/>
+<meta content="security" property="article:section">
+<meta content="security" property="article:tag"/>
+<meta content="cryptography" property="article:tag"/>
+<meta content="code review" property="article:tag"/>
+<meta content="https://maggick.fr/media/image.png" property="og:image"/>
+<title>maggick's logs – Breaking some homemade crypto</title>
+</meta></meta></head>
+<body>
+<aside>
+<div>
+<a href="../../">
+<img alt="maggick's logs" src="https://maggick.fr/media/image.png" title="maggick's logs"/>
+</a>
+<h1>
+<a href="../../">maggick's logs</a>
+</h1>
 <p>Offensive security tales</p>
-
-      <nav>
-        <ul class="list">
-
-
-              <li>
-                <a target="_self"
-                   href="../../pages/about.html">
+<nav>
+<ul class="list">
+<li>
+<a href="../../pages/about.html" target="_self">
                   About
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/notes.html">
+</li>
+<li>
+<a href="../../pages/notes.html" target="_self">
                   Notes
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/tools.html">
+</li>
+<li>
+<a href="../../pages/tools.html" target="_self">
                   Tools
                 </a>
-              </li>
-
-        </ul>
-      </nav>
-
-      <ul class="social">
-          <li>
-            <a  class="sc-github" href="https://github.com/maggick" target="_blank">
-              <i class="fab fa-github"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
-              <i class="fab fa-twitter"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
-              <i class="fab fa-stack-overflow"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
-              <i class="fas fa-rss"></i>
-            </a>
-          </li>
-      </ul>
-    </div>
-
-  </aside>
-  <main>
-
-    <nav>
-      <a href="../../">Home</a>
-
-      <a href="/archives.html">Archives</a>
-      <a href="/categories.html">Categories</a>
-      <a href="/tags.html">Tags</a>
-
-      <a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
-
-    </nav>
-
+</li>
+</ul>
+</nav>
+<ul class="social">
+<li>
+<a class="sc-github" href="https://github.com/maggick" target="_blank">
+<i class="fab fa-github"></i>
+</a>
+</li>
+<li>
+<a class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
+<i class="fab fa-twitter"></i>
+</a>
+</li>
+<li>
+<a class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
+<i class="fab fa-stack-overflow"></i>
+</a>
+</li>
+<li>
+<a class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
+<i class="fas fa-rss"></i>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<main>
+<nav>
+<a href="../../">Home</a>
+<a href="/archives.html">Archives</a>
+<a href="/categories.html">Categories</a>
+<a href="/tags.html">Tags</a>
+<a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
+</nav>
 <article class="single">
-  <header>
-      
-    <h1 id="breaking-some-homemade-crypto">Breaking some homemade crypto</h1>
-    <p>
+<header>
+<h1 id="breaking-some-homemade-crypto">Breaking some homemade crypto</h1>
+<p>
       Posted on 01 Aug 2017 in <a href="../../category/security.html">security</a>
 
-        &#8226; 3 min read
+        • 3 min read
     </p>
-  </header>
-
-
-  <div>
-    <p>I recently did a code review assessment on an application for one of my client.
+</header>
+<div>
+<p>I recently did a code review assessment on an application for one of my client.
 The best part of the application was their own cryptography algorithm.</p>
 <p>Moreover, the application was written in PHP and PHP do some strange things with
 string, characters and XOR operations.
 It only needed a few lines of python in order to break it.</p>
 <p>TL;DR : <strong>please do not write your own crypto!</strong></p>
-
-
 <p>The cryptography algorithm was a symmetric one, that means there is always a
 private key shared between the encryption and the decryption. In fact the
 key was shared for the application.</p>
@@ -166,10 +120,10 @@ key was shared for the application.</p>
 <p>The encryption algorithm is the following (I rewrote it in python for a better
 comprehension):</p>
 <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">crypt</span><span class="p">(</span><span class="n">clearText</span><span class="p">):</span>
-    <span class="n">privateKey</span> <span class="o">=</span> <span class="s1">&#39;123456&#39;</span>
-    <span class="n">cipherText</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">privateKey</span> <span class="o">=</span> <span class="s1">'123456'</span>
+    <span class="n">cipherText</span> <span class="o">=</span> <span class="s1">''</span>
 
-    <span class="n">key</span><span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">32000</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+    <span class="n">key</span><span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">32000</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'ascii'</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
 
     <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
@@ -180,10 +134,10 @@ comprehension):</p>
         <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
 
-    <span class="n">key2</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="n">privateKey</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+    <span class="n">key2</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="n">privateKey</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'ascii'</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
     <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="s1">''</span>
 
     <span class="k">while</span> <span class="p">(</span><span class="n">i</span><span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">cipherText</span><span class="p">)):</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">j</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">key2</span><span class="p">)):</span>
@@ -194,7 +148,6 @@ comprehension):</p>
 
     <span class="k">return</span> <span class="n">result</span>
 </code></pre></div>
-
 <p>We observe that there is only XOR operations. Quick reminder about XOR
 operations:</p>
 <div class="highlight"><pre><span></span><code><span class="mf">0</span><span class="w"> </span><span class="n">XOR</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="w"></span>
@@ -202,7 +155,6 @@ operations:</p>
 <span class="mf">1</span><span class="w"> </span><span class="n">XOR</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span><span class="w"></span>
 <span class="mf">1</span><span class="w"> </span><span class="n">XOR</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="w"></span>
 </code></pre></div>
-
 <p>Moreover, by definition: <code>a XOR b XOR a = b</code></p>
 <h2>Breaking things</h2>
 <p>In our situation we need to find <code>cipherText</code> in order to find the md5 hash of
@@ -216,12 +168,12 @@ the plain text must be longer than 36 characters in order to easily find the md5
 hash (an other option might have be to search for ascii characters).</p>
 <p>Here is the python code:</p>
 <div class="highlight"><pre><span></span><code><span class="n">def</span><span class="w"> </span><span class="n">brute</span><span class="p">()</span><span class="err">:</span><span class="w"></span>
-<span class="w">    </span><span class="n">clearText</span><span class="o">=</span><span class="s1">&#39;this is a test in order to break some home made crypto&#39;</span><span class="w"></span>
+<span class="w">    </span><span class="n">clearText</span><span class="o">=</span><span class="s1">'this is a test in order to break some home made crypto'</span><span class="w"></span>
 <span class="w">    </span><span class="n">codedText</span><span class="o">=</span><span class="n">crypt</span><span class="p">(</span><span class="n">clearText</span><span class="p">)</span><span class="w"></span>
 <span class="w">    </span><span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="w"></span>
 <span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">k</span><span class="o">&lt;</span><span class="mi">32001</span><span class="p">)</span><span class="err">:</span><span class="w"></span>
-<span class="w">        </span><span class="k">key</span><span class="o">=</span><span class="w"> </span><span class="n">hashlib</span><span class="p">.</span><span class="n">md5</span><span class="p">(</span><span class="nf">str</span><span class="p">(</span><span class="n">k</span><span class="p">).</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">)).</span><span class="n">hexdigest</span><span class="p">()</span><span class="w"></span>
-<span class="w">        </span><span class="n">cipherText</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"></span>
+<span class="w">        </span><span class="k">key</span><span class="o">=</span><span class="w"> </span><span class="n">hashlib</span><span class="p">.</span><span class="n">md5</span><span class="p">(</span><span class="nf">str</span><span class="p">(</span><span class="n">k</span><span class="p">).</span><span class="n">encode</span><span class="p">(</span><span class="s1">'ascii'</span><span class="p">)).</span><span class="n">hexdigest</span><span class="p">()</span><span class="w"></span>
+<span class="w">        </span><span class="n">cipherText</span><span class="o">=</span><span class="w"> </span><span class="s1">''</span><span class="w"></span>
 
 <span class="w">        </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"></span>
 <span class="w">        </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"></span>
@@ -234,7 +186,7 @@ hash (an other option might have be to search for ascii characters).</p>
 
 <span class="w">        </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"></span>
 <span class="w">        </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"></span>
-<span class="w">        </span><span class="k">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"></span>
+<span class="w">        </span><span class="k">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">''</span><span class="w"></span>
 
 <span class="w">        </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="o">&lt;</span><span class="w"> </span><span class="nf">len</span><span class="p">(</span><span class="n">codedText</span><span class="p">))</span><span class="err">:</span><span class="w"></span>
 <span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">j</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nf">len</span><span class="p">(</span><span class="n">cipherText</span><span class="p">))</span><span class="err">:</span><span class="w"></span>
@@ -254,7 +206,6 @@ hash (an other option might have be to search for ascii characters).</p>
 <span class="w">            </span><span class="k">break</span><span class="w"></span>
 <span class="w">        </span><span class="n">k</span><span class="o">+=</span><span class="mi">1</span><span class="w"></span>
 </code></pre></div>
-
 <p>I put the two function in a file, added a main and run it:</p>
 <div class="highlight"><pre><span></span><code><span class="o">[</span><span class="n">maggick@eridani ~</span><span class="o">]</span><span class="err">$</span><span class="w"> </span><span class="nc">time</span><span class="w"> </span><span class="n">python</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">py</span><span class="w"></span>
 <span class="mi">23467</span><span class="w"></span>
@@ -263,10 +214,9 @@ hash (an other option might have be to search for ascii characters).</p>
 <span class="nc">real</span><span class="w">    </span><span class="mi">0</span><span class="n">m2</span><span class="mf">.186</span><span class="n">s</span><span class="w"></span>
 <span class="k">user</span><span class="w">    </span><span class="mi">0</span><span class="n">m2</span><span class="mf">.186</span><span class="n">s</span><span class="w"></span>
 <span class="n">sys</span><span class="w"> </span><span class="mi">0</span><span class="n">m0</span><span class="mf">.000</span><span class="n">s</span><span class="w"></span>
-<span class="o">[</span><span class="n">maggick@eridani ~</span><span class="o">]</span><span class="err">$</span><span class="w"> </span><span class="n">echo</span><span class="w"> </span><span class="o">-</span><span class="n">en</span><span class="w"> </span><span class="s1">&#39;123456&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">md5sum</span><span class="w"></span>
+<span class="o">[</span><span class="n">maggick@eridani ~</span><span class="o">]</span><span class="err">$</span><span class="w"> </span><span class="n">echo</span><span class="w"> </span><span class="o">-</span><span class="n">en</span><span class="w"> </span><span class="s1">'123456'</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">md5sum</span><span class="w"></span>
 <span class="n">e10adc3949ba59abbe56e057f20f883e</span><span class="w">  </span><span class="o">-</span><span class="w"></span>
 </code></pre></div>
-
 <p>We got the md5 hash of the private key. The default key used in the application
 was 8 characters long and was use in other algorithms not home made.</p>
 <h2>PHP: character XOR character</h2>
@@ -275,7 +225,6 @@ When analysing the original PHP code of the encryption function, I found
 something very strange:</p>
 <div class="highlight"><pre><span></span><code><span class="x">$tmp .= mb_substr($text, $i, 1) ^ mb_substr($key, $j, 1);</span>
 </code></pre></div>
-
 <p>How can you make a xor operation between two characters?!</p>
 <p>In fact PHP make a xor operation between the ASCII value of the character and
 convert the result back to the ASCII character. For instance <code>'a' xor 'B'</code> will
@@ -284,7 +233,6 @@ result in <code>65 xor 98</code> which give <code>35</code> therefore <code>'a' 
 python code:</p>
 <div class="highlight"><pre><span></span><code><span class="n">tmp</span> <span class="o">+=</span> <span class="nb">chr</span><span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="n">clearText</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">^</span><span class="nb">ord</span><span class="p">(</span><span class="n">key</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
 </code></pre></div>
-
 <h2>Full code</h2>
 <p>The complete code is the following:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">hashlib</span>
@@ -292,10 +240,10 @@ python code:</p>
 <span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">randint</span>
 
 <span class="k">def</span> <span class="nf">crypt</span><span class="p">(</span><span class="n">clearText</span><span class="p">):</span>
-    <span class="n">privateKey</span> <span class="o">=</span> <span class="s1">&#39;123456&#39;</span>
-    <span class="n">cipherText</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">privateKey</span> <span class="o">=</span> <span class="s1">'123456'</span>
+    <span class="n">cipherText</span> <span class="o">=</span> <span class="s1">''</span>
 
-    <span class="n">key</span><span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">32000</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+    <span class="n">key</span><span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">32000</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'ascii'</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
 
     <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
@@ -306,10 +254,10 @@ python code:</p>
         <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
 
-    <span class="n">key2</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="n">privateKey</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+    <span class="n">key2</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="n">privateKey</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'ascii'</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
     <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="s1">''</span>
 
     <span class="k">while</span> <span class="p">(</span><span class="n">i</span><span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">cipherText</span><span class="p">)):</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">j</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">key2</span><span class="p">)):</span>
@@ -321,12 +269,12 @@ python code:</p>
     <span class="k">return</span> <span class="n">result</span>
 
 <span class="k">def</span> <span class="nf">brute</span><span class="p">():</span>
-    <span class="n">clearText</span><span class="o">=</span><span class="s1">&#39;this is a test in order to break some home made crypto&#39;</span>
+    <span class="n">clearText</span><span class="o">=</span><span class="s1">'this is a test in order to break some home made crypto'</span>
     <span class="n">codedText</span><span class="o">=</span><span class="n">crypt</span><span class="p">(</span><span class="n">clearText</span><span class="p">)</span>
     <span class="n">k</span><span class="o">=</span><span class="mi">0</span>
     <span class="k">while</span> <span class="p">(</span><span class="n">k</span><span class="o">&lt;</span><span class="mi">32001</span><span class="p">):</span>
-        <span class="n">key</span><span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
-        <span class="n">cipherText</span><span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">key</span><span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'ascii'</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+        <span class="n">cipherText</span><span class="o">=</span> <span class="s1">''</span>
 
         <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
@@ -340,7 +288,7 @@ python code:</p>
 
         <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="s1">''</span>
 
         <span class="k">while</span> <span class="p">(</span><span class="n">i</span><span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">codedText</span><span class="p">)):</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">j</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">cipherText</span><span class="p">)):</span>
@@ -364,63 +312,42 @@ python code:</p>
 <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="n">brute</span><span class="p">()</span>
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
     <span class="n">main</span><span class="p">()</span>
 </code></pre></div>
-  </div>
-  <div class="tag-cloud">
-    <p>
-      <a href="../../tag/security.html">security</a>
-      <a href="../../tag/cryptography.html">cryptography</a>
-      <a href="../../tag/code-review.html">code review</a>
-    </p>
-  </div>
-
-
-  <div class="neighbors">
-    <a class="btn float-left" href="../../2017/03/building-this-blog-with-travis.html" title="Building this blog with travis">
-      <i class="fa fa-angle-left"></i> Previous Post
-    </a>
-    <a class="btn float-right" href="../../2017/11/vulnhub-bulldog-1.html" title="Vulnhub, Bulldog: 1">
-      Next Post <i class="fa fa-angle-right"></i>
-    </a>
-  </div>
-
-
-
-</article>
-
-    <footer>
+</div>
+<div class="tag-cloud">
 <p>
-  &copy; 2022  - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US" target="_blank">Creative Commons Attribution</a>
+<a href="../../tag/security.html">security</a>
+<a href="../../tag/cryptography.html">cryptography</a>
+<a href="../../tag/code-review.html">code review</a>
+</p>
+</div>
+<div class="neighbors">
+<a class="btn float-left" href="../../2017/03/building-this-blog-with-travis.html" title="Building this blog with travis">
+<i class="fa fa-angle-left"></i> Previous Post
+    </a>
+<a class="btn float-right" href="../../2017/11/vulnhub-bulldog-1.html" title="Vulnhub, Bulldog: 1">
+      Next Post <i class="fa fa-angle-right"></i>
+</a>
+</div>
+</article>
+<footer>
+<p>
+  © 2022  - This work is licensed under a <a href="http://creativecommons.org/licenses/by/4.0/deed.en_US" rel="license" target="_blank">Creative Commons Attribution</a>
 </p>
 <p>
 Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a href="http://bit.ly/flex-pelican" target="_blank">Flex</a> theme
   <span class="footer-separator">|</span>
   Switch to the <a href="javascript:void(0)" onclick="theme.switch(`dark`)">dark</a> | <a href="javascript:void(0)" onclick="theme.switch(`light`)">light</a> | <a href="javascript:void(0)" onclick="theme.switch(`browser`)">browser</a> theme
-  <script id="dark-theme-script"
-          src="../../theme/dark-theme/dark-theme.min.js"
-          data-enable-auto-detect-theme="True"
-          data-default-theme="light"
-          type="text/javascript">
-  </script>
+  <script data-default-theme="light" data-enable-auto-detect-theme="True" id="dark-theme-script" src="../../theme/dark-theme/dark-theme.min.js" type="text/javascript">
+</script>
 </p><p>
-  <a rel="license"
-     href="http://creativecommons.org/licenses/by/4.0/"
-     target="_blank">
-    <img alt="Creative Commons License"
-         title="Creative Commons License"
-         style="border-width:0"
-           src="https://i.creativecommons.org/l/by/4.0/80x15.png"
-         width="80"
-         height="15"/>
-  </a>
-</p>    </footer>
-  </main>
-
-
-
-
+<a href="http://creativecommons.org/licenses/by/4.0/" rel="license" target="_blank">
+<img alt="Creative Commons License" height="15" src="https://i.creativecommons.org/l/by/4.0/80x15.png" style="border-width:0" title="Creative Commons License" width="80">
+</img></a>
+</p> </footer>
+</main>
 <script type="application/ld+json">
 {
   "@context" : "http://schema.org",
@@ -431,6 +358,5 @@ Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a 
   "description": ""
 }
 </script>
-
 </body>
 </html>

