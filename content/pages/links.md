@@ -1,5 +1,4 @@
 Title: Links
-Status: hidden
 
 Just some interesting links.
 
