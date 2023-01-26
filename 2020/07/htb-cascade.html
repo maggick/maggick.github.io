@@ -350,35 +350,35 @@ kali@kali:~$ tree /mnt/
 <p>We load the executable in <a href="https://github.com/0xd4d/dnSpy">DNSpy</a> and look at
 the code. We saw a function that use the Crypto DLL to decrypt a text providing
 from the database using the key <code>c4scadek3y654321</code>.</p>
-<div class="highlight"><pre><span></span><code>using (SQLiteConnection sqliteConnection = new SQLiteConnection("Data Source=" + MyProject.Application.CommandLineArgs[0] + ";Version=3;"))
+<div class="highlight"><pre><span></span><code>using<span class="w"> </span>(SQLiteConnection<span class="w"> </span>sqliteConnection<span class="w"> </span>=<span class="w"> </span>new<span class="w"> </span>SQLiteConnection("Data<span class="w"> </span>Source="<span class="w"> </span>+<span class="w"> </span>MyProject.Application.CommandLineArgs[0]<span class="w"> </span>+<span class="w"> </span>";Version=3;"))
 {
-  string str = string.Empty;
-  string password = string.Empty;
-  string str2 = string.Empty;
-  try
-  {
-    sqliteConnection.Open();
-    using (SQLiteCommand sqliteCommand = new SQLiteCommand("SELECT * FROM LDAP", sqliteConnection))
-    {
-      using (SQLiteDataReader sqliteDataReader = sqliteCommand.ExecuteReader())
-      {
-        sqliteDataReader.Read();
-        str = Conversions.ToString(sqliteDataReader["Uname"]);
-        str2 = Conversions.ToString(sqliteDataReader["Domain"]);
-        string text = Conversions.ToString(sqliteDataReader["Pwd"]);
-        try
-        {
-          password = Crypto.DecryptString(text, "c4scadek3y654321");
-        }
-        catch (Exception ex)
-        {
-          Console.WriteLine("Error decrypting password: " + ex.Message);
-          return;
-        }
-      }
-    }
-    sqliteConnection.Close();
-  }
+<span class="w">  </span>string<span class="w"> </span>str<span class="w"> </span>=<span class="w"> </span>string.Empty;
+<span class="w">  </span>string<span class="w"> </span>password<span class="w"> </span>=<span class="w"> </span>string.Empty;
+<span class="w">  </span>string<span class="w"> </span>str2<span class="w"> </span>=<span class="w"> </span>string.Empty;
+<span class="w">  </span>try
+<span class="w">  </span>{
+<span class="w">    </span>sqliteConnection.Open();
+<span class="w">    </span>using<span class="w"> </span>(SQLiteCommand<span class="w"> </span>sqliteCommand<span class="w"> </span>=<span class="w"> </span>new<span class="w"> </span>SQLiteCommand("SELECT<span class="w"> </span>*<span class="w"> </span>FROM<span class="w"> </span>LDAP",<span class="w"> </span>sqliteConnection))
+<span class="w">    </span>{
+<span class="w">      </span>using<span class="w"> </span>(SQLiteDataReader<span class="w"> </span>sqliteDataReader<span class="w"> </span>=<span class="w"> </span>sqliteCommand.ExecuteReader())
+<span class="w">      </span>{
+<span class="w">        </span>sqliteDataReader.Read();
+<span class="w">        </span>str<span class="w"> </span>=<span class="w"> </span>Conversions.ToString(sqliteDataReader["Uname"]);
+<span class="w">        </span>str2<span class="w"> </span>=<span class="w"> </span>Conversions.ToString(sqliteDataReader["Domain"]);
+<span class="w">        </span>string<span class="w"> </span>text<span class="w"> </span>=<span class="w"> </span>Conversions.ToString(sqliteDataReader["Pwd"]);
+<span class="w">        </span>try
+<span class="w">        </span>{
+<span class="w">          </span>password<span class="w"> </span>=<span class="w"> </span>Crypto.DecryptString(text,<span class="w"> </span>"c4scadek3y654321");
+<span class="w">        </span>}
+<span class="w">        </span>catch<span class="w"> </span>(Exception<span class="w"> </span>ex)
+<span class="w">        </span>{
+<span class="w">          </span>Console.WriteLine("Error<span class="w"> </span>decrypting<span class="w"> </span>password:<span class="w"> </span>"<span class="w"> </span>+<span class="w"> </span>ex.Message);
+<span class="w">          </span>return;
+<span class="w">        </span>}
+<span class="w">      </span>}
+<span class="w">    </span>}
+<span class="w">    </span>sqliteConnection.Close();
+<span class="w">  </span>}
 </code></pre></div>
 <p>We repeat the SQL request using <code>sqlite3</code> and got some base64 data for the
 user <code>ArkSvc</code>.</p>
@@ -391,27 +391,27 @@ sqlite&gt; SELECT * FROM LDAP;
 <p>We look at the crypto code in the DLL (still using <a href="https://github.com/0xd4d/dnSpy">DNSpy</a>).
 This is a simple AES using a fix IV and the key passed in parameter by the
 executable binary.</p>
-<div class="highlight"><pre><span></span><code>// Token: 0x06000013 RID: 19 RVA: 0x00002360 File Offset: 0x00000760
-public static string DecryptString(string EncryptedString, string Key)
+<div class="highlight"><pre><span></span><code>//<span class="w"> </span>Token:<span class="w"> </span>0x06000013<span class="w"> </span>RID:<span class="w"> </span>19<span class="w"> </span>RVA:<span class="w"> </span>0x00002360<span class="w"> </span>File<span class="w"> </span>Offset:<span class="w"> </span>0x00000760
+public<span class="w"> </span>static<span class="w"> </span>string<span class="w"> </span>DecryptString(string<span class="w"> </span>EncryptedString,<span class="w"> </span>string<span class="w"> </span>Key)
 {
-  byte[] array = Convert.FromBase64String(EncryptedString);
-  Aes aes = Aes.Create();
-  aes.KeySize = 128;
-  aes.BlockSize = 128;
-  aes.IV = Encoding.UTF8.GetBytes("1tdyjCbY1Ix49842");
-  aes.Mode = CipherMode.CBC;
-  aes.Key = Encoding.UTF8.GetBytes(Key);
-  string @string;
-  using (MemoryStream memoryStream = new MemoryStream(array))
-  {
-    using (CryptoStream cryptoStream = new CryptoStream(memoryStream, aes.CreateDecryptor(), CryptoStreamMode.Read))
-    {
-      byte[] array2 = new byte[checked(array.Length - 1 + 1)];
-      cryptoStream.Read(array2, 0, array2.Length);
-      @string = Encoding.UTF8.GetString(array2);
-    }
-  }
-  return @string;
+<span class="w">  </span>byte[]<span class="w"> </span>array<span class="w"> </span>=<span class="w"> </span>Convert.FromBase64String(EncryptedString);
+<span class="w">  </span>Aes<span class="w"> </span>aes<span class="w"> </span>=<span class="w"> </span>Aes.Create();
+<span class="w">  </span>aes.KeySize<span class="w"> </span>=<span class="w"> </span>128;
+<span class="w">  </span>aes.BlockSize<span class="w"> </span>=<span class="w"> </span>128;
+<span class="w">  </span>aes.IV<span class="w"> </span>=<span class="w"> </span>Encoding.UTF8.GetBytes("1tdyjCbY1Ix49842");
+<span class="w">  </span>aes.Mode<span class="w"> </span>=<span class="w"> </span>CipherMode.CBC;
+<span class="w">  </span>aes.Key<span class="w"> </span>=<span class="w"> </span>Encoding.UTF8.GetBytes(Key);
+<span class="w">  </span>string<span class="w"> </span>@string;
+<span class="w">  </span>using<span class="w"> </span>(MemoryStream<span class="w"> </span>memoryStream<span class="w"> </span>=<span class="w"> </span>new<span class="w"> </span>MemoryStream(array))
+<span class="w">  </span>{
+<span class="w">    </span>using<span class="w"> </span>(CryptoStream<span class="w"> </span>cryptoStream<span class="w"> </span>=<span class="w"> </span>new<span class="w"> </span>CryptoStream(memoryStream,<span class="w"> </span>aes.CreateDecryptor(),<span class="w"> </span>CryptoStreamMode.Read))
+<span class="w">    </span>{
+<span class="w">      </span>byte[]<span class="w"> </span>array2<span class="w"> </span>=<span class="w"> </span>new<span class="w"> </span>byte[checked(array.Length<span class="w"> </span>-<span class="w"> </span>1<span class="w"> </span>+<span class="w"> </span>1)];
+<span class="w">      </span>cryptoStream.Read(array2,<span class="w"> </span>0,<span class="w"> </span>array2.Length);
+<span class="w">      </span>@string<span class="w"> </span>=<span class="w"> </span>Encoding.UTF8.GetString(array2);
+<span class="w">    </span>}
+<span class="w">  </span>}
+<span class="w">  </span>return<span class="w"> </span>@string;
 }
 </code></pre></div>
 <p>Here is the <a href="https://gchq.github.io/CyberChef/#recipe=From_Base64('A-Za-z0-9%2B/%3D',true)AES_Decrypt(%7B'option':'UTF8','string':'c4scadek3y654321'%7D,%7B'option':'UTF8','string':'1tdyjCbY1Ix49842'%7D,'CBC','Raw','Raw',%7B'option':'Hex','string':''%7D)&amp;input=QlFPNWw1S2o5TWRFclh4NlE2QUdPdz09">CyberChef recipe</a> to decode the password: <code>w3lc0meFr31nd</code>.</p>
