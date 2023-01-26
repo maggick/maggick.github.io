@@ -13,3 +13,5 @@ Just some interesting links.
  * [Everything you should know about certificates and PKI but are too afraid to ask](https://smallstep.com/blog/everything-pki.html)
  * [How to undo (almost) anything with Git](https://github.blog/2015-06-08-how-to-undo-almost-anything-with-git/)
  * [What is a shell and how to be shell fluent](https://effective-shell.com/)
+ * [Cheatsheets and quick references contributed by open source angels](https://quickref.me/)
+ * [Convert curl commands to (almost) anything](https://curlconverter.com/)
