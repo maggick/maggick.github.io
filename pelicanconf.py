@@ -1,4 +1,5 @@
 from PIL import Image, ImageOps
+import datetime
 
 AUTHOR = 'maggick'
 SITENAME = "maggick's logs"
@@ -49,7 +50,9 @@ EXTRA_PATH_METADATA = {'extra/CNAME': {'path': 'CNAME'}, 'extra/.nojekyll':{'pat
 FAVICON_URL = "%s/media/favicon.ico" % SITEURL
 SITELOGO = "%s/media/image.png" % SITEURL
 
-COPYRIGHT_YEAR = 2022
+today = datetime.date.today()
+year = today.year
+COPYRIGHT_YEAR = year
 
 THEME_COLOR = 'light'
 THEME_COLOR_AUTO_DETECT_BROWSER_PREFERENCE = True
