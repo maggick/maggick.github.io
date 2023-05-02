@@ -3,22 +3,18 @@
 [![Pelican build](https://github.com/maggick/maggick.github.io/actions/workflows/pelican.yml/badge.svg)](https://github.com/maggick/maggick.github.io/actions/workflows/pelican.yml)
 [![Links Check](https://github.com/maggick/maggick.github.io/actions/workflows/links.yml/badge.svg)](https://github.com/maggick/maggick.github.io/actions/workflows/links.yml)
 
-This project is my actual website, my window on the cyberspace.
+This project is my blog, mostly offensive security and CTF tales.
 
 ## Blog
 
 This blog is:
   * publish with [Pelican](https://blog.getpelican.com) a static blog generator
-  * build by [Github actions](https://github.com/features/actions)
-  * hosted by [github](https://github.com) with github pages
+  * build by [GitHub actions](https://github.com/features/actions)
+  * hosted by [gitHub](https://github.com) with GitHub pages
 
 ## Theme
 
-The theme is based on Maggner theme, created by
-[Templateify](https://www.templateify.com/) and adapted to
-pelican by [Klaus Laube](https://github.com/kplaube/maggner-pelican) with
-my personal modifications in
-[a fork of the project](https://github.com/maggick/maggner-pelican).
+The theme is [Flex, The minimalist Pelican theme](https://flex.alxd.me/).
 
 ## License
 
