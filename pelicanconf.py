@@ -33,7 +33,7 @@ SOCIAL = (('github', 'https://github.com/maggick'),
           ('twitter', 'https://twitter.com/maggick_fr'),
           ('stack-overflow', 'http://stackoverflow.com/users/1827067/maggick'),
           ('rss', 'https://maggick.fr/feeds/all.atom.xml'),
-          ('discord', 'maggick'),
+          ('discord', 'https://discord.com/users/maggick'),
           )
 
 # Menu
