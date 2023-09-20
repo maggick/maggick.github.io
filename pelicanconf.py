@@ -79,10 +79,3 @@ IMAGE_PROCESS = {
         "ops": [border],
     },
 }
-
-MARKDOWN = {
-    'extension_configs':{
-        'markdown.extensions.mermaid': {},
-    },
-    'output_format': 'html5',
-}
