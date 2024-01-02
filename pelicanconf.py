@@ -26,7 +26,7 @@ DISPLAY_CATEGORIES_ON_MENU = False
 
 # Plugins
 PLUGIN_PATHS = ['./pelican-plugins/']
-PLUGINS = ['summary', 'neighbors', 'post_stats', 'image_process', 'render-math']
+PLUGINS = ['summary', 'neighbors', 'post_stats', 'image_process', 'render_math']
 
 # Social
 SOCIAL = (('github', 'https://github.com/maggick'),
