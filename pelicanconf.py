@@ -79,3 +79,5 @@ IMAGE_PROCESS = {
         "ops": [border],
     },
 }
+
+ANALYTICS = """<script defer src="https://eu.umami.is/script.js" data-website-id="3fd2620b-e9b8-4445-9d3a-161dee9977e1"></script>"""
