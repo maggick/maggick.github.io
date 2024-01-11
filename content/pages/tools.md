@@ -31,11 +31,6 @@ This is my list of tools.
   parses out the operations that are associated with the targeted web service, and generates SOAP requests
   that can then be sent to the SOAP endpoints."
 
-## Firefox
-
-  * [foxyproxy](https://addons.mozilla.org/en-US/firefox/addon/foxyproxy-standard/) an advanced proxy management tool
-  * [Multi account container](https://addons.mozilla.org/en-US/firefox/addon/multi-account-containers/) Use for authorization testing
-
 ## tools for linux and i3
 
   * [i3](https://i3wm.org/) a tiling window manager, see [my config on github](https://github.com/maggick/dotfiles/tree/master/i3)
