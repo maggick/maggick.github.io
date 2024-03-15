@@ -23,8 +23,8 @@ Actually my servers run on Debian and my desktops run on Arch Linux.
 
 The social links in the left panel give your four different ways to contact me:
 
-  1. [email](mailto:postmaster at maggick.fr)
-  2. [GitHub](https://github.com/maggick).
+  1. [email](mailto:postmaster at maggick dot fr)
+  2. [GitHub](https://github.com/maggick)
   3. [reddit](https://www.reddit.com/user/maaggick/)
   4. [Twitter](https://twitter.com/maggick_fr)
   5. [Stackoverflow](https://stackoverflow.com/users/1827067/maggick)
