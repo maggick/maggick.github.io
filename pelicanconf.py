@@ -29,7 +29,8 @@ PLUGIN_PATHS = ['./pelican-plugins/']
 PLUGINS = ['summary', 'neighbors', 'post_stats', 'image_process', 'render_math']
 
 # Social
-SOCIAL = (('github', 'https://github.com/maggick'),
+SOCIAL = (('email', 'mailto:postmater at maggick dot fr'),
+          ('github', 'https://github.com/maggick'),
           ('twitter', 'https://twitter.com/maggick_fr'),
           ('stack-overflow', 'http://stackoverflow.com/users/1827067/maggick'),
           ('rss', 'https://maggick.fr/feeds/all.atom.xml'),
