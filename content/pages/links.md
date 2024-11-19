@@ -15,3 +15,4 @@ Just some interesting links.
  * [What is a shell and how to be shell fluent](https://effective-shell.com/)
  * [Cheatsheets and quick references contributed by open source angels](https://quickref.me/)
  * [Convert curl commands to (almost) anything](https://curlconverter.com/)
+ * [Explain a shell command](https://explainshell.com/)
