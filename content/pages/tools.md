@@ -44,7 +44,7 @@ This is my list of tools.
   * [ncdu](http://dev.yorhel.nl/ncdu) a disk usage analyzer with an ncurses interface
   * [pacgraph](http://kmkeen.com/pacgraph/) draws a pretty picture of your installed packages
   * [evince](https://wiki.gnome.org/Apps/Evince) a document viewer for multiple document formats
-  * [sxiv](https://github.com/muennich/sxiv) Simple X Image Viewer
+  * [nsxiv](https://github.com/nsxiv/nsxiv) Neo Simple X Image Viewer (sxiv is unmaintained since 2023)
   * [vlc](http://www.videolan.org/) a free and open source cross-platform multimedia player
   * [nemo](https://github.com/linuxmint/nemo) a File browser
   * [pinta](https://www.pinta-project.com/) a Simple GTK# Paint Program
